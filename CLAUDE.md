@@ -20,11 +20,12 @@ No framework, no build step, no npm dependencies. Plain ES modules served as sta
   - LeagueLogs: server-rendered `<table>`, 200 players incl. DST, no K. Its order nearly mirrors FantasyPros ECR, so it is weighted 0.5.
 - `lib/consensus.js` — `normName` + `NICKNAMES` map, `buildIndex(sleeperPlayers)`, `matchRow`, `buildConsensus`. Rank → value is `100 * exp(-0.0115 * (rank-1))`, weighted average across sources (`SOURCE_WEIGHTS`). Missing weekly projections are filled by a per-position linear fit of DraftSharks pts vs value, falling back to `DEFAULT_FIT` if DraftSharks is down.
 - `lib/engine.js` — `computeLeague(input)`: pure, no DOM, runs in browser and Node. Produces teams (sorted by power rank), weekly results, all-play, luck, efficiency, ROS best lineup (greedy fixed-then-flex), position-group ranks, power score + rank history, Monte Carlo playoff odds (10k sims, seeded), matchup previews, explanations (`explain`), tiers (`tierFor`), transaction feed with ROS value deltas, best available free agents, "divisive" players.
+- `lib/stories.js` — the newsroom, pure like the engine. `buildStories(D, {now, dateKey})` scores candidate stories (fresh trades and wire moves, unbeaten/winless/streaks, last week's upsets/blowouts/nail-biters, rank moves, luck, game of the week) and returns `{lead, more}`; a date-seeded jitter rotates near-ties daily. `keyMatchup(D)` picks the game of the week by 0.55 × stakes + 0.45 × closeness, where stakes is the combined playoff-odds swing (`playoffIfWin − playoffIfLoss` from the simulation). `matchupQuips(D)` gives one data-driven one-liner per matchup, no repeated joke within a week.
 - `lib/charts.js` — hand-written SVG/HTML chart builders (bump, scatter, radar, weekly bars, diverging bars, heat table). Marks carry `data-tip` for the shared tooltip in `app.js`. Deliberately no chart library.
 
 ### Power score
 
-`WEIGHTS` in `lib/engine.js`: rosProj 0.40, depth 0.10, allPlay 0.20, pfPerGame 0.15, winPct 0.10, form 0.05. Each metric is z-scored across the 12 teams; score = `50 + 22 * weighted z`, clamped 1–99. If `/api/ros` fails, ROS terms are dropped and the page shows a "results-only mode" notice. Rank history holds the ROS half at today's value, so week-to-week movement comes from results only.
+`WEIGHTS` in `lib/engine.js`: rosProj 0.35, depth 0.10, sos 0.10, allPlay 0.20, pfPerGame 0.10, winPct 0.10, form 0.05. Each metric is z-scored across the 12 teams; score = `50 + 22 * weighted z`, clamped 1–99. `sos` is schedule wins (`t.schedWins`): sum over the remaining regular-season games of P(win vs actual opponent) − P(win vs average opponent), using the same `projMean` and pooled SD as the playoff simulation, so the projection block runs before the power score. The rows show three sub-scores: `rosScore`, `sosScore`, `resultsScore`. If `/api/ros` fails, ROS terms are dropped (schedule stays, using points per game) and the page shows a "results-only mode" notice. Rank history holds the ROS and schedule terms at today's value, so week-to-week movement comes from results only.
 
 ## Commands
 
@@ -57,6 +58,7 @@ Concept: night game under stadium lights seen through frosted (Apple liquid-glas
 
 - Sleeper roster `fpts` etc. are split into integer + `_decimal`/100.
 - Sleeper team defenses use the team abbreviation as player ID (`"DET"`). Ranking sites spell some teams differently; `TEAM_FIX` in `sources.js` normalises (JAC→JAX, WSH→WAS…).
+- Players the sources haven't listed yet (fresh signings) project 0. Patch them in `OVERRIDES` in `lib/overrides.js` (`{pos, wk}`); `app.js` applies it before `computeLeague`, only while the consensus has no `wk` for that player, and the footer lists active patches. Remove entries once the sources catch up.
 - Name mismatches go in `NICKNAMES` (e.g. Bam Knight → Zonovan Knight, Cameron Skattebo → Cam Skattebo). Check `/api/ros` → `sources.*.matched` after changes; ~190 of 194 rostered players should have values.
 - Scrapers may be blocked from Vercel IPs (browser-like User-Agent is set). A failed source degrades gracefully; don't make the whole endpoint fail on one source.
 - Sleeper asks for `/players/nfl` at most once a day; only `api/ros.js` calls it, and the edge cache enforces that. Never call it from the browser.
