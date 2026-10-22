@@ -3,6 +3,7 @@ import { bumpChart, scatter, radar, weeklyBars, divergingBars, heatTable, stakes
 import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
 import { tradeIdeas } from './lib/trades.js';
+import { breakdown, shortName } from './lib/matchup.js';
 
 // ---------- config ----------
 const LEAGUE_ID = '1312001652454088704';
@@ -14,6 +15,17 @@ const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const f1 = (x) => (x == null || Number.isNaN(x) ? '–' : Number(x).toFixed(1));
 const pct = (x) => `${Math.round((x || 0) * 100)}%`;
+// fair American odds for a probability, rounded the way a sportsbook posts them (no vig)
+function american(p) {
+  if (p == null) return '–';
+  if (p <= 0) return 'OTB';
+  if (p >= 1) return '-10000';
+  const raw = p >= 0.5 ? (-100 * p) / (1 - p) : (100 * (1 - p)) / p;
+  const a = Math.abs(raw), step = a >= 2000 ? 100 : a >= 1000 ? 50 : a >= 300 ? 10 : 5;
+  const r = Math.min(50000, Math.round(a / step) * step);
+  return p >= 0.5 ? `-${Math.max(100, r)}` : `+${Math.max(100, r)}`;
+}
+const half = (x) => (Math.round(x * 2) / 2).toFixed(1);
 const ordinal = (n) => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch { return null; } },
@@ -25,6 +37,7 @@ let RAW = null;
 let myTeam = Number(store.get('ph-my-team')) || null;
 const wireState = { type: 'all', mine: false, limit: 50, trades: 3 };
 const tradeState = { shape: 'all', cache: {} };
+let VOTES = null; // { week, open, counts: { "3-8": { "3": n } }, mine: { "3-8": "3" } } once /api/votes answers
 
 // ---------- data ----------
 const getJSON = async (url) => {
@@ -72,6 +85,7 @@ async function load() {
     transactions: RAW.transactions,
     players: ros ? ros.players : {},
     ros: patched.values,
+    byes: ros?.byes || {},
     currentWeek: RAW.state.week,
     lastScored: RAW.league.settings?.last_scored_leg,
   });
@@ -143,6 +157,7 @@ function viewRankings() {
     </div>
     ${notice}
     <ol class="ranks enter">${items}</ol>
+    ${futuresBoard()}
     <details class="panel glass method-box">
       <summary><h2>How the score works</h2>${XP}</summary>
       <div class="method">
@@ -153,6 +168,20 @@ function viewRankings() {
         <p><b>Playoff odds.</b> 10,000 simulations of the remaining regular-season schedule, using each team's projected lineup blended with its actual scoring. Ties in the standings go to points for, like Sleeper.</p>
       </div>
     </details>`;
+}
+
+// ---------- championship futures ----------
+function futuresBoard() {
+  if (!DATA.meta.futures) return '';
+  const board = [...DATA.teams].sort((a, b) => b.champPct - a.champPct || b.finalPct - a.finalPct);
+  const tile = (t, i) => `<li class="fut ${t.rid === myTeam ? 'mine' : ''} ${i === 0 ? 'fav' : ''}" data-tip="${esc(`${t.name}: wins the title in ${(t.champPct * 100).toFixed(1)}% of simulations, reaches the final in ${(t.finalPct * 100).toFixed(1)}%, makes the playoffs in ${pct(t.playoffPct)}`)}">
+      ${avatar(t)}<span class="fn"><b>${esc(t.name)}</b><small>${(t.champPct * 100).toFixed(1)}% title, ${pct(t.finalPct)} final</small></span><span class="odds-tag">${american(t.champPct)}</span>
+    </li>`;
+  return `<section class="panel glass futures">
+      <h2>Championship futures</h2>
+      <p class="sub">Fair odds to win the title, from 10,000 simulations of the rest of the season and the ${DATA.meta.playoffTeams}-team playoff bracket, bye weeks included. No house cut, so they're better than any book would give you.</p>
+      <ol class="fut-list">${board.map(tile).join('')}</ol>
+    </section>`;
 }
 
 // ---------- lead story ----------
@@ -197,7 +226,10 @@ function leadStory() {
     </section>`;
 }
 
+let carouselFit = null, carouselSeen = null;
 function bindCarousel() {
+  carouselFit = null;
+  carouselSeen?.disconnect();
   const car = $('.lead-car'), track = car?.querySelector('.car-track');
   if (!track) return;
   const dots = [...car.querySelectorAll('.car-dot')], n = dots.length;
@@ -207,15 +239,18 @@ function bindCarousel() {
   // on phones the card hugs the story that's showing instead of the tallest one, so short stories leave no gap
   const phone = matchMedia('(max-width: 760px)');
   const fit = () => { track.style.height = phone.matches ? `${slides[idx].offsetHeight}px` : ''; };
-  const show = (i) => {
+  const show = (i, resize = true) => {
     idx = (i + n) % n;
     dots.forEach((d, k) => (k === idx ? d.setAttribute('aria-current', 'true') : d.removeAttribute('aria-current')));
-    fit();
+    if (resize) fit();
   };
   fit();
   document.fonts?.ready.then(fit); // headline height changes once the display font arrives
-  phone.addEventListener?.('change', fit);
-  window.addEventListener('resize', fit, { passive: true });
+  carouselFit = fit; // re-run on real width changes (see onWidthChange)
+  // Only rotate while the card is mostly on screen. A rotation changes the card's height on phones, and iPhone
+  // Safari doesn't anchor scrolling, so rotating while someone reads further down would jolt the whole page.
+  carouselSeen = new IntersectionObserver(([e]) => car.classList.toggle('away', e.intersectionRatio < 0.6), { threshold: [0, 0.6] });
+  carouselSeen.observe(car);
   const go = (i) => {
     show(i);
     const sl = slides[idx];
@@ -226,10 +261,14 @@ function bindCarousel() {
     steering = setTimeout(() => (steering = 0), 700); // ignore scroll events from our own smooth scroll
     track.scrollTo({ left: idx * track.clientWidth, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   };
+  // during a finger swipe, move the dots right away but resize only once the slide has settled
+  let settle = 0;
   track.addEventListener('scroll', () => {
     if (steering) return;
     const i = Math.round(track.scrollLeft / track.clientWidth);
-    if (i !== idx) show(i);
+    if (i !== idx) show(i, false);
+    clearTimeout(settle);
+    settle = setTimeout(fit, 140);
   }, { passive: true });
   dots.forEach((d) => {
     d.addEventListener('click', () => go(Number(d.dataset.i)));
@@ -440,7 +479,7 @@ function viewMatchups() {
     <section class="view-head">
       <div>
         <h1><span class="wk">${wk ? `Week ${wk}` : 'Off week'}</span>Matchups</h1>
-        <p>Projections use each team's best healthy lineup for the week, blended with how they've actually been scoring. Win odds assume a typical week-to-week swing of about ${Math.round(DATA.meta.sd)} points.</p>
+        <p>Projections use each team's best healthy lineup for the week (byes and injuries count as zero), blended with how they've actually been scoring. Win odds assume a typical week-to-week swing of about ${Math.round(DATA.meta.sd)} points. Open any game for the lineups slot by slot, and get your pick in before kickoff.</p>
       </div>
     </section>
     ${gameOfTheWeek()}
@@ -450,7 +489,7 @@ function viewMatchups() {
       const swing = (t) => (t.playoffIfWin != null && t.playoffIfLoss != null ? Math.round((t.playoffIfWin - t.playoffIfLoss) * 100) : null);
       const sa = swing(a), sb = swing(b);
       const stakes = sa != null && sb != null ? `Playoff odds on the line: ${sa} pts for ${esc(a.name)}, ${sb} for ${esc(b.name)}.` : '';
-      return `<article class="mu glass ${p.a === myTeam || p.b === myTeam ? 'rim' : ''} ${isKey ? 'key' : ''}">
+      return `<article class="mu glass ${p.a === myTeam || p.b === myTeam ? 'rim' : ''} ${isKey ? 'key' : ''}" id="mu-${i}" data-i="${i}">
         ${isKey ? '<span class="key-tag">Game of the week</span>' : ''}
         <p class="mu-quip">${esc(DATA.quips[i])}</p>
         <div class="mu-teams">
@@ -460,9 +499,165 @@ function viewMatchups() {
         </div>
         <div class="wp"><div class="wp-bar" role="img" aria-label="${esc(a.name)} ${pct(p.winA)}, ${esc(b.name)} ${pct(1 - p.winA)}"><i style="width:${p.winA * 100}%"></i><i style="width:${(1 - p.winA) * 100}%"></i></div>
           <div class="wp-labels"><span>${pct(p.winA)}</span><span>${pct(1 - p.winA)}</span></div></div>
+        ${betLine(p, a, b)}
+        <div class="fan-slot" data-i="${i}">${fanBlock(p)}</div>
         ${stakes ? `<p class="mu-note">${stakes}</p>` : ''}
+        <button type="button" class="mu-more" aria-expanded="false" aria-controls="mud-${i}"><span>Lineup breakdown</span>${XP}</button>
+        <div class="detail mu-detail" id="mud-${i}"><div></div></div>
       </article>`;
     }).join('')}</div>` : '<p class="empty glass panel">No regular-season matchups left to preview.</p>'}`;
+}
+
+// ---------- fan picks ----------
+// a random id kept on this device; re-voting from the same device replaces its pick
+let VOTER = null;
+const voterId = () => {
+  if (VOTER) return VOTER;
+  VOTER = store.get('ph-voter');
+  if (!VOTER) {
+    VOTER = crypto.randomUUID?.() || `v-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+    store.set('ph-voter', VOTER);
+  }
+  return VOTER;
+};
+const pairKey = (p) => [p.a, p.b].sort((x, y) => x - y).join('-');
+
+function fanBlock(p) {
+  if (!VOTES || VOTES.week !== p.week) return '';
+  const pair = pairKey(p), c = VOTES.counts[pair] || {}, mine = VOTES.mine?.[pair];
+  const na = c[p.a] || 0, nb = c[p.b] || 0, n = na + nb, fa = n ? na / n : 0.5;
+  const pick = (t) => `<button type="button" class="pick ${String(t.rid) === mine ? 'on' : ''}" data-pair="${pair}" data-pick="${t.rid}" aria-pressed="${String(t.rid) === mine}">${esc(short(t.name, 18))}</button>`;
+  // the split stays hidden until you've picked, so nobody just follows the crowd
+  const reveal = n > 0 && (mine || !VOTES.open);
+  const head = !VOTES.open ? 'Fan picks (voting closed)' : mine ? 'Your pick is in. Tap the other side to switch.' : 'Who wins? Cast your pick';
+  return `<div class="fan">
+      <div class="fan-head"><span>${head}</span><small>${n} fan vote${n === 1 ? '' : 's'}</small></div>
+      ${VOTES.open ? `<div class="picks">${pick(team(p.a))}${pick(team(p.b))}</div>` : ''}
+      ${reveal ? `<div class="wp-bar fan-bar" role="img" aria-label="Fans: ${pct(fa)} ${esc(team(p.a).name)}, ${pct(1 - fa)} ${esc(team(p.b).name)}"><i style="width:${fa * 100}%"></i><i style="width:${(1 - fa) * 100}%"></i></div>
+        <div class="wp-labels"><span>Fans ${pct(fa)}</span><span>${pct(1 - fa)}</span></div>` : ''}
+    </div>`;
+}
+function paintVotes(err) {
+  document.querySelectorAll('.fan-slot').forEach((el) => {
+    const i = Number(el.dataset.i);
+    el.innerHTML = fanBlock(DATA.previews[i]) + (err && err.i === i ? `<p class="fan-err">${esc(err.msg)}</p>` : '');
+  });
+}
+async function loadVotes() {
+  const wk = DATA.previews[0]?.week;
+  if (!wk || new URLSearchParams(location.search).has('demo')) return;
+  try {
+    const r = await fetch(`/api/votes?week=${wk}&voter=${encodeURIComponent(voterId())}`);
+    if (!r.ok) return; // unavailable: voting stays hidden
+    const body = await r.json();
+    if (!body.enabled) return; // store not connected yet
+    VOTES = body;
+    paintVotes();
+  } catch { /* offline or no API: voting stays hidden */ }
+}
+async function castVote(btn) {
+  const pair = btn.dataset.pair, pick = btn.dataset.pick, i = Number(btn.closest('.fan-slot').dataset.i);
+  const prev = VOTES.mine[pair];
+  if (prev === pick) return;
+  const before = JSON.stringify(VOTES);
+  // show it right away, then confirm with the server
+  const c = (VOTES.counts[pair] ||= {});
+  if (prev) c[prev] = Math.max(0, (c[prev] || 1) - 1);
+  c[pick] = (c[pick] || 0) + 1;
+  VOTES.mine[pair] = pick;
+  paintVotes();
+  try {
+    const r = await fetch('/api/votes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ week: VOTES.week, pair, pick, voter: voterId() }) });
+    const body = await r.json().catch(() => ({}));
+    // the server's own reasons (closed, already voted from this network) are final; outages are worth a retry
+    if (!r.ok) throw new Error(r.status >= 500 || !body.error ? 'Vote not saved. Try again in a moment.' : `${body.error}.`);
+    VOTES = body;
+    paintVotes();
+  } catch (e) {
+    VOTES = JSON.parse(before);
+    paintVotes({ i, msg: e instanceof TypeError ? 'Vote not saved: no connection. Try again in a moment.' : e.message });
+  }
+}
+
+// sportsbook-style line from the projections: moneyline, spread and total
+function betLine(p, a, b) {
+  const fav = p.projA >= p.projB ? a : b, margin = Math.abs(p.projA - p.projB);
+  const even = margin < 0.25;
+  return `<div class="line" data-tip="Fair lines from the projections: moneyline from the win odds, spread from the projected margin, total from the projected combined score.">
+      <span><small>Moneyline</small><b>${american(p.winA)}</b><b>${american(1 - p.winA)}</b></span>
+      <span><small>Spread</small><b>${even ? 'Pick' : `-${half(margin)}`}</b>${even ? '' : `<small class="who">${esc(fav.name)}</small>`}</span>
+      <span><small>Total</small><b>${half(p.projA + p.projB)}</b></span>
+    </div>`;
+}
+
+// ---------- matchup breakdown ----------
+const bdCache = {};
+function matchupDetail(i) {
+  const pv = DATA.previews[i], bd = (bdCache[i] ||= breakdown(DATA, pv));
+  const A = team(pv.a), B = team(pv.b);
+  const max = Math.max(1, ...bd.rows.flatMap((r) => [r.a?.proj || 0, r.b?.proj || 0]));
+  const flag = (p) => {
+    if (p.bye) return '<em class="st out" title="On a bye this week">BYE</em>';
+    if (!p.status) return '';
+    const label = p.out ? (p.status === 'IR' ? 'IR' : 'OUT') : p.status[0];
+    return `<em class="st ${p.out ? 'out' : p.status === 'Questionable' ? 'q' : 'd'}" title="${esc(p.status)}">${esc(label)}</em>`;
+  };
+  const who = (p, side) => p
+    ? `<div class="h2h-p ${side}"><b><span class="full">${esc(p.name)}</span><span class="short">${esc(shortName(p))}</span></b><small>${esc([p.team, p.pos].filter(Boolean).join(' '))}${flag(p)}</small></div>`
+    : `<div class="h2h-p ${side} empty"><b>Empty</b><small>nobody set</small></div>`;
+  const tip = (p) => !p ? 'Empty slot'
+    : `${p.name}: ${p.bye ? 'on a bye, ' : p.out ? `${p.status}, ` : ''}${f1(p.proj)} projected${p.floor != null && p.proj > 0 ? `, floor ${f1(p.floor)} to ceiling ${f1(p.ceil)}` : ''}`;
+  const row = (r) => {
+    const pa = r.a?.proj || 0, pb = r.b?.proj || 0;
+    return `<div class="h2h-row ${r.edge > 0.5 ? 'win-a' : r.edge < -0.5 ? 'win-b' : 'even'}" data-tip="${esc(`${tip(r.a)}. ${tip(r.b)}.`)}">
+      ${who(r.a, 'a')}<b class="pts a">${f1(pa)}</b><span class="slot">${r.slot === 'FLEX' ? 'FLX' : esc(r.slot)}</span><b class="pts b">${f1(pb)}</b>${who(r.b, 'b')}
+      <div class="h2h-bar"><span class="a"><i style="width:${(pa / max) * 100}%"></i></span><span class="b"><i style="width:${(pb / max) * 100}%"></i></span></div>
+    </div>`;
+  };
+  const src = bd.source.a === 'set' && bd.source.b === 'set' ? 'Starting lineups as set in Sleeper'
+    : bd.source.a !== 'set' && bd.source.b !== 'set' ? "Lineups aren't set yet, so these are each team's best projected starters"
+    : `${esc((bd.source.a === 'set' ? B : A).name)} hasn't set a lineup, so theirs is the best projected one`;
+  const gmax = Math.max(1, ...bd.groups.map((g) => Math.abs(g.edge)));
+  const grp = (g) => {
+    const side = g.edge > 0.25 ? 'a' : g.edge < -0.25 ? 'b' : 'n';
+    const sum = (k) => g.rows.reduce((a, r) => a + (r[k]?.proj || 0), 0);
+    return `<div class="grp ${side}" data-tip="${esc(`${g.key}: ${A.name} ${f1(sum('a'))}, ${B.name} ${f1(sum('b'))}`)}"><span class="g">${g.key}</span><span class="gtrack"><i style="width:${(Math.abs(g.edge) / gmax) * 50}%"></i></span><b>${side === 'n' ? 'Even' : `+${f1(Math.abs(g.edge))}`}</b></div>`;
+  };
+  return `
+    <div class="bd">
+      <div class="bd-main">
+        <div class="bd-head"><div class="a"><b>${f1(bd.totals.a)}</b><span>${esc(A.name)}</span></div><p>${src}</p><div class="b"><b>${f1(bd.totals.b)}</b><span>${esc(B.name)}</span></div></div>
+        <div class="h2h">${bd.rows.map(row).join('')}</div>
+      </div>
+      <div class="bd-side">
+        <h4>Where it's won</h4>
+        <div class="grp-legend"><span class="a">${esc(short(A.name, 16))}</span><span class="b">${esc(short(B.name, 16))}</span></div>
+        ${bd.groups.map(grp).join('')}
+        <h4>Things to watch</h4>
+        <ul class="watch">${bd.watch.map((w) => `<li class="${w.tone}">${esc(w.text)}</li>`).join('') || '<li class="n">Nothing unusual: both lineups are set and healthy.</li>'}</ul>
+      </div>
+    </div>
+    <p class="bd-note">Player projections are DraftSharks rest-of-season weekly averages, with players on a bye or ruled out counted as zero. Hover or tap a row for floor and ceiling.</p>`;
+}
+
+function toggleMatchup(card) {
+  const open = !card.classList.contains('open');
+  const holder = card.querySelector('.mu-detail > div');
+  if (open && !holder.innerHTML) holder.innerHTML = matchupDetail(Number(card.dataset.i));
+  // Desktop: the open card takes the whole row. Glide every card from its old spot to its new one (FLIP, transform
+  // only) instead of letting the grid jump. Phones are one column already, so nothing moves sideways there.
+  const grid = card.parentElement, cards = [...grid.children];
+  const glide = !lite() && !calm() && getComputedStyle(grid).gridTemplateColumns.split(' ').length > 1;
+  const first = glide ? new Map(cards.map((c) => [c, c.getBoundingClientRect()])) : null;
+  card.classList.toggle('open', open);
+  card.querySelector('.mu-more').setAttribute('aria-expanded', open);
+  if (!glide) return;
+  for (const c of cards) {
+    const a = first.get(c), b = c.getBoundingClientRect(), dx = a.left - b.left, dy = a.top - b.top;
+    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) c.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+  }
+  const top = card.getBoundingClientRect().top;
+  if (open && (top < 90 || top > innerHeight * 0.6)) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function gameOfTheWeek() {
@@ -488,6 +683,7 @@ function gameOfTheWeek() {
           <div class="wp-bar" role="img" aria-label="${esc(a.name)} ${pct(p.winA)}, ${esc(b.name)} ${pct(1 - p.winA)}"><i style="width:${p.winA * 100}%"></i><i style="width:${(1 - p.winA) * 100}%"></i></div>
           <div class="right"><span class="tn">${esc(b.name)}</span><b>${f1(p.projB)}</b></div>
         </div>
+        <button type="button" class="gotw-more" data-open="${k.i}">Lineup breakdown${XP}</button>
       </div>
       <div class="gotw-chart">
         <h4>Playoff odds if they lose <i class="dot lose"></i> or win <i class="dot win"></i> this week</h4>
@@ -666,11 +862,17 @@ function placeInk() {
 
 // count big numbers up from zero, keeping their format (decimals, sign, %)
 const COUNT = '.score, .odds b, .wire-stats b, .mu-team .pr, .gotw-score b, .cast-odds b';
-function countUp(el) {
-  if (el.dataset.counted) return;
+function countAll(els) {
+  // measure every final width first, then write, so this costs one layout instead of one per number
+  const todo = els.filter((el) => !el.dataset.counted).map((el) => ({ el, w: el.getBoundingClientRect().width }));
+  todo.forEach(({ el, w }) => countUp(el, w));
+}
+function countUp(el, w) {
   el.dataset.counted = '1';
   const m = el.textContent.trim().match(/^([+-]?)(\d+(?:\.\d+)?)(%?)$/);
   if (!m) return;
+  if (getComputedStyle(el).display === 'inline') el.style.display = 'inline-block';
+  el.style.minWidth = `${Math.ceil(w)}px`;
   const target = Number(m[2]), dec = (m[2].split('.')[1] || '').length, t0 = performance.now(), dur = 750;
   const tick = (now) => {
     const k = Math.min(1, (now - t0) / dur), e = 1 - (1 - k) ** 3;
@@ -686,11 +888,16 @@ let io = null;
 function reveal(root) {
   io?.disconnect();
   if (calm() || !('IntersectionObserver' in window)) return;
+  if (lite()) {
+    // phones: count the numbers on the first screen once; nothing runs while scrolling
+    countAll([...root.querySelectorAll(COUNT)].filter((el) => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; }));
+    return;
+  }
   io = new IntersectionObserver((entries) => {
     entries.filter((e) => e.isIntersecting).forEach((e, k) => {
       const el = e.target;
       io.unobserve(el);
-      el.querySelectorAll(COUNT).forEach(countUp);
+      countAll([...el.querySelectorAll(COUNT)]);
       if (!el.classList.contains('reveal')) return;
       el.style.setProperty('--d', `${Math.min(k, 8) * 60}ms`);
       el.classList.add('in');
@@ -702,8 +909,7 @@ function reveal(root) {
       });
     });
   }, { rootMargin: '0px 0px -6% 0px' });
-  const rise = !lite();
-  root.querySelectorAll(REVEAL).forEach((el) => { if (rise) el.classList.add('reveal'); io.observe(el); });
+  root.querySelectorAll(REVEAL).forEach((el) => { el.classList.add('reveal'); io.observe(el); });
   root.querySelectorAll('.rank').forEach((el) => io.observe(el)); // ranking rows have their own rise; just count
 }
 
@@ -737,11 +943,31 @@ function bind(key) {
         const open = !li.classList.contains('open');
         const holder = li.querySelector('.detail > div');
         if (open && !holder.innerHTML) holder.innerHTML = rankDetail(team(Number(li.dataset.rid)));
+        // The jersey number is centred on the row. Pin it at its current pixel spot while the row is open so it
+        // neither jumps nor drifts as the row grows; release the pin once the row has finished closing.
+        const jersey = li.querySelector('.jersey');
+        clearTimeout(li._unpin);
+        if (open) {
+          jersey.style.top = `${jersey.getBoundingClientRect().top - li.getBoundingClientRect().top}px`;
+          jersey.style.transform = 'none';
+        } else {
+          li._unpin = setTimeout(() => { if (!li.classList.contains('open')) jersey.style.top = jersey.style.transform = ''; }, 450);
+        }
         li.classList.toggle('open', open);
         b.setAttribute('aria-expanded', open);
       })
     );
     setTimeout(() => $('.ranks')?.classList.remove('enter'), 1400);
+  }
+  if (key === 'matchups') {
+    $('.matchups')?.addEventListener('click', (e) => { const b = e.target.closest('.pick'); if (b && VOTES?.open) castVote(b); });
+    document.querySelectorAll('.mu-more').forEach((b) => b.addEventListener('click', () => toggleMatchup(b.closest('.mu'))));
+    $('.gotw-more')?.addEventListener('click', (e) => {
+      const card = $(`#mu-${e.currentTarget.dataset.open}`);
+      if (!card) return;
+      if (!card.classList.contains('open')) toggleMatchup(card);
+      card.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'start' });
+    });
   }
   if (key === 'trades') {
     $('#trade-team')?.addEventListener('change', (e) => setMyTeam(Number(e.target.value)));
@@ -774,11 +1000,22 @@ function initTooltips() {
     tip.style.left = `${Math.min(window.innerWidth - r.width - 8, Math.max(8, x + 14))}px`;
     tip.style.top = `${Math.min(window.innerHeight - r.height - 8, y + 16)}px`;
   };
+  const hide = () => (tip.hidden = true);
+  let touch = false;
+  document.addEventListener('pointerdown', (e) => (touch = e.pointerType !== 'mouse'), { passive: true });
   document.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') return; // a finger dragging over marks would flash tips mid-scroll
     const el = e.target.closest?.('[data-tip]');
-    if (el && el.dataset.tip) show(el, e.clientX, e.clientY); else tip.hidden = true;
+    if (el && el.dataset.tip) show(el, e.clientX, e.clientY); else hide();
   });
-  document.addEventListener('pointerleave', () => (tip.hidden = true));
+  // touch: tap a mark to see its numbers, tap anywhere else (or scroll) to dismiss
+  document.addEventListener('click', (e) => {
+    if (!touch) return;
+    const el = e.target.closest?.('[data-tip]');
+    if (el && el.dataset.tip && !el.closest('button')) show(el, e.clientX, e.clientY); else hide();
+  });
+  window.addEventListener('scroll', hide, { passive: true });
+  document.addEventListener('pointerleave', hide);
 }
 
 async function main() {
@@ -793,7 +1030,14 @@ async function main() {
   $('#footer-meta').textContent = `${RAW.isDemo ? 'Demo snapshot. ' : ''}Through week ${DATA.meta.lastScored}. ${updatedText()}${DATA.overrides.length ? ` Manual fixes: ${DATA.overrides.map((o) => o.note).join('; ')}.` : ''}`;
   initTeamPicker();
   window.addEventListener('hashchange', () => route({ fresh: true }));
-  window.addEventListener('resize', placeInk, { passive: true });
+  loadVotes();
+  let lastWidth = innerWidth;
+  window.addEventListener('resize', () => {
+    if (innerWidth === lastWidth) return; // height-only resizes are the browser toolbar, ignore them
+    lastWidth = innerWidth;
+    placeInk();
+    carouselFit?.();
+  }, { passive: true });
   route();
 }
 main();

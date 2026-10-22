@@ -73,6 +73,10 @@ export default async function handler(req, res) {
       };
     }
 
+    // NFL bye weeks by team, from FantasyPros (every player row carries its team's bye)
+    const byes = {};
+    for (const p of sources.fp?.ok ? sources.fp.players : []) if (p.team && p.bye) byes[p.team] = p.bye;
+
     const body = {
       updated: new Date().toISOString(),
       sources: Object.fromEntries(
@@ -84,6 +88,7 @@ export default async function handler(req, res) {
       weights: { fp: 1, ds: 1, ll: 0.5 },
       players,
       values,
+      byes,
     };
 
     res.setHeader('Content-Type', 'application/json; charset=utf-8');

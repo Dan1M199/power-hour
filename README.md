@@ -14,7 +14,7 @@ Power rankings, a live waiver-wire feed and data-nerd stats for the **NFL Fantas
 | Rosters, scores, matchups, transactions | Sleeper API, called from the visitor's browser | Live on every page load |
 | ROS rankings (FantasyPros, DraftSharks, LeagueLogs) | `api/ros.js`, a Vercel serverless function | Pulled once per day (first visitor each day, Central time), then cached at Vercel's edge |
 
-No database and no cron job: the page requests `/api/ros?d=YYYY-MM-DD`, so each new day is a new cache key. If one ranking source fails, the others are still used and that response is only cached for an hour so it retries soon.
+No cron job: the page requests `/api/ros?d=YYYY-MM-DD`, so each new day is a new cache key. If one ranking source fails, the others are still used and that response is only cached for an hour so it retries soon.
 
 ## Deploy to Vercel
 
@@ -25,6 +25,18 @@ No database and no cron job: the page requests `/api/ros?d=YYYY-MM-DD`, so each 
 Nothing needs installing: there are no npm dependencies. The serverless function runs on Vercel's default Node runtime (18+).
 
 To preview locally: `npx vercel dev`, then open http://localhost:3000. Add `?demo=1` to the URL to see the saved Week 7 snapshot without calling any APIs.
+
+## Turn on fan picks (one-time)
+
+Fan votes on the This week page need somewhere shared to live. Everything else works without it; until it's connected the voting box just doesn't appear.
+
+1. In the Vercel dashboard, open the project and go to **Storage**.
+2. Choose **Create Database**, pick **Upstash for Redis** (the free plan is plenty), and connect it to this project for all environments.
+3. Redeploy (Deployments, then the three dots on the latest one, then **Redeploy**) so the function picks up the new `KV_REST_API_URL` and `KV_REST_API_TOKEN` variables.
+
+Optional: add an environment variable `VOTE_SALT` with any random string; it's mixed into the hashed IP addresses used for the per-network vote cap.
+
+How it works: each phone keeps a random voter id, so voting again from the same phone switches the pick instead of adding one. One network can cast at most 3 votes per matchup (so a few friends on the same Wi-Fi still can), voting closes as soon as the week's first points are scored, and tallies stay visible to everyone. It's built for fun among friends, not to stop a determined cheater.
 
 ## Tuning
 
