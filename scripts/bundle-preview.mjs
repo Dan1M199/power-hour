@@ -12,7 +12,8 @@ const demo = r('demo/demo.json').replace(/<\//g, '<\\/');
 let html = r('index.html')
   .replace('<link rel="stylesheet" href="styles.css">', `<style>${r('styles.css')}</style>`)
   .replace('<script type="module" src="app.js"></script>', `<script>window.__DEMO__ = ${demo};</script>\n<script type="module">${js}</script>`)
-  .replace('<title>The Power Hour</title>', '<title>The Power Hour</title>');
+  .replace('<title>The Power Hour</title>', '<title>The Power Hour</title>')
+  .replace('src="assets/ttp-logo.png"', `src="data:image/png;base64,${readFileSync(new URL('../assets/ttp-logo.png', import.meta.url)).toString('base64')}"`);
 mkdirSync(new URL('../dist', import.meta.url), { recursive: true });
 writeFileSync(new URL('../dist/preview.html', import.meta.url), html);
 console.log('dist/preview.html', html.length, 'bytes');

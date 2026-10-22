@@ -108,6 +108,8 @@ function fixAvatars(root) {
     }, { once: true });
   });
 }
+// circled down-arrow that marks anything tappable to expand; CSS flips it when open
+const XP = '<span class="xp" aria-hidden="true"><svg width="12" height="8" viewBox="0 0 12 8"><path d="M1 1.5l5 5 5-5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
 const record = (t) => `${t.wins}-${t.losses}${t.ties ? `-${t.ties}` : ''}`;
 const updatedText = () => {
   const iso = DATA.rosMeta?.updated;
@@ -137,8 +139,8 @@ function viewRankings() {
     </section>
     ${notice}
     <ol class="ranks enter">${items}</ol>
-    <section class="panel glass" style="margin-top:26px">
-      <h2>How the score works</h2>
+    <details class="panel glass method-box">
+      <summary><h2>How the score works</h2>${XP}</summary>
       <div class="method">
         <p><b>Rest-of-season roster (${Math.round((WEIGHTS.rosProj + WEIGHTS.depth) * 100)}%).</b> Every player gets a consensus value from FantasyPros, DraftSharks and LeagueLogs half-PPR ROS rankings (LeagueLogs counts half, since it tracks the FantasyPros consensus closely). We build each team's best possible starting lineup from DraftSharks' weekly projections, discounted for games a player is expected to miss, then add the value of the top four bench pieces.</p>
         <p><b>Remaining schedule (${Math.round(WEIGHTS.sos * 100)}%).</b> Priced in wins: each team's expected wins against its actual remaining opponents, minus what it would expect against an average opponent. Opponent strength uses the same projection as the playoff odds (about two-thirds projected lineup, one-third points per game so far).</p>
@@ -146,7 +148,7 @@ function viewRankings() {
         <p><b>Scale.</b> Each input is compared to the rest of the league, so 50 is a dead-average team. The bars under each score show the roster, schedule and results parts separately.</p>
         <p><b>Playoff odds.</b> 10,000 simulations of the remaining regular-season schedule, using each team's projected lineup blended with its actual scoring. Ties in the standings go to points for, like Sleeper.</p>
       </div>
-    </section>`;
+    </details>`;
 }
 
 // ---------- lead story ----------
@@ -180,7 +182,7 @@ function leadStory() {
         </div>
         ${cast ? `<div class="cast">${cast}</div>` : ''}
       </div>
-      ${s.more.length ? `<ul class="also">${s.more.map((m) => `<li><span class="k">${esc(m.kicker)}</span><b>${esc(m.headline)}</b><span class="d">${esc(m.deck)}</span></li>`).join('')}</ul>` : ''}
+      ${s.more.length ? `<ul class="also">${s.more.map((m) => `<li><button type="button" class="also-btn" aria-expanded="false"><span class="k">${esc(m.kicker)}</span><b>${esc(m.headline)}</b><span class="d">${esc(m.deck)}</span>${XP}</button></li>`).join('')}</ul>` : ''}
     </section>`;
 }
 
@@ -204,7 +206,7 @@ function rankRow(t, i) {
           <div class="meter-top"><span class="score">${t.score.toFixed(1)}</span><small>power score</small></div>
           <div class="split">${ros}${t.sosScore != null ? `<div class="split-row" data-tip="${esc(`${t.name}: ${t.schedWins >= 0 ? '+' : ''}${t.schedWins.toFixed(2)} wins from the remaining schedule vs an average one`)}"><span>Schedule</span><span class="track"><i class="sos" style="width:${t.sosScore}%"></i></span><span>${Math.round(t.sosScore)}</span></div>` : ''}<div class="split-row"><span>Results</span><span class="track"><i class="res" style="width:${t.resultsScore}%"></i></span><span>${Math.round(t.resultsScore)}</span></div></div>
         </div>
-        <div class="odds"><b>${pct(t.playoffPct)}</b><small>playoffs</small><svg class="chev" width="14" height="9" viewBox="0 0 14 9" aria-hidden="true"><path d="M1 1l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none"/></svg></div>
+        <div class="odds"><b>${pct(t.playoffPct)}</b><small>playoffs</small>${XP}</div>
       </button>
       <div class="detail" id="d-${t.rid}"><div></div></div>
     </div>
@@ -259,6 +261,13 @@ const timeLabel = (ts) => new Date(ts).toLocaleTimeString('en-US', { timeZone: T
 const signed = (x) => `${x > 0 ? '+' : ''}${f1(x)}`;
 const tone = (x) => (x > 0.4 ? 'plus' : x < -0.4 ? 'minus' : 'flat');
 
+// in uneven trades the side receiving fewer players gets a credit for the roster spot it frees up
+function spotNote(sides) {
+  const r = DATA.meta.replacement, freed = sides.filter((s) => s.spots < 0);
+  if (!r || !freed.length) return '';
+  return ` Includes ${freed.map((s) => `${f1(r * -s.spots)} for the ${-s.spots === 1 ? 'roster spot' : `${-s.spots} roster spots`} ${esc(team(s.rid).name)} frees up`).join(' and ')}, valued at the best few free agents (${f1(r)} each).`;
+}
+
 function tradeCard(item) {
   const sides = item.sides;
   const best = Math.max(...sides.map((s) => s.net));
@@ -272,7 +281,7 @@ function tradeCard(item) {
         <p class="gets">Receives</p>
         <ul>${s.adds.map((p) => `<li>${posTag(p.id)}${esc(nameOf(p.id))}${DATA.meta.hasRos ? `<span class="pv">${f1(p.v)}</span>` : ''}</li>`).join('')}${s.picks.filter((p) => p.dir === 'in').map((p) => `<li>${pick(p)}</li>`).join('')}${s.faabIn ? `<li>$${s.faabIn} FAAB</li>` : ''}</ul>
       </div>`).join('')}</div>
-    ${DATA.meta.hasRos ? `<p class="verdict">${winner ? `By consensus ROS value, <b>${esc(team(winner.rid).name)}</b> came out ahead by ${f1(Math.abs(sides[0].net - sides[1].net))}.` : 'By consensus ROS value this one is close to even.'}</p>` : ''}
+    ${DATA.meta.hasRos ? `<p class="verdict">${winner ? `By consensus ROS value, <b>${esc(team(winner.rid).name)}</b> came out ahead by ${f1(Math.abs(sides[0].net - sides[1].net))}.` : 'By consensus ROS value this one is close to even.'}${spotNote(sides)}</p>` : ''}
   </li>`;
 }
 
@@ -362,7 +371,7 @@ function viewWire() {
         <section class="panel glass"><h2>Busiest managers</h2><p class="sub">Completed moves this season, with net ROS value added.</p>
           ${mm.map((m) => `<div class="leader"><span>${esc(team(m.rid).name)}</span><span>${m.moves}${DATA.meta.hasRos ? ` <span class="${m.net >= 0 ? 'plus' : 'minus'}">${signed(m.net)}</span>` : ''}</span></div>`).join('')}
         </section>
-        ${traders.length && DATA.meta.hasRos ? `<section class="panel glass"><h2>Trade ledger</h2><p class="sub">Net ROS value from trades, valued at today's consensus.</p>
+        ${traders.length && DATA.meta.hasRos ? `<section class="panel glass"><h2>Trade ledger</h2><p class="sub">Net ROS value from trades at today's consensus. In uneven trades, each roster spot freed up counts as one top free agent (${f1(DATA.meta.replacement)}).</p>
           ${traders.map((m) => `<div class="leader"><span>${esc(team(m.rid).name)}</span><span class="${m.tradeNet >= 0 ? 'plus' : 'minus'}">${signed(m.tradeNet)}</span></div>`).join('')}</section>` : ''}
       </aside>
     </div>`;
@@ -511,7 +520,7 @@ function viewLab() {
         <table class="table"><thead><tr><th>Player</th><th class="num">FP</th><th class="num">DS</th><th class="num">LL</th></tr></thead><tbody>
         ${DATA.divisive.map((d) => `<tr><td>${posTag(d.id)}${esc(nameOf(d.id))}<br><small class="when">${esc(team(d.rid)?.name || '')}</small></td><td class="num">${d.r.fp ?? '–'}</td><td class="num">${d.r.ds ?? '–'}</td><td class="num">${d.r.ll ?? '–'}</td></tr>`).join('')}
         </tbody></table></section>` : ''}
-      ${DATA.meta.hasRos ? `<section class="panel glass span-6"><h2>Waiver and trade ROI</h2><p class="sub">Consensus ROS value added through moves, valued at today's rankings.</p>
+      ${DATA.meta.hasRos ? `<section class="panel glass span-6"><h2>Waiver and trade ROI</h2><p class="sub">Consensus ROS value added through moves, valued at today's rankings. Uneven trades credit each freed roster spot as one top free agent.</p>
         ${divergingBars({ rows: Object.values(DATA.managerMoves).sort((a, b) => b.net - a.net).map((m) => ({ label: short(team(m.rid).name, 20), value: m.net, tip: `${team(m.rid).name}: ${f1(m.waiverNet)} from adds and drops, ${f1(m.tradeNet)} from trades over ${m.moves} moves` })) })}</section>` : ''}
     </div>`;
 }
@@ -530,6 +539,14 @@ function route() {
 
 function bind(key) {
   if (key === 'rankings') {
+    document.querySelectorAll('.also-btn').forEach((b) => {
+      const d = b.querySelector('.d');
+      if (d.scrollHeight <= d.clientHeight + 1) { b.disabled = true; b.classList.add('fits'); return; }
+      b.addEventListener('click', () => {
+        const open = b.getAttribute('aria-expanded') !== 'true';
+        b.setAttribute('aria-expanded', open);
+      });
+    });
     document.querySelectorAll('.rank-btn').forEach((b) =>
       b.addEventListener('click', () => {
         const li = b.closest('.rank');

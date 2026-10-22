@@ -173,8 +173,13 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .odds { text-align: right; min-width: 74px; }
 .odds b { display: block; font: 800 28px/1 var(--display); }
 .odds small { color: var(--ink-3); font-size: 12px; }
-.chev { transition: transform 0.25s; color: var(--ink-3); margin-left: 4px; }
-.rank.open .chev { transform: rotate(180deg); }
+/* shared expand control: circled down arrow, flips when its parent opens */
+.xp { display: inline-grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 50%; color: var(--flood);
+  border: 1px solid var(--hair); background: rgba(255, 233, 184, 0.06); transition: transform 0.25s, background 0.2s; }
+.xp svg { margin-top: 1px; }
+.rank-btn:hover .xp, .also-btn:hover .xp, .method-box summary:hover .xp { background: rgba(255, 233, 184, 0.14); }
+.rank.open .xp, .also-btn[aria-expanded='true'] .xp, .method-box[open] .xp { transform: rotate(180deg); }
+.odds .xp { display: grid; margin: 8px 0 0 auto; }
 
 /* expanded detail */
 .detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.35s ease; }
@@ -323,7 +328,13 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .cast-odds b { display: block; font: 800 22px/1 var(--display); color: var(--flood); }
 .cast-odds small { color: var(--ink-3); font-size: 11px; }
 .also { list-style: none; margin: 26px -30px 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
-.also li { padding: 16px 22px 20px 30px; display: grid; gap: 4px; align-content: start; }
+.also li { display: grid; }
+.also-btn { all: unset; box-sizing: border-box; position: relative; display: grid; gap: 4px; align-content: start; padding: 16px 22px 20px 30px; cursor: pointer; }
+.also-btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: -4px; border-radius: 8px; }
+.also-btn.fits { cursor: default; }
+.also-btn.fits .xp { display: none; }
+.also-btn .xp { justify-self: start; margin-top: 6px; width: 24px; height: 24px; }
+.also-btn[aria-expanded='true'] .d { -webkit-line-clamp: unset; display: block; }
 .also li + li { border-left: 1px solid var(--line); }
 .also .k { color: var(--gold); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
 .also b { font: 800 21px/1.08 var(--display); }
@@ -386,6 +397,12 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .table th { text-align: left; color: var(--ink-3); font-weight: 600; font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--line); }
 .table td { padding: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
 .table td.num, .table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.method-box { margin-top: 26px; padding: 0; }
+.method-box summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; cursor: pointer; border-radius: inherit; }
+.method-box summary::-webkit-details-marker { display: none; }
+.method-box summary h2 { margin: 0; }
+.method-box summary:focus-visible { outline: 2px solid var(--cyan); outline-offset: -4px; }
+.method-box .method { padding: 0 20px 14px; }
 .method { columns: 2 280px; column-gap: 28px; color: var(--ink-2); font-size: 14.5px; }
 .method p { margin: 0 0 10px; break-inside: avoid; }
 .method b { color: var(--ink); }
@@ -396,7 +413,11 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 /* ---------- footer ---------- */
 .footer { width: min(1180px, calc(100% - 24px)); margin: 0 auto; padding: 18px 4px 48px; color: var(--ink-3); font-size: 13px; border-top: 1px solid var(--hair); }
 .footer p { margin: 0 0 6px; max-width: 80ch; }
-.footer .sponsor { color: var(--gold); font-weight: 600; letter-spacing: 0.01em; }
+.footer .sponsor { display: flex; align-items: center; gap: 14px; margin: 10px 0 12px; }
+.footer .sponsor img { width: 72px; height: auto; flex: none; filter: drop-shadow(0 6px 14px rgba(232, 146, 40, 0.25)); }
+.footer .sponsor p { margin: 0; color: var(--ink-2); font-size: 14px; }
+.footer .sponsor .was { color: var(--ink-3); text-decoration: line-through; text-decoration-color: rgba(255, 90, 95, 0.6); margin-right: 4px; }
+.footer .sponsor b { color: var(--gold); font-weight: 700; }
 
 /* ---------- page-load moment: rows rise into place once ---------- */
 @media (prefers-reduced-motion: no-preference) {
@@ -441,7 +462,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .team-meta { font-size: 12.5px; gap: 4px 10px; }
   .team-meta .owner { display: none; }
   .odds { grid-row: 1; grid-column: 3; }
-  .chev { display: none; }
+  .odds .xp { width: 24px; height: 24px; margin-top: 6px; }
   .detail-inner { padding: 14px; }
   .mini-row { grid-template-columns: 1fr; }
   .lineup { grid-template-columns: 1fr; }
@@ -454,7 +475,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .wt-rows li { grid-template-columns: 58px 1fr auto; }
   .lead { padding: 20px 18px 0; border-radius: var(--r-lg); }
   .also { margin: 20px -18px 0; }
-  .also li { padding: 14px 18px 16px; }
+  .also-btn { padding: 14px 18px 16px; }
   .lead-deck { font-size: 15px; }
   .cast-team .spark { display: none; }
   .cast-team { grid-template-columns: 40px minmax(0, 1fr) auto; }
