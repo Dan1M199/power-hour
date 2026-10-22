@@ -2,6 +2,7 @@ import { computeLeague, WEIGHTS } from './lib/engine.js';
 import { bumpChart, scatter, radar, weeklyBars, divergingBars, heatTable, stakesChart, TEAM_COLORS } from './lib/charts.js';
 import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
+import { tradeIdeas } from './lib/trades.js';
 
 // ---------- config ----------
 const LEAGUE_ID = '1312001652454088704';
@@ -23,6 +24,7 @@ let DATA = null; // computed league
 let RAW = null;
 let myTeam = Number(store.get('ph-my-team')) || null;
 const wireState = { type: 'all', mine: false, limit: 50, trades: 3 };
+const tradeState = { shape: 'all', cache: {} };
 
 // ---------- data ----------
 const getJSON = async (url) => {
@@ -129,14 +131,16 @@ function viewRankings() {
     : '';
   const items = DATA.teams.map((t, i) => rankRow(t, i)).join('');
   return `
-    ${leadStory()}
-    <section class="view-head">
-      <div>
-        <h2 class="page-title"><span class="wk">Week ${m.lastScored + 1}</span>Power Rankings</h2>
-        <p>Rest-of-season roster strength, who's left on the schedule, and what's already happened. Tap any team to see why it sits where it does.</p>
-      </div>
-      <div class="sources">${chips}${updatedText() ? `<span class="chip">${esc(updatedText())}</span>` : ''}</div>
-    </section>
+    <div class="hero">
+      ${leadStory()}
+      <section class="view-head">
+        <div>
+          <h2 class="page-title"><span class="wk">Week ${m.lastScored + 1}</span>Power Rankings</h2>
+          <p>Rest-of-season roster strength, who's left on the schedule, and what's already happened. Tap any team to see why it sits where it does.</p>
+        </div>
+        <div class="sources">${chips}${updatedText() ? `<span class="chip">${esc(updatedText())}</span>` : ''}</div>
+      </section>
+    </div>
     ${notice}
     <ol class="ranks enter">${items}</ol>
     <details class="panel glass method-box">
@@ -158,32 +162,75 @@ function rankSpark(t, w = 84, h = 30) {
   const x = (i) => 3 + (i / (v.length - 1)) * (w - 6), y = (r) => 3 + ((r - 1) / (n - 1)) * (h - 6);
   const d = v.map((r, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(r).toFixed(1)}`).join('');
   return `<svg class="spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="Power rank by week" data-tip="${esc(`${t.name} power rank by week: ${v.join(', ')}`)}">
-    <path d="${d}" stroke="${DATA.color[t.rid]}"/><circle cx="${x(v.length - 1)}" cy="${y(v[v.length - 1])}" r="3" fill="${DATA.color[t.rid]}"/></svg>`;
+    <path d="${d}" stroke="${DATA.color[t.rid]}" pathLength="1"/><circle cx="${x(v.length - 1)}" cy="${y(v[v.length - 1])}" r="3" fill="${DATA.color[t.rid]}"/></svg>`;
 }
 
+// three headlines in one square card: swipe, arrows or dots; the active dot's fill is the auto-advance timer
+const CAROUSEL_SIZE = 3;
 function leadStory() {
   const s = DATA.stories;
   if (!s?.lead) return '';
-  const L = s.lead;
+  const stories = [s.lead, ...s.more].slice(0, CAROUSEL_SIZE);
   const date = new Date(DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' });
-  const cast = L.rids.map(team).filter(Boolean).map((t) => `
+  const cast = (st) => st.rids.map(team).filter(Boolean).map((t) => `
     <div class="cast-team">${avatar(t)}
       <div class="cast-name"><b>${esc(t.name)}</b><small>No. ${t.powerRank} power, ${record(t)}</small></div>
       ${rankSpark(t)}
       <span class="cast-odds"><b>${pct(t.playoffPct)}</b><small>playoffs</small></span>
     </div>`).join('');
+  const slide = (st, i) => `
+    <article class="slide" id="slide-${i}" role="group" aria-roledescription="slide" aria-label="Headline ${i + 1} of ${stories.length}">
+      <p class="kicker"><span>${i ? `Also today` : esc(date)}</span><span class="k">${esc(st.kicker)}</span></p>
+      <${i ? 'h2' : 'h1'} class="lead-hed">${esc(st.headline)}</${i ? 'h2' : 'h1'}>
+      <p class="lead-deck">${esc(st.deck)}</p>
+      <div class="cast">${cast(st)}</div>
+    </article>`;
+  const arrow = (dir, label, d) => `<button type="button" class="car-arrow" data-dir="${dir}" aria-label="${label}"><svg width="9" height="14" viewBox="0 0 9 14" aria-hidden="true"><path d="${d}" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
   return `
-    <section class="lead glass rim" aria-labelledby="lead-hed">
-      <div class="lead-top">
-        <div class="lead-main">
-          <p class="kicker"><span>${esc(date)}</span><span class="k">${esc(L.kicker)}</span></p>
-          <h1 id="lead-hed" class="lead-hed">${esc(L.headline)}</h1>
-          <p class="lead-deck">${esc(L.deck)}</p>
-        </div>
-        ${cast ? `<div class="cast">${cast}</div>` : ''}
-      </div>
-      ${s.more.length ? `<ul class="also">${s.more.map((m) => `<li><button type="button" class="also-btn" aria-expanded="false"><span class="k">${esc(m.kicker)}</span><b>${esc(m.headline)}</b><span class="d">${esc(m.deck)}</span>${XP}</button></li>`).join('')}</ul>` : ''}
+    <section class="lead-car glass rim" aria-roledescription="carousel" aria-label="Today's headlines">
+      <div class="car-track" tabindex="0">${stories.map(slide).join('')}</div>
+      ${stories.length > 1 ? `<div class="car-nav">
+        ${arrow(-1, 'Previous headline', 'M7.5 1.5 2 7l5.5 5.5')}
+        <div class="car-dots">${stories.map((_, i) => `<button type="button" class="car-dot" data-i="${i}" aria-label="Show headline ${i + 1}" aria-controls="slide-${i}"${i ? '' : ' aria-current="true"'}><i></i></button>`).join('')}</div>
+        ${arrow(1, 'Next headline', 'M1.5 1.5 7 7l-5.5 5.5')}
+      </div>` : ''}
     </section>`;
+}
+
+function bindCarousel() {
+  const car = $('.lead-car'), track = car?.querySelector('.car-track');
+  if (!track) return;
+  const dots = [...car.querySelectorAll('.car-dot')], n = dots.length;
+  if (n < 2) return;
+  let idx = 0, steering = 0;
+  const show = (i) => {
+    idx = (i + n) % n;
+    dots.forEach((d, k) => (k === idx ? d.setAttribute('aria-current', 'true') : d.removeAttribute('aria-current')));
+  };
+  const slides = [...track.querySelectorAll('.slide')];
+  const go = (i) => {
+    show(i);
+    const sl = slides[idx];
+    sl.classList.remove('enter');
+    void sl.offsetWidth; // restart the animation
+    sl.classList.add('enter');
+    clearTimeout(steering);
+    steering = setTimeout(() => (steering = 0), 700); // ignore scroll events from our own smooth scroll
+    track.scrollTo({ left: idx * track.clientWidth, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  };
+  track.addEventListener('scroll', () => {
+    if (steering) return;
+    const i = Math.round(track.scrollLeft / track.clientWidth);
+    if (i !== idx) show(i);
+  }, { passive: true });
+  dots.forEach((d) => {
+    d.addEventListener('click', () => go(Number(d.dataset.i)));
+    d.querySelector('i').addEventListener('animationend', () => go(idx + 1));
+  });
+  car.querySelectorAll('.car-arrow').forEach((b) => b.addEventListener('click', () => go(idx + Number(b.dataset.dir))));
+  // touch has no hover, so hold the timer while a finger is down
+  track.addEventListener('pointerdown', () => car.classList.add('held'));
+  ['pointerup', 'pointercancel'].forEach((e) => track.addEventListener(e, () => car.classList.remove('held')));
 }
 
 function rankRow(t, i) {
@@ -215,7 +262,7 @@ function rankRow(t, i) {
 
 function rankDetail(t) {
   const n = DATA.teams.length;
-  const why = t.why.map((w) => `<li class="${w.tone}"><b>${esc(w.title)}</b><span>${esc(w.text)}</span></li>`).join('');
+  const why = t.why.map((w, k) => `<li class="${w.tone}" style="--k:${k}"><b>${esc(w.title)}</b><span>${esc(w.text)}</span></li>`).join('');
   const axes = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
   const rad = DATA.meta.hasRos
     ? radar({ axes, values: axes.map((p) => 1 - (t.posRanks[p] - 1) / (n - 1)), color: DATA.color[t.rid], tips: axes.map((p) => `${p}: ${ordinal(t.posRanks[p])} of ${n} (${f1(t.posGroups[p])} proj pts/wk)`) })
@@ -442,6 +489,70 @@ function gameOfTheWeek() {
     </section>`;
 }
 
+// ---------- trade lab ----------
+function setMyTeam(rid) {
+  myTeam = rid || null;
+  store.set('ph-my-team', myTeam ? String(myTeam) : null);
+  $('#my-team').value = myTeam ? String(myTeam) : '';
+  route();
+}
+
+function viewTrades() {
+  const teamSelect = `<label class="trade-pick"><span>Trade ideas for</span><select id="trade-team"><option value="">Choose your team</option>${[...DATA.teams].sort((a, b) => a.name.localeCompare(b.name)).map((t) => `<option value="${t.rid}" ${t.rid === myTeam ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label>`;
+  const head = `
+    <section class="view-head">
+      <div>
+        <h1><span class="wk">${myTeam ? esc(team(myTeam).name) : 'Pick your team'}</span>Trade Lab</h1>
+        <p>Every 1-for-1, 2-for-1 and 1-for-2 swap with the rest of the league, kept only when both starting lineups get better and the consensus values line up. Ranked by how much the deal helps you, with a bonus for deals the other side should like too.</p>
+      </div>
+      <div>${teamSelect}</div>
+    </section>`;
+  if (!DATA.meta.hasRos) return head + '<p class="empty glass panel">Trade ideas need the rest-of-season rankings, which are unavailable right now.</p>';
+  if (!myTeam) return head + '<p class="empty glass panel">Choose your team above to see trade ideas built around its needs.</p>';
+
+  const me = team(myTeam), n = DATA.teams.length;
+  const all = (tradeState.cache[myTeam] ||= tradeIdeas(DATA, myTeam));
+  const ideas = tradeState.shape === 'all' ? all : all.filter((i) => i.shape === tradeState.shape);
+  const count = (k) => (k === 'all' ? all.length : all.filter((i) => i.shape === k).length);
+  const btn = (k, label) => `<button type="button" data-shape="${k}" aria-pressed="${tradeState.shape === k}">${label} (${count(k)})</button>`;
+  const needs = ['QB', 'RB', 'WR', 'TE'].map((p) => {
+    const r = me.posRanks[p], cls = r >= n - 3 ? 'need' : r <= 3 ? 'strong' : '';
+    return `<span class="need-chip ${cls}" data-tip="${esc(`${p}: ${ordinal(r)} of ${n} in projected starter points (${f1(me.posGroups[p])} pts/wk)`)}"><b>${p}</b>${ordinal(r)}</span>`;
+  }).join('');
+  const maxGain = Math.max(0.5, ...all.flatMap((i) => [i.gainMe, i.gainThem]));
+  const proj = (id) => DATA.helpers.effWeekly(id);
+  const list = (ids) => `<ul>${ids.map((id) => `<li>${posTag(id)}<span class="pl">${esc(nameOf(id))}</span><span class="pv" data-tip="Consensus value ${f1(DATA.helpers.valueOf(id))}, ${f1(proj(id))} proj pts/wk">${f1(DATA.helpers.valueOf(id))}</span></li>`).join('')}</ul>`;
+  const bar = (label, v) => `<div class="gain"><span>${label}</span><span class="track"><i style="width:${Math.max(3, (v / maxGain) * 100)}%"></i></span><b>+${f1(v)}</b></div>`;
+  const card = (i, k) => {
+    const them = team(i.partner);
+    const band = Math.max(6, 0.15 * (i.get.concat(i.give).reduce((a, id) => a + DATA.helpers.valueOf(id), 0)) / 2);
+    const pos = 50 + Math.max(-1, Math.min(1, i.value / band)) * 50;
+    return `<article class="idea glass ${k === 0 ? 'rim' : ''}">
+      <header class="idea-head">${avatar(them)}<div><small>Idea ${k + 1}, ${i.shape}</small><b>With ${esc(them.name)}</b></div>
+        <span class="idea-shape">No. ${them.powerRank} power</span></header>
+      <div class="idea-swap">
+        <div class="give"><h4>You give</h4>${list(i.give)}</div>
+        <span class="swap-arrow" aria-hidden="true"><svg width="22" height="16" viewBox="0 0 22 16"><path d="M1 5h17l-4-4M21 11H4l4 4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <div class="get"><h4>You get</h4>${list(i.get)}</div>
+      </div>
+      <div class="idea-impact">
+        ${bar('Your lineup', i.gainMe)}
+        ${bar(`${esc(short(them.name, 16))}`, i.gainThem)}
+        <div class="balance" data-tip="${esc(i.fair)}"><span>Value balance</span><span class="scale"><i class="mid"></i><i class="mark" style="left:${pos}%"></i></span><b>${i.value > 0 ? '+' : ''}${f1(i.value)}</b></div>
+      </div>
+      <ul class="idea-why">${i.why.map((w) => `<li>${esc(w)}</li>`).join('')}<li class="fair">${esc(i.fair)}</li></ul>
+    </article>`;
+  };
+  return head + `
+    <div class="trade-bar">
+      <div class="needs"><span class="lbl">Your position ranks</span>${needs}</div>
+      <div class="filters" role="group" aria-label="Trade shape">${btn('all', 'All')}${btn('1 for 1', '1 for 1')}${btn('2 for 1', '2 for 1')}${btn('1 for 2', '1 for 2')}</div>
+    </div>
+    <p class="sub trade-legend">Green bars are projected starting-lineup points per week gained by each side. The dot on the value balance is your side of the consensus value: right of center you come out ahead, left of center they do. Uneven trades count the cut player or the free-agent pickup they force.</p>
+    ${ideas.length ? `<div class="ideas">${ideas.map(card).join('')}</div>`
+      : `<p class="empty glass panel">${all.length ? 'No ideas of this shape. Try another filter.' : 'No trade both sides should take right now. Your roster is balanced enough that every fair deal makes one lineup worse. Check back after the next round of waivers or injuries.'}</p>`}`;
+}
+
 // ---------- nerd lab ----------
 function viewLab() {
   const teams = DATA.teams;
@@ -526,27 +637,87 @@ function viewLab() {
 }
 
 // ---------- shell ----------
-const VIEWS = { rankings: viewRankings, wire: viewWire, matchups: viewMatchups, lab: viewLab };
-function route() {
+// ---------- motion ----------
+// Everything here animates transform/opacity only, runs when on screen, and is skipped under reduced motion.
+const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ORDER = ['rankings', 'wire', 'matchups', 'trades', 'lab'];
+let currentView = null;
+
+// gold pill behind the active tab; with view transitions the browser morphs it, otherwise CSS slides it
+function placeInk() {
+  const ink = $('.tab-ink'), a = $('.tabs a[aria-current]');
+  if (!ink || !a) return;
+  ink.style.width = `${a.offsetWidth}px`;
+  ink.style.transform = `translateX(${a.offsetLeft}px)`;
+  if (!document.startViewTransition) requestAnimationFrame(() => ink.classList.add('live'));
+}
+
+// count big numbers up from zero, keeping their format (decimals, sign, %)
+const COUNT = '.score, .odds b, .wire-stats b, .mu-team .pr, .gotw-score b, .cast-odds b';
+function countUp(el) {
+  if (el.dataset.counted) return;
+  el.dataset.counted = '1';
+  const m = el.textContent.trim().match(/^([+-]?)(\d+(?:\.\d+)?)(%?)$/);
+  if (!m) return;
+  const target = Number(m[2]), dec = (m[2].split('.')[1] || '').length, t0 = performance.now(), dur = 750;
+  const tick = (now) => {
+    const k = Math.min(1, (now - t0) / dur), e = 1 - (1 - k) ** 3;
+    el.textContent = `${m[1]}${(target * e).toFixed(dec)}${m[3]}`;
+    if (k < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+// cards and panels rise in as they scroll into view, staggered within each batch
+const REVEAL = '.hero > .lead-car, .notice, .gotw, .matchups > .mu, .wire-stats, .sec-title, .moves > li, .day > h3, .two-col aside > .panel, .lab-grid > .panel, .trade-bar, .trade-legend, .ideas > .idea, .method-box, .empty';
+let io = null;
+function reveal(root) {
+  io?.disconnect();
+  if (calm() || !('IntersectionObserver' in window)) return;
+  io = new IntersectionObserver((entries) => {
+    entries.filter((e) => e.isIntersecting).forEach((e, k) => {
+      const el = e.target;
+      io.unobserve(el);
+      el.querySelectorAll(COUNT).forEach(countUp);
+      if (!el.classList.contains('reveal')) return;
+      el.style.setProperty('--d', `${Math.min(k, 8) * 60}ms`);
+      el.classList.add('in');
+      // drop the classes once risen so hover transitions aren't stuck behind the reveal delay
+      el.addEventListener('animationend', function done(ev) {
+        if (ev.target !== el) return;
+        el.classList.remove('reveal', 'in');
+        el.removeEventListener('animationend', done);
+      });
+    });
+  }, { rootMargin: '0px 0px -6% 0px' });
+  root.querySelectorAll(REVEAL).forEach((el) => { el.classList.add('reveal'); io.observe(el); });
+  root.querySelectorAll('.rank').forEach((el) => io.observe(el)); // ranking rows have their own rise; just count
+}
+
+const VIEWS = { rankings: viewRankings, wire: viewWire, matchups: viewMatchups, trades: viewTrades, lab: viewLab };
+function route({ fresh = false } = {}) {
   const v = (location.hash || '#rankings').slice(1);
   const key = VIEWS[v] ? v : 'rankings';
-  document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.view === key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
-  const app = $('#app');
-  app.innerHTML = VIEWS[key]();
-  fixAvatars(app);
-  bind(key);
+  const dir = !currentView || key === currentView ? 'same' : ORDER.indexOf(key) > ORDER.indexOf(currentView) ? 'fwd' : 'back';
+  const render = () => {
+    document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.view === key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
+    placeInk();
+    const app = $('#app');
+    app.innerHTML = VIEWS[key]();
+    fixAvatars(app);
+    bind(key);
+    if (fresh) { app.focus({ preventScroll: true }); window.scrollTo({ top: 0 }); }
+    reveal(app);
+    currentView = key;
+  };
+  document.documentElement.dataset.dir = dir;
+  if (document.startViewTransition && currentView && !calm()) document.startViewTransition(render);
+  else render();
 }
 
 function bind(key) {
   if (key === 'rankings') {
-    document.querySelectorAll('.also-btn').forEach((b) => {
-      const d = b.querySelector('.d');
-      if (d.scrollHeight <= d.clientHeight + 1) { b.disabled = true; b.classList.add('fits'); return; }
-      b.addEventListener('click', () => {
-        const open = b.getAttribute('aria-expanded') !== 'true';
-        b.setAttribute('aria-expanded', open);
-      });
-    });
+    bindCarousel();
     document.querySelectorAll('.rank-btn').forEach((b) =>
       b.addEventListener('click', () => {
         const li = b.closest('.rank');
@@ -558,6 +729,10 @@ function bind(key) {
       })
     );
     setTimeout(() => $('.ranks')?.classList.remove('enter'), 1400);
+  }
+  if (key === 'trades') {
+    $('#trade-team')?.addEventListener('change', (e) => setMyTeam(Number(e.target.value)));
+    document.querySelectorAll('[data-shape]').forEach((b) => b.addEventListener('click', () => { tradeState.shape = b.dataset.shape; route(); }));
   }
   if (key === 'wire') {
     document.querySelectorAll('[data-type]').forEach((b) => b.addEventListener('click', () => { wireState.type = b.dataset.type; wireState.limit = 50; route(); }));
@@ -604,7 +779,8 @@ async function main() {
   $('#league-name').textContent = `${RAW.league.name} ${RAW.league.season}`;
   $('#footer-meta').textContent = `${RAW.isDemo ? 'Demo snapshot. ' : ''}Through week ${DATA.meta.lastScored}. ${updatedText()}${DATA.overrides.length ? ` Manual fixes: ${DATA.overrides.map((o) => o.note).join('; ')}.` : ''}`;
   initTeamPicker();
-  window.addEventListener('hashchange', () => { route(); $('#app').focus({ preventScroll: true }); window.scrollTo({ top: 0 }); });
+  window.addEventListener('hashchange', () => route({ fresh: true }));
+  window.addEventListener('resize', placeInk, { passive: true });
   route();
 }
 main();
