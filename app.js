@@ -640,6 +640,9 @@ function viewLab() {
 // ---------- motion ----------
 // Everything here animates transform/opacity only, runs when on screen, and is skipped under reduced motion.
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+// phones and touch screens get the light set: no page morphs or scroll reveals, which cost the most on mobile GPUs
+const lite = () => matchMedia('(max-width: 760px), (pointer: coarse)').matches;
+const morphs = () => !!document.startViewTransition && !calm() && !lite();
 const ORDER = ['rankings', 'wire', 'matchups', 'trades', 'lab'];
 let currentView = null;
 
@@ -649,7 +652,8 @@ function placeInk() {
   if (!ink || !a) return;
   ink.style.width = `${a.offsetWidth}px`;
   ink.style.transform = `translateX(${a.offsetLeft}px)`;
-  if (!document.startViewTransition) requestAnimationFrame(() => ink.classList.add('live'));
+  // the browser morphs the pill during a view transition; otherwise CSS slides it
+  requestAnimationFrame(() => ink.classList.toggle('live', !morphs()));
 }
 
 // count big numbers up from zero, keeping their format (decimals, sign, %)
@@ -690,7 +694,8 @@ function reveal(root) {
       });
     });
   }, { rootMargin: '0px 0px -6% 0px' });
-  root.querySelectorAll(REVEAL).forEach((el) => { el.classList.add('reveal'); io.observe(el); });
+  const rise = !lite();
+  root.querySelectorAll(REVEAL).forEach((el) => { if (rise) el.classList.add('reveal'); io.observe(el); });
   root.querySelectorAll('.rank').forEach((el) => io.observe(el)); // ranking rows have their own rise; just count
 }
 
@@ -711,7 +716,7 @@ function route({ fresh = false } = {}) {
     currentView = key;
   };
   document.documentElement.dataset.dir = dir;
-  if (document.startViewTransition && currentView && !calm()) document.startViewTransition(render);
+  if (currentView && morphs()) document.startViewTransition(render);
   else render();
 }
 

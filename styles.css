@@ -351,7 +351,10 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .car-dot[aria-current='true'] { width: 34px; }
 .car-dot i { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #E6C68A, #FFF6E2); border-radius: inherit; }
 .car-dot[aria-current='true'] i { animation: car-fill 7s linear forwards; }
-.lead-car:hover .car-dot i, .lead-car:focus-within .car-dot i, .lead-car.held .car-dot i { animation-play-state: paused; }
+/* hold the timer while someone is reading: a finger down, a real mouse hovering, or keyboard focus. Phones keep tapped
+   elements in :hover and :focus, so those only count for mouse pointers and keyboard focus or the carousel would freeze. */
+.lead-car.held .car-dot i, .lead-car:has(:focus-visible) .car-dot i { animation-play-state: paused; }
+@media (hover: hover) { .lead-car:hover .car-dot i { animation-play-state: paused; } }
 @keyframes car-fill { to { width: 100%; } }
 @media (prefers-reduced-motion: reduce) { .car-dot[aria-current='true'] i { width: 100%; } }
 .view-head .page-title { font-size: clamp(44px, 6.6vw, 84px); }
@@ -503,14 +506,24 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 
   /* ranking rows rise once on load, their bars fill right behind them */
   .ranks.enter .rank { animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i) * 45ms); }
-  .rank .track i { transform-origin: left; animation: grow-x 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 45ms + 250ms); }
 
   /* scroll reveal (classes set by reveal() in app.js) */
   .reveal { opacity: 0; }
   .reveal.in { opacity: 1; animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: var(--d, 0ms); }
 
+  /* carousel: the new headline's pieces fade up in sequence */
+  .slide.enter > * { animation: rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .slide.enter > :nth-child(2) { animation-delay: 60ms; }
+  .slide.enter > :nth-child(3) { animation-delay: 120ms; }
+  .slide.enter > :nth-child(4) { animation-delay: 180ms; }
+
+}
+
+/* desktop-only flourishes; phones skip them for smooth scrolling */
+@media (prefers-reduced-motion: no-preference) and (min-width: 761px) and (hover: hover) {
   /* data draws itself in: bars grow, lines draw, dots pop; held until their card is revealed */
   .track i, .wp-bar i:first-child { transform-origin: left; animation: grow-x 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both; }
+  .rank .track i { animation-delay: calc(var(--i, 0) * 45ms + 250ms); }
   .wp-bar i:last-child { transform-origin: right; animation: grow-x 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both; }
   .seeds i { transform-origin: bottom; animation: grow-y 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: 0.15s; }
   .chart .line, .spark path { stroke-dasharray: 1; animation: draw 1.3s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both; }
@@ -523,12 +536,6 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .rank.open .detail-side > .mini:nth-child(2) { animation-delay: 70ms; }
   .rank.open .detail-side > .mini:nth-child(3) { animation-delay: 140ms; }
   .rank.open .detail-side > .mini:nth-child(4) { animation-delay: 210ms; }
-
-  /* carousel: the new headline's pieces fade up in sequence */
-  .slide.enter > * { animation: rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-  .slide.enter > :nth-child(2) { animation-delay: 60ms; }
-  .slide.enter > :nth-child(3) { animation-delay: 120ms; }
-  .slide.enter > :nth-child(4) { animation-delay: 180ms; }
 }
 
 /* hover: cards lift toward the floodlights */
@@ -541,6 +548,16 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* ---------- phone performance ---------- */
+/* Live backdrop blur behind every card is the costliest thing on a phone GPU while scrolling. On small screens cards
+   get a pre-tinted fill that reads the same against the dark field; the header keeps its real blur. */
+@media (max-width: 760px) {
+  .glass:not(.topbar) { -webkit-backdrop-filter: none; backdrop-filter: none;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015)), rgba(12, 15, 38, 0.9); }
+  .flood { filter: none; opacity: 0.22; }
+  .field::after { display: none; }
 }
 
 /* ---------- responsive ---------- */
