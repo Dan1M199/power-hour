@@ -1,0 +1,59 @@
+# The Power Hour
+
+Power rankings, a live waiver-wire feed and data-nerd stats for the **NFL Fantasy Championship** Sleeper league.
+
+- **Rankings**: a 0–100 power score per team, half rest-of-season roster strength and half results. Tap a team for the reasons behind its rank, a position-group radar, its best ROS lineup, weekly scoring and simulated playoff seeds.
+- **Wire**: every add, drop and trade, newest first. Each move is graded by the consensus ROS value gained or lost. Also shows the best available free agents and a trade ledger.
+- **This week**: projected scores and win odds for every matchup.
+- **Nerd lab**: rank flow, luck index, points for vs against, weekly finishes heatmap, position-group ranks, playoff odds, lineup efficiency, biggest games, players the experts disagree on, and waiver/trade ROI.
+
+## How it stays up to date
+
+| Data | Where it comes from | How fresh |
+| --- | --- | --- |
+| Rosters, scores, matchups, transactions | Sleeper API, called from the visitor's browser | Live on every page load |
+| ROS rankings (FantasyPros, DraftSharks, LeagueLogs) | `api/ros.js`, a Vercel serverless function | Pulled once per day (first visitor each day, Central time), then cached at Vercel's edge |
+
+No database and no cron job: the page requests `/api/ros?d=YYYY-MM-DD`, so each new day is a new cache key. If one ranking source fails, the others are still used and that response is only cached for an hour so it retries soon.
+
+## Deploy to Vercel
+
+1. Create a new GitHub repo and push this folder to it.
+2. In Vercel, choose **Add New → Project**, import the repo, and keep every setting at its default (Framework preset: **Other**, no build command, no output directory).
+3. Deploy. The site is at `https://<project>.vercel.app`; share that link with the league.
+
+Nothing needs installing: there are no npm dependencies. The serverless function runs on Vercel's default Node runtime (18+).
+
+To preview locally: `npx vercel dev`, then open http://localhost:3000. Add `?demo=1` to the URL to see the saved Week 7 snapshot without calling any APIs.
+
+## Tuning
+
+| What | Where |
+| --- | --- |
+| League ID, time zone | top of `app.js` (`LEAGUE_ID`, `TZ`) |
+| Power-score weights | `WEIGHTS` in `lib/engine.js` |
+| Source weights (LeagueLogs counts half by default) | `SOURCE_WEIGHTS` in `lib/consensus.js` |
+| Rank-to-value curve | `VALUE_DECAY` in `lib/consensus.js` |
+| Tier labels and explanation wording | `tierFor` and `explain` in `lib/engine.js` |
+| Name mismatches between sites and Sleeper | `NICKNAMES` in `lib/consensus.js` |
+
+Check `/api/ros` in the browser to see how many players each source matched (`sources.*.matched`).
+
+## Files
+
+```
+index.html, styles.css, app.js   the site
+lib/engine.js                    power score, explanations, playoff simulation, transaction grading
+lib/consensus.js                 matches ranking rows to Sleeper IDs and blends the three sources
+lib/sources.js                   parsers for each ranking site
+lib/charts.js                    dependency-free SVG charts
+api/ros.js                       daily rankings endpoint (Vercel function)
+demo/demo.json                   saved Week 7 snapshot for ?demo=1
+fixtures/, scripts/              saved source data and tests (node scripts/test-engine.mjs)
+```
+
+## If a ranking site changes its page
+
+The parsers read specific page structures: FantasyPros' embedded `ecrData`, DraftSharks' `/ros-rankings/load-rows` table rows, and LeagueLogs' rankings table. If a site redesigns, that source shows as offline on the Rankings page and the other two carry the score until the parser in `lib/sources.js` is updated.
+
+Rankings data belongs to FantasyPros, DraftSharks and LeagueLogs; league data comes from the Sleeper API. This is a personal, non-commercial league site.

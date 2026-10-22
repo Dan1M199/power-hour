@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>The Power Hour</title>
+  <meta name="description" content="Power rankings, waiver wire and data-nerd stats for the NFL Fantasy Championship league.">
+  <meta name="theme-color" content="#0B1638">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230B1638'/%3E%3Ctext x='32' y='46' font-family='Arial Black,sans-serif' font-size='34' font-weight='900' text-anchor='middle' fill='%23FFE9B8'%3EPH%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800;900&family=Albert+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="field" aria-hidden="true"><span class="flood flood-a"></span><span class="flood flood-b"></span><span class="yardlines"></span></div>
+
+  <header class="topbar glass">
+    <a class="brand" href="#rankings" aria-label="The Power Hour home">
+      <span class="brand-mark">PH</span>
+      <span class="brand-text"><strong>The Power Hour</strong><small id="league-name">Loading league…</small></span>
+    </a>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#rankings" data-view="rankings">Rankings</a>
+      <a href="#wire" data-view="wire">Wire</a>
+      <a href="#matchups" data-view="matchups">This week</a>
+      <a href="#lab" data-view="lab">Nerd lab</a>
+    </nav>
+    <label class="team-pick">
+      <span class="sr-only">Highlight your team</span>
+      <select id="my-team"><option value="">Your team</option></select>
+    </label>
+  </header>
+
+  <main id="app" tabindex="-1">
+    <section class="loading" id="loading">
+      <div class="loading-glass glass"><span class="spinner" aria-hidden="true"></span><p>Pulling your league from Sleeper…</p></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p id="footer-meta"></p>
+    <p class="sponsor">The Power Hour is presented by Dimassi's Mediterranean Kitchen.</p>
+    <p class="fine">League data from the Sleeper API. Rest-of-season rankings from FantasyPros, DraftSharks and LeagueLogs, blended into one consensus. Not affiliated with any of them.</p>
+  </footer>
+
+  <div id="tip" class="tip" role="tooltip" hidden></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
