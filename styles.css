@@ -610,8 +610,11 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .wire-stats > div:nth-child(n + 3) { border-top: 1px solid var(--line); }
   .wire-stats b { font-size: 24px; }
   .wt-rows li { grid-template-columns: 58px 1fr auto; }
-  .lead-car { border-radius: var(--r-lg); }
+  /* phones: no forced square; the card fits the story on screen (height set by fit() in bindCarousel) */
+  .lead-car { border-radius: var(--r-lg); aspect-ratio: auto; }
+  .car-track { flex: none; align-items: start; overflow-y: hidden; transition: height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
   .slide { padding: 22px 18px 4px; }
+  .slide .cast { margin-top: 0; padding-top: 16px; }
   .car-nav { padding: 8px 14px 14px; }
   .lead-deck { font-size: 15px; }
   .cast-team .spark { display: none; }

@@ -203,11 +203,19 @@ function bindCarousel() {
   const dots = [...car.querySelectorAll('.car-dot')], n = dots.length;
   if (n < 2) return;
   let idx = 0, steering = 0;
+  const slides = [...track.querySelectorAll('.slide')];
+  // on phones the card hugs the story that's showing instead of the tallest one, so short stories leave no gap
+  const phone = matchMedia('(max-width: 760px)');
+  const fit = () => { track.style.height = phone.matches ? `${slides[idx].offsetHeight}px` : ''; };
   const show = (i) => {
     idx = (i + n) % n;
     dots.forEach((d, k) => (k === idx ? d.setAttribute('aria-current', 'true') : d.removeAttribute('aria-current')));
+    fit();
   };
-  const slides = [...track.querySelectorAll('.slide')];
+  fit();
+  document.fonts?.ready.then(fit); // headline height changes once the display font arrives
+  phone.addEventListener?.('change', fit);
+  window.addEventListener('resize', fit, { passive: true });
   const go = (i) => {
     show(i);
     const sl = slides[idx];
