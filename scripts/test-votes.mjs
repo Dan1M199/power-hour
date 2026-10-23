@@ -1,4 +1,5 @@
-// Runs api/votes.js against an in-memory stand-in for Upstash Redis and a mocked Sleeper.
+// Runs api/votes.js against an in-memory stand-in for Upstash Redis and a mocked /api/league snapshot.
+process.env.VOTES_NOW = String(Date.parse('2026-10-20T15:00:00Z')); // a Tuesday: before kickoff
 import handler from '../api/votes.js';
 
 const db = new Map();
@@ -18,15 +19,14 @@ const redisCmd = ([cmd, k, ...a]) => {
 globalThis.fetch = async (u, opts = {}) => {
   const ok = (json) => ({ ok: true, status: 200, json: async () => json });
   if (u.endsWith('/pipeline')) return ok(JSON.parse(opts.body).map((c) => ({ result: redisCmd(c) })));
-  if (u.endsWith('/state/nfl')) return ok({ week: 7 });
-  if (u.includes('/matchups/7')) return ok([[1, 1], [2, 1], [3, 2], [8, 2]].map(([roster_id, matchup_id]) => ({ roster_id, matchup_id, points: started ? 4.2 : 0 })));
+  if (u.includes('/api/league?d=')) return ok({ state: { week: 7 }, matchups: { 7: [[1, 1], [2, 1], [3, 2], [8, 2]].map(([roster_id, matchup_id]) => ({ roster_id, matchup_id, points: started ? 4.2 : 0 })) } });
   throw new Error('unexpected ' + u);
 };
 
 const call = async (method, { query, body, ip = '1.1.1.1' } = {}) => {
   let out = {};
   const res = { headers: {}, setHeader(k, v) { this.headers[k] = v; }, status(c) { out.code = c; return this; }, json(b) { out.body = b; return this; } };
-  await handler({ method, query, body, headers: { 'x-forwarded-for': ip } }, res);
+  await handler({ method, query, body, headers: { 'x-forwarded-for': ip, host: 'localhost:3000' } }, res);
   return out;
 };
 const check = (label, cond, detail) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${label}${cond ? '' : ` -> ${JSON.stringify(detail)}`}`); if (!cond) process.exitCode = 1; };
@@ -62,3 +62,7 @@ r = await call('POST', { body: { week: 7, pair: '1-2', pick: '1', voter: 'device
 check('voting closes once points are on the board', r.code === 409, r);
 r = await call('GET', { query: { week: '7' } });
 check('tallies stay visible after kickoff', r.code === 200 && !r.body.open && r.body.counts['3-8']['8'] === 4, r.body);
+started = false;
+process.env.VOTES_NOW = String(Date.parse('2026-10-23T00:30:00Z')); // Thursday 7:30pm Central, before the morning snapshot shows points
+r = await call('POST', { body: { week: 7, pair: '1-2', pick: '1', voter: 'device-gggggggg' } });
+check('voting closes at Thursday kickoff even before the snapshot has points', r.code === 409, r);

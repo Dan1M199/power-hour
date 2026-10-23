@@ -11,7 +11,7 @@ Power rankings, a live waiver-wire feed and data-nerd stats for the **NFL Fantas
 
 | Data | Where it comes from | How fresh |
 | --- | --- | --- |
-| Rosters, scores, matchups, transactions | Sleeper API, called from the visitor's browser | Live on every page load |
+| Rosters, scores, matchups, transactions | Sleeper API, via `/api/league` | Once each morning (6am Central), cached on the CDN for everyone |
 | ROS rankings (FantasyPros, DraftSharks, LeagueLogs) | `api/ros.js`, a Vercel serverless function | Pulled once per day (first visitor each day, Central time), then cached at Vercel's edge |
 
 No cron job: the page requests `/api/ros?d=YYYY-MM-DD`, so each new day is a new cache key. If one ranking source fails, the others are still used and that response is only cached for an hour so it retries soon.

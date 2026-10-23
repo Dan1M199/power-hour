@@ -10,12 +10,13 @@
 //
 // One vote per device: the browser keeps a random voter id and re-voting replaces its pick. As a soft guard against
 // clearing storage to vote again, one network (hashed IP) can cast at most MAX_PER_NETWORK votes per matchup, which
-// still lets a few friends on the same Wi-Fi vote. Voting closes once any points are scored that week.
+// still lets a few friends on the same Wi-Fi vote. Voting closes at Thursday night kickoff (7:15pm Central) or once
+// the morning snapshot shows points on the board, whichever comes first.
+//
+// Matchups come from /api/league, the once-a-morning Sleeper snapshot on the CDN, so voting never calls Sleeper itself.
 
 import { createHash } from 'node:crypto';
 
-const LEAGUE_ID = '1312001652454088704';
-const SLEEPER = 'https://api.sleeper.app/v1';
 const MAX_PER_NETWORK = 3;
 const TTL = 60 * 60 * 24 * 120; // keep a season's votes around
 // Vercel may prefix the injected names (e.g. STORAGE_KV_REST_API_URL), so match on the suffix
@@ -41,17 +42,29 @@ async function redis(commands) {
   });
 }
 
-// this week's matchups straight from Sleeper: pair keys like "3-8" (lower roster id first) and whether games have started
-async function week(w) {
-  const [state, rows] = await Promise.all([
-    fetch(`${SLEEPER}/state/nfl`).then((r) => r.json()),
-    fetch(`${SLEEPER}/league/${LEAGUE_ID}/matchups/${w}`).then((r) => (r.ok ? r.json() : [])),
-  ]);
+const TZ = 'America/Chicago';
+const now = () => Number(process.env.VOTES_NOW) || Date.now(); // overridable for tests
+const morningKey = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(now() - 6 * 36e5));
+// Thursday from 7:15pm through Monday, Central time: this week's games are under way
+function kickedOff() {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' })
+    .formatToParts(new Date(now())).map((x) => [x.type, x.value]));
+  const mins = Number(p.hour) * 60 + Number(p.minute);
+  return ['Fri', 'Sat', 'Sun', 'Mon'].includes(p.weekday) || (p.weekday === 'Thu' && mins >= 19 * 60 + 15);
+}
+
+// this week's matchups from the morning snapshot: pair keys like "3-8" (lower roster id first) and whether voting is open
+async function week(w, req) {
+  const proto = req.headers['x-forwarded-proto'] || (String(req.headers.host).startsWith('localhost') ? 'http' : 'https');
+  const r = await fetch(`${proto}://${req.headers.host}/api/league?d=${morningKey()}`);
+  if (!r.ok) throw new Error(`league snapshot ${r.status}`);
+  const snap = await r.json();
+  const rows = snap.matchups?.[w] || [];
   const byId = {};
-  for (const m of rows || []) (byId[m.matchup_id] ||= []).push(m.roster_id);
+  for (const m of rows) (byId[m.matchup_id] ||= []).push(m.roster_id);
   const pairs = Object.values(byId).filter((p) => p.length === 2).map((p) => p.sort((a, b) => a - b).join('-'));
-  const started = (rows || []).some((m) => (m.custom_points ?? m.points ?? 0) > 0);
-  return { pairs, open: Number(w) === Number(state.week) && !started };
+  const started = kickedOff() || rows.some((m) => (m.custom_points ?? m.points ?? 0) > 0);
+  return { pairs, open: Number(w) === Number(snap.state?.week) && !started };
 }
 
 const key = (w, pair) => `ph:votes:${w}:${pair}`;
@@ -85,14 +98,14 @@ export default async function handler(req, res) {
       const w = Number(req.query?.week);
       if (!Number.isInteger(w) || w < 1 || w > 18) return res.status(400).json({ error: 'Bad week' });
       const voter = validVoter(req.query?.voter) ? req.query.voter : null;
-      const wk = await week(w);
+      const wk = await week(w, req);
       return res.status(200).json({ enabled: true, week: w, open: wk.open, ...(await tally(w, wk.pairs, voter)) });
     }
     if (req.method === 'POST') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
       const w = Number(body.week), pair = String(body.pair || ''), pick = String(body.pick || ''), voter = body.voter;
       if (!Number.isInteger(w) || !validVoter(voter)) return res.status(400).json({ error: 'Bad vote' });
-      const wk = await week(w);
+      const wk = await week(w, req);
       if (!wk.pairs.includes(pair) || !pair.split('-').includes(pick)) return res.status(400).json({ error: 'That matchup is not on this week' });
       if (!wk.open) return res.status(409).json({ error: 'Voting is closed: this week has kicked off' });
       const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim();

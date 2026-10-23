@@ -300,6 +300,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .mu-team .tn { font: 800 20px/1.05 var(--display); overflow-wrap: anywhere; }
 .mu-team .pr { font: 900 34px/1 var(--display); color: var(--flood); }
 .mu-team small { color: var(--ink-3); font-size: 12px; }
+.mu-team small.live { color: var(--turf); font-weight: 700; }
 .vs { font: 800 16px var(--display); color: var(--ink-3); }
 .wp { margin-top: 14px; }
 .wp-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: rgba(255, 255, 255, 0.08); }
@@ -455,6 +456,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .st { font-style: normal; font-weight: 700; font-size: 9.5px; letter-spacing: 0.02em; padding: 1px 4px; border-radius: 4px; margin-left: 5px; vertical-align: 1px; }
 .st.q { color: var(--night); background: var(--amber); }
 .st.d, .st.out { color: #fff; background: var(--flag); }
+.st.fin { color: var(--night); background: var(--turf); }
 .bd-side { display: grid; gap: 8px; align-content: start; }
 .bd-side h4 { margin: 6px 0 2px; font: 600 13px/1 var(--body); color: var(--ink-3); }
 .bd-side h4:not(:first-child) { margin-top: 14px; }

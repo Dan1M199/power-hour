@@ -6,10 +6,10 @@ import { tradeIdeas } from './lib/trades.js';
 import { breakdown, shortName } from './lib/matchup.js';
 
 // ---------- config ----------
-const LEAGUE_ID = '1312001652454088704';
 const TZ = 'America/Chicago';
-const SLEEPER = 'https://api.sleeper.app/v1';
 const SOURCE_NAMES = { fp: 'FantasyPros', ds: 'DraftSharks', ll: 'LeagueLogs' };
+// the site's author: his own lineup blunders always make the lead story
+const EDITOR = { user: 'dmir9999', name: 'Dan' };
 
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -47,28 +47,17 @@ const getJSON = async (url) => {
 };
 const chicagoDate = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
+// the day's data key: the Central date, rolling over at 6am so the morning snapshot has last night's games final
+const morningKey = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(Date.now() - 6 * 36e5));
+
+// Sleeper is read once per morning through /api/league (CDN-cached per key), never straight from the browser
 async function loadLive() {
-  const [state, league, users, rosters] = await Promise.all([
-    getJSON(`${SLEEPER}/state/nfl`),
-    getJSON(`${SLEEPER}/league/${LEAGUE_ID}`),
-    getJSON(`${SLEEPER}/league/${LEAGUE_ID}/users`),
-    getJSON(`${SLEEPER}/league/${LEAGUE_ID}/rosters`),
+  const key = morningKey();
+  const [snap, ros] = await Promise.all([
+    getJSON(`/api/league?d=${key}`),
+    getJSON(`/api/ros?d=${key}`).catch((e) => ({ error: String(e.message || e) })),
   ]);
-  const s = league.settings || {};
-  const regEnd = (s.playoff_week_start || 15) - 1;
-  const weeks = Array.from({ length: regEnd }, (_, i) => i + 1);
-  const txWeeks = Array.from({ length: Math.max(1, Math.min(18, state.leg || state.week || 1)) }, (_, i) => i + 1);
-  const [mus, txs, ros] = await Promise.all([
-    Promise.all(weeks.map((w) => getJSON(`${SLEEPER}/league/${LEAGUE_ID}/matchups/${w}`).catch(() => []))),
-    Promise.all(txWeeks.map((w) => getJSON(`${SLEEPER}/league/${LEAGUE_ID}/transactions/${w}`).catch(() => []))),
-    getJSON(`/api/ros?d=${chicagoDate()}`).catch((e) => ({ error: String(e.message || e) })),
-  ]);
-  return {
-    state, league, users, rosters,
-    matchups: Object.fromEntries(weeks.map((w, i) => [w, mus[i]])),
-    transactions: txs.flat(),
-    ros,
-  };
+  return { ...snap, ros };
 }
 
 async function load() {
@@ -97,7 +86,7 @@ async function load() {
   // the demo snapshot is frozen in time, so "fresh" is measured from its newest move
   const now = RAW.isDemo && DATA.feed.length ? DATA.feed[0].ts + 6 * 36e5 : Date.now();
   DATA.now = now;
-  DATA.stories = buildStories(DATA, { now, dateKey: chicagoDate() });
+  DATA.stories = buildStories(DATA, { now, dateKey: chicagoDate(), editor: EDITOR });
   DATA.key = keyMatchup(DATA);
   DATA.quips = matchupQuips(DATA);
 }
@@ -493,9 +482,9 @@ function viewMatchups() {
         ${isKey ? '<span class="key-tag">Game of the week</span>' : ''}
         <p class="mu-quip">${esc(DATA.quips[i])}</p>
         <div class="mu-teams">
-          <div class="mu-team">${avatar(a)}<span class="tn">${esc(a.name)}</span><small>#${a.powerRank} power, ${record(a)}</small><span class="pr">${f1(p.projA)}</span></div>
+          <div class="mu-team">${avatar(a)}<span class="tn">${esc(a.name)}</span><small>#${a.powerRank} power, ${record(a)}</small>${liveTag(p.liveA)}<span class="pr">${f1(p.projA)}</span></div>
           <span class="vs">vs</span>
-          <div class="mu-team right">${avatar(b)}<span class="tn">${esc(b.name)}</span><small>#${b.powerRank} power, ${record(b)}</small><span class="pr">${f1(p.projB)}</span></div>
+          <div class="mu-team right">${avatar(b)}<span class="tn">${esc(b.name)}</span><small>#${b.powerRank} power, ${record(b)}</small>${liveTag(p.liveB)}<span class="pr">${f1(p.projB)}</span></div>
         </div>
         <div class="wp"><div class="wp-bar" role="img" aria-label="${esc(a.name)} ${pct(p.winA)}, ${esc(b.name)} ${pct(1 - p.winA)}"><i style="width:${p.winA * 100}%"></i><i style="width:${(1 - p.winA) * 100}%"></i></div>
           <div class="wp-labels"><span>${pct(p.winA)}</span><span>${pct(1 - p.winA)}</span></div></div>
@@ -507,6 +496,9 @@ function viewMatchups() {
       </article>`;
     }).join('')}</div>` : '<p class="empty glass panel">No regular-season matchups left to preview.</p>'}`;
 }
+
+// points already on the board this week (games played so far); the big number is that plus the rest projected
+const liveTag = (pts) => (pts == null ? '' : `<small class="live" data-tip="Points scored in games already played. The big number adds the projection for everyone still to play.">${f1(pts)} scored so far</small>`);
 
 // ---------- fan picks ----------
 // a random id kept on this device; re-voting from the same device replaces its pick
@@ -597,6 +589,7 @@ function matchupDetail(i) {
   const A = team(pv.a), B = team(pv.b);
   const max = Math.max(1, ...bd.rows.flatMap((r) => [r.a?.proj || 0, r.b?.proj || 0]));
   const flag = (p) => {
+    if (p.played) return '<em class="st fin" title="Game over: these points are final">FINAL</em>';
     if (p.bye) return '<em class="st out" title="On a bye this week">BYE</em>';
     if (!p.status) return '';
     const label = p.out ? (p.status === 'IR' ? 'IR' : 'OUT') : p.status[0];
@@ -606,6 +599,7 @@ function matchupDetail(i) {
     ? `<div class="h2h-p ${side}"><b><span class="full">${esc(p.name)}</span><span class="short">${esc(shortName(p))}</span></b><small>${esc([p.team, p.pos].filter(Boolean).join(' '))}${flag(p)}</small></div>`
     : `<div class="h2h-p ${side} empty"><b>Empty</b><small>nobody set</small></div>`;
   const tip = (p) => !p ? 'Empty slot'
+    : p.played ? `${p.name}: scored ${f1(p.proj)} (game over), ${f1(p.pre)} projected`
     : `${p.name}: ${p.bye ? 'on a bye, ' : p.out ? `${p.status}, ` : ''}${f1(p.proj)} projected${p.floor != null && p.proj > 0 ? `, floor ${f1(p.floor)} to ceiling ${f1(p.ceil)}` : ''}`;
   const row = (r) => {
     const pa = r.a?.proj || 0, pb = r.b?.proj || 0;
@@ -637,7 +631,7 @@ function matchupDetail(i) {
         <ul class="watch">${bd.watch.map((w) => `<li class="${w.tone}">${esc(w.text)}</li>`).join('') || '<li class="n">Nothing unusual: both lineups are set and healthy.</li>'}</ul>
       </div>
     </div>
-    <p class="bd-note">Player projections are DraftSharks rest-of-season weekly averages, with players on a bye or ruled out counted as zero. Hover or tap a row for floor and ceiling.</p>`;
+    <p class="bd-note">${DATA.live ? 'Players marked final show their actual points, locked in for the week. ' : ''}Player projections are DraftSharks rest-of-season weekly averages, with players on a bye or ruled out counted as zero. Hover or tap a row for floor and ceiling.</p>`;
 }
 
 function toggleMatchup(card) {

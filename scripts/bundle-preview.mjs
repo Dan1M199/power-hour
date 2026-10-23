@@ -7,7 +7,7 @@ const wrap = (src) => {
   const names = [...src.matchAll(/^export (?:const|function|async function) ([A-Za-z0-9_]+)/gm)].map((m) => m[1]);
   return `const { ${names.join(', ')} } = (() => {\n${strip(src)}\nreturn { ${names.join(', ')} };\n})();`;
 };
-const js = [wrap(r('lib/charts.js')), wrap(r('lib/engine.js')), wrap(r('lib/stories.js')), wrap(r('lib/overrides.js')), wrap(r('lib/trades.js')), strip(r('app.js'))].join('\n');
+const js = [wrap(r('lib/charts.js')), wrap(r('lib/engine.js')), wrap(r('lib/matchup.js')), wrap(r('lib/stories.js')), wrap(r('lib/overrides.js')), wrap(r('lib/trades.js')), strip(r('app.js'))].join('\n');
 const demo = r('demo/demo.json').replace(/<\//g, '<\\/');
 let html = r('index.html')
   .replace('<link rel="stylesheet" href="styles.css">', `<style>${r('styles.css')}</style>`)
