@@ -396,16 +396,49 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .gotw-chart { padding: 16px 18px; border-radius: var(--r-lg); background: rgba(255, 255, 255, 0.07); }
 .gotw-chart h4 { margin: 0 0 8px; font: 700 13px/1.3 var(--body); color: rgba(255, 255, 255, 0.75); }
 .gotw-chart .sub { margin: 10px 0 0; font-size: 12.5px; color: rgba(255, 255, 255, 0.62); }
-.gotw .chart .grid { stroke: rgba(255, 255, 255, 0.13); }
-.gotw .chart .axis { fill: rgba(255, 255, 255, 0.6); }
-.gotw .chart :is(.row-label, .val) { fill: rgba(255, 255, 255, 0.88); }
-.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: 0; }
-.dot.lose { background: var(--flag); } .dot.win { background: var(--grass); }
-.chart.stakes .span { stroke-width: 4; stroke-linecap: round; opacity: 0.7; }
-.chart.stakes .lose { fill: var(--flag); stroke: var(--board); stroke-width: 2; }
-.chart.stakes .win { fill: var(--grass); stroke: var(--board); stroke-width: 2; }
-.chart.stakes .now { stroke: var(--chalk); stroke-width: 2; }
-.chart.stakes .val { font-size: 11.5px; font-weight: 600; }
+/* the playoff drive: a mini field from 0% playoff odds (left goal line) to 100% (the end zone); each team is a
+   football on its yard line, and picking a result sends both balls to their new spots */
+.drive-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 12px; }
+.drive-head h4 { margin: 0; font: 800 20px/1 var(--display); color: var(--chalk); }
+.drive-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.drive-pick button { cursor: pointer; padding: 7px 12px; border: 0; border-radius: 999px; font: 700 12.5px/1 var(--body); color: var(--chalk);
+  background: rgba(255, 255, 255, 0.12); max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drive-pick button:hover { background: rgba(255, 255, 255, 0.2); }
+.drive-pick button[aria-pressed='true'] { color: var(--ink); background: var(--amber); box-shadow: 0 3px 0 var(--ledge-gold); }
+.drive-pick button:active { transform: translateY(2px); box-shadow: none; }
+.drive-field { position: relative; overflow: hidden; display: grid; gap: 14px; padding: 30px 58px 16px 18px; border-radius: var(--r-md);
+  background: repeating-linear-gradient(90deg, var(--grass) 0 12.5%, var(--stripe) 12.5% 25%); box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.75); }
+/* yard lines sit on the same track as the balls: 18px in from the left, 58px in from the right */
+.drive-field .yard { position: absolute; top: 0; bottom: 0; left: calc(18px + var(--y) * (100% - 76px)); width: 2px; margin-left: -1px; background: rgba(255, 255, 255, 0.55);
+  font: 800 12px/1 var(--display); color: var(--chalk); text-indent: 6px; padding-top: 8px; white-space: nowrap; }
+.drive-field .endzone { position: absolute; top: 0; right: 0; bottom: 0; width: 40px; display: grid; place-items: center; background: var(--amber);
+  font: 800 13px/1 var(--display); letter-spacing: 0.04em; color: var(--ink); writing-mode: vertical-rl; }
+.lane { position: relative; height: 44px; }
+.drive-key { order: 3; flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; font-size: 12.5px; font-weight: 700; color: rgba(255, 255, 255, 0.85); }
+.drive-key span::before { content: ''; display: inline-block; width: 14px; height: 9px; margin-right: 6px; border-radius: 50%; vertical-align: 0; }
+.drive-key .a::before { background: var(--a); } .drive-key .b::before { background: var(--b); }
+/* the runner spans the whole track, so translating it by x * 100% puts its left edge (the ball) at x */
+.runner, .ghost { position: absolute; left: 0; right: 0; bottom: 0; height: 26px; pointer-events: none; }
+.runner { transform: translateX(calc(var(--x, var(--at-now)) * 100%)); transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.drive[data-s='a'] .lane { --x: var(--at-a); }
+.drive[data-s='b'] .lane { --x: var(--at-b); }
+.ball { position: absolute; left: -17px; bottom: 0; width: 34px; height: 22px; border-radius: 50%; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3); }
+.lane.a .ball { background: var(--a); }
+.lane.b .ball { background: var(--b); }
+/* laces */
+.ball::before { content: ''; position: absolute; left: 9px; right: 9px; top: 50%; height: 2px; margin-top: -1px; border-radius: 2px; background: var(--chalk); }
+.ball::after { content: ''; position: absolute; left: 50%; top: 6px; bottom: 6px; width: 8px; margin-left: -4px;
+  background: repeating-linear-gradient(90deg, var(--chalk) 0 2px, transparent 2px 3px); }
+.ball-pct { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); padding: 3px 7px; border-radius: 999px; font: 800 13px/1 var(--display);
+  color: var(--ink); background: var(--chalk); white-space: nowrap; }
+.ball-gain { position: absolute; left: 40px; top: 3px; font: 800 13px/1 var(--display); white-space: nowrap; }
+.ball-gain.up { color: var(--yellow); }
+.ball-gain.down { left: auto; right: 40px; color: #FFCDD2; } /* a drop leaves its chalk mark on the right, so the number goes left */
+/* where the ball started today, left behind as a chalk mark while a result is picked */
+.ghost { transform: translateX(calc(var(--at-now) * 100%)); opacity: 0; transition: opacity 0.3s; }
+.ghost::before { content: ''; position: absolute; left: -12px; bottom: 2px; width: 24px; height: 18px; border-radius: 50%; border: 2px dashed rgba(255, 255, 255, 0.8); }
+.drive:not([data-s='now']) .ghost { opacity: 1; }
+.drive-note { margin: 12px 0 0; min-height: 2.8em; font-size: 14px; color: rgba(255, 255, 255, 0.88); }
 .gotw-more { display: inline-flex; align-items: center; gap: 10px; margin-top: 18px; padding: 6px 6px 6px 18px; border-radius: 999px; border: 0; cursor: pointer;
   color: var(--ink); background: var(--amber); box-shadow: 0 3px 0 var(--ledge-gold); font: 700 14px/1 var(--body); }
 .gotw-more:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ledge-gold); }

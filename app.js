@@ -1,5 +1,5 @@
 import { computeLeague, WEIGHTS } from './lib/engine.js';
-import { bumpChart, scatter, radar, weeklyBars, divergingBars, heatTable, stakesChart, TEAM_COLORS } from './lib/charts.js';
+import { bumpChart, scatter, radar, weeklyBars, divergingBars, heatTable, TEAM_COLORS } from './lib/charts.js';
 import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
 import { tradeIdeas } from './lib/trades.js';
@@ -659,13 +659,6 @@ function gameOfTheWeek() {
   if (!k) return '';
   const { p } = k;
   const a = team(p.a), b = team(p.b);
-  const row = (t) => {
-    const lose = t.playoffIfLoss ?? t.playoffPct, win = t.playoffIfWin ?? t.playoffPct;
-    return {
-      label: short(t.name, 14), lose, win, now: t.playoffPct, color: DATA.color[t.rid],
-      tipLose: `${t.name} lose: ${pct(lose)} playoff odds`, tipWin: `${t.name} win: ${pct(win)} playoff odds`, tipNow: `${t.name} today: ${pct(t.playoffPct)}`,
-    };
-  };
   return `
     <section class="gotw glass rim" aria-labelledby="gotw-hed">
       <div class="gotw-copy">
@@ -680,11 +673,59 @@ function gameOfTheWeek() {
         <button type="button" class="gotw-more" data-open="${k.i}">Lineup breakdown${XP}</button>
       </div>
       <div class="gotw-chart">
-        <h4>Playoff odds if they lose <i class="dot lose"></i> or win <i class="dot win"></i> this week</h4>
-        ${stakesChart({ rows: [row(a), row(b)] })}
+        ${playoffDrive(a, b)}
         <p class="sub">Picked from this week's slate by stakes (${Math.round(p.stakes * 100)} combined points of playoff odds on the line, ${Math.round(k.stakesNorm * 100)}% of the week's biggest) and closeness (${Math.round(k.closeness * 100)} out of 100, where 100 is a dead-even projection).</p>
       </div>
     </section>`;
+}
+
+// The playoff drive: each team is a football on a field that runs from 0% playoff odds (its own goal line) to 100%
+// (the end zone). Pick a result and both balls move to where the simulations say that result leaves them.
+function playoffDrive(a, b) {
+  const odds = (t, won) => (won ? t.playoffIfWin : t.playoffIfLoss) ?? t.playoffPct;
+  const states = {
+    now: [a.playoffPct, b.playoffPct],
+    a: [odds(a, true), odds(b, false)],
+    b: [odds(a, false), odds(b, true)],
+  };
+  const lane = (t, side, k) => `
+    <div class="lane ${side}" style="${Object.entries(states).map(([s, v]) => `--at-${s}:${v[k].toFixed(3)}`).join(';')}">
+      <span class="ghost" aria-hidden="true"></span>
+      <span class="runner" aria-hidden="true"><span class="ball"><b class="ball-pct"></b><small class="ball-gain"></small></span></span>
+    </div>`;
+  const btn = (s, label) => `<button type="button" data-s="${s}" aria-pressed="${s === 'now'}">${label}</button>`;
+  return `
+    <div class="drive" data-s="now" data-a="${esc(a.name)}" data-b="${esc(b.name)}" data-states='${JSON.stringify(states)}'>
+      <div class="drive-head">
+        <h4>The playoff drive</h4>
+        <p class="drive-key"><span class="a">${esc(a.name)}</span><span class="b">${esc(b.name)}</span></p>
+        <div class="drive-pick" role="group" aria-label="Show playoff odds after a result">${btn('now', 'Today')}${btn('a', `${esc(short(a.name, 14))} win`)}${btn('b', `${esc(short(b.name, 14))} win`)}</div>
+      </div>
+      <div class="drive-field">
+        <span class="endzone" aria-hidden="true">Playoffs</span>
+        ${[0.25, 0.5, 0.75].map((x) => `<span class="yard" style="--y:${x}" aria-hidden="true">${x * 100}</span>`).join('')}
+        ${lane(a, 'a', 0)}${lane(b, 'b', 1)}
+      </div>
+      <p class="drive-note" aria-live="polite"></p>
+    </div>`;
+}
+
+// fill in the drive's numbers and sentence for the picked result
+function paintDrive(el, s) {
+  const st = JSON.parse(el.dataset.states), names = [el.dataset.a, el.dataset.b];
+  el.dataset.s = s;
+  el.querySelectorAll('.drive-pick button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.s === s));
+  el.querySelectorAll('.lane').forEach((ln, k) => {
+    const v = st[s][k], d = v - st.now[k], pts = Math.round(d * 100);
+    ln.querySelector('.ball-pct').textContent = pct(v);
+    const g = ln.querySelector('.ball-gain');
+    g.textContent = s === 'now' || !pts ? '' : `${pts > 0 ? '+' : ''}${pts}`;
+    g.className = `ball-gain ${pts > 0 ? 'up' : 'down'}`;
+  });
+  const move = (k) => { const pts = Math.round((st[s][k] - st.now[k]) * 100); return `${names[k]} ${pts >= 0 ? 'climbs' : 'drops'} to ${pct(st[s][k])} (${pts >= 0 ? '+' : ''}${pts})`; };
+  el.querySelector('.drive-note').textContent = s === 'now'
+    ? `Today ${names[0]} sits at ${pct(st.now[0])} playoff odds and ${names[1]} at ${pct(st.now[1])}. Pick a result to see where it sends them.`
+    : `If ${names[s === 'a' ? 0 : 1]} wins: ${move(s === 'a' ? 0 : 1)}, ${move(s === 'a' ? 1 : 0)}.`;
 }
 
 // ---------- trade lab ----------
@@ -957,6 +998,11 @@ function bind(key) {
   if (key === 'matchups') {
     $('.matchups')?.addEventListener('click', (e) => { const b = e.target.closest('.pick'); if (b && VOTES?.open) castVote(b); });
     document.querySelectorAll('.mu-more').forEach((b) => b.addEventListener('click', () => toggleMatchup(b.closest('.mu'))));
+    const drive = $('.drive');
+    if (drive) {
+      paintDrive(drive, 'now');
+      drive.querySelector('.drive-pick').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) paintDrive(drive, b.dataset.s); });
+    }
     $('.gotw-more')?.addEventListener('click', (e) => {
       const card = $(`#mu-${e.currentTarget.dataset.open}`);
       if (!card) return;
