@@ -683,9 +683,8 @@ function viewMatchups() {
         </div>
         <div class="wp"><div class="wp-bar" role="img" aria-label="${esc(a.name)} ${pct(p.winA)}, ${esc(b.name)} ${pct(1 - p.winA)}"><i style="width:${p.winA * 100}%"></i><i style="width:${(1 - p.winA) * 100}%"></i></div>
           <div class="wp-labels"><span>${pct(p.winA)}</span><span>${pct(1 - p.winA)}</span></div></div>
-        ${betLine(p, a, b)}
+        ${betLine(p, a, b, i, stakes)}
         <div class="fan-slot" data-i="${i}">${fanBlock(p)}</div>
-        ${stakes ? `<p class="mu-note">${stakes}</p>` : ''}
         <button type="button" class="mu-more" aria-expanded="false" aria-controls="mud-${i}"><span>Lineup breakdown</span>${XP}</button>
         <div class="detail mu-detail" id="mud-${i}"><div></div></div>
       </article>`;
@@ -766,15 +765,40 @@ async function castVote(btn) {
   }
 }
 
-// sportsbook-style line from the projections: moneyline, spread and total
-function betLine(p, a, b) {
+// normal CDF (Abramowitz-Stegun), for the prop odds below
+function phi(z) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z)), d = 0.3989423 * Math.exp((-z * z) / 2);
+  const q = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z > 0 ? 1 - q : q;
+}
+// sportsbook-style line from the projections: the moneyline stays on the card, everything else sits behind "More odds"
+function betLine(p, a, b, i, stakes) {
   const fav = p.projA >= p.projB ? a : b, margin = Math.abs(p.projA - p.projB);
   const even = margin < 0.25;
-  return `<div class="line" data-tip="Fair lines from the projections: moneyline from the win odds, spread from the projected margin, total from the projected combined score.">
-      <span><small>Moneyline</small><b>${american(p.winA)}</b><b>${american(1 - p.winA)}</b></span>
-      <span><small>Spread</small><b>${even ? 'Pick' : `-${half(margin)}`}</b>${even ? '' : `<small class="who">${esc(fav.name)}</small>`}</span>
-      <span><small>Total</small><b>${half(p.projA + p.projB)}</b></span>
-    </div>`;
+  // the margin is normal with the two teams' week spreads combined, the same model as the win odds
+  const sdOf = (t) => t.sdWeek?.[p.week] ?? DATA.meta.sd, sd = Math.hypot(sdOf(a), sdOf(b));
+  const within = (x) => phi((x - (p.projA - p.projB)) / sd) - phi((-x - (p.projA - p.projB)) / sd);
+  const close = within(5), blowout = 1 - within(20);
+  const B = DATA.bull && DATA.bull.state !== 'final' && DATA.bull.rows.length ? DATA.bull : null;
+  const bull = (rid) => B.rows.find((r) => r.rid === rid)?.pWin ?? 0;
+  const tile = (label, val, sub = '', tip = '') => `<span${tip ? ` data-tip="${esc(tip)}"` : ''}><small>${label}</small><b>${val}</b>${sub ? `<small class="who">${sub}</small>` : ''}</span>`;
+  const pair = (label, va, vb, tip) => `<span class="pair" data-tip="${esc(tip)}"><small>${label}</small><b class="a">${va}</b><b class="b">${vb}</b></span>`;
+  return `
+    <div class="ml" data-tip="Fair moneyline from the win odds: minus is the favourite (bet that much to win 100), plus is the underdog (what 100 wins).">
+      <b class="a">${american(p.winA)}</b><small>Moneyline</small><b class="b">${american(1 - p.winA)}</b>
+    </div>
+    <button type="button" class="odds-more" aria-expanded="false" aria-controls="odds-${i}"><span>More odds</span>${XP}</button>
+    <div class="detail odds-detail" id="odds-${i}"><div>
+      <div class="line">
+        ${tile('Spread', even ? 'Pick' : `-${half(margin)}`, even ? '' : esc(fav.name), 'From the projected margin')}
+        ${tile('Total', half(p.projA + p.projB), 'combined points', 'Projected combined score')}
+        ${pair('Team totals', f1(p.projA), f1(p.projB), `${a.name} ${f1(p.projA)}, ${b.name} ${f1(p.projB)} projected`)}
+        ${tile('Nail-biter', american(close), 'margin under 5', `${pct(close)} chance the final margin is under 5 points`)}
+        ${tile('Blowout', american(blowout), 'margin 20+', `${pct(blowout)} chance the final margin is 20 points or more`)}
+        ${B ? pair(`Closest to ${B.target}`, american(bull(p.a)), american(bull(p.b)), `Money week: odds each team lands closest to ${B.target} of all twelve and takes ${money(MONEY_WEEK.prize)}`) : ''}
+      </div>
+      ${stakes ? `<p class="mu-note">${stakes}</p>` : ''}
+    </div></div>`;
 }
 
 // ---------- matchup breakdown ----------
@@ -1212,6 +1236,11 @@ function bind(key) {
   if (key === 'matchups') {
     $('.matchups')?.addEventListener('click', (e) => { const b = e.target.closest('.pick'); if (b && VOTES?.open) castVote(b); });
     document.querySelectorAll('.mu-more').forEach((b) => b.addEventListener('click', () => toggleMatchup(b.closest('.mu'))));
+    document.querySelectorAll('.odds-more').forEach((b) => b.addEventListener('click', () => {
+      const card = b.closest('.mu'), open = !card.classList.contains('odds-open');
+      card.classList.toggle('odds-open', open);
+      b.setAttribute('aria-expanded', open);
+    }));
     const drive = $('.drive');
     if (drive) {
       paintDrive(drive, 'now');
