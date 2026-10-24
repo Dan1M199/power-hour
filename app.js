@@ -4,6 +4,7 @@ import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
 import { tradeIdeas } from './lib/trades.js';
 import { breakdown, shortName } from './lib/matchup.js';
+import { MEMBERS, photoUrl } from './lib/members.js';
 
 // ---------- config ----------
 const TZ = 'America/Chicago';
@@ -97,13 +98,24 @@ const short = (name, n = 15) => (name.length > n ? name.slice(0, n - 1) + '…' 
 const nameOf = (id) => DATA.helpers.nameOf(id);
 const posOf = (id) => DATA.helpers.posOf(id);
 const posTag = (id) => { const p = posOf(id); return p ? `<span class="pos ${p}">${p}</span>` : ''; };
+const member = (t) => (t && MEMBERS[t.ownerId]) || null;
+// the person, not the Sleeper handle, wherever we can
+const faceSrc = (t) => (member(t) ? photoUrl(member(t).photo) : null);
+const firstName = (t) => member(t)?.first || t.owner;
 function avatar(t, cls = 'avatar') {
   const initials = esc(t.name.replace(/[^A-Za-z0-9 ]/g, '').split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?');
+  const m = member(t);
+  if (m) return `<img class="${cls} face" src="${photoUrl(m.photo)}" alt="" loading="lazy" decoding="async" data-initials="${initials}">`;
   if (!t.avatar) return `<span class="${cls} ph" aria-hidden="true">${initials}</span>`;
   return `<img class="${cls}" src="https://sleepercdn.com/avatars/thumbs/${esc(t.avatar)}" alt="" loading="lazy" data-initials="${initials}">`;
 }
+// a bigger, named photo for the places a face is the point (headlines, manager cards, the face-off)
+const headshot = (t, cls) => {
+  const m = member(t);
+  return m ? `<img class="${cls}" src="${photoUrl(m.photo)}" alt="${esc(m.first)}" decoding="async" data-initials="${esc(m.first[0])}">` : avatar(t, cls);
+};
 function fixAvatars(root) {
-  root.querySelectorAll('img.avatar').forEach((img) => {
+  root.querySelectorAll('img[data-initials]').forEach((img) => {
     img.addEventListener('error', () => {
       const s = document.createElement('span');
       s.className = img.className + ' ph';
@@ -183,6 +195,21 @@ function rankSpark(t, w = 84, h = 30) {
     <path d="${d}" stroke="${DATA.color[t.rid]}" pathLength="1"/><circle cx="${x(v.length - 1)}" cy="${y(v[v.length - 1])}" r="3" fill="${DATA.color[t.rid]}"/></svg>`;
 }
 
+// the front-page photo: whoever the story is about, with a stamp on the first face saying what kind of day it was
+const STAMPS = {
+  trade: 'Deal', wire: 'Pickup', cut: 'Cut', flurry: 'Busy', dud: 'Benched?', star: 'Star turn', unbeaten: 'Perfect',
+  winless: 'Winless', upset: 'Upset', blowout: 'Boom', nailbiter: 'Phew', explosion: 'Boom', climb: 'Rising',
+  fall: 'Sliding', unlucky: 'Robbed', lucky: 'Lucky', giant: 'Giant', gotw: 'Big game',
+};
+function leadFaces(st) {
+  const ts = st.rids.map(team).filter((t) => member(t)).slice(0, 2);
+  if (!ts.length) return '';
+  const stamp = st.type === 'streak' ? (st.tone === 'good' ? 'Heater' : 'Skid') : STAMPS[st.type];
+  return `<div class="lead-faces n${ts.length} ${esc(st.tone || '')}" aria-hidden="true">
+      ${ts.map((t, k) => `<span class="lf">${headshot(t, 'lead-face')}<span class="cap">${esc(firstName(t))}</span>${k === 0 && stamp ? `<em class="stamp">${esc(stamp)}</em>` : ''}</span>`).join('')}
+    </div>`;
+}
+
 // three headlines in one square card: swipe, arrows or dots; the active dot's fill is the auto-advance timer
 const CAROUSEL_SIZE = 3;
 function leadStory() {
@@ -198,7 +225,10 @@ function leadStory() {
     </div>`).join('');
   const slide = (st, i) => `
     <article class="slide" id="slide-${i}" role="group" aria-roledescription="slide" aria-label="Headline ${i + 1} of ${stories.length}">
-      <p class="kicker"><span>${i ? `Also today` : esc(date)}</span><span class="k">${esc(st.kicker)}</span></p>
+      <div class="slide-top">
+        <p class="kicker"><span>${i ? `Also today` : esc(date)}</span><span class="k">${esc(st.kicker)}</span></p>
+        ${leadFaces(st)}
+      </div>
       <${i ? 'h2' : 'h1'} class="lead-hed">${esc(st.headline)}</${i ? 'h2' : 'h1'}>
       <p class="lead-deck">${esc(st.deck)}</p>
       <div class="cast">${cast(st)}</div>
@@ -280,10 +310,10 @@ function rankRow(t, i) {
     <span class="jersey" aria-hidden="true">${t.powerRank}</span>
     <div class="rank-card glass ${t.powerRank <= 3 ? 'rim' : ''}">
       <button class="rank-btn" aria-expanded="false" aria-controls="d-${t.rid}">
-        ${avatar(t)}
+        ${avatar(t, `avatar${t.tier.key === "stinks" ? " drained" : ""}`)}
         <div class="team-line">
           <div class="team-name"><span class="sr-only">Rank ${t.powerRank}:</span><span class="name">${esc(t.name)}</span>${mv}${mine ? '<span class="you">You</span>' : ''}</div>
-          <div class="team-meta"><span><b>${record(t)}</b></span><span class="owner">${esc(t.owner)}</span><span>${f1(t.pfPerGame)} pts/gm</span><span class="tier ${t.tier.key}">${t.tier.label}</span></div>
+          <div class="team-meta"><span><b>${record(t)}</b></span><span class="owner" title="${esc(t.owner)} on Sleeper">${esc(firstName(t))}</span><span>${f1(t.pfPerGame)} pts/gm</span><span class="tier ${t.tier.key}">${t.tier.label}</span></div>
         </div>
         <div class="meter">
           <div class="meter-top"><span class="score">${t.score.toFixed(1)}</span><small>power score</small></div>
@@ -294,6 +324,44 @@ function rankRow(t, i) {
       <div class="detail" id="d-${t.rid}"><div></div></div>
     </div>
   </li>`;
+}
+
+// the manager's trading card at the top of an opened team: photo, a stat line, and any league-wide superlatives they own
+function superlatives(t) {
+  const ts = DATA.teams, mv = (x) => DATA.managerMoves[x.rid] || { moves: 0, tradeNet: 0 };
+  const top = (f, dir = 1) => { const ok = ts.filter((x) => f(x) != null); return ok.length ? ok.reduce((a, b) => (dir * (f(b) - f(a)) > 0 ? b : a)) : null; };
+  const best = (x) => Math.max(0, ...x.weeks.map((w) => w.pts || 0));
+  const out = [];
+  const add = (cond, label, tip, tone = 'good') => { if (cond && out.length < 3) out.push({ label, tip, tone }); };
+  add(top(best) === t, 'Season high', `Highest single-week score in the league: ${f1(best(t))}`);
+  add(top((x) => x.pfPerGame) === t, 'Points machine', `Most points per game in the league (${f1(t.pfPerGame)})`);
+  add(top((x) => x.efficiency) === t, 'Lineup sniper', `Best lineup efficiency in the league (${pct(t.efficiency)} of optimal)`);
+  add(top((x) => x.efficiency, -1) === t, 'Bench is loaded', `Worst lineup efficiency in the league (${pct(t.efficiency)} of optimal)`, 'bad');
+  add(top((x) => x.luck) === t && t.luck > 0.5, 'Horseshoe', `Luckiest record in the league: ${signed(t.luck)} wins over all-play expectation`, 'bad');
+  add(top((x) => x.luck, -1) === t && t.luck < -0.5, 'Snakebitten', `Unluckiest record in the league: ${signed(t.luck)} wins against all-play expectation`);
+  add(top((x) => mv(x).moves) === t && mv(t).moves > 0, 'Lives on the wire', `Most completed moves in the league (${mv(t).moves})`, 'neutral');
+  add(DATA.meta.hasRos && top((x) => mv(x).tradeNet) === t && mv(t).tradeNet > 1, 'Trade shark', `Best trade ledger in the league (${signed(mv(t).tradeNet)} ROS value)`);
+  add(DATA.meta.hasRos && top((x) => mv(x).tradeNet, -1) === t && mv(t).tradeNet < -1, 'Got fleeced', `Worst trade ledger in the league (${signed(mv(t).tradeNet)} ROS value)`, 'bad');
+  return out;
+}
+function managerCard(t) {
+  const m = member(t);
+  const bestWk = t.weeks.reduce((a, w) => (!a || (w.pts || 0) > a.pts ? w : a), null);
+  const moves = DATA.managerMoves[t.rid]?.moves || 0;
+  const stat = (v, l, tip) => `<div${tip ? ` data-tip="${esc(tip)}"` : ''}><b>${v}</b><small>${l}</small></div>`;
+  const sup = superlatives(t);
+  return `<div class="mgr">
+      ${headshot(t, `mgr-face${t.tier.key === 'stinks' ? ' drained' : ''}`)}
+      <div class="mgr-id"><small>Manager</small><b>${esc(m ? m.first : t.owner)}</b><span>@${esc(t.owner)}</span></div>
+      <div class="mgr-stats">
+        ${stat(record(t), 'record')}
+        ${bestWk ? stat(f1(bestWk.pts), `best, week ${bestWk.week}`) : ''}
+        ${t.efficiency != null ? stat(pct(t.efficiency), 'lineup IQ', `Started ${(t.efficiency * 100).toFixed(1)}% of their best possible lineup`) : ''}
+        ${stat(signed(t.luck), 'luck (wins)', `${record(t)} actual vs ${f1(t.expectedWins)} expected wins from all-play`)}
+        ${stat(moves, moves === 1 ? 'move' : 'moves')}
+      </div>
+      ${sup.length ? `<div class="mgr-sup">${sup.map((s) => `<span class="sup ${s.tone}" data-tip="${esc(s.tip)}">${esc(s.label)}</span>`).join('')}</div>` : ''}
+    </div>`;
 }
 
 function rankDetail(t) {
@@ -316,6 +384,7 @@ function rankDetail(t) {
   const maxSeed = Math.max(...seeds, 0.01);
   return `
     <div class="detail-inner">
+      ${managerCard(t)}
       <ul class="why">${why}</ul>
       <div class="detail-side">
         ${rad ? `<div class="mini"><h4>Position groups vs the league</h4><div class="mini-row">${rad}<div>${lineup}</div></div></div>` : ''}
@@ -452,10 +521,10 @@ function viewWire() {
         ${DATA.meta.hasRos ? `<section class="panel glass"><h2>Best available</h2><p class="sub">Highest consensus ROS value not on a roster right now.</p>
           <ol class="fa-list">${fa.map((p, i) => `<li><span class="n">${i + 1}</span><span>${posTag(p.id)}${esc(nameOf(p.id))} <span class="when">${p.pos}${p.prk}</span></span><span class="v" data-tip="Consensus value ${f1(p.v)}, ${f1(p.wk)} proj pts/wk">${f1(p.v)}</span></li>`).join('') || '<li>Nothing notable on waivers.</li>'}</ol></section>` : ''}
         <section class="panel glass"><h2>Busiest managers</h2><p class="sub">Completed moves this season, with net ROS value added.</p>
-          ${mm.map((m) => `<div class="leader"><span>${esc(team(m.rid).name)}</span><span>${m.moves}${DATA.meta.hasRos ? ` <span class="${m.net >= 0 ? 'plus' : 'minus'}">${signed(m.net)}</span>` : ''}</span></div>`).join('')}
+          ${mm.map((m) => `<div class="leader"><span>${avatar(team(m.rid), "avatar xs")}${esc(team(m.rid).name)}</span><span>${m.moves}${DATA.meta.hasRos ? ` <span class="${m.net >= 0 ? 'plus' : 'minus'}">${signed(m.net)}</span>` : ''}</span></div>`).join('')}
         </section>
         ${traders.length && DATA.meta.hasRos ? `<section class="panel glass"><h2>Trade ledger</h2><p class="sub">Net ROS value from trades at today's consensus. In uneven trades, each roster spot freed up counts as one top free agent (${f1(DATA.meta.replacement)}).</p>
-          ${traders.map((m) => `<div class="leader"><span>${esc(team(m.rid).name)}</span><span class="${m.tradeNet >= 0 ? 'plus' : 'minus'}">${signed(m.tradeNet)}</span></div>`).join('')}</section>` : ''}
+          ${traders.map((m) => `<div class="leader"><span>${avatar(team(m.rid), "avatar xs")}${esc(team(m.rid).name)}</span><span class="${m.tradeNet >= 0 ? 'plus' : 'minus'}">${signed(m.tradeNet)}</span></div>`).join('')}</section>` : ''}
       </aside>
     </div>`;
 }
@@ -482,9 +551,9 @@ function viewMatchups() {
         ${isKey ? '<span class="key-tag">Game of the week</span>' : ''}
         <p class="mu-quip">${esc(DATA.quips[i])}</p>
         <div class="mu-teams">
-          <div class="mu-team">${avatar(a)}<span class="tn">${esc(a.name)}</span><small>#${a.powerRank} power, ${record(a)}</small>${liveTag(p.liveA)}<span class="pr">${f1(p.projA)}</span></div>
-          <span class="vs">vs</span>
-          <div class="mu-team right">${avatar(b)}<span class="tn">${esc(b.name)}</span><small>#${b.powerRank} power, ${record(b)}</small>${liveTag(p.liveB)}<span class="pr">${f1(p.projB)}</span></div>
+          <div class="mu-team">${headshot(a, "mu-face")}<span class="tn">${esc(a.name)}</span><small>#${a.powerRank} power, ${record(a)}</small>${liveTag(p.liveA)}<span class="pr">${f1(p.projA)}</span></div>
+          <span class="vs" aria-hidden="true">vs</span>
+          <div class="mu-team right">${headshot(b, "mu-face")}<span class="tn">${esc(b.name)}</span><small>#${b.powerRank} power, ${record(b)}</small>${liveTag(p.liveB)}<span class="pr">${f1(p.projB)}</span></div>
         </div>
         <div class="wp"><div class="wp-bar" role="img" aria-label="${esc(a.name)} ${pct(p.winA)}, ${esc(b.name)} ${pct(1 - p.winA)}"><i style="width:${p.winA * 100}%"></i><i style="width:${(1 - p.winA) * 100}%"></i></div>
           <div class="wp-labels"><span>${pct(p.winA)}</span><span>${pct(1 - p.winA)}</span></div></div>
@@ -620,7 +689,7 @@ function matchupDetail(i) {
   return `
     <div class="bd">
       <div class="bd-main">
-        <div class="bd-head"><div class="a"><b>${f1(bd.totals.a)}</b><span>${esc(A.name)}</span></div><p>${src}</p><div class="b"><b>${f1(bd.totals.b)}</b><span>${esc(B.name)}</span></div></div>
+        <div class="bd-head"><div class="a">${avatar(A)}<b>${f1(bd.totals.a)}</b><span>${esc(A.name)}</span></div><p>${src}</p><div class="b">${avatar(B)}<b>${f1(bd.totals.b)}</b><span>${esc(B.name)}</span></div></div>
         <div class="h2h">${bd.rows.map(row).join('')}</div>
       </div>
       <div class="bd-side">
@@ -661,6 +730,7 @@ function gameOfTheWeek() {
   const a = team(p.a), b = team(p.b);
   return `
     <section class="gotw glass rim" aria-labelledby="gotw-hed">
+      ${faceoff(p, a, b)}
       <div class="gotw-copy">
         <p class="kicker"><span>Game of the week</span><span class="k">${esc(a.name)} vs ${esc(b.name)}</span></p>
         <h2 id="gotw-hed">${esc(k.headline)}</h2>
@@ -677,6 +747,22 @@ function gameOfTheWeek() {
         <p class="sub">Picked from this week's slate by stakes (${Math.round(p.stakes * 100)} combined points of playoff odds on the line, ${Math.round(k.stakesNorm * 100)}% of the week's biggest) and closeness (${Math.round(k.closeness * 100)} out of 100, where 100 is a dead-even projection).</p>
       </div>
     </section>`;
+}
+
+// the fight-poster header: both managers nose to nose, blue corner against amber corner
+function faceoff(p, a, b) {
+  const favA = p.winA >= 0.5;
+  const side = (t, k, win, fav) => `
+    <div class="fo-side ${k}">
+      ${headshot(t, 'fo-face')}
+      <div class="fo-tag">
+        ${fav ? '<span class="fo-fav">Favourite</span>' : '<span class="fo-fav dog">Underdog</span>'}
+        <b>${esc(firstName(t))}</b>
+        <small>${esc(t.name)}, ${record(t)}</small>
+        <span class="fo-odds">${pct(win)}<small> to win</small></span>
+      </div>
+    </div>`;
+  return `<div class="faceoff" aria-hidden="true">${side(a, 'a', p.winA, favA)}<span class="fo-vs"><i>vs</i></span>${side(b, 'b', 1 - p.winA, !favA)}</div>`;
 }
 
 // The playoff drive: each team is a football on a field that runs from 0% playoff odds (its own goal line) to 100%
@@ -698,7 +784,7 @@ function playoffDrive(a, b) {
     <div class="drive" data-s="now" data-a="${esc(a.name)}" data-b="${esc(b.name)}" data-states='${JSON.stringify(states)}'>
       <div class="drive-head">
         <h4>The playoff drive</h4>
-        <p class="drive-key"><span class="a">${esc(a.name)}</span><span class="b">${esc(b.name)}</span></p>
+        <p class="drive-key"><span class="a">${avatar(a)}${esc(a.name)}</span><span class="b">${avatar(b)}${esc(b.name)}</span></p>
         <div class="drive-pick" role="group" aria-label="Show playoff odds after a result">${btn('now', 'Today')}${btn('a', `${esc(short(a.name, 14))} win`)}${btn('b', `${esc(short(b.name, 14))} win`)}</div>
       </div>
       <div class="drive-field">
@@ -799,7 +885,7 @@ function viewLab() {
   const weeks = DATA.history.map((h) => h.week);
   const focus = myTeam || null;
   const bump = bumpChart({
-    series: teams.map((t) => ({ id: t.rid, label: t.name, short: short(t.name, 14), color: DATA.color[t.rid], values: t.rankHistory })),
+    series: teams.map((t) => ({ id: t.rid, label: t.name, short: short(t.name, 14), color: DATA.color[t.rid], values: t.rankHistory, img: faceSrc(t) })),
     weeks, n, focus,
   });
   const luckRows = [...teams].sort((a, b) => b.luck - a.luck).map((t) => ({
@@ -808,7 +894,7 @@ function viewLab() {
   }));
   const avgPf = teams.reduce((a, t) => a + t.pfPerGame, 0) / n;
   const sc = scatter({
-    points: teams.map((t) => ({ id: t.rid, x: t.pfPerGame, y: t.pa / Math.max(1, t.games), color: DATA.color[t.rid], label: t.name, short: short(t.name, 12), tip: `${t.name}: ${f1(t.pfPerGame)} for, ${f1(t.pa / Math.max(1, t.games))} against per game` })),
+    points: teams.map((t) => ({ id: t.rid, x: t.pfPerGame, y: t.pa / Math.max(1, t.games), color: DATA.color[t.rid], img: faceSrc(t), label: t.name, short: short(t.name, 12), tip: `${t.name}: ${f1(t.pfPerGame)} for, ${f1(t.pa / Math.max(1, t.games))} against per game` })),
     xLabel: 'Points for per game', yLabel: 'Points against per game', refX: avgPf, refY: avgPf,
     quadrants: ['Snakebitten', 'Good but unlucky', 'Struggling', 'Cruising'], focus,
   });
@@ -859,7 +945,7 @@ function viewLab() {
       ${posHeat ? `<section class="panel glass span-7"><h2>Position group ranks</h2><p class="sub">League rank of each team's projected rest-of-season starters by position, flex spots included.</p>${posHeat}</section>` : ''}
       <section class="panel glass ${posHeat ? 'span-5' : 'span-12'}"><h2>Playoff odds</h2><p class="sub">From 10,000 simulated finishes to the regular season, top ${DATA.meta.playoffTeams} get in.</p>
         <table class="table"><thead><tr><th>Team</th><th class="num">Playoffs</th><th class="num">Bye</th><th class="num">Proj W</th><th class="num">Last</th></tr></thead><tbody>
-        ${oddsRows.map((t) => `<tr${t.rid === myTeam ? ' class="mine"' : ''}><td>${esc(short(t.name, 20))}</td><td class="num"><b>${pct(t.playoffPct)}</b></td><td class="num">${pct(t.byePct)}</td><td class="num">${f1(t.projWins)}</td><td class="num">${pct(t.lastPct)}</td></tr>`).join('')}
+        ${oddsRows.map((t) => `<tr${t.rid === myTeam ? ' class="mine"' : ''}><td class="tm">${avatar(t, "avatar xs")}${esc(short(t.name, 20))}</td><td class="num"><b>${pct(t.playoffPct)}</b></td><td class="num">${pct(t.byePct)}</td><td class="num">${f1(t.projWins)}</td><td class="num">${pct(t.lastPct)}</td></tr>`).join('')}
         </tbody></table></section>
       <section class="panel glass span-6"><h2>Lineup efficiency</h2><p class="sub">Share of their best possible lineup each manager actually started, compared with the league average of ${(effAvg * 100).toFixed(1)}%.</p>${divergingBars({ rows: effRows, unit: ' pts' }).replace(/ pts</g, '%<')}</section>
       <section class="panel glass span-6"><h2>Biggest single games</h2><p class="sub">Top individual starter performances this season.</p>
@@ -957,6 +1043,7 @@ function route({ fresh = false } = {}) {
   const render = () => {
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.view === key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
     placeInk();
+    paintMe();
     const app = $('#app');
     app.innerHTML = VIEWS[key]();
     fixAvatars(app);
@@ -1022,6 +1109,14 @@ function bind(key) {
   }
 }
 
+// your own face next to the team picker once you have chosen a team
+function paintMe() {
+  const img = $('#my-face'), src = myTeam ? faceSrc(team(myTeam)) : null;
+  if (!img) return;
+  img.hidden = !src;
+  if (src && img.getAttribute('src') !== src) img.src = src;
+}
+
 function initTeamPicker() {
   const sel = $('#my-team');
   sel.innerHTML = '<option value="">Your team</option>' + [...DATA.teams].sort((a, b) => a.name.localeCompare(b.name)).map((t) => `<option value="${t.rid}" ${t.rid === myTeam ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
@@ -1070,6 +1165,12 @@ async function main() {
   $('#league-name').textContent = `${RAW.league.name} ${RAW.league.season}`;
   $('#footer-meta').textContent = `${RAW.isDemo ? 'Demo snapshot. ' : ''}Through week ${DATA.meta.lastScored}. ${updatedText() ? `${updatedText()}.` : ''}${DATA.overrides.length ? ` Manual fixes: ${DATA.overrides.map((o) => o.note).join('; ')}.` : ''}`;
   initTeamPicker();
+  const ed = DATA.teams.find((t) => t.owner === EDITOR.user);
+  if (ed && faceSrc(ed)) {
+    const mh = $('#masthead');
+    mh.innerHTML = `<img src="${faceSrc(ed)}" alt="" width="44" height="44"><span>The Power Hour is put together by <b>${esc(EDITOR.name)}</b>, whose own lineup mistakes are always front-page news.</span>`;
+    mh.hidden = false;
+  }
   window.addEventListener('hashchange', () => route({ fresh: true }));
   loadVotes();
   let lastWidth = innerWidth;
