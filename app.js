@@ -537,7 +537,7 @@ function paintVotes(err) {
 }
 async function loadVotes() {
   const wk = DATA.previews[0]?.week;
-  if (!wk || new URLSearchParams(location.search).has('demo')) return;
+  if (!wk || RAW.isDemo) return; // the demo snapshot and the single-file preview never call the vote store
   try {
     const r = await fetch(`/api/votes?week=${wk}&voter=${encodeURIComponent(voterId())}`);
     if (!r.ok) return; // unavailable: voting stays hidden
@@ -818,7 +818,7 @@ function viewLab() {
       ${posHeat ? `<section class="panel glass span-7"><h2>Position group ranks</h2><p class="sub">League rank of each team's projected rest-of-season starters by position, flex spots included.</p>${posHeat}</section>` : ''}
       <section class="panel glass ${posHeat ? 'span-5' : 'span-12'}"><h2>Playoff odds</h2><p class="sub">From 10,000 simulated finishes to the regular season, top ${DATA.meta.playoffTeams} get in.</p>
         <table class="table"><thead><tr><th>Team</th><th class="num">Playoffs</th><th class="num">Bye</th><th class="num">Proj W</th><th class="num">Last</th></tr></thead><tbody>
-        ${oddsRows.map((t) => `<tr${t.rid === myTeam ? ' style="color:var(--cyan)"' : ''}><td>${esc(short(t.name, 20))}</td><td class="num"><b>${pct(t.playoffPct)}</b></td><td class="num">${pct(t.byePct)}</td><td class="num">${f1(t.projWins)}</td><td class="num">${pct(t.lastPct)}</td></tr>`).join('')}
+        ${oddsRows.map((t) => `<tr${t.rid === myTeam ? ' class="mine"' : ''}><td>${esc(short(t.name, 20))}</td><td class="num"><b>${pct(t.playoffPct)}</b></td><td class="num">${pct(t.byePct)}</td><td class="num">${f1(t.projWins)}</td><td class="num">${pct(t.lastPct)}</td></tr>`).join('')}
         </tbody></table></section>
       <section class="panel glass span-6"><h2>Lineup efficiency</h2><p class="sub">Share of their best possible lineup each manager actually started, compared with the league average of ${(effAvg * 100).toFixed(1)}%.</p>${divergingBars({ rows: effRows, unit: ' pts' }).replace(/ pts</g, '%<')}</section>
       <section class="panel glass span-6"><h2>Biggest single games</h2><p class="sub">Top individual starter performances this season.</p>
@@ -845,9 +845,10 @@ const ORDER = ['rankings', 'wire', 'matchups', 'trades', 'lab'];
 let currentView = null;
 
 // gold pill behind the active tab; with view transitions the browser morphs it, otherwise CSS slides it
-function placeInk() {
+function placeInk({ settle = false } = {}) {
   const ink = $('.tab-ink'), a = $('.tabs a[aria-current]');
   if (!ink || !a) return;
+  if (settle) ink.classList.remove('live'); // a re-measure snaps into place instead of sliding
   ink.style.width = `${a.offsetWidth}px`;
   ink.style.transform = `translateX(${a.offsetLeft}px)`;
   // the browser morphs the pill during a view transition; otherwise CSS slides it
@@ -1021,7 +1022,7 @@ async function main() {
     return;
   }
   $('#league-name').textContent = `${RAW.league.name} ${RAW.league.season}`;
-  $('#footer-meta').textContent = `${RAW.isDemo ? 'Demo snapshot. ' : ''}Through week ${DATA.meta.lastScored}. ${updatedText()}${DATA.overrides.length ? ` Manual fixes: ${DATA.overrides.map((o) => o.note).join('; ')}.` : ''}`;
+  $('#footer-meta').textContent = `${RAW.isDemo ? 'Demo snapshot. ' : ''}Through week ${DATA.meta.lastScored}. ${updatedText() ? `${updatedText()}.` : ''}${DATA.overrides.length ? ` Manual fixes: ${DATA.overrides.map((o) => o.note).join('; ')}.` : ''}`;
   initTeamPicker();
   window.addEventListener('hashchange', () => route({ fresh: true }));
   loadVotes();
@@ -1029,9 +1030,13 @@ async function main() {
   window.addEventListener('resize', () => {
     if (innerWidth === lastWidth) return; // height-only resizes are the browser toolbar, ignore them
     lastWidth = innerWidth;
-    placeInk();
+    placeInk({ settle: true });
     carouselFit?.();
   }, { passive: true });
   route();
+  // the first route can measure the tabs before the stylesheet or the fonts have applied (fast or cached data)
+  const settle = () => placeInk({ settle: true });
+  if (document.readyState !== 'complete') window.addEventListener('load', settle, { once: true });
+  document.fonts?.ready.then(settle);
 }
 main();
