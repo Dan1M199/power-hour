@@ -2,8 +2,12 @@
 //
 // Pulls FantasyPros, DraftSharks and LeagueLogs half-PPR ROS rankings plus Sleeper's player map,
 // matches every ranked player to a Sleeper ID and blends the sources (lib/consensus.js).
-// The response is cached on Vercel's CDN; the front end asks for /api/ros?d=<today's date>,
-// so the first visit each day triggers a fresh pull and everyone else that day gets the cached copy.
+// The front end asks for /api/ros?d=<morning key> (lib/newsclock.js); any other key is redirected to it. Sleeper's
+// player map is read at most once per morning: it's kept slimmed in the store (lib/snapstore.js) under that key, so
+// deploys, CDN purges and the hourly retry while a ranking site is down all reuse it. The ranking sites are scraped
+// once per morning too (hourly while one of them is failing).
+import { morningKey } from '../lib/newsclock.js';
+import { once } from '../lib/snapstore.js';
 
 import {
   FANTASYPROS_URL, DRAFTSHARKS_URL, LEAGUELOGS_URL,
@@ -41,18 +45,54 @@ async function loadSource(key, url, parse) {
   }
 }
 
+// Sleeper's /players/nfl (~5 MB), cut to the fields we use for fantasy positions
+async function sleeperPlayers() {
+  const r = await fetch('https://api.sleeper.app/v1/players/nfl');
+  if (!r.ok) throw new Error(`Sleeper players ${r.status}`);
+  const all = await r.json(), slim = {};
+  for (const [id, p] of Object.entries(all)) {
+    if (!POS.has(p.position)) continue;
+    slim[id] = { full_name: p.full_name, first_name: p.first_name, last_name: p.last_name, position: p.position, team: p.team, injury_status: p.injury_status, active: p.active, age: p.age };
+  }
+  return slim;
+}
+
+const askedKey = (req) => req.query?.d ?? (req.url ? new URL(req.url, 'http://x').searchParams.get('d') : null);
+
 export default async function handler(req, res) {
   try {
+    const key = morningKey();
+    if (req.url && askedKey(req) !== key) {
+      res.setHeader('Cache-Control', 'public, s-maxage=60');
+      res.setHeader('Location', `/api/ros?d=${encodeURIComponent(key)}`);
+      return res.status(307).end();
+    }
+    const { body, from } = await once('ros', key, async () => {
+      const body = await build(key);
+      const allOk = Object.values(body.sources).every((s) => s.ok);
+      return { body, ttl: allOk ? 3 * 86400 : 3600 }; // a failed source gets retried after an hour
+    });
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('X-Snapshot', `${key} ${from}`);
+    // A day at the edge, then serve stale for another day while a fresh copy is fetched in the background.
+    // If a source failed, only cache for an hour so the next visitor retries.
+    const allOk = Object.values(body.sources).every((s) => s.ok);
+    res.setHeader('Cache-Control', allOk ? 'public, s-maxage=86400, stale-while-revalidate=86400' : 'public, s-maxage=3600');
+    res.status(200).send(JSON.stringify(body));
+  } catch (e) {
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(502).json({ error: String(e.message || e) });
+  }
+}
+
+async function build(key) {
     const [sources, sleeper] = await Promise.all([
       Promise.all([
         loadSource('fp', FANTASYPROS_URL, parseFantasyPros),
         loadSource('ds', DRAFTSHARKS_URL, parseDraftSharks),
         loadSource('ll', LEAGUELOGS_URL, parseLeagueLogs),
       ]).then(Object.fromEntries),
-      fetch('https://api.sleeper.app/v1/players/nfl').then((r) => {
-        if (!r.ok) throw new Error(`Sleeper players ${r.status}`);
-        return r.json();
-      }),
+      once('players', key, async () => ({ body: await sleeperPlayers(), ttl: 3 * 86400 })).then((x) => x.body),
     ]);
 
     const idx = buildIndex(sleeper);
@@ -91,14 +131,5 @@ export default async function handler(req, res) {
       byes,
     };
 
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    // A day at the edge, then serve stale for another day while a fresh copy is fetched in the background.
-    // If a source failed, only cache for an hour so the next visitor retries.
-    const allOk = Object.values(sources).every((s) => s.ok);
-    res.setHeader('Cache-Control', allOk ? 'public, s-maxage=86400, stale-while-revalidate=86400' : 'public, s-maxage=3600');
-    res.status(200).send(JSON.stringify(body));
-  } catch (e) {
-    res.setHeader('Cache-Control', 'no-store');
-    res.status(502).json({ error: String(e.message || e) });
-  }
+    return body;
 }

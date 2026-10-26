@@ -1,8 +1,11 @@
 // GET /api/league — one snapshot of everything the site reads from Sleeper for the league.
 //
-// The front end asks for /api/league?d=<morning key> (the Central date, rolling over at 6am so last night's games
-// are final). Vercel's CDN caches each key for a day, so Sleeper is hit once per morning no matter how many people
-// open the page; every visitor that day shares the cached copy.
+// The front end asks for /api/league?d=<key>. The key is set by the news clock (lib/newsclock.js): the Central date,
+// rolling over at 6am so last night's games are final, plus a "-late" copy after Sunday night football. That is the
+// whole Sleeper schedule. Any other key is redirected to the current one, and each snapshot is kept in the store
+// (lib/snapstore.js), so the CDN purge on every deploy, odd query strings or many visitors never cause another pull.
+import { leagueKey } from '../lib/newsclock.js';
+import { once } from '../lib/snapstore.js';
 
 const LEAGUE_ID = '1312001652454088704';
 const SLEEPER = 'https://api.sleeper.app/v1';
@@ -35,10 +38,20 @@ export async function snapshot() {
   };
 }
 
+const askedKey = (req) => req.query?.d ?? (req.url ? new URL(req.url, 'http://x').searchParams.get('d') : null);
+
 export default async function handler(req, res) {
   try {
-    const body = await snapshot();
+    const key = leagueKey();
+    if (req.url && askedKey(req) !== key) {
+      res.setHeader('Cache-Control', 'public, s-maxage=60');
+      res.setHeader('Location', `/api/league?d=${encodeURIComponent(key)}`);
+      return res.status(307).end();
+    }
+    // three days in the store: long enough to outlive any deploy, short enough to clean itself up
+    const { body, from } = await once('league', key, async () => ({ body: await snapshot(), ttl: 3 * 86400 }));
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('X-Snapshot', `${key} ${from}`);
     res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600');
     res.status(200).send(JSON.stringify(body));
   } catch (e) {

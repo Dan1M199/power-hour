@@ -7,9 +7,9 @@ import { breakdown, shortName } from './lib/matchup.js';
 import { MEMBERS, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
+import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
 
 // ---------- config ----------
-const TZ = 'America/Chicago';
 const SOURCE_NAMES = { fp: 'FantasyPros', ds: 'DraftSharks', ll: 'LeagueLogs' };
 // the site's author: his own lineup blunders always make the lead story
 const EDITOR = { user: 'dmir9999', name: 'Dan' };
@@ -19,26 +19,14 @@ const MONEY_WEEK = {
   week: 7, target: 120, prize: 80, usual: 40, title: "Mo's birthday bullseye", honoree: '1004163936612089856',
   why: "120 is 10/20, Commissioner Mo's birthday", flyer: 'assets/money-week-flyer.jpg',
 };
-// The news clock (Central time, minutes into the week from Sunday midnight). During Sunday's games the main page
-// says the news is on hold; at the late pull, after Sunday night football, the site takes a fresh Sleeper snapshot
-// and the night desk (lib/nightdesk.js) writes the night edition, which leads until Tuesday morning.
-const NEWS_CLOCK = {
-  hold: [12 * 60, 22 * 60 + 45], // Sunday noon to 10:45pm
-  holdNote: "Games in progress: news will be updated at the conclusion of tonight's matchup.",
-  late: 22 * 60 + 45, // Sunday 10:45pm: the late pull
-  through: 2 * 1440 + 6 * 60, // the night edition runs until Tuesday 6am
-};
-// ?at=2026-10-25T22:45-05:00 pretends it's that moment, to check the news clock
+// The news clock (lib/newsclock.js): the hold on Sunday's news, the late pull after Sunday night football, the night
+// edition and the game window. ?at=2026-10-25T22:45-05:00 pretends it's that moment for the page (not for the data:
+// snapshot keys always follow the real clock, and the API redirects any other key to the current one).
 const AT = (() => { const v = new URLSearchParams(location.search).get('at'); const d = v && new Date(v); return d && !isNaN(d) ? d : null; })();
 const clock = () => AT || new Date();
-function weekMinute(d = clock()) {
-  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' }).formatToParts(d).map((x) => [x.type, x.value]));
-  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(p.weekday) * 1440 + Number(p.hour) * 60 + Number(p.minute);
-}
-const onHold = () => { const m = weekMinute(); return m >= NEWS_CLOCK.hold[0] && m < NEWS_CLOCK.hold[1]; };
-// the game window, Thursday 7:15pm kickoff to Tuesday 6am: the Live tab is the front page all weekend, points or not
-const gameWindow = () => { const m = weekMinute(); return m >= 4 * 1440 + 19 * 60 + 15 || m < 2 * 1440 + 6 * 60; };
-const nightDesk = () => { const m = weekMinute(); return m >= NEWS_CLOCK.late && m < NEWS_CLOCK.through; };
+const onHold = () => isOnHold(clock());
+const gameWindow = () => inGameWindow(clock());
+const nightDesk = () => isNightDesk(clock());
 
 // last season's champion carries a trophy wherever their team shows up
 const CHAMPION = { user: '1004111276118761472', season: 2025 };
@@ -77,12 +65,7 @@ const getJSON = async (url) => {
   if (!r.ok) throw new Error(`${r.status} from ${url}`);
   return r.json();
 };
-const chicagoDate = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(clock());
-
-// the day's data key: the Central date, rolling over at 6am so the morning snapshot has last night's games final
-const morningKey = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(clock() - 6 * 36e5));
-// the league snapshot's key: the morning one, plus a "-late" copy from the late pull until the next morning rolls over
-const leagueKey = () => { const m = weekMinute(); return m >= NEWS_CLOCK.late && m < 1440 + 6 * 60 ? `${morningKey()}-late` : morningKey(); };
+const chicagoDate = () => centralDate(clock());
 
 // Sleeper is read once per morning through /api/league (CDN-cached per key), never straight from the browser
 async function loadLive() {

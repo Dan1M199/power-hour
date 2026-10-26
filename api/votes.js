@@ -14,6 +14,7 @@
 // the morning snapshot shows points on the board, whichever comes first.
 //
 // Matchups come from /api/league, the once-a-morning Sleeper snapshot on the CDN, so voting never calls Sleeper itself.
+import { leagueKey } from '../lib/newsclock.js';
 
 import { createHash } from 'node:crypto';
 
@@ -44,7 +45,8 @@ async function redis(commands) {
 
 const TZ = 'America/Chicago';
 const now = () => Number(process.env.VOTES_NOW) || Date.now(); // overridable for tests
-const morningKey = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(now() - 6 * 36e5));
+// the same snapshot key the page uses, so this reads the stored copy and never causes a Sleeper pull of its own
+const snapKey = () => leagueKey(new Date(now()));
 // Thursday from 7:15pm through Monday, Central time: this week's games are under way
 function kickedOff() {
   const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' })
@@ -56,7 +58,7 @@ function kickedOff() {
 // this week's matchups from the morning snapshot: pair keys like "3-8" (lower roster id first) and whether voting is open
 async function week(w, req) {
   const proto = req.headers['x-forwarded-proto'] || (String(req.headers.host).startsWith('localhost') ? 'http' : 'https');
-  const r = await fetch(`${proto}://${req.headers.host}/api/league?d=${morningKey()}`);
+  const r = await fetch(`${proto}://${req.headers.host}/api/league?d=${snapKey()}`);
   if (!r.ok) throw new Error(`league snapshot ${r.status}`);
   const snap = await r.json();
   const rows = snap.matchups?.[w] || [];
