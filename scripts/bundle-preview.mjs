@@ -21,6 +21,8 @@ let html = r('index.html')
   .replace('<title>The Power Hour</title>', '<title>The Power Hour</title>')
   // the demo data is inline, so the kicker loader never shows: drop its video and still instead of shipping them
   .replace(/\s*<video class="kick"[\s\S]*?<\/video>\s*<img class="kick kick-still"[^>]*>/, '')
+  // the league logo: header, footer, tab and home-screen icons
+  .replace(/(src|href)="assets\/(logo-header\.webp|logo-footer\.webp|favicon\.png|apple-touch-icon\.png)"/g, (_, attr, f) => `${attr}="data:image/${f.endsWith('.png') ? 'png' : 'webp'};base64,${readFileSync(new URL(`../assets/${f}`, import.meta.url)).toString('base64')}"`)
   .replace('src="assets/ttp-logo.png"', `src="data:image/png;base64,${readFileSync(new URL('../assets/ttp-logo.png', import.meta.url)).toString('base64')}"`);
 mkdirSync(new URL('../dist', import.meta.url), { recursive: true });
 writeFileSync(new URL('../dist/preview.html', import.meta.url), html);

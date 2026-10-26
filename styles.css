@@ -80,8 +80,8 @@ button, select { font: inherit; color: inherit; }
   display: flex; align-items: center; gap: 16px; padding: 8px 10px; border-radius: 999px;
 }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); min-width: 0; }
-.brand-mark { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
-  font: 900 18px/1 var(--display); letter-spacing: 0.02em; color: var(--ink); background: var(--yellow); box-shadow: 0 3px 0 var(--ledge-gold); }
+/* the league logo (assets/power_hour_logo.png, trimmed and resized to logo-header.webp) */
+.brand-logo { flex: none; display: block; width: auto; height: 48px; }
 .brand-text { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
 .brand-text strong { font: 800 21px/1 var(--display); letter-spacing: 0.01em; }
 .brand-text small { color: var(--ink-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -665,6 +665,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .footer { position: relative; width: min(1180px, calc(100% - 24px)); margin: 0 auto; padding: 30px 4px 48px; color: var(--tile); font-size: 13px; }
 .footer::before { content: ''; position: absolute; z-index: -1; inset: 0 calc(50% - 50vw); background: var(--turf); box-shadow: inset 0 6px 0 var(--chalk); }
 .footer p { margin: 0 0 6px; max-width: 80ch; }
+.footer-logo { display: block; width: auto; height: 160px; margin: 6px 0 14px; }
 .footer .sponsor { display: flex; align-items: center; gap: 14px; margin: 10px 0 12px; }
 .footer .sponsor img { width: 72px; height: auto; flex: none; }
 .footer .sponsor p { margin: 0; color: var(--chalk); font-size: 14px; }
@@ -1034,7 +1035,9 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .team-pick { margin-left: auto; flex: none; }
   .team-pick select { max-width: 132px; font-size: 13px; padding-block: 6px; }
   .brand-text small { display: none; }
-  .brand-mark { width: 34px; height: 34px; font-size: 15px; }
+  .brand-logo { height: 42px; }
+  /* phones: the logo carries the name on its own, leaving room for the team picker */
+  .brand-text { display: none; }
   .view-head { grid-template-columns: 1fr; }
   .sources { justify-content: flex-start; }
   .rank, .rank:nth-child(-n + 3) { padding-left: 46px; }
