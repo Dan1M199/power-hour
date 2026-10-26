@@ -91,6 +91,8 @@ button, select { font: inherit; color: inherit; }
 .tab-ink.live { transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .tabs a { position: relative; z-index: 1; padding: 8px 16px; border-radius: 999px; color: var(--ink-2); text-decoration: none; font-weight: 700; font-size: 14px; white-space: nowrap; transition: color 0.2s; }
 .tabs a:hover, .tabs a[aria-current='page'] { color: var(--ink); }
+/* short tab labels for phones (six tabs during a live week) */
+.tabs .ts { display: none; }
 .team-pick select {
   appearance: none; -webkit-appearance: none; cursor: pointer; max-width: 190px;
   padding: 8px 34px 8px 14px; border-radius: 999px; border: 2px solid var(--line); background: var(--chalk)
@@ -758,6 +760,39 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   @keyframes live-blink { 50% { opacity: 0.25; } }
 }
 
+/* ---------- live week: weekly rankings and projected standings ---------- */
+.live-panel + .live-panel { margin-top: 22px; }
+.chip .dot.live { background: var(--flag); }
+.wr-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.wr { display: grid; grid-template-columns: 34px 40px minmax(0, 1fr) minmax(0, 1.3fr) 118px; gap: 6px 14px; align-items: center; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+.wr:last-child { border-bottom: 0; }
+.wr.mine { border-radius: 14px; background: var(--mine-bg); box-shadow: inset 0 0 0 2px #F2C200; }
+.wr-n { font: 900 30px/1 var(--display); text-align: right; color: var(--ink); }
+.wr:nth-child(-n + 3) .wr-n { color: var(--good); }
+.wr.last .wr-n { color: var(--bad); }
+.wr .avatar { width: 40px; height: 40px; }
+.wr .avatar.ph { font-size: 17px; }
+.wr-who { min-width: 0; display: grid; gap: 4px; justify-items: start; }
+.wr-who b { max-width: 100%; font: 800 19px/1.05 var(--display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-chip { max-width: 100%; padding: 3px 9px; border-radius: 999px; font: 700 11.5px/1.3 var(--body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-chip.up { color: var(--good); background: #E3F2DC; }
+.st-chip.down { color: var(--bad); background: #FDE7E7; }
+.st-chip.won { color: var(--ink); background: var(--grass-2); }
+.st-chip.lost { color: var(--chalk); background: var(--flag); }
+.wr-bar { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--tile-2); }
+.wr-bar i { display: block; height: 100%; }
+.wr-bar .bk { background: var(--turf); }
+.wr-bar .rs { background: repeating-linear-gradient(135deg, var(--grass-2) 0 6px, #B9DC8F 6px 12px); }
+.wr-num { text-align: right; line-height: 1.1; }
+.wr-num b { display: block; font: 900 28px/1 var(--display); color: var(--ink); }
+.wr-num small { font-size: 11.5px; color: var(--ink-3); white-space: nowrap; }
+.stand .seed { white-space: nowrap; }
+.stand .seed b { font: 800 18px/1 var(--display); }
+.stand .seed .move { margin-left: 6px; font-size: 11px; padding: 3px 6px; }
+.stand td.tm { white-space: nowrap; font-weight: 600; }
+.stand .now small { color: var(--ink-3); }
+.stand tr.cut td { border-bottom: 3px dashed var(--grass); }
+
 /* ---------- the defending champion's trophy ---------- */
 .trophy { flex: none; vertical-align: -3px; }
 .champ { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px 3px 5px; border-radius: 999px; white-space: nowrap;
@@ -937,6 +972,8 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .topbar { flex-wrap: wrap; border-radius: 26px; padding: 10px; gap: 10px; }
   .tabs { order: 3; width: 100%; justify-content: space-between; margin: 0; }
   .tabs a { padding: 8px 7px; font-size: 12.5px; flex: 1 1 auto; text-align: center; }
+  .tabs .tl { display: none; }
+  .tabs .ts { display: inline; }
   main::before { border-radius: 28px 28px 0 0;
     background:
       repeating-linear-gradient(180deg, transparent 0 177px, rgba(255, 255, 255, 0.42) 177px 180px),
@@ -1035,5 +1072,16 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .fo-side.b .fo-ph .champ-badge { left: -9px; }
   .fo-ph .champ-badge .trophy { width: 21px; height: 21px; }
   .desk-note { padding: 11px 18px; border-radius: var(--r-lg) var(--r-lg) 0 0; font-size: 13px; }
+  .wr { grid-template-columns: 26px 34px minmax(0, 1fr) auto; gap: 6px 10px; padding: 9px 4px; }
+  .wr .avatar { width: 34px; height: 34px; }
+  .wr-n { font-size: 24px; }
+  .wr-bar { grid-column: 3 / -1; grid-row: 2; height: 10px; }
+  .wr-who b { font-size: 17px; }
+  .wr-num b { font-size: 24px; }
+  .stand .pf, .stand .now small { display: none; }
+  .stand { font-size: 13px; }
+  .stand td, .stand th { padding: 7px 4px; white-space: nowrap; }
+  .stand td.tm { max-width: 27vw; overflow: hidden; text-overflow: ellipsis; }
+  .stand .seed .move { margin-left: 3px; padding: 2px 4px; font-size: 10px; }
   .me-face { width: 28px; height: 28px; box-shadow: 0 0 0 2px var(--yellow); }
 }

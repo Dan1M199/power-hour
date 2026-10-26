@@ -6,7 +6,7 @@ import { tradeIdeas } from './lib/trades.js';
 import { breakdown, shortName } from './lib/matchup.js';
 import { MEMBERS, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
-import { nightEdition } from './lib/nightdesk.js';
+import { nightEdition, nightBoard } from './lib/nightdesk.js';
 
 // ---------- config ----------
 const TZ = 'America/Chicago';
@@ -111,6 +111,7 @@ async function load() {
     lastScored: RAW.league.settings?.last_scored_leg,
   });
   DATA.rosMeta = ros;
+  DATA.fetched = RAW.fetched ? new Date(RAW.fetched).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' }) : null;
   DATA.overrides = patched.applied;
   DATA.rosError = RAW.ros && RAW.ros.error;
   // stable team colours by roster id
@@ -289,18 +290,20 @@ function viewRankings() {
     ? `<div class="notice glass"><strong>Results-only mode.</strong> The rest-of-season rankings couldn't be loaded (${esc(DATA.rosError)}), so these ranks use this season's results alone until they come back.</div>`
     : '';
   const items = DATA.teams.map((t, i) => rankRow(t, i)).join('');
-  return `
-    <div class="hero">
-      ${leadStory()}
+  // while a week is being played the headlines move to the Live tab and these ranks hold until the week is final
+  const held = !!DATA.live;
+  const head = `
       <section class="view-head">
         <div>
-          <h2 class="page-title"><span class="wk">Week ${m.lastScored + 1}</span>Power Rankings</h2>
+          <h2 class="page-title"><span class="wk">${held ? `On hold during week ${m.lastScored + 1}` : `Week ${m.lastScored + 1}`}</span>Power Rankings</h2>
           <p>Rest-of-season roster strength, who's left on the schedule, and what's already happened. Tap any team to see why it sits where it does.</p>
         </div>
         <div class="sources">${chips}${updatedText() ? `<span class="chip">${esc(updatedText())}</span>` : ''}</div>
-      </section>
-    </div>
-    ${notice}
+      </section>`;
+  const hold = held ? `<div class="notice glass hold"><span><strong>Power rankings are on hold.</strong> Week ${m.lastScored + 1} is being played, so these are the ranks going into the week. They update Tuesday morning once every game is final. For how this week is going, see the <a href="#live">Live</a> tab.</span></div>` : '';
+  return `
+    ${held ? head : `<div class="hero">${leadStory()}${head}</div>`}
+    ${hold}${notice}
     <ol class="ranks enter">${items}</ol>
     ${futuresBoard()}
     <details class="panel glass method-box">
@@ -313,6 +316,85 @@ function viewRankings() {
         <p><b>Playoff odds.</b> 10,000 simulations of the remaining regular-season schedule, using each team's projected lineup blended with its actual scoring. Ties in the standings go to points for, like Sleeper.</p>
       </div>
     </details>`;
+}
+
+// ---------- live week: weekly rankings and projected standings ----------
+// every team this week: projected final (banked plus the rest projected, as on the matchup cards), what's banked, who's
+// still to play, and how its game stands (from the night desk's board: locked once the other side can't catch up)
+function liveWeek() {
+  const sides = {};
+  nightBoard(DATA).forEach((g) => [g.lead, g.trail].forEach((s) => (sides[s.t.rid] = { s, g, opp: (s === g.lead ? g.trail : g.lead).t, ahead: s === g.lead && g.gap > 0 })));
+  const rows = DATA.previews.flatMap((p) => [[p.a, p.projA, p.liveA, p.winA], [p.b, p.projB, p.liveB, 1 - p.winA]]).map(([rid, proj, banked, win]) => {
+    const x = sides[rid];
+    return { t: team(rid), proj, banked: banked || 0, win, left: x?.s.left || [], opp: x?.opp, locked: !!x?.g.locked, final: !!x?.g.final, ahead: !!x?.ahead, gap: x?.g.gap || 0 };
+  });
+  rows.sort((a, b) => b.proj - a.proj || b.banked - a.banked);
+  // standings now and after the week if every game goes the way it's trending; record first, then points for (Sleeper)
+  const order = (list) => [...list].sort((a, b) => b.w - a.w || b.pf - a.pf);
+  const base = DATA.teams.map((t) => ({ t, w: t.wins + 0.5 * t.ties, pf: t.pf }));
+  const seedNow = new Map(order(base).map((x, i) => [x.t.rid, i + 1]));
+  const after = order(rows.map((r) => ({ t: r.t, r, w: r.t.wins + 0.5 * r.t.ties + (r.win >= 0.5 ? 1 : 0), pf: r.t.pf + r.proj })));
+  return { rows, standings: after.map((x, i) => ({ ...x, seed: i + 1, was: seedNow.get(x.t.rid) })) };
+}
+
+function viewLive() {
+  const wk = DATA.previews[0]?.week, { rows, standings } = liveWeek();
+  const pt = DATA.meta.playoffTeams, n = rows.length;
+  const max = Math.max(1, ...rows.map((r) => r.proj)) * 1.04;
+  const played = DATA.live?.teams.length || 0;
+  const status = (r) => {
+    const o = r.opp ? esc(r.opp.name) : 'their opponent';
+    if (r.final) return r.ahead ? `<span class="st-chip won">Beat ${o}</span>` : `<span class="st-chip lost">Lost to ${o}</span>`;
+    if (r.locked) return r.ahead ? `<span class="st-chip won">Locked up vs ${o}</span>` : `<span class="st-chip lost">Can't catch ${o}</span>`;
+    return `<span class="st-chip ${r.win >= 0.5 ? 'up' : 'down'}">${pct(r.win)} to beat ${o}</span>`;
+  };
+  const row = (r, i) => {
+    const t = r.t, rest = Math.max(0, r.proj - r.banked);
+    const tip = `${t.name}: ${f1(r.banked)} scored, ${f1(rest)} more projected from ${r.left.length ? r.left.map((x) => x.name).join(', ') : 'nobody'}`;
+    return `<li class="wr ${t.rid === myTeam ? 'mine' : ''} ${i === n - 1 ? 'last' : ''}">
+        <span class="wr-n">${i + 1}</span>${avatar(t)}
+        <div class="wr-who"><b>${esc(t.name)}${champTag(t, false)}</b>${status(r)}</div>
+        <div class="wr-bar" data-tip="${esc(tip)}"><i class="bk" style="width:${(r.banked / max) * 100}%"></i><i class="rs" style="width:${(rest / max) * 100}%"></i></div>
+        <div class="wr-num"><b>${f1(r.proj)}</b><small>${f1(r.banked)} in, ${r.left.length ? `${r.left.length} to play` : 'all done'}</small></div>
+      </li>`;
+  };
+  const srow = (x) => {
+    const t = x.t, r = x.r, won = r.win >= 0.5, mv = x.was - x.seed;
+    const after = `${t.wins + (won ? 1 : 0)}-${t.losses + (won ? 0 : 1)}${t.ties ? `-${t.ties}` : ''}`;
+    return `<tr class="${t.rid === myTeam ? 'mine' : ''} ${x.seed === pt ? 'cut' : ''}">
+        <td class="num seed"><b>${x.seed}</b>${mv ? `<span class="move ${mv > 0 ? 'up' : 'down'}">${mv > 0 ? '▲' : '▼'}${Math.abs(mv)}</span>` : ''}</td>
+        <td class="tm">${avatar(t, 'avatar xs')}${esc(short(t.name, 22))}${champTag(t, false)}</td>
+        <td class="num now">${record(t)}<small> (${ordinal(x.was)})</small></td>
+        <td class="num"><b>${after}</b></td>
+        <td class="num"><span class="${won ? 'plus' : 'minus'}" data-tip="${esc(`${t.name} wins this week in ${pct(r.win)} of outcomes`)}">${r.final || r.locked ? (won ? 'W' : 'L') : pct(r.win)}</span></td>
+        <td class="num pf">${f1(x.pf)}</td>
+        <td class="num"><b>${pct(t.playoffPct)}</b></td>
+      </tr>`;
+  };
+  return `
+    <div class="hero">
+      ${leadStory()}
+      <section class="view-head">
+        <div>
+          <h2 class="page-title"><span class="wk">Week ${wk} live</span>Weekly Rankings</h2>
+          <p>How this week is going, best to worst: everything scored so far plus the projection for everyone still to play. The power rankings are on hold until the week is final and come back Tuesday morning.</p>
+        </div>
+        <div class="sources"><span class="chip"><span class="dot live"></span>${played} NFL team${played === 1 ? '' : 's'} played so far</span>${DATA.fetched ? `<span class="chip">Scores as of ${esc(DATA.fetched)}</span>` : ''}</div>
+      </section>
+    </div>
+    <section class="panel glass live-panel wk-rank">
+      <h2>Week ${wk}, top to bottom</h2>
+      <p class="sub">Ranked by projected final score. The dark part of each bar is banked, the light part is still to come. Whoever finishes 12th had the worst week in the league.</p>
+      <ol class="wr-list">${rows.map(row).join('')}</ol>
+    </section>
+    <section class="panel glass live-panel wk-stand">
+      <h2>Projected standings</h2>
+      <p class="sub">The table after week ${wk} if every game ends the way it's trending: the team more likely to win right now gets the W, and everyone adds their projected score to points for, the tiebreaker. The line is the playoff cut (top ${pt}). Playoff odds come from 10,000 simulations, this week's live scores included.</p>
+      <div class="heat-wrap"><table class="table stand">
+        <thead><tr><th class="num">Seed</th><th>Team</th><th class="num">Now</th><th class="num">After</th><th class="num">This week</th><th class="num pf">PF after</th><th class="num">Playoffs</th></tr></thead>
+        <tbody>${standings.map(srow).join('')}</tbody>
+      </table></div>
+    </section>`;
 }
 
 // ---------- championship futures ----------
@@ -1149,7 +1231,7 @@ const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 // phones and touch screens get the light set: no page morphs or scroll reveals, which cost the most on mobile GPUs
 const lite = () => matchMedia('(max-width: 760px), (pointer: coarse)').matches;
 const morphs = () => !!document.startViewTransition && !calm() && !lite();
-const ORDER = ['rankings', 'wire', 'matchups', 'trades', 'lab'];
+const ORDER = ['live', 'rankings', 'wire', 'matchups', 'trades', 'lab'];
 let currentView = null;
 
 // gold pill behind the active tab; with view transitions the browser morphs it, otherwise CSS slides it
@@ -1164,7 +1246,7 @@ function placeInk({ settle = false } = {}) {
 }
 
 // count big numbers up from zero, keeping their format (decimals, sign, %)
-const COUNT = '.score, .odds b, .wire-stats b, .mu-team .pr, .gotw-score b, .cast-odds b';
+const COUNT = '.score, .wr-num b, .odds b, .wire-stats b, .mu-team .pr, .gotw-score b, .cast-odds b';
 function countAll(els) {
   // measure every final width first, then write, so this costs one layout instead of one per number
   const todo = els.filter((el) => !el.dataset.counted).map((el) => ({ el, w: el.getBoundingClientRect().width }));
@@ -1186,7 +1268,7 @@ function countUp(el, w) {
 }
 
 // cards and panels rise in as they scroll into view, staggered within each batch
-const REVEAL = '.hero > .lead-car, .notice, .gotw, .bull, .matchups > .mu, .wire-stats, .sec-title, .moves > li, .day > h3, .two-col aside > .panel, .lab-grid > .panel, .trade-bar, .trade-legend, .ideas > .idea, .method-box, .empty';
+const REVEAL = '.hero > .lead-car, .live-panel, .notice, .gotw, .bull, .matchups > .mu, .wire-stats, .sec-title, .moves > li, .day > h3, .two-col aside > .panel, .lab-grid > .panel, .trade-bar, .trade-legend, .ideas > .idea, .method-box, .empty';
 let io = null;
 function reveal(root) {
   io?.disconnect();
@@ -1216,10 +1298,12 @@ function reveal(root) {
   root.querySelectorAll('.rank').forEach((el) => io.observe(el)); // ranking rows have their own rise; just count
 }
 
-const VIEWS = { rankings: viewRankings, wire: viewWire, matchups: viewMatchups, trades: viewTrades, lab: viewLab };
+const VIEWS = { live: viewLive, rankings: viewRankings, wire: viewWire, matchups: viewMatchups, trades: viewTrades, lab: viewLab };
 function route({ fresh = false } = {}) {
-  const v = (location.hash || '#rankings').slice(1);
-  const key = VIEWS[v] ? v : 'rankings';
+  // while a week is being played the Live tab is the front page; it only exists then
+  const home = DATA.live ? 'live' : 'rankings';
+  const v = (location.hash || `#${home}`).slice(1);
+  const key = VIEWS[v] && (v !== 'live' || DATA.live) ? v : home;
   const dir = !currentView || key === currentView ? 'same' : ORDER.indexOf(key) > ORDER.indexOf(currentView) ? 'fwd' : 'back';
   const render = () => {
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.view === key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
@@ -1239,8 +1323,9 @@ function route({ fresh = false } = {}) {
 }
 
 function bind(key) {
+  if (key === 'live') bindCarousel();
   if (key === 'rankings') {
-    bindCarousel();
+    if (!DATA.live) bindCarousel();
     document.querySelectorAll('.rank-btn').forEach((b) =>
       b.addEventListener('click', () => {
         const li = b.closest('.rank');
@@ -1351,6 +1436,10 @@ async function main() {
   $('#league-name').textContent = `${RAW.league.name} ${RAW.league.season}`;
   $('#footer-meta').textContent = `${RAW.isDemo ? 'Demo snapshot. ' : ''}Through week ${DATA.meta.lastScored}. ${updatedText() ? `${updatedText()}.` : ''}${DATA.overrides.length ? ` Manual fixes: ${DATA.overrides.map((o) => o.note).join('; ')}.` : ''}`;
   initTeamPicker();
+  if (DATA.live) {
+    $('.tabs a[data-view="live"]').hidden = false;
+    $('.brand').setAttribute('href', '#live');
+  }
   const ed = DATA.teams.find((t) => t.owner === EDITOR.user);
   if (ed && faceSrc(ed)) {
     const mh = $('#masthead');
