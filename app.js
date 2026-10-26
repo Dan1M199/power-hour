@@ -316,9 +316,10 @@ function viewRankings() {
 }
 
 // ---------- the editor's one-off headlines ----------
-// Dan's request for week 7: one extra headline for Chubb in my Jeanty, passive-aggressive whatever happens. Written
-// from the live numbers each time the page builds, and gone after Tuesday 6am Central. Set SASS to null to drop it.
-const SASS = { owner: '857297655477444608', week: 7, until: Date.parse('2026-10-27T06:00:00-05:00') };
+// Dan's request for week 7: an extra headline for Chubb in my Jeanty bragging about Jaxon Smith-Njigba's big Sunday
+// night. JSN's points come from the live data once his game shows as played; until the snapshot catches up, the number
+// Dan reported stands in. Gone after Tuesday 6am Central. Set SASS to null to drop it.
+const SASS = { owner: '857297655477444608', week: 7, until: Date.parse('2026-10-27T06:00:00-05:00'), star: 'Jaxon Smith-Njigba', reported: 26.8 };
 function sassStory() {
   if (!SASS || clock() >= SASS.until) return null;
   const t = DATA.teams.find((x) => x.ownerId === SASS.owner);
@@ -328,32 +329,31 @@ function sassStory() {
   const mine = side === 'a' ? { proj: p.projA, banked: p.liveA || 0, win: p.winA } : { proj: p.projB, banked: p.liveB || 0, win: 1 - p.winA };
   const theirs = side === 'a' ? { banked: p.liveB || 0 } : { banked: p.liveA || 0 };
   const rows = breakdown(DATA, p).rows.map((r) => r[side]).filter(Boolean);
-  // the starter who let them down the most, among the games already played
-  const dud = rows.filter((x) => x.played).sort((x, y) => (y.pre - y.proj) - (x.pre - x.proj))[0];
-  const left = rows.filter((x) => !x.played && !x.out && !x.bye && x.proj > 0);
+  const jsn = rows.find((x) => x.name === SASS.star);
+  const pts = jsn?.played ? jsn.proj : SASS.reported, pre = jsn?.pre;
+  const left = rows.filter((x) => !x.played && !x.out && !x.bye && x.proj > 0 && x !== jsn);
   const rank = DATA.previews.flatMap((q) => [q.projA, q.projB]).sort((x, y) => y - x).indexOf(mine.proj) + 1;
   const N = firstName(t), O = opp.name, gap = Math.abs(mine.banked - theirs.banked);
   const seed = [...chicagoDate()].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7);
   const pick = (xs) => xs[Math.abs(seed) % xs.length];
   const ahead = mine.win >= 0.5;
-  const headline = mine.win >= 0.75
-    ? pick(["Chubb in my Jeanty is winning. We're all very happy for them. Really.", 'Congratulations to Chubb in my Jeanty on a win nobody asked for'])
-    : mine.win <= 0.25
-      ? pick(["Chubb in my Jeanty would like everyone to know it's fine. It's totally fine.", 'Thoughts and prayers to Chubb in my Jeanty, who tried their best, we assume'])
-      : pick(['No pressure, Chubb in my Jeanty, but the whole league is watching Monday night', 'Chubb in my Jeanty is in a close one. Bold of them to make it interesting']);
-  const lead = mine.banked >= theirs.banked ? `${f1(gap)} behind, for now` : `${f1(gap)} ahead`;
+  const headline = pick([
+    `Jaxon Smith-Njigba just hung ${f1(pts)} on the league. Chubb in my Jeanty would like a word`,
+    `JSN went nuclear for ${f1(pts)} and Chubb in my Jeanty is not being humble about it`,
+  ]);
+  const lead = mine.banked >= theirs.banked ? `${f1(gap)} behind` : `${f1(gap)} ahead, for now`;
+  const share = mine.banked > 0 && jsn?.played ? Math.round((pts / mine.banked) * 100) : null;
   const deck = [
-    `${N}, nobody is saying anything.`,
-    dud && dud.pre - dud.proj >= 2
-      ? `We're just noting that ${dud.name} put up ${f1(dud.proj)} on a ${f1(dud.pre)}-point projection, which is a choice someone made.`
-      : "We're just noting the lineup, which is certainly a lineup.",
-    `Chubb in my Jeanty has ${f1(mine.banked)} so far, ${ordinal(rank)} in the league this week by projection, and ${O} is ${lead}.`,
+    `${N} would never brag, so we will.`,
+    `Jaxon Smith-Njigba put up ${f1(pts)} points${pre ? ` on a ${f1(pre)}-point projection, ${(pts / pre).toFixed(1)} times what the experts saw coming` : ''}${share ? `, ${share}% of everything Chubb in my Jeanty has scored this week` : ''}.`,
+    'Anyone who let him get away can sit quietly.',
+    `Chubb in my Jeanty is ${ordinal(rank)} in the league this week by projection, and ${O} is ${lead}.`,
     left.length
-      ? `${left.slice(0, 2).map((x) => x.name).join(' and ')} still ${left.length === 1 ? 'has' : 'have'} Monday night to sort it out. ${pct(mine.win)} to win, if anyone's counting.`
-      : `Nobody left to play, so this is the whole story. ${pct(mine.win)} to win, if anyone's counting.`,
-    ahead ? 'Great job. Really.' : 'Anyway. Proud of you.',
+      ? `${left.slice(0, 2).map((x) => x.name).join(' and ')} still ${left.length === 1 ? 'has' : 'have'} Monday night. ${pct(mine.win)} to win.`
+      : `Nobody left to play. ${pct(mine.win)} to win.`,
+    ahead ? "You're welcome, league." : 'Whatever happens from here, JSN did his part. The rest of the lineup knows what it did.',
   ].join(' ');
-  return { type: 'sass', kicker: 'A note from the desk', tone: ahead ? 'good' : 'bad', stamp: 'Just saying', rids: [t.rid, opp.rid], headline, deck };
+  return { type: 'sass', kicker: 'A note from the desk', tone: 'good', stamp: 'JSN szn', rids: [t.rid, opp.rid], headline, deck };
 }
 
 // ---------- live week: weekly rankings and projected standings ----------
