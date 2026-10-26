@@ -761,16 +761,40 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 }
 
 /* ---------- live week: weekly rankings and projected standings ---------- */
-.live-panel + .live-panel { margin-top: 22px; }
+/* the two live cards side by side on wide screens: both are 12-team lists, so a team's week and its standing line up */
+.live-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: start; }
+@media (min-width: 1100px) {
+  .live-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .live-grid .stand .pf { display: none; }
+  /* the standings are shorter than the weekly list, so they ride along while you scroll it */
+  .live-grid .wk-stand { position: sticky; top: 100px; }
+}
+.stand-note { margin: 12px 0 0; font-size: 12.5px; }
+/* "Your week": the desk's note to whoever picked a team */
+.you-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; margin: 0 0 22px; padding: 18px 22px; border-radius: var(--r-lg);
+  box-shadow: 0 0 0 4px var(--yellow), 0 var(--lift) 0 4px var(--ledge-c); }
+.you-card.good { --ledge-c: var(--good); }
+.you-card.bad { --ledge-c: var(--flag); }
+.you-card.close { --ledge-c: var(--ledge-gold); }
+.you-card.empty { display: block; box-shadow: 0 var(--lift) 0 var(--ledge-c); color: var(--ink-2); font-weight: 600; }
+.you-card.empty p { margin: 0; }
+.you-face { width: 84px; height: 84px; border-radius: 22px; object-fit: cover; border: 3px solid var(--chalk); box-shadow: 0 4px 0 var(--ledge); transform: rotate(-3deg); }
+.you-face.ph { display: grid; place-items: center; font: 800 30px var(--display); background: var(--lime); }
+.you-body small { display: block; font-size: 12.5px; font-weight: 700; color: var(--ink-3); }
+.you-msg { margin: 4px 0 10px; font: 800 clamp(22px, 2.4vw, 30px)/1.08 var(--display); letter-spacing: 0.005em; color: var(--ink); text-wrap: pretty; }
+.you-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.you-chip { padding: 4px 10px; border-radius: 999px; font: 700 12.5px/1.2 var(--body); color: var(--ink-2); background: var(--tile); }
+.you-chip.up { color: var(--good); background: #E3F2DC; }
+.you-chip.down { color: var(--bad); background: #FDE7E7; }
 .chip .dot.live { background: var(--flag); }
 .wr-list { list-style: none; margin: 0; padding: 0; display: grid; }
-.wr { display: grid; grid-template-columns: 34px 40px minmax(0, 1fr) minmax(0, 1.3fr) 118px; gap: 6px 14px; align-items: center; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+.wr { display: grid; grid-template-columns: 30px 38px minmax(0, 1fr) auto; gap: 5px 12px; align-items: center; padding: 8px 8px; border-bottom: 1px solid var(--line); }
 .wr:last-child { border-bottom: 0; }
 .wr.mine { border-radius: 14px; background: var(--mine-bg); box-shadow: inset 0 0 0 2px #F2C200; }
-.wr-n { font: 900 30px/1 var(--display); text-align: right; color: var(--ink); }
+.wr-n { font: 900 28px/1 var(--display); text-align: right; color: var(--ink); }
 .wr:nth-child(-n + 3) .wr-n { color: var(--good); }
 .wr.last .wr-n { color: var(--bad); }
-.wr .avatar { width: 40px; height: 40px; }
+.wr .avatar { width: 38px; height: 38px; }
 .wr .avatar.ph { font-size: 17px; }
 .wr-who { min-width: 0; display: grid; gap: 4px; justify-items: start; }
 .wr-who b { max-width: 100%; font: 800 19px/1.05 var(--display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -779,12 +803,12 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .st-chip.down { color: var(--bad); background: #FDE7E7; }
 .st-chip.won { color: var(--ink); background: var(--grass-2); }
 .st-chip.lost { color: var(--chalk); background: var(--flag); }
-.wr-bar { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--tile-2); }
+.wr-bar { grid-column: 3 / -1; grid-row: 2; display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--tile-2); }
 .wr-bar i { display: block; height: 100%; }
 .wr-bar .bk { background: var(--turf); }
 .wr-bar .rs { background: repeating-linear-gradient(135deg, var(--grass-2) 0 6px, #B9DC8F 6px 12px); }
 .wr-num { text-align: right; line-height: 1.1; }
-.wr-num b { display: block; font: 900 28px/1 var(--display); color: var(--ink); }
+.wr-num b { display: block; font: 900 26px/1 var(--display); color: var(--ink); }
 .wr-num small { font-size: 11.5px; color: var(--ink-3); white-space: nowrap; }
 .stand .seed { white-space: nowrap; }
 .stand .seed b { font: 800 18px/1 var(--display); }
@@ -1072,10 +1096,12 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .fo-side.b .fo-ph .champ-badge { left: -9px; }
   .fo-ph .champ-badge .trophy { width: 21px; height: 21px; }
   .desk-note { padding: 11px 18px; border-radius: var(--r-lg) var(--r-lg) 0 0; font-size: 13px; }
-  .wr { grid-template-columns: 26px 34px minmax(0, 1fr) auto; gap: 6px 10px; padding: 9px 4px; }
+  .wr { grid-template-columns: 26px 34px minmax(0, 1fr) auto; gap: 5px 10px; padding: 9px 4px; }
+  .you-card { grid-template-columns: 60px minmax(0, 1fr); gap: 14px; padding: 14px; }
+  .you-face { width: 60px; height: 60px; border-radius: 16px; }
+  .you-msg { font-size: 21px; }
   .wr .avatar { width: 34px; height: 34px; }
   .wr-n { font-size: 24px; }
-  .wr-bar { grid-column: 3 / -1; grid-row: 2; height: 10px; }
   .wr-who b { font-size: 17px; }
   .wr-num b { font-size: 24px; }
   .stand .pf, .stand .now small { display: none; }

@@ -36,6 +36,8 @@ function weekMinute(d = clock()) {
   return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(p.weekday) * 1440 + Number(p.hour) * 60 + Number(p.minute);
 }
 const onHold = () => { const m = weekMinute(); return m >= NEWS_CLOCK.hold[0] && m < NEWS_CLOCK.hold[1]; };
+// the game window, Thursday 7:15pm kickoff to Tuesday 6am: the Live tab is the front page all weekend, points or not
+const gameWindow = () => { const m = weekMinute(); return m >= 4 * 1440 + 19 * 60 + 15 || m < 2 * 1440 + 6 * 60; };
 const nightDesk = () => { const m = weekMinute(); return m >= NEWS_CLOCK.late && m < NEWS_CLOCK.through; };
 
 // last season's champion carries a trophy wherever their team shows up
@@ -111,6 +113,8 @@ async function load() {
     lastScored: RAW.league.settings?.last_scored_leg,
   });
   DATA.rosMeta = ros;
+  // live-week mode: games are on (or there are points on the board) and this week is still unscored
+  DATA.liveMode = DATA.previews.length > 0 && (!!DATA.live || gameWindow());
   DATA.fetched = RAW.fetched ? new Date(RAW.fetched).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' }) : null;
   DATA.overrides = patched.applied;
   DATA.rosError = RAW.ros && RAW.ros.error;
@@ -291,7 +295,7 @@ function viewRankings() {
     : '';
   const items = DATA.teams.map((t, i) => rankRow(t, i)).join('');
   // while a week is being played the headlines move to the Live tab and these ranks hold until the week is final
-  const held = !!DATA.live;
+  const held = !!DATA.liveMode;
   const head = `
       <section class="view-head">
         <div>
@@ -337,6 +341,55 @@ function liveWeek() {
   return { rows, standings: after.map((x, i) => ({ ...x, seed: i + 1, was: seedNow.get(x.t.rid) })) };
 }
 
+// "Your week": a note from the desk to whoever picked a team. Winning gets congratulated, losing gets roasted, and a
+// coin flip gets a pep talk if they're ahead or a reality check if they're behind. Wording rotates daily.
+function yourWeek(rows, standings) {
+  if (!myTeam) return `<section class="you-card glass empty"><p>Pick your team in the top right and the desk will tell you how your week is going. No sugarcoating.</p></section>`;
+  const k = rows.findIndex((r) => r.t.rid === myTeam), r = rows[k];
+  if (!r) return '';
+  const t = r.t, N = esc(firstName(t)), o = rows.find((x) => x.t === r.opp), O = r.opp ? esc(r.opp.name) : 'your opponent';
+  const P = pct(r.win), margin = o ? Math.abs(r.proj - o.proj) : 0, star = r.left[0] ? esc(r.left[0].name) : '';
+  const st = standings.find((x) => x.t.rid === myTeam), mv = st ? st.was - st.seed : 0;
+  const kind = r.final || r.locked ? (r.ahead ? 'won' : 'lost') : r.win >= 0.7 ? 'good' : r.win <= 0.3 ? 'bad' : r.win >= 0.5 ? 'up' : 'down';
+  const lines = {
+    won: [`It's over, ${N}, and you won. ${O} can't catch you${r.final ? '' : ', Monday or not'}. Take the victory lap, you earned this one.`,
+      `${N}, ${O} is done. Lock it in, screenshot it, send it to the group chat.`],
+    lost: [`${N}, it's done. ${O} beat you and it wasn't close. Go set next week's lineup before you embarrass yourself again.`,
+      `Bad news, ${N}: ${O} already has this one in the bag. You can stop refreshing now.`,
+      `${N}. Buddy. ${O} can't lose this from here. Maybe try starting players who score.`],
+    good: [`Look at you, ${N}. ${P} to beat ${O}, ${f1(r.proj)} projected, ${ordinal(k + 1)} in the league. Don't get used to it.`,
+      `${N}, this is what a functioning lineup looks like. ${P} to win${star ? ` with ${star} still to play` : ''}. Enjoy it.`],
+    bad: [`${N}, ${P}. That's your chance against ${O}. Your lineup is a cry for help.`,
+      `Bold strategy, ${N}: get outscored by ${f1(margin)} and hope ${O} forgets to show up. ${P} odds.`,
+      `${N}, the model ran 10,000 simulations and you lose most of them. ${P} to beat ${O}. Thoughts and prayers.`],
+    up: [`This is yours, ${N}. ${P} to win, a ${f1(margin)}-point game${star ? `, and ${star} still to play` : ''}. Lock in.`,
+      `${N}, you're ${f1(margin)} up on ${O} by projection. Nobody blinks. Let's go.`],
+    down: [`Don't get your hopes up, ${N}. ${P} to win and you're counting on ${star || 'a miracle'}. Brave.`,
+      `${N}, it's close, and close usually means you lose. ${P} against ${O}. Start drafting the excuses.`],
+  }[kind];
+  const seed = [...`${chicagoDate()}${t.rid}`].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7);
+  let msg = lines[Math.abs(seed) % lines.length];
+  const so = r.banked > 0 ? '' : 'projected '; // before kickoff it's all projection
+  if (k === rows.length - 1) msg += ` Also: ${so}dead last in the league this week. Even your bench is embarrassed.`;
+  else if (k === 0 && !msg.includes('1st in the league')) msg += ` ${so ? 'Projected top' : 'Top'} score in the whole league, too.`;
+  const chip = (v, cls = '') => `<span class="you-chip ${cls}">${v}</span>`;
+  const bull = DATA.bull && DATA.bull.state !== 'final' && DATA.bull.rows.find((x) => x.rid === myTeam);
+  const tone = kind === 'won' || kind === 'good' ? 'good' : kind === 'lost' || kind === 'bad' ? 'bad' : 'close';
+  return `<section class="you-card glass ${tone}" aria-label="Your week">
+      ${headshot(t, 'you-face')}
+      <div class="you-body">
+        <small>Your week, ${N}</small>
+        <p class="you-msg">${msg}</p>
+        <div class="you-chips">
+          ${chip(`${ordinal(k + 1)} this week`)}
+          ${chip(r.final || r.locked ? (r.ahead ? 'Won' : 'Lost') : `${P} to win`, r.win >= 0.5 ? 'up' : 'down')}
+          ${st ? chip(`Projected ${ordinal(st.seed)}${mv ? ` (${mv > 0 ? 'up' : 'down'} ${Math.abs(mv)})` : ''}`, mv > 0 ? 'up' : mv < 0 ? 'down' : '') : ''}
+          ${bull ? chip(`Money week: ${awayText(bull)}`) : ''}
+        </div>
+      </div>
+    </section>`;
+}
+
 function viewLive() {
   const wk = DATA.previews[0]?.week, { rows, standings } = liveWeek();
   const pt = DATA.meta.playoffTeams, n = rows.length;
@@ -365,7 +418,7 @@ function viewLive() {
         <td class="num seed"><b>${x.seed}</b>${mv ? `<span class="move ${mv > 0 ? 'up' : 'down'}">${mv > 0 ? '▲' : '▼'}${Math.abs(mv)}</span>` : ''}</td>
         <td class="tm">${avatar(t, 'avatar xs')}${esc(short(t.name, 22))}${champTag(t, false)}</td>
         <td class="num now">${record(t)}<small> (${ordinal(x.was)})</small></td>
-        <td class="num"><b>${after}</b></td>
+        <td class="num"><b data-tip="${esc(`${t.name}: ${after} with ${f1(x.pf)} points for after the week`)}">${after}</b></td>
         <td class="num"><span class="${won ? 'plus' : 'minus'}" data-tip="${esc(`${t.name} wins this week in ${pct(r.win)} of outcomes`)}">${r.final || r.locked ? (won ? 'W' : 'L') : pct(r.win)}</span></td>
         <td class="num pf">${f1(x.pf)}</td>
         <td class="num"><b>${pct(t.playoffPct)}</b></td>
@@ -382,19 +435,23 @@ function viewLive() {
         <div class="sources"><span class="chip"><span class="dot live"></span>${played} NFL team${played === 1 ? '' : 's'} played so far</span>${DATA.fetched ? `<span class="chip">Scores as of ${esc(DATA.fetched)}</span>` : ''}</div>
       </section>
     </div>
-    <section class="panel glass live-panel wk-rank">
-      <h2>Week ${wk}, top to bottom</h2>
-      <p class="sub">Ranked by projected final score. The dark part of each bar is banked, the light part is still to come. Whoever finishes 12th had the worst week in the league.</p>
-      <ol class="wr-list">${rows.map(row).join('')}</ol>
-    </section>
-    <section class="panel glass live-panel wk-stand">
-      <h2>Projected standings</h2>
-      <p class="sub">The table after week ${wk} if every game ends the way it's trending: the team more likely to win right now gets the W, and everyone adds their projected score to points for, the tiebreaker. The line is the playoff cut (top ${pt}). Playoff odds come from 10,000 simulations, this week's live scores included.</p>
-      <div class="heat-wrap"><table class="table stand">
-        <thead><tr><th class="num">Seed</th><th>Team</th><th class="num">Now</th><th class="num">After</th><th class="num">This week</th><th class="num pf">PF after</th><th class="num">Playoffs</th></tr></thead>
-        <tbody>${standings.map(srow).join('')}</tbody>
-      </table></div>
-    </section>`;
+    ${yourWeek(rows, standings)}
+    <div class="live-grid">
+      <section class="panel glass live-panel wk-rank">
+        <h2>Week ${wk}, top to bottom</h2>
+        <p class="sub">By projected final score. Dark is banked, striped is still to come. 12th is the worst week in the league.</p>
+        <ol class="wr-list">${rows.map(row).join('')}</ol>
+      </section>
+      <section class="panel glass live-panel wk-stand">
+        <h2>Projected standings</h2>
+        <p class="sub">The table after week ${wk} if every game ends the way it's trending, projected points added for the tiebreaker. The dashed line is the playoff cut (top ${pt}).</p>
+        <div class="heat-wrap"><table class="table stand">
+          <thead><tr><th class="num">Seed</th><th>Team</th><th class="num">Now</th><th class="num">After</th><th class="num">This week</th><th class="num pf">PF after</th><th class="num">Playoffs</th></tr></thead>
+          <tbody>${standings.map(srow).join('')}</tbody>
+        </table></div>
+        <p class="sub stand-note">Playoff odds are from 10,000 simulations of the season with this week's live scores in.</p>
+      </section>
+    </div>`;
 }
 
 // ---------- championship futures ----------
@@ -1268,7 +1325,7 @@ function countUp(el, w) {
 }
 
 // cards and panels rise in as they scroll into view, staggered within each batch
-const REVEAL = '.hero > .lead-car, .live-panel, .notice, .gotw, .bull, .matchups > .mu, .wire-stats, .sec-title, .moves > li, .day > h3, .two-col aside > .panel, .lab-grid > .panel, .trade-bar, .trade-legend, .ideas > .idea, .method-box, .empty';
+const REVEAL = '.hero > .lead-car, .live-panel, .you-card, .notice, .gotw, .bull, .matchups > .mu, .wire-stats, .sec-title, .moves > li, .day > h3, .two-col aside > .panel, .lab-grid > .panel, .trade-bar, .trade-legend, .ideas > .idea, .method-box, .empty';
 let io = null;
 function reveal(root) {
   io?.disconnect();
@@ -1301,9 +1358,9 @@ function reveal(root) {
 const VIEWS = { live: viewLive, rankings: viewRankings, wire: viewWire, matchups: viewMatchups, trades: viewTrades, lab: viewLab };
 function route({ fresh = false } = {}) {
   // while a week is being played the Live tab is the front page; it only exists then
-  const home = DATA.live ? 'live' : 'rankings';
+  const home = DATA.liveMode ? 'live' : 'rankings';
   const v = (location.hash || `#${home}`).slice(1);
-  const key = VIEWS[v] && (v !== 'live' || DATA.live) ? v : home;
+  const key = VIEWS[v] && (v !== 'live' || DATA.liveMode) ? v : home;
   const dir = !currentView || key === currentView ? 'same' : ORDER.indexOf(key) > ORDER.indexOf(currentView) ? 'fwd' : 'back';
   const render = () => {
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.view === key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
@@ -1325,7 +1382,7 @@ function route({ fresh = false } = {}) {
 function bind(key) {
   if (key === 'live') bindCarousel();
   if (key === 'rankings') {
-    if (!DATA.live) bindCarousel();
+    if (!DATA.liveMode) bindCarousel();
     document.querySelectorAll('.rank-btn').forEach((b) =>
       b.addEventListener('click', () => {
         const li = b.closest('.rank');
@@ -1436,7 +1493,7 @@ async function main() {
   $('#league-name').textContent = `${RAW.league.name} ${RAW.league.season}`;
   $('#footer-meta').textContent = `${RAW.isDemo ? 'Demo snapshot. ' : ''}Through week ${DATA.meta.lastScored}. ${updatedText() ? `${updatedText()}.` : ''}${DATA.overrides.length ? ` Manual fixes: ${DATA.overrides.map((o) => o.note).join('; ')}.` : ''}`;
   initTeamPicker();
-  if (DATA.live) {
+  if (DATA.liveMode) {
     $('.tabs a[data-view="live"]').hidden = false;
     $('.brand').setAttribute('href', '#live');
   }
