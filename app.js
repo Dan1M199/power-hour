@@ -6,6 +6,7 @@ import { tradeIdeas } from './lib/trades.js';
 import { breakdown, shortName } from './lib/matchup.js';
 import { MEMBERS, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
+import { nightEdition } from './lib/nightdesk.js';
 
 // ---------- config ----------
 const TZ = 'America/Chicago';
@@ -18,6 +19,25 @@ const MONEY_WEEK = {
   week: 7, target: 120, prize: 80, usual: 40, title: "Mo's birthday bullseye", honoree: '1004163936612089856',
   why: "120 is 10/20, Commissioner Mo's birthday", flyer: 'assets/money-week-flyer.jpg',
 };
+// The news clock (Central time, minutes into the week from Sunday midnight). During Sunday's games the main page
+// says the news is on hold; at the late pull, after Sunday night football, the site takes a fresh Sleeper snapshot
+// and the night desk (lib/nightdesk.js) writes the night edition, which leads until Tuesday morning.
+const NEWS_CLOCK = {
+  hold: [12 * 60, 22 * 60 + 45], // Sunday noon to 10:45pm
+  holdNote: "Games in progress: news will be updated at the conclusion of tonight's matchup.",
+  late: 22 * 60 + 45, // Sunday 10:45pm: the late pull
+  through: 2 * 1440 + 6 * 60, // the night edition runs until Tuesday 6am
+};
+// ?at=2026-10-25T22:45-05:00 pretends it's that moment, to check the news clock
+const AT = (() => { const v = new URLSearchParams(location.search).get('at'); const d = v && new Date(v); return d && !isNaN(d) ? d : null; })();
+const clock = () => AT || new Date();
+function weekMinute(d = clock()) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' }).formatToParts(d).map((x) => [x.type, x.value]));
+  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(p.weekday) * 1440 + Number(p.hour) * 60 + Number(p.minute);
+}
+const onHold = () => { const m = weekMinute(); return m >= NEWS_CLOCK.hold[0] && m < NEWS_CLOCK.hold[1]; };
+const nightDesk = () => { const m = weekMinute(); return m >= NEWS_CLOCK.late && m < NEWS_CLOCK.through; };
+
 // last season's champion carries a trophy wherever their team shows up
 const CHAMPION = { user: '1004111276118761472', season: 2025 };
 
@@ -55,16 +75,18 @@ const getJSON = async (url) => {
   if (!r.ok) throw new Error(`${r.status} from ${url}`);
   return r.json();
 };
-const chicagoDate = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+const chicagoDate = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(clock());
 
 // the day's data key: the Central date, rolling over at 6am so the morning snapshot has last night's games final
-const morningKey = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(Date.now() - 6 * 36e5));
+const morningKey = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(clock() - 6 * 36e5));
+// the league snapshot's key: the morning one, plus a "-late" copy from the late pull until the next morning rolls over
+const leagueKey = () => { const m = weekMinute(); return m >= NEWS_CLOCK.late && m < 1440 + 6 * 60 ? `${morningKey()}-late` : morningKey(); };
 
 // Sleeper is read once per morning through /api/league (CDN-cached per key), never straight from the browser
 async function loadLive() {
   const key = morningKey();
   const [snap, ros] = await Promise.all([
-    getJSON(`/api/league?d=${key}`),
+    getJSON(`/api/league?d=${leagueKey()}`),
     getJSON(`/api/ros?d=${key}`).catch((e) => ({ error: String(e.message || e) })),
   ]);
   return { ...snap, ros };
@@ -99,8 +121,14 @@ async function load() {
   DATA.stories = buildStories(DATA, { now, dateKey: chicagoDate(), editor: EDITOR });
   DATA.bull = MONEY_WEEK ? bullseye(DATA, MONEY_WEEK) : null;
   // money week leads the headlines for as long as it runs
+  // after Sunday night football the night desk takes over the headlines
+  if (nightDesk() && DATA.live) {
+    const people = Object.fromEntries(DATA.teams.map((t) => [t.rid, firstName(t)]));
+    const ed = nightEdition(DATA, { dateKey: chicagoDate(), editor: EDITOR, people });
+    if (ed?.length) DATA.stories = { lead: ed[0], more: ed.slice(1), night: true };
+  }
   const ms = moneyStory();
-  if (ms) DATA.stories = { lead: ms, more: [DATA.stories.lead, ...DATA.stories.more].filter(Boolean) };
+  if (ms) DATA.stories = { ...DATA.stories, lead: ms, more: [DATA.stories.lead, ...DATA.stories.more].filter(Boolean) };
   DATA.key = keyMatchup(DATA);
   DATA.quips = matchupQuips(DATA);
 }
@@ -326,13 +354,14 @@ function leadFaces(st) {
     </div>`;
 }
 
-// three headlines in one square card: swipe, arrows or dots; the active dot's fill is the auto-advance timer
+// three headlines in one square card (four on night-edition nights): swipe, arrows or dots; the active dot's fill is the
+// auto-advance timer
 const CAROUSEL_SIZE = 3;
 function leadStory() {
   const s = DATA.stories;
   if (!s?.lead) return '';
-  const stories = [s.lead, ...s.more].slice(0, CAROUSEL_SIZE);
-  const date = new Date(DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' });
+  const stories = [s.lead, ...s.more].slice(0, s.night ? CAROUSEL_SIZE + 1 : CAROUSEL_SIZE);
+  const date = new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' });
   const cast = (st) => st.rids.map(team).filter(Boolean).map((t) => `
     <div class="cast-team">${avatar(t)}
       <div class="cast-name"><b>${esc(t.name)}${champTag(t, false)}</b><small>No. ${t.powerRank} power, ${record(t)}</small></div>
@@ -342,7 +371,7 @@ function leadStory() {
   const slide = (st, i) => `
     <article class="slide" id="slide-${i}" role="group" aria-roledescription="slide" aria-label="Headline ${i + 1} of ${stories.length}">
       <div class="slide-top">
-        <p class="kicker"><span>${i ? `Also today` : esc(date)}</span><span class="k">${esc(st.kicker)}</span></p>
+        <p class="kicker"><span>${i ? (st.type === 'monday' || st.type === 'locked' ? 'Tonight' : 'Also today') : esc(date)}</span><span class="k">${esc(st.kicker)}</span></p>
         ${leadFaces(st)}
       </div>
       <${i ? 'h2' : 'h1'} class="lead-hed">${esc(st.headline)}</${i ? 'h2' : 'h1'}>
@@ -352,6 +381,7 @@ function leadStory() {
   const arrow = (dir, label, d) => `<button type="button" class="car-arrow" data-dir="${dir}" aria-label="${label}"><svg width="9" height="14" viewBox="0 0 9 14" aria-hidden="true"><path d="${d}" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
   return `
     <section class="lead-car glass rim" aria-roledescription="carousel" aria-label="Today's headlines">
+      ${onHold() ? `<p class="desk-note" role="status"><span class="live-dot" aria-hidden="true"></span>${esc(NEWS_CLOCK.holdNote)}</p>` : ''}
       <div class="car-track" tabindex="0">${stories.map(slide).join('')}</div>
       ${stories.length > 1 ? `<div class="car-nav">
         ${arrow(-1, 'Previous headline', 'M7.5 1.5 2 7l5.5 5.5')}

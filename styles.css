@@ -747,6 +747,17 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .pitch b { color: var(--ink); }
 .pitch-face { flex: none; width: 42px; height: 42px; border-radius: 12px; object-fit: cover; border: 2px solid var(--chalk); box-shadow: 0 3px 0 var(--ledge-gold); transform: rotate(-3deg); }
 
+/* ---------- the news clock: games in progress ---------- */
+/* a strip across the top of the headline card while Sunday's games are on and the news is on hold */
+.desk-note { display: flex; align-items: center; gap: 10px; margin: 0; padding: 12px 30px; border-radius: var(--r-xl) var(--r-xl) 0 0;
+  font: 700 14px/1.3 var(--body); color: var(--ink); background: var(--yellow); }
+.desk-note + .car-track { border-radius: 0; }
+.live-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--flag); box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.25); }
+@media (prefers-reduced-motion: no-preference) {
+  .live-dot { animation: live-blink 1.6s ease-in-out infinite; }
+  @keyframes live-blink { 50% { opacity: 0.25; } }
+}
+
 /* ---------- the defending champion's trophy ---------- */
 .trophy { flex: none; vertical-align: -3px; }
 .champ { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px 3px 5px; border-radius: 999px; white-space: nowrap;
@@ -1023,5 +1034,6 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .fo-ph .champ-badge { width: 34px; height: 34px; top: -9px; right: -9px; }
   .fo-side.b .fo-ph .champ-badge { left: -9px; }
   .fo-ph .champ-badge .trophy { width: 21px; height: 21px; }
+  .desk-note { padding: 11px 18px; border-radius: var(--r-lg) var(--r-lg) 0 0; font-size: 13px; }
   .me-face { width: 28px; height: 28px; box-shadow: 0 0 0 2px var(--yellow); }
 }
