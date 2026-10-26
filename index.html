@@ -37,9 +37,31 @@
   </header>
 
   <main id="app" tabindex="-1">
-    <section class="loading" id="loading">
-      <div class="loading-glass glass"><span class="spinner" aria-hidden="true"></span><p>Pulling your league from Sleeper…</p></div>
+    <!-- the kicker loader: shown only if loading takes longer than 300 ms (app.js, startLoader) -->
+    <section class="loading" id="loading" aria-busy="true">
+      <div class="kick-card glass rim">
+        <video class="kick" autoplay muted loop playsinline preload="auto" poster="assets/kicker-poster.webp" aria-hidden="true">
+          <source src="assets/kicker.webm" type="video/webm">
+          <source src="assets/kicker.mp4" type="video/mp4">
+        </video>
+        <img class="kick kick-still" src="assets/kicker-poster.webp" alt="" aria-hidden="true">
+        <p role="status">Pulling your league from Sleeper…</p>
+      </div>
     </section>
+    <script>
+      // The loader clock starts here, not in app.js: on a slow connection app.js can take seconds to arrive, and the
+      // kicker should still appear 300 ms in. Reduced motion drops the video right away (the still frame shows instead).
+      (function () {
+        var l = document.getElementById('loading'), v = l && l.querySelector('video');
+        if (v && matchMedia('(prefers-reduced-motion: reduce)').matches) { v.removeAttribute('autoplay'); v.pause(); v.remove(); v = null; }
+        window.__loader = { timer: setTimeout(function () {
+          if (!l) return;
+          window.__loader.shownAt = performance.now();
+          if (v) { try { v.currentTime = 0; var p = v.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+          l.classList.add('show');
+        }, 300) };
+      })();
+    </script>
   </main>
 
   <footer class="footer">

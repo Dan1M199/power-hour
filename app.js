@@ -1465,11 +1465,36 @@ function initTooltips() {
   document.addEventListener('pointerleave', hide);
 }
 
+// The kicker loader (#loading in index.html). Its 300 ms timer is started by the inline script right after it, so it
+// runs even while app.js is still downloading; fast loads never see it. Once shown, the kick restarted from the top, and
+// done() keeps it up until one full kick has played, then fades it out and resolves when it's gone (right away if it
+// never appeared). Under reduced motion it's the still frame, no video, no wait, no fade.
+function startLoader() {
+  const el = $('#loading'), video = el?.querySelector('video'), state = window.__loader || {};
+  const still = calm() || !video;
+  // one kick is the clip's length (2.7 s; fallback until its metadata arrives), capped so a slow file can't hold the page
+  const kickMs = () => Math.min(6000, (video && Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 2.75) * 1000);
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  return {
+    async done() {
+      clearTimeout(state.timer);
+      if (!state.shownAt || !el) return;
+      if (!still) await wait(Math.max(0, state.shownAt + kickMs() - performance.now()));
+      el.classList.add('out');
+      if (!still) await wait(350); // the fade (styles.css, #loading)
+      video?.pause();
+    },
+  };
+}
+
 async function main() {
   initTooltips();
+  const loader = startLoader();
   try {
     await load();
+    await loader.done();
   } catch (e) {
+    await loader.done();
     $('#app').innerHTML = `<section class="loading"><div class="notice glass"><strong>Couldn't reach Sleeper.</strong> ${esc(e.message || e)}. Check your connection and reload the page.</div></section>`;
     return;
   }

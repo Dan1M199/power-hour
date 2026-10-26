@@ -119,9 +119,22 @@ main:has(> .loading:only-child)::before, main:has(> .loading:only-child)::after 
 
 /* ---------- loading / errors ---------- */
 .loading { display: grid; place-items: center; min-height: 50vh; }
-.loading-glass { display: flex; align-items: center; gap: 14px; padding: 18px 24px; border-radius: var(--r-lg); color: var(--ink-2); }
-.spinner { width: 20px; height: 20px; border-radius: 50%; border: 3px solid var(--tile-2); border-top-color: var(--grass); animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* the kicker loader: the field goal clip (one kick, 2.7 s, looping) on a white card. It only appears if loading takes
+   longer than 300 ms, stays for at least one full kick, then fades (startLoader in app.js). The clip's own white
+   backdrop is feathered at the edges with a radial mask so it melts into the card instead of showing a box: the one
+   soft edge on the site, by request. The mask is an ellipse wider than the frame, so only the outer rim fades and the
+   kicker, ball and posts stay solid. */
+#loading { opacity: 0; transition: opacity 0.35s ease; }
+#loading.show { opacity: 1; }
+#loading.show.out { opacity: 0; }
+.kick-card { display: grid; justify-items: center; gap: 8px; width: min(380px, calc(100vw - 40px)); padding: 12px 12px 18px; border-radius: var(--r-xl); }
+.kick { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover;
+  -webkit-mask-image: radial-gradient(ellipse 58% 62% at 50% 50%, #000 72%, transparent 100%);
+  mask-image: radial-gradient(ellipse 58% 62% at 50% 50%, #000 72%, transparent 100%); }
+.kick-still { display: none; }
+.kick-card p { margin: 0; font: 700 14px/1.3 var(--body); color: var(--ink-2); text-align: center; }
+/* reduced motion: the still frame only */
+@media (prefers-reduced-motion: reduce) { video.kick { display: none; } .kick-still { display: block; } }
 .notice { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border-radius: var(--r-md); margin: 0 0 22px; font-size: 14px; color: var(--ink-2);
   background: #FFF8E1; --ledge-c: var(--ledge-gold); }
 .notice strong { color: var(--ink); }
