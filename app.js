@@ -328,29 +328,44 @@ function sassStory() {
   const side = p.a === t.rid ? 'a' : 'b', opp = team(side === 'a' ? p.b : p.a);
   const mine = side === 'a' ? { proj: p.projA, banked: p.liveA || 0, win: p.winA } : { proj: p.projB, banked: p.liveB || 0, win: 1 - p.winA };
   const theirs = side === 'a' ? { banked: p.liveB || 0 } : { banked: p.liveA || 0 };
-  const rows = breakdown(DATA, p).rows.map((r) => r[side]).filter(Boolean);
+  const bd = breakdown(DATA, p), other = side === 'a' ? 'b' : 'a';
+  const rows = bd.rows.map((r) => r[side]).filter(Boolean);
   const jsn = rows.find((x) => x.name === SASS.star);
+  // who the other side still has on Monday night, best projection first
+  const still = (xs) => xs.filter((x) => x && !x.played && !x.out && !x.bye && x.proj > 0).sort((x, y) => y.proj - x.proj);
+  const oppLeft = still(bd.rows.map((r) => r[other]));
   const pts = jsn?.played ? jsn.proj : SASS.reported, pre = jsn?.pre;
   const left = rows.filter((x) => !x.played && !x.out && !x.bye && x.proj > 0 && x !== jsn);
   const rank = DATA.previews.flatMap((q) => [q.projA, q.projB]).sort((x, y) => y - x).indexOf(mine.proj) + 1;
   const N = firstName(t), O = opp.name, gap = Math.abs(mine.banked - theirs.banked);
+  // "a 16.7" but "an 11.6", "an 18", "an 8": the article follows how the number is said
+  const an = (x) => { const i = Math.floor(x); return i === 11 || i === 18 || String(i)[0] === '8' ? 'an' : 'a'; };
   const seed = [...chicagoDate()].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7);
   const pick = (xs) => xs[Math.abs(seed) % xs.length];
   const ahead = mine.win >= 0.5;
-  const headline = pick([
-    `Jaxon Smith-Njigba just hung ${f1(pts)} on the league. Chubb in my Jeanty would like a word`,
-    `JSN went nuclear for ${f1(pts)} and Chubb in my Jeanty is not being humble about it`,
-  ]);
+  const behind = mine.banked > theirs.banked, savior = oppLeft[0];
+  // ahead with the other side still playing Monday: the brag comes with the miracle they'd need
+  const headline = behind && savior
+    ? pick([
+      `JSN went nuclear for ${f1(pts)}. Now ${O} needs a Monday night miracle from ${savior.name}`,
+      `Jaxon Smith-Njigba hung ${f1(pts)} on ${O}, and only ${savior.name} can save them now`,
+    ])
+    : pick([
+      `Jaxon Smith-Njigba just hung ${f1(pts)} on the league. Chubb in my Jeanty would like a word`,
+      `JSN went nuclear for ${f1(pts)} and Chubb in my Jeanty is not being humble about it`,
+    ]);
   const lead = mine.banked >= theirs.banked ? `${f1(gap)} behind` : `${f1(gap)} ahead, for now`;
   const share = mine.banked > 0 && jsn?.played ? Math.round((pts / mine.banked) * 100) : null;
   const deck = [
     `${N} would never brag, so we will.`,
-    `Jaxon Smith-Njigba put up ${f1(pts)} points${pre ? ` on a ${f1(pre)}-point projection, ${(pts / pre).toFixed(1)} times what the experts saw coming` : ''}${share ? `, ${share}% of everything Chubb in my Jeanty has scored this week` : ''}.`,
+    `Jaxon Smith-Njigba put up ${f1(pts)} points${pre ? ` on ${an(pre)} ${f1(pre)}-point projection, ${(pts / pre).toFixed(1)} times what the experts saw coming` : ''}${share ? `, ${share}% of everything Chubb in my Jeanty has scored this week` : ''}.`,
     'Anyone who let him get away can sit quietly.',
-    `Chubb in my Jeanty is ${ordinal(rank)} in the league this week by projection, and ${O} is ${lead}.`,
     left.length
-      ? `${left.slice(0, 2).map((x) => x.name).join(' and ')} still ${left.length === 1 ? 'has' : 'have'} Monday night. ${pct(mine.win)} to win.`
-      : `Nobody left to play. ${pct(mine.win)} to win.`,
+      ? `Chubb in my Jeanty is ${ordinal(rank)} in the league this week by projection, with ${left.slice(0, 2).map((x) => x.name).join(' and ')} still to play Monday.`
+      : `Chubb in my Jeanty is done for the week, ${ordinal(rank)} in the league by projection.`,
+    behind && savior
+      ? `${O} is ${f1(gap)} back with ${oppLeft.slice(0, 2).map((x) => x.name).join(' and ')} left on Monday night. ${oppLeft.length === 1 ? `${savior.name} would need ${f1(gap)} on his own` : `They'd need ${f1(gap)} between them`}, against ${oppLeft.length === 1 ? `${an(savior.pre ?? savior.proj)} ${f1(savior.pre ?? savior.proj)}-point projection${savior.ceil ? ` and ${an(savior.ceil)} ${f1(savior.ceil)}-point ceiling` : ''}` : `${f1(oppLeft.reduce((a, x) => a + (x.pre ?? x.proj), 0))} projected`}. That's not a comeback, that's a Monday night miracle. ${pct(mine.win)} to win.`
+      : `${O} is ${lead}. ${pct(mine.win)} to win.`,
     ahead ? "You're welcome, league." : 'Whatever happens from here, JSN did his part. The rest of the lineup knows what it did.',
   ].join(' ');
   return { type: 'sass', kicker: 'A note from the desk', tone: 'good', stamp: 'JSN szn', rids: [t.rid, opp.rid], headline, deck };
