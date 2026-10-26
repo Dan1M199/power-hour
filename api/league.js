@@ -6,6 +6,7 @@
 // (lib/snapstore.js), so the CDN purge on every deploy, odd query strings or many visitors never cause another pull.
 import { leagueKey } from '../lib/newsclock.js';
 import { once } from '../lib/snapstore.js';
+import { revision, revKey, publishedConfig } from '../lib/published.js';
 
 const LEAGUE_ID = '1312001652454088704';
 const SLEEPER = 'https://api.sleeper.app/v1';
@@ -42,16 +43,20 @@ const askedKey = (req) => req.query?.d ?? (req.url ? new URL(req.url, 'http://x'
 
 export default async function handler(req, res) {
   try {
-    const key = leagueKey();
-    if (req.url && askedKey(req) !== key) {
+    // the page asks for the plain key; it always redirects (cached a minute) to the current revision, which the admin
+    // page bumps on publish (lib/published.js), so a publish reaches everyone without a new Sleeper pull
+    const key = leagueKey(), canonical = revKey(key, await revision(key));
+    if (req.url && askedKey(req) !== canonical) {
       res.setHeader('Cache-Control', 'public, s-maxage=60');
-      res.setHeader('Location', `/api/league?d=${encodeURIComponent(key)}`);
+      res.setHeader('Location', `/api/league?d=${encodeURIComponent(canonical)}`);
       return res.status(307).end();
     }
     // three days in the store: long enough to outlive any deploy, short enough to clean itself up
-    const { body, from } = await once('league', key, async () => ({ body: await snapshot(), ttl: 3 * 86400 }));
+    const { body: snap, from } = await once('league', key, async () => ({ body: await snapshot(), ttl: 3 * 86400 }));
+    // the published power-score weights ride along (null: the engine's defaults)
+    const body = { ...snap, config: await publishedConfig() };
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.setHeader('X-Snapshot', `${key} ${from}`);
+    res.setHeader('X-Snapshot', `${canonical} ${from}`);
     res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600');
     res.status(200).send(JSON.stringify(body));
   } catch (e) {

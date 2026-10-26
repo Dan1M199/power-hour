@@ -11,6 +11,9 @@ const redisCmd = ([cmd, k, ...a]) => {
     case 'GET': return db.has(k) ? db.get(k) : null;
     case 'SET': { if (a.includes('NX') && db.has(k)) return null; db.set(k, a[0]); return 'OK'; }
     case 'DEL': return db.delete(k) ? 1 : 0;
+    case 'INCR': { const v = (Number(db.get(k)) || 0) + 1; db.set(k, String(v)); return v; }
+    case 'EXPIRE': return 1;
+    case 'TTL': return db.has(k) ? 60 : -2;
     default: throw new Error(`unmocked ${cmd}`);
   }
 };
@@ -40,7 +43,7 @@ const call = async (handler, path) => {
 };
 const check = (label, cond, detail = '') => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${label}${cond ? '' : ` -> ${detail}`}`); if (!cond) process.exitCode = 1; };
 
-const L = `/api/league?d=${leagueKey()}`, R = `/api/ros?d=${morningKey()}`;
+const L = `/api/league?d=${leagueKey()}.r0`, R = `/api/ros?d=${morningKey()}`; // the league URL carries its revision (lib/published.js)
 
 // no store connected: behaves as before (a CDN miss reads Sleeper), but odd keys still never do
 let r = await call(league, '/api/league?d=1999-01-01');

@@ -1,4 +1,4 @@
-import { computeLeague, WEIGHTS } from './lib/engine.js';
+import { computeLeague, WEIGHTS, WEIGHTS_PROPOSED } from './lib/engine.js';
 import { bumpChart, scatter, radar, weeklyBars, divergingBars, heatTable, faceDot, TEAM_COLORS } from './lib/charts.js';
 import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
@@ -77,24 +77,29 @@ async function loadLive() {
   return { ...snap, ros };
 }
 
+// the engine input for a league snapshot (the public one, or the admin page's draft) with the morning ROS values
+function leagueInput(raw, extra = {}) {
+  const ros = RAW.ros && !RAW.ros.error ? RAW.ros : null;
+  const patched = ros ? applyOverrides(ros.values) : { values: {}, applied: [] };
+  return {
+    input: {
+      league: raw.league, users: raw.users, rosters: raw.rosters, matchups: raw.matchups, transactions: raw.transactions,
+      players: ros ? ros.players : {}, ros: patched.values, byes: ros?.byes || {},
+      currentWeek: raw.state.week, lastScored: raw.league.settings?.last_scored_leg,
+      // the published power-score weights ride on the snapshot (admin page); none means the engine's defaults
+      weights: raw.config?.weights || undefined,
+      ...extra,
+    },
+    ros, patched,
+  };
+}
+
 async function load() {
   const demo = new URLSearchParams(location.search).has('demo') || window.__DEMO__;
   RAW = window.__DEMO__ || (demo ? await getJSON('demo/demo.json') : await loadLive());
   RAW.isDemo = !!demo;
-  const ros = RAW.ros && !RAW.ros.error ? RAW.ros : null;
-  const patched = ros ? applyOverrides(ros.values) : { values: {}, applied: [] };
-  DATA = computeLeague({
-    league: RAW.league,
-    users: RAW.users,
-    rosters: RAW.rosters,
-    matchups: RAW.matchups,
-    transactions: RAW.transactions,
-    players: ros ? ros.players : {},
-    ros: patched.values,
-    byes: ros?.byes || {},
-    currentWeek: RAW.state.week,
-    lastScored: RAW.league.settings?.last_scored_leg,
-  });
+  const { input, ros, patched } = leagueInput(RAW);
+  DATA = computeLeague(input);
   DATA.rosMeta = ros;
   // live-week mode: games are on (or there are points on the board) and this week is still unscored
   DATA.liveMode = DATA.previews.length > 0 && (!!DATA.live || gameWindow());
@@ -122,6 +127,8 @@ async function load() {
 }
 
 // ---------- shared bits ----------
+const RESULT_KEYS = ['allPlay', 'pfPerGame', 'winPct', 'standing', 'form', 'lastWeek'];
+const weightTotal = () => Object.values(DATA.meta.weights).reduce((a, b) => a + b, 0) || 1;
 const team = (rid) => DATA.byRid[rid];
 const short = (name, n = 15) => (name.length > n ? name.slice(0, n - 1) + '…' : name);
 const nameOf = (id) => DATA.helpers.nameOf(id);
@@ -296,9 +303,9 @@ function viewRankings() {
     <details class="panel glass method-box">
       <summary><h2>How the score works</h2>${XP}</summary>
       <div class="method">
-        <p><b>Rest-of-season roster (${Math.round((WEIGHTS.rosProj + WEIGHTS.depth) * 100)}%).</b> Every player gets a consensus value from FantasyPros, DraftSharks and LeagueLogs half-PPR ROS rankings (LeagueLogs counts half, since it tracks the FantasyPros consensus closely). We build each team's best possible starting lineup from DraftSharks' weekly projections, discounted for games a player is expected to miss, then add the value of the top four bench pieces.</p>
-        <p><b>Remaining schedule (${Math.round(WEIGHTS.sos * 100)}%).</b> Priced in wins: each team's expected wins against its actual remaining opponents, minus what it would expect against an average opponent. Opponent strength uses the same projection as the playoff odds (about two-thirds projected lineup, one-third points per game so far).</p>
-        <p><b>Results so far (${Math.round((WEIGHTS.allPlay + WEIGHTS.pfPerGame + WEIGHTS.winPct + WEIGHTS.form) * 100)}%).</b> All-play win rate (your record if you played every team every week) carries the most weight because it strips out schedule luck. Points per game, actual record and the last three weeks round it out.</p>
+        <p><b>Rest-of-season roster (${Math.round(((DATA.meta.weights.rosProj || 0) + (DATA.meta.weights.depth || 0)) * 100 / weightTotal())}%).</b> Every player gets a consensus value from FantasyPros, DraftSharks and LeagueLogs half-PPR ROS rankings (LeagueLogs counts half, since it tracks the FantasyPros consensus closely). We build each team's best possible starting lineup from DraftSharks' weekly projections, discounted for games a player is expected to miss, then add the value of the top four bench pieces.</p>
+        <p><b>Remaining schedule (${Math.round((DATA.meta.weights.sos || 0) * 100 / weightTotal())}%).</b> Priced in wins: each team's expected wins against its actual remaining opponents, minus what it would expect against an average opponent. Opponent strength uses the same projection as the playoff odds (about two-thirds projected lineup, one-third points per game so far).</p>
+        <p><b>Results so far (${Math.round(RESULT_KEYS.reduce((a, k) => a + (DATA.meta.weights[k] || 0), 0) * 100 / weightTotal())}%).</b> All-play win rate (your record if you played every team every week) strips out schedule luck. Points per game, the actual record${DATA.meta.weights.standing ? ', your place in the standings' : ''}, the last three weeks${DATA.meta.weights.lastWeek ? ' and last week on its own' : ''} round it out.</p>
         <p><b>Scale.</b> Each input is compared to the rest of the league, so 50 is a dead-average team. The bars under each score show the roster, schedule and results parts separately.</p>
         <p><b>Playoff odds.</b> 10,000 simulations of the remaining regular-season schedule, using each team's projected lineup blended with its actual scoring. Ties in the standings go to points for, like Sleeper.</p>
       </div>
@@ -1243,7 +1250,7 @@ function viewLab() {
       <section class="panel glass span-12"><h2>Rank flow</h2><p class="sub">Power rank after each week. The roster half uses today's ROS values throughout, so the movement comes from results.</p>${bump}</section>
       <section class="panel glass span-6"><h2>Luck index</h2><p class="sub">Actual wins minus all-play expected wins. Orange teams are winning more than their scores deserve, blue teams less.</p>${divergingBars({ rows: luckRows })}</section>
       <section class="panel glass span-6"><h2>Points for vs against</h2><p class="sub">Dashed lines are the league average. Bottom right is where you want to live.</p>${sc}</section>
-      ${schedHeat ? `<section class="panel glass span-12"><h2>Schedule strength</h2><p class="sub">Each cell is that week's opponent by current power rank; red is a top team, green a bottom one. Teams run toughest to easiest, with the schedule's effect in expected wins next to the name. This counts for ${Math.round(WEIGHTS.sos * 100)}% of the power score.</p>${schedHeat}</section>` : ''}
+      ${schedHeat ? `<section class="panel glass span-12"><h2>Schedule strength</h2><p class="sub">Each cell is that week's opponent by current power rank; red is a top team, green a bottom one. Teams run toughest to easiest, with the schedule's effect in expected wins next to the name. This counts for ${Math.round((DATA.meta.weights.sos || 0) * 100 / weightTotal())}% of the power score.</p>${schedHeat}</section>` : ''}
       <section class="panel glass span-12"><h2>Weekly finishes</h2><p class="sub">Each cell is that week's score; green finished near the top of the league, red near the bottom.</p>${weeklyHeat}</section>
       ${posHeat ? `<section class="panel glass span-7"><h2>Position group ranks</h2><p class="sub">League rank of each team's projected rest-of-season starters by position, flex spots included.</p>${posHeat}</section>` : ''}
       <section class="panel glass ${posHeat ? 'span-5' : 'span-12'}"><h2>Playoff odds</h2><p class="sub">From 10,000 simulated finishes to the regular season, top ${DATA.meta.playoffTeams} get in.</p>
@@ -1264,6 +1271,233 @@ function viewLab() {
     </div>`;
 }
 
+// ---------- admin (Dan only: #admin, reached from the footer logo) ----------
+// Every action goes to /api/admin with the password, which the server checks; this page only shows what the server
+// allows. A manual pull lands in a private draft; the preview recomputes the power rankings with any weights, on the
+// live snapshot or the draft, optionally counting the week in progress as final; nothing changes for anyone else
+// until Publish.
+const WEIGHT_INFO = {
+  rosProj: ['Roster: best lineup', 'Projected weekly points of the best rest-of-season starting lineup'],
+  depth: ['Roster: bench', 'Value of the best bench pieces'],
+  sos: ['Schedule left', 'Expected wins vs the actual remaining opponents, minus vs an average slate'],
+  allPlay: ['All-play', 'Record if you played every team every week'],
+  pfPerGame: ['Points per game', 'Season scoring average'],
+  winPct: ['Record', 'Actual win percentage'],
+  standing: ['Standings place', 'Place in the real standings: record, then points for'],
+  form: ['Last 3 weeks', 'Scoring average over the last three weeks'],
+  lastWeek: ['Last week', 'Last week\'s score on its own'],
+};
+const adminState = { pw: null, status: null, draft: null, source: 'live', week: 'off', weights: { ...WEIGHTS_PROPOSED }, msg: '', busy: false };
+try { adminState.pw = sessionStorage.getItem('ph-admin'); } catch { /* storage unavailable */ }
+
+async function adminCall(action, extra = {}) {
+  const r = await fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: adminState.pw, action, ...extra }) });
+  const body = await r.json().catch(() => ({ error: `Admin API answered ${r.status}` }));
+  if (!r.ok) { const e = new Error(body.error || `Admin API answered ${r.status}`); e.status = r.status; e.body = body; throw e; }
+  return body;
+}
+
+// a snapshot with the week in progress counted as final: scores so far, or each team's projected finish
+function asFinal(raw, mode) {
+  if (mode === 'off') return raw;
+  const pre = computeLeague({ ...leagueInput(raw).input, sims: 500 });
+  const w = pre.previews[0]?.week;
+  if (!w) return raw;
+  const proj = Object.fromEntries(pre.previews.flatMap((p) => [[p.a, p.projA], [p.b, p.projB]]));
+  const rows = (raw.matchups[w] || []).map((m) => ({ ...m, points: mode === 'proj' ? proj[m.roster_id] ?? m.points ?? 0 : m.points || 0 }));
+  const byId = Object.fromEntries(rows.map((m) => [m.roster_id, m]));
+  const split = (x) => ({ i: Math.floor(x), d: Math.round((x - Math.floor(x)) * 100) });
+  const rosters = raw.rosters.map((r) => {
+    const m = byId[r.roster_id], o = m && rows.find((x) => x.matchup_id === m.matchup_id && x.roster_id !== r.roster_id);
+    if (!m || !o) return r;
+    const s = { ...r.settings }, pf = split((s.fpts || 0) + (s.fpts_decimal || 0) / 100 + m.points), pa = split((s.fpts_against || 0) + (s.fpts_against_decimal || 0) / 100 + o.points);
+    s.fpts = pf.i; s.fpts_decimal = pf.d; s.fpts_against = pa.i; s.fpts_against_decimal = pa.d;
+    if (m.points > o.points) s.wins = (s.wins || 0) + 1; else if (m.points < o.points) s.losses = (s.losses || 0) + 1; else s.ties = (s.ties || 0) + 1;
+    return { ...r, settings: s };
+  });
+  return { ...raw, rosters, matchups: { ...raw.matchups, [w]: rows }, league: { ...raw.league, settings: { ...raw.league.settings, last_scored_leg: w } }, state: { ...raw.state, week: w + 1 } };
+}
+
+function adminPreview() {
+  const base = adminState.source === 'draft' && adminState.draft ? adminState.draft : RAW;
+  const raw = asFinal(base, adminState.week);
+  const D = computeLeague({ ...leagueInput(raw).input, weights: adminState.weights, sims: 2000 });
+  return { D, raw };
+}
+
+function adminLogin(err = '') {
+  return `
+    <section class="view-head"><div>
+      <h1><span class="wk">Admin</span>Front office</h1>
+      <p>For the commissioner\'s desk only.</p>
+    </div></section>
+    <form class="panel glass adm-login" id="adm-login">
+      <label for="adm-pw">Password</label>
+      <div class="adm-row"><input id="adm-pw" type="password" inputmode="numeric" autocomplete="current-password" required><button type="submit" class="adm-btn primary">Unlock</button></div>
+      ${err ? `<p class="adm-err" role="alert">${esc(err)}</p>` : ''}
+    </form>`;
+}
+
+function viewAdmin() {
+  if (!adminState.status) return adminLogin(adminState.loginErr || '');
+  const st = adminState.status, pub = st.config?.weights;
+  const wk = DATA.previews[0]?.week;
+  const when = (iso) => (iso ? new Date(iso).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'never');
+  const draftOk = st.draft && st.draft.key === st.key;
+  const seg = (name, val, label) => `<button type="button" data-${name}="${val}" aria-pressed="${adminState[name] === val}">${label}</button>`;
+  const total = Object.values(adminState.weights).reduce((a, b) => a + b, 0) || 1;
+  const slider = (k) => `
+    <label class="adm-w" title="${esc(WEIGHT_INFO[k][1])}">
+      <span class="adm-wn">${WEIGHT_INFO[k][0]}<small>${esc(WEIGHT_INFO[k][1])}</small></span>
+      <input type="range" min="0" max="0.4" step="0.01" value="${adminState.weights[k] || 0}" data-w="${k}">
+      <b data-wv="${k}">${Math.round(((adminState.weights[k] || 0) / total) * 100)}%</b>
+    </label>`;
+  return `
+    <section class="view-head"><div>
+      <h1><span class="wk">Admin</span>Front office</h1>
+      <p>Pull fresh data, try out power-score weights, and publish when it looks right. Nothing here changes what anyone else sees until you press Publish.</p>
+    </div></section>
+    <div class="adm-grid">
+      <section class="panel glass adm-status">
+        <h2>What's live</h2>
+        <dl>
+          <div><dt>League snapshot</dt><dd>${esc(st.key)}, revision ${st.rev}<small>${RAW.isDemo ? 'Demo snapshot on this page' : `Fetched ${esc(when(RAW.fetched))}`}</small></dd></div>
+          <div><dt>Power-score weights</dt><dd>${pub ? 'Custom' : 'Default'}<small>${pub ? `Published ${esc(when(st.config.at))}` : 'The original 45 / 10 / 45 mix'}</small></dd></div>
+          <div><dt>Your draft</dt><dd>${st.draft ? `Pulled ${esc(when(st.draft.fetched))}` : 'None yet'}<small>${st.draft ? (draftOk ? 'Ready to publish' : 'From an earlier snapshot window: pull again to publish') : 'Private until published'}</small></dd></div>
+        </dl>
+        <div class="adm-actions">
+          <button type="button" class="adm-btn primary" data-act="pull" ${st.nextPullIn ? 'disabled' : ''}>${st.nextPullIn ? `Pull again in ${st.nextPullIn}s` : 'Pull fresh from Sleeper'}</button>
+          <button type="button" class="adm-btn" data-act="pub-data" ${draftOk ? '' : 'disabled'}>Publish draft data</button>
+        </div>
+        <p class="sub">One pull every two minutes at most. A pull goes to your draft only; the site keeps its once-a-morning schedule.</p>
+        ${adminState.msg ? `<p class="adm-msg" role="status">${esc(adminState.msg)}</p>` : ''}
+      </section>
+      <section class="panel glass adm-weights">
+        <h2>Power-score weights</h2>
+        <div class="filters adm-seg" role="group" aria-label="Data">${seg('source', 'live', 'Live snapshot')}${st.draft ? seg('source', 'draft', 'Your draft') : ''}</div>
+        <div class="filters adm-seg" role="group" aria-label="This week">${seg('week', 'off', `Through week ${DATA.meta.lastScored}`)}${wk ? `${seg('week', 'now', `Week ${wk} final as it stands`)}${seg('week', 'proj', `Week ${wk} projected finish`)}` : ''}</div>
+        <div class="filters adm-seg" role="group" aria-label="Presets">
+          <button type="button" data-preset="default">Load default</button><button type="button" data-preset="proposed">Load proposed</button>${pub ? '<button type="button" data-preset="published">Load published</button>' : ''}
+        </div>
+        <div class="adm-sliders">${Object.keys(WEIGHT_INFO).map(slider).join('')}</div>
+        <div class="adm-actions">
+          <button type="button" class="adm-btn primary" data-act="pub-weights">Publish these weights</button>
+          ${pub ? '<button type="button" class="adm-btn" data-act="pub-default">Go back to default weights</button>' : ''}
+        </div>
+      </section>
+    </div>
+    <section class="panel glass adm-results" id="adm-results">${adminResults()}</section>`;
+}
+
+// the preview next to what everyone sees now: a slope chart from live rank to preview rank, then the table
+function adminResults() {
+  const { D } = adminPreview(), n = D.teams.length;
+  const H = 30 * n + 20, x0 = 150, x1 = 410, y = (r) => 20 + (r - 1) * 30;
+  const lines = D.teams.map((t) => {
+    const a = DATA.byRid[t.rid].powerRank, b = t.powerRank, c = DATA.color[t.rid], mine = t.rid === myTeam;
+    return `<g class="${mine ? 'mine' : ''}" data-tip="${esc(`${t.name}: ${ordinal(a)} now, ${ordinal(b)} in the preview`)}">
+      <line x1="${x0}" y1="${y(a)}" x2="${x1}" y2="${y(b)}" stroke="${c}" stroke-width="${mine ? 4 : 2.5}"/>
+      <circle cx="${x0}" cy="${y(a)}" r="5" fill="${c}"/><circle cx="${x1}" cy="${y(b)}" r="5" fill="${c}"/>
+      <text x="${x0 - 12}" y="${y(a) + 4}" text-anchor="end" class="label">${esc(short(t.name, 16))}</text>
+      <text x="${x1 + 12}" y="${y(b) + 4}" class="label">${b}. ${esc(short(t.name, 16))}</text></g>`;
+  }).join('');
+  const chart = `<svg class="chart adm-slope" viewBox="0 0 560 ${H}" role="img" aria-label="Live power rank to preview rank">
+    <text x="${x0}" y="10" text-anchor="middle" class="axis-title">Live</text><text x="${x1}" y="10" text-anchor="middle" class="axis-title">Preview</text>${lines}</svg>`;
+  const row = (t) => {
+    const was = DATA.byRid[t.rid].powerRank, mv = was - t.powerRank;
+    return `<tr class="${t.rid === myTeam ? 'mine' : ''}">
+      <td class="num"><b>${t.powerRank}</b></td>
+      <td>${mv ? `<span class="move ${mv > 0 ? 'up' : 'down'}">${mv > 0 ? '▲' : '▼'}${Math.abs(mv)}</span>` : '<span class="move-none">–</span>'}</td>
+      <td class="tm">${avatar(t, 'avatar xs')}${esc(short(t.name, 22))}</td>
+      <td class="num">${record(t)}</td>
+      <td class="num">${DATA.byRid[t.rid].score.toFixed(1)} → <b>${t.score.toFixed(1)}</b></td>
+      <td class="num">${t.rosScore != null ? Math.round(t.rosScore) : '–'}</td>
+      <td class="num">${t.sosScore != null ? Math.round(t.sosScore) : '–'}</td>
+      <td class="num">${Math.round(t.resultsScore)}</td>
+      <td class="num">${pct(t.playoffPct)}</td>
+    </tr>`;
+  };
+  const moved = D.teams.filter((t) => DATA.byRid[t.rid].powerRank !== t.powerRank).length;
+  return `<h2>Preview</h2>
+    <p class="sub">${moved ? `${moved} of ${n} teams move compared with what the site shows now.` : 'Same order as what the site shows now.'} ${adminState.week === 'off' ? '' : `Week ${DATA.previews[0]?.week} is counted as final (${adminState.week === 'now' ? 'scores so far' : 'projected finish'}), so records include it.`}</p>
+    <div class="adm-res">
+      <div class="adm-chart">${chart}</div>
+      <div class="heat-wrap"><table class="table">
+        <thead><tr><th class="num">Rank</th><th></th><th>Team</th><th class="num">Record</th><th class="num">Score</th><th class="num">Roster</th><th class="num">Sched</th><th class="num">Results</th><th class="num">Playoffs</th></tr></thead>
+        <tbody>${D.teams.map(row).join('')}</tbody>
+      </table></div>
+    </div>`;
+}
+
+let adminTimer = 0;
+function paintAdminResults() {
+  clearTimeout(adminTimer);
+  adminTimer = setTimeout(() => {
+    const el = $('#adm-results');
+    if (el) { el.innerHTML = adminResults(); fixAvatars(el); }
+    const total = Object.values(adminState.weights).reduce((a, b) => a + b, 0) || 1;
+    document.querySelectorAll('[data-wv]').forEach((b) => (b.textContent = `${Math.round(((adminState.weights[b.dataset.wv] || 0) / total) * 100)}%`));
+  }, 120);
+}
+
+async function adminAct(act) {
+  const confirmations = {
+    'pub-data': 'Publish the draft? Everyone gets this snapshot within a minute.',
+    'pub-weights': 'Publish these weights? Everyone\'s power rankings switch to them within a minute.',
+    'pub-default': 'Go back to the default weights for everyone?',
+  };
+  if (confirmations[act] && !confirm(confirmations[act])) return;
+  adminState.msg = act === 'pull' ? 'Pulling from Sleeper…' : 'Publishing…';
+  route();
+  try {
+    if (act === 'pull') {
+      const r = await adminCall('pull');
+      adminState.status = r; adminState.draft = r.snapshot; adminState.source = 'draft';
+      adminState.msg = `Pulled ${new Date(r.snapshot.fetched).toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' })}. The preview now uses your draft.`;
+    } else {
+      const extra = act === 'pub-data' ? { data: true } : act === 'pub-weights' ? { weights: adminState.weights } : { weights: null };
+      const r = await adminCall('publish', extra);
+      adminState.status = r;
+      adminState.msg = `Published ${r.published.join(' and ')} (revision ${r.rev}). Visitors pick it up within a minute; reload this page to see it as they will.`;
+    }
+  } catch (e) {
+    if (e.body?.key) adminState.status = e.body;
+    adminState.msg = e.message;
+  }
+  route();
+}
+
+async function adminUnlock(pw) {
+  adminState.pw = pw;
+  try {
+    adminState.status = await adminCall('status');
+    adminState.loginErr = '';
+    try { sessionStorage.setItem('ph-admin', pw); } catch { /* storage unavailable */ }
+    if (adminState.status.draft) adminState.draft = (await adminCall('draft')).snapshot;
+  } catch (e) {
+    adminState.status = null; adminState.pw = null;
+    try { sessionStorage.removeItem('ph-admin'); } catch { /* storage unavailable */ }
+    adminState.loginErr = e.message;
+  }
+  route();
+}
+
+function bindAdmin() {
+  $('#adm-login')?.addEventListener('submit', (e) => { e.preventDefault(); adminUnlock($('#adm-pw').value); });
+  $('#adm-pw')?.focus();
+  document.querySelectorAll('[data-w]').forEach((r) => r.addEventListener('input', () => { adminState.weights[r.dataset.w] = Number(r.value); paintAdminResults(); }));
+  document.querySelectorAll('[data-source], [data-week]').forEach((b) => b.addEventListener('click', () => {
+    if (b.dataset.source) adminState.source = b.dataset.source; else adminState.week = b.dataset.week;
+    route();
+  }));
+  document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => {
+    const p = b.dataset.preset;
+    adminState.weights = { ...(p === 'default' ? WEIGHTS : p === 'published' ? adminState.status.config.weights : WEIGHTS_PROPOSED) };
+    route();
+  }));
+  document.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', () => adminAct(b.dataset.act)));
+}
+
 // ---------- shell ----------
 // ---------- motion ----------
 // Everything here animates transform/opacity only, runs when on screen, and is skipped under reduced motion.
@@ -1277,6 +1511,7 @@ let currentView = null;
 // gold pill behind the active tab; with view transitions the browser morphs it, otherwise CSS slides it
 function placeInk({ settle = false } = {}) {
   const ink = $('.tab-ink'), a = $('.tabs a[aria-current]');
+  if (ink && !a) { ink.style.width = '0px'; return; } // a page with no tab (the admin page)
   if (!ink || !a) return;
   if (settle) ink.classList.remove('live'); // a re-measure snaps into place instead of sliding
   ink.style.width = `${a.offsetWidth}px`;
@@ -1338,7 +1573,7 @@ function reveal(root) {
   root.querySelectorAll('.rank').forEach((el) => io.observe(el)); // ranking rows have their own rise; just count
 }
 
-const VIEWS = { live: viewLive, rankings: viewRankings, wire: viewWire, matchups: viewMatchups, trades: viewTrades, lab: viewLab };
+const VIEWS = { admin: viewAdmin, live: viewLive, rankings: viewRankings, wire: viewWire, matchups: viewMatchups, trades: viewTrades, lab: viewLab };
 function route({ fresh = false } = {}) {
   // while a week is being played the Live tab is the front page; it only exists then
   const home = DATA.liveMode ? 'live' : 'rankings';
@@ -1363,6 +1598,14 @@ function route({ fresh = false } = {}) {
 }
 
 function bind(key) {
+  if (key === 'admin') {
+    bindAdmin();
+    // a password saved earlier this session unlocks straight away (the server still checks it)
+    if (adminState.pw && !adminState.status && !adminState.loginErr && !adminState.trying) {
+      adminState.trying = true;
+      adminUnlock(adminState.pw).finally(() => (adminState.trying = false));
+    }
+  }
   if (key === 'live') bindCarousel();
   if (key === 'rankings') {
     if (!DATA.liveMode) bindCarousel();
