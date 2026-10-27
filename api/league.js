@@ -9,7 +9,7 @@ import { once } from '../lib/snapstore.js';
 
 // Your Sleeper league: the number at the end of your league's URL (sleeper.com/leagues/<LEAGUE_ID>/...). Set it here, or
 // as the SLEEPER_LEAGUE_ID environment variable in Vercel (that wins if both are set).
-const LEAGUE_ID = '';
+const LEAGUE_ID = '1389360536516329472'; // jits and diddles
 const SLEEPER = 'https://api.sleeper.app/v1';
 
 async function getJSON(path) {

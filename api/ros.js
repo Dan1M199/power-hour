@@ -1,6 +1,6 @@
 // GET /api/ros — consensus rest-of-season values keyed by Sleeper player ID.
 //
-// Pulls FantasyPros, DraftSharks and LeagueLogs half-PPR ROS rankings plus Sleeper's player map,
+// Pulls FantasyPros, DraftSharks and LeagueLogs ROS rankings (full or half PPR, SCORING in lib/sources.js) plus Sleeper's player map,
 // matches every ranked player to a Sleeper ID and blends the sources (lib/consensus.js).
 // The front end asks for /api/ros?d=<morning key> (lib/newsclock.js); any other key is redirected to it. Sleeper's
 // player map is read at most once per morning: it's kept slimmed in the store (lib/snapstore.js) under that key, so

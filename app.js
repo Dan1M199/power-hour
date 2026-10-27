@@ -13,7 +13,7 @@ import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDe
 const SOURCE_NAMES = { fp: 'FantasyPros', ds: 'DraftSharks', ll: 'LeagueLogs' };
 // the site's author, by Sleeper display name: their own lineup blunders always make the lead story, and the footer
 // credits them. null for nobody. Example: { user: 'sleeperName', name: 'First name' }
-const EDITOR = null;
+const EDITOR = { user: 'aneeshd24', name: 'Aneesh' };
 // money week: whoever scores closest to the target, over or under, takes the doubled bonus (lib/bullseye.js). The board
 // shows from now through the week after, then disappears on its own; null when there isn't one. Example:
 // { week: 9, target: 120, prize: 80, usual: 40, title: 'Money week bullseye', honoree: '<sleeper user_id>',
@@ -36,7 +36,7 @@ const gameWindow = () => inGameWindow(clock());
 const nightDesk = () => isNightDesk(clock());
 
 // last season's champion carries a trophy wherever their team shows up. Example: { user: '<sleeper user_id>', season: 2025 }
-const CHAMPION = null;
+const CHAMPION = { user: '475088579287052288', season: 2025 }; // jp1648, Help me i need a RB
 
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2178,9 +2178,9 @@ async function main() {
   initTeamPicker();
   paintTabs();
   const ed = EDITOR && DATA.teams.find((t) => t.owner === EDITOR.user);
-  if (ed && faceSrc(ed)) {
+  if (ed) {
     const mh = $('#masthead');
-    mh.innerHTML = `<img src="${faceSrc(ed)}" alt="" width="44" height="44"><span>The Power Hour is put together by <b>${esc(EDITOR.name)}</b>, whose own lineup mistakes are always front-page news.</span>`;
+    mh.innerHTML = `${faceSrc(ed) ? `<img src="${faceSrc(ed)}" alt="" width="44" height="44">` : ''}<span>The Power Hour is put together by <b>${esc(EDITOR.name)}</b>, whose own lineup mistakes are always front-page news.</span>`;
     mh.hidden = false;
   }
   const champ = DATA.teams.find(isChamp);

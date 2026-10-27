@@ -1,14 +1,16 @@
 # The Power Hour
 
-Power rankings, a live waiver-wire feed and data-nerd stats for a Sleeper fantasy football league.
+Power rankings, a live waiver-wire feed and data-nerd stats for **jits and diddles**, a 10-team full-PPR Sleeper league.
 
 ## Connect your league
+
+Already connected to jits and diddles (`1389360536516329472`). To point it at another league:
 
 1. Find your league ID: open your league on sleeper.com; it's the long number in the URL (`sleeper.com/leagues/<league ID>/...`).
 2. Either put it in `api/league.js` (`const LEAGUE_ID = '...'`) or, in Vercel, add an environment variable `SLEEPER_LEAGUE_ID` with that number (Project, Settings, Environment Variables), then redeploy.
 3. Optional personal touches, all in `app.js` and off by default: `EDITOR` (the site's author), `CHAMPION` (last season's winner gets a trophy), `MONEY_WEEK`, `SHAKEUP`, `MESSAGE_VIDEO`, `CLIP`. Manager headshots go in `MEMBERS` in `lib/members.js` with photos in `assets/heads/`.
 
-The page reads Sleeper only through the site's own `/api/league` and `/api/ros`, once each morning. Your league needs the same scoring the projections assume to be most accurate (half-PPR), but any Sleeper league loads.
+The page reads Sleeper only through the site's own `/api/league` and `/api/ros`, once each morning. Rankings use the full-PPR lists; for a half-PPR league set `SCORING = 'half'` in `lib/sources.js`.
 
 - **Rankings**: a 0–100 power score per team from standing (40%), scoring (28%), schedule left (17%) and rest-of-season roster (15%). Tap a team for the reasons behind its rank, a position-group radar, its best ROS lineup, weekly scoring and simulated playoff seeds.
 - **Wire**: every add, drop and trade, newest first. Each move is graded by the consensus ROS value gained or lost. Also shows the best available free agents and a trade ledger.
