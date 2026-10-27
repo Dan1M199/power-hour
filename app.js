@@ -194,8 +194,8 @@ function buildFinal() {
   if (live.after || !live.finalCall) return live;
   build(asFinal(RAW, 'now'));
   DATA.liveMode = false;
+  DATA.after = live; // first: the shakeup compares against this week-in-progress snapshot
   DATA.stories = shakeupOn() ? shakeupStories() : null;
-  DATA.after = live;
   revealed = true;
   return DATA;
 }
@@ -548,10 +548,14 @@ const shareOf = (w, keys) => { const tot = Object.values(w).reduce((a, b) => a +
 function shakeupStories() {
   const wk = SHAKEUP.week;
   // where everyone stood going into the week: week 6 ranks on the old formula
-  const old = computeLeague({ ...leagueInput(DATA.raw).input, weights: WEIGHTS, sims: 200 });
+  // what the rankings page showed going into the week: the week-in-progress snapshot (DATA.after, the final call) on
+  // the old formula; once Sleeper has scored the week there is no such snapshot, so the old formula's week 6 ranks
+  const before = DATA.after?.raw;
+  const old = computeLeague({ ...leagueInput(before || DATA.raw).input, weights: WEIGHTS, sims: 200 });
   const moves = DATA.teams.map((t) => {
-    const was = old.byRid[t.rid].rankHistory[wk - 2] ?? old.byRid[t.rid].powerRank;
-    return { t, was, d: was - t.powerRank };
+    const o = old.byRid[t.rid], was = before ? o.powerRank : o.rankHistory[wk - 2] ?? o.powerRank;
+    t.movement = was - t.powerRank; // the arrows on the ranking rows tell the same story as the headline
+    return { t, was, d: t.movement };
   });
   const moved = moves.filter((m) => m.d).length;
   const up = [...moves].sort((a, b) => b.d - a.d)[0], down = [...moves].sort((a, b) => a.d - b.d)[0];
