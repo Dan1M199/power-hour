@@ -1834,7 +1834,7 @@ function viewAdmin() {
           <button type="button" class="adm-btn primary" data-act="pull" ${st.nextPullIn ? 'disabled' : ''}>${st.nextPullIn ? `Pull again in ${st.nextPullIn}s` : 'Pull fresh from Sleeper'}</button>
           <button type="button" class="adm-btn" data-act="pub-data" ${draftOk ? '' : 'disabled'}>Publish draft data</button>
           <button type="button" class="adm-btn" data-act="ros">Refresh rankings sources</button>
-          <a class="adm-btn" href="./?rehearse=1#live" target="_blank" rel="noopener">Rehearse the 10:45pm flow</a>
+          <a class="adm-btn" href="./?rehearse=1#live">Rehearse the 10:45pm flow</a>
         </div>
         <p class="sub">One pull every two minutes at most. A pull goes to your draft only; the site keeps its once-a-morning schedule.</p>
         ${adminState.msg ? `<p class="adm-msg" role="status">${esc(adminState.msg)}</p>` : ''}
@@ -2260,7 +2260,7 @@ async function main() {
     const b = document.createElement('div');
     b.className = 'rehearse-strip';
     b.setAttribute('role', 'status');
-    b.innerHTML = 'Rehearsal: the 10:45pm flow with the scores as they stand now. Nothing here is saved or seen by anyone. <a href="./?rehearse=1#live">Start over</a>';
+    b.innerHTML = 'Rehearsal: the 10:45pm flow with the scores as they stand now. Nothing here is saved or seen by anyone. <a href="./?rehearse=1#live">Start over</a> <a href="./#admin">Back to admin</a>';
     document.body.append(b);
   }
   const ed = DATA.teams.find((t) => t.owner === EDITOR.user);
