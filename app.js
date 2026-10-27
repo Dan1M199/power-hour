@@ -7,7 +7,7 @@ import { breakdown, shortName } from './lib/matchup.js';
 import { MEMBERS, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
-import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
+import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow, isFinalCall } from './lib/newsclock.js';
 
 // ---------- config ----------
 const SOURCE_NAMES = { fp: 'FantasyPros', ds: 'DraftSharks', ll: 'LeagueLogs' };
@@ -24,9 +24,22 @@ const MONEY_WEEK = {
 // snapshot keys always follow the real clock, and the API redirects any other key to the current one).
 const AT = (() => { const v = new URLSearchParams(location.search).get('at'); const d = v && new Date(v); return d && !isNaN(d) ? d : null; })();
 const clock = () => AT || new Date();
+const T0 = Date.now();
+const tick = () => (AT ? +AT + (Date.now() - T0) : Date.now()); // the clock still running, for countdowns under ?at=
+
+// Dan's call for week 7: the new formula is published, so the power rankings page stays shut until tonight's final call
+// at 10:45pm, its tab hidden and a countdown in its place. Past that time it stays shut while the week is still being
+// played (Monday night running long), until Tuesday 6am at the latest. Set to null to drop it.
+const RANKINGS_LOCK = { until: Date.parse('2026-10-26T22:45:00-05:00'), end: Date.parse('2026-10-27T06:00:00-05:00') };
+function rankingsLocked() {
+  if (!RANKINGS_LOCK || DATA.after || DATA.finalCall) return false;
+  const now = tick();
+  return now < RANKINGS_LOCK.until || (now < RANKINGS_LOCK.end && DATA.liveMode);
+}
 const onHold = () => isOnHold(clock());
 const gameWindow = () => inGameWindow(clock());
 const nightDesk = () => isNightDesk(clock());
+const finalCall = () => isFinalCall(clock());
 
 // last season's champion carries a trophy wherever their team shows up
 const CHAMPION = { user: '1004111276118761472', season: 2025 };
@@ -94,15 +107,46 @@ function leagueInput(raw, extra = {}) {
   };
 }
 
+// a snapshot with the week in progress counted as final (the admin preview, and the final call): scores so far, or each team's projected finish
+function asFinal(raw, mode) {
+  if (mode === 'off') return raw;
+  const pre = computeLeague({ ...leagueInput(raw).input, sims: 500 });
+  const w = pre.previews[0]?.week;
+  if (!w) return raw;
+  const proj = Object.fromEntries(pre.previews.flatMap((p) => [[p.a, p.projA], [p.b, p.projB]]));
+  const rows = (raw.matchups[w] || []).map((m) => ({ ...m, points: mode === 'proj' ? proj[m.roster_id] ?? m.points ?? 0 : m.points || 0 }));
+  const byId = Object.fromEntries(rows.map((m) => [m.roster_id, m]));
+  const split = (x) => ({ i: Math.floor(x), d: Math.round((x - Math.floor(x)) * 100) });
+  const rosters = raw.rosters.map((r) => {
+    const m = byId[r.roster_id], o = m && rows.find((x) => x.matchup_id === m.matchup_id && x.roster_id !== r.roster_id);
+    if (!m || !o) return r;
+    const s = { ...r.settings }, pf = split((s.fpts || 0) + (s.fpts_decimal || 0) / 100 + m.points), pa = split((s.fpts_against || 0) + (s.fpts_against_decimal || 0) / 100 + o.points);
+    s.fpts = pf.i; s.fpts_decimal = pf.d; s.fpts_against = pa.i; s.fpts_against_decimal = pa.d;
+    if (m.points > o.points) s.wins = (s.wins || 0) + 1; else if (m.points < o.points) s.losses = (s.losses || 0) + 1; else s.ties = (s.ties || 0) + 1;
+    return { ...r, settings: s };
+  });
+  return { ...raw, rosters, matchups: { ...raw.matchups, [w]: rows }, league: { ...raw.league, settings: { ...raw.league.settings, last_scored_leg: w } }, state: { ...raw.state, week: w + 1 } };
+}
+
 async function load() {
   const demo = new URLSearchParams(location.search).has('demo') || window.__DEMO__;
   RAW = window.__DEMO__ || (demo ? await getJSON('demo/demo.json') : await loadLive());
   RAW.isDemo = !!demo;
-  const { input, ros, patched } = leagueInput(RAW);
+  build(RAW);
+  // anyone who has already been through the final-scores reveal this week goes straight to the new rankings
+  if (DATA.finalCall && store.get('ph-final-seen') === finalSeenKey()) buildFinal();
+}
+
+// computes a league snapshot into DATA (the helpers below all read DATA) and dresses it for the page
+function build(raw) {
+  const { input, ros, patched } = leagueInput(raw);
   DATA = computeLeague(input);
+  DATA.raw = raw;
   DATA.rosMeta = ros;
   // live-week mode: games are on (or there are points on the board) and this week is still unscored
   DATA.liveMode = DATA.previews.length > 0 && (!!DATA.live || gameWindow());
+  // the final call: after Monday night football every game is done, so the week reads as final before Sleeper scores it
+  DATA.finalCall = DATA.liveMode && !!DATA.live && finalCall() && nightBoard(DATA).every((g) => g.final);
   DATA.fetched = RAW.fetched ? new Date(RAW.fetched).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' }) : null;
   DATA.overrides = patched.applied;
   DATA.rosError = RAW.ros && RAW.ros.error;
@@ -125,9 +169,30 @@ async function load() {
   if (sass) DATA.stories = { ...DATA.stories, more: [...DATA.stories.more, sass], extra: true };
   const ms = moneyStory();
   if (ms) DATA.stories = { ...DATA.stories, lead: ms, more: [DATA.stories.lead, ...DATA.stories.more].filter(Boolean) };
+  // once the week is final the headlines come down; the week after, the shakeup leads
+  if (DATA.finalCall) DATA.stories = null;
+  else if (!DATA.liveMode && shakeupOn()) DATA.stories = shakeupStories();
   DATA.key = keyMatchup(DATA);
   DATA.quips = matchupQuips(DATA);
+  return DATA;
 }
+
+// The new power rankings after the final call: this week's final scores counted into records and points for, ranked
+// with the live published weights. The final-scores page stays reachable from it (DATA.after).
+function buildFinal() {
+  const live = DATA;
+  if (live.after || !live.finalCall) return live;
+  build(asFinal(RAW, 'now'));
+  DATA.liveMode = false;
+  DATA.stories = shakeupOn() ? shakeupStories() : null;
+  DATA.after = live;
+  revealed = true;
+  return DATA;
+}
+let revealed = false; // this visitor has been through the final-scores reveal
+const finalSeenKey = () => `${RAW.league.season}-w${(DATA.after || DATA).previews[0]?.week}`;
+// render with another computed league in DATA (the final-scores page after the reveal)
+function withData(D, fn) { const keep = DATA; DATA = D; try { return fn(); } finally { DATA = keep; } }
 
 // ---------- shared bits ----------
 const RESULT_KEYS = ['allPlay', 'pfPerGame', 'winPct', 'standing', 'form', 'lastWeek'];
@@ -279,6 +344,7 @@ const updatedText = () => {
 
 // ---------- views ----------
 function viewRankings() {
+  if (rankingsLocked()) return viewLocked();
   const m = DATA.meta;
   const chips = DATA.rosMeta
     ? Object.entries(DATA.rosMeta.sources).map(([k, s]) => `<span class="chip ${s.ok ? '' : 'off'}" title="${s.ok ? `${s.matched} of ${s.rows} players matched` : esc(s.error)}"><span class="dot"></span>${SOURCE_NAMES[k] || k}</span>`).join('')
@@ -297,10 +363,13 @@ function viewRankings() {
         </div>
         <div class="sources">${chips}${updatedText() ? `<span class="chip">${esc(updatedText())}</span>` : ''}</div>
       </section>`;
-  const hold = held ? `<div class="notice glass hold"><span><strong>Power rankings are on hold.</strong> Week ${m.lastScored + 1} is being played, so these are the ranks going into the week. They update Tuesday morning once every game is final. For how this week is going, see the <a href="#live">Live</a> tab.</span></div>` : '';
+  const hold = DATA.finalCall
+    ? `<div class="notice glass hold"><span><strong>Week ${m.lastScored + 1} is final.</strong> These are the ranks going into the week. The new ones are ready.</span></div>${revealCta(false)}`
+    : held ? `<div class="notice glass hold"><span><strong>Power rankings are on hold.</strong> Week ${m.lastScored + 1} is being played, so these are the ranks going into the week. They update Tuesday morning once every game is final. For how this week is going, see the <a href="#live">Live</a> tab.</span></div>` : '';
   return `
     ${held ? head : `<div class="hero">${leadStory()}${head}</div>`}
     ${hold}${notice}
+    <div id="poll-slot">${pollCard()}</div>
     <ol class="ranks enter">${items}</ol>
     ${futuresBoard()}
     <details class="panel glass method-box">
@@ -313,6 +382,42 @@ function viewRankings() {
         <p><b>Playoff odds.</b> 10,000 simulations of the remaining regular-season schedule, using each team's projected lineup blended with its actual scoring. Ties in the standings go to points for, like Sleeper.</p>
       </div>
     </details>`;
+}
+
+// the rankings page while it's shut: a scoreboard counting down to the final call
+const hms = (ms) => { const t = Math.max(0, Math.floor(ms / 1000)); return [Math.floor(t / 3600), Math.floor(t / 60) % 60, t % 60].map((x) => String(x).padStart(2, '0')).join(':'); };
+function viewLocked() {
+  const left = RANKINGS_LOCK.until - tick();
+  return `
+    <section class="view-head"><div>
+      <h2 class="page-title"><span class="wk">Back after the game</span>Power Rankings</h2>
+      <p>Week ${DATA.meta.lastScored + 1} is wrapping up, and the new power rankings are on the way.</p>
+    </div></section>
+    <section class="lock glass rim" aria-label="Power rankings countdown">
+      <p class="lock-msg">This page will be live after the game.</p>
+      ${left > 0
+        ? `<div class="lock-clock" data-lock role="timer" aria-live="off">${hms(left)}</div>
+          <p class="lock-sub">Tonight at 10:45pm Central. Until then, follow the games on the <a href="#live">Live</a> tab.</p>`
+        : `<div class="lock-clock wait">Final whistle pending</div>
+          <p class="lock-sub">The game is still going. The rankings open the moment every game is final. Check back soon.</p>`}
+    </section>`;
+}
+let lockTimer = 0;
+function bindLock() {
+  clearInterval(lockTimer);
+  const el = $('[data-lock]');
+  if (!el) return;
+  lockTimer = setInterval(() => {
+    const left = RANKINGS_LOCK.until - tick();
+    if (!document.body.contains(el)) return clearInterval(lockTimer);
+    el.textContent = hms(left);
+    if (left > 0) return;
+    clearInterval(lockTimer);
+    el.textContent = 'Pulling the final scores…';
+    // a fresh load picks up the final snapshot; a few seconds of spread so not every open page asks at once, and
+    // under ?at= (a fixed pretend time) there is no new snapshot to get, so it just re-renders
+    if (AT) route(); else setTimeout(() => location.reload(), 3000 + Math.random() * 12000);
+  }, 1000);
 }
 
 // ---------- the editor's one-off headlines ----------
@@ -371,6 +476,125 @@ function sassStory() {
   return { type: 'sass', kicker: 'A note from the desk', tone: 'good', stamp: 'JSN szn', rids: [t.rid, opp.rid], headline, deck };
 }
 
+// ---------- the week 7 shakeup ----------
+// Once week 7 is final (from the final call, or Sleeper's own scoring), the power rankings page leads with the shakeup:
+// how far the new ranks moved from where teams stood after week 6 on the old formula (the engine's default weights),
+// then week 7's closest games, then the money week result. The bottom six of the new ranks get a fan poll
+// (api/poll.js). Set SHAKEUP to null to drop it all.
+const SHAKEUP = { week: 7, poll: { id: 'w7-bottom6', question: 'Which one of the bottom 6 has the best chance at a playoff run?' } };
+const shakeupOn = () => !!SHAKEUP && DATA.meta.lastScored === SHAKEUP.week;
+const GROUPS = { roster: ['rosProj', 'depth'], schedule: ['sos'], results: RESULT_KEYS };
+const shareOf = (w, keys) => { const tot = Object.values(w).reduce((a, b) => a + b, 0) || 1; return keys.reduce((a, k) => a + (w[k] || 0), 0) / tot; };
+
+function shakeupStories() {
+  const wk = SHAKEUP.week;
+  // where everyone stood going into the week: week 6 ranks on the old formula
+  const old = computeLeague({ ...leagueInput(DATA.raw).input, weights: WEIGHTS, sims: 200 });
+  const moves = DATA.teams.map((t) => {
+    const was = old.byRid[t.rid].rankHistory[wk - 2] ?? old.byRid[t.rid].powerRank;
+    return { t, was, d: was - t.powerRank };
+  });
+  const moved = moves.filter((m) => m.d).length;
+  const up = [...moves].sort((a, b) => b.d - a.d)[0], down = [...moves].sort((a, b) => a.d - b.d)[0];
+  const top = DATA.teams[0], topWas = moves.find((m) => m.t === top).was;
+  const W = DATA.meta.weights, fresh = Object.keys({ ...W, ...WEIGHTS }).some((k) => Math.abs((W[k] || 0) / (Object.values(W).reduce((a, b) => a + b, 0) || 1) - (WEIGHTS[k] || 0) / (Object.values(WEIGHTS).reduce((a, b) => a + b, 0) || 1)) > 0.005);
+  const pctOf = (w, g) => Math.round(shareOf(w, GROUPS[g]) * 100);
+  const formula = fresh
+    ? `The formula got an upgrade: results now carry ${pctOf(W, 'results')}% of the score (was ${pctOf(WEIGHTS, 'results')}%), rest-of-season roster ${pctOf(W, 'roster')}% (was ${pctOf(WEIGHTS, 'roster')}%) and schedule ${pctOf(W, 'schedule')}% (was ${pctOf(WEIGHTS, 'schedule')}%)${W.standing && !WEIGHTS.standing ? ', and your place in the real standings counts for the first time' : ''}. More of what actually happened, less guessing.`
+    : '';
+  const lead = {
+    type: 'shakeup', kicker: 'Power rankings shakeup', tone: 'good', stamp: 'Shakeup', rids: [up.t.rid, down.t.rid].filter((r, i, a) => a.indexOf(r) === i),
+    headline: fresh
+      ? `Huge power rankings shakeup: week ${wk} results and a sharper new algorithm move ${moved} of ${DATA.teams.length} teams`
+      : `Huge power rankings shakeup: week ${wk} results move ${moved} of ${DATA.teams.length} teams`,
+    deck: [
+      formula,
+      up.d > 0 ? `${up.t.name} is the big winner, up ${up.d} spot${up.d === 1 ? '' : 's'} to ${ordinal(up.t.powerRank)}.` : '',
+      down.d < 0 ? `${down.t.name} takes the fall, down ${-down.d} to ${ordinal(down.t.powerRank)}.` : '',
+      topWas === 1 ? `${top.name} holds on to No. 1.` : `${top.name} is the new No. 1, up from ${ordinal(topWas)}.`,
+    ].filter(Boolean).join(' '),
+  };
+  return { lead, more: [closeGames(wk), moneyStory()].filter(Boolean) };
+}
+
+// week 7's two closest finishes, and the bench points the loser of the closest one left sitting
+function closeGames(wk) {
+  const rows = DATA.raw.matchups?.[wk] || [], by = {};
+  rows.forEach((m) => (by[m.matchup_id] ||= []).push(m));
+  const pts = (m) => m.custom_points ?? m.points ?? 0;
+  const games = Object.values(by).filter((g) => g.length === 2).map(([a, b]) => {
+    const [w, l] = pts(a) >= pts(b) ? [a, b] : [b, a];
+    return { w, l, W: team(w.roster_id), L: team(l.roster_id), margin: pts(w) - pts(l) };
+  }).filter((g) => g.W && g.L).sort((a, b) => a.margin - b.margin);
+  if (games.length < 2) return null;
+  const [g1, g2] = games;
+  // the loser's worst call: a bench player who outscored a starter at the same position by more than the margin
+  const regret = (g) => {
+    const pp = g.l.players_points || {}, st = (g.l.starters || []).filter((x) => x && x !== '0');
+    let best = null;
+    (g.l.players || []).filter((id) => !st.includes(id)).forEach((b) => st.forEach((s) => {
+      const p = posOf(b), swing = (pp[b] || 0) - (pp[s] || 0);
+      if (p && p === posOf(s) && swing > g.margin && (!best || swing > best.swing)) best = { b, s, swing };
+    }));
+    return best && { ...best, bp: pp[best.b] || 0, sp: pp[best.s] || 0 };
+  };
+  const r = regret(g1), fn = firstName;
+  const line = (g) => `${g.W.name} ${f1(pts(g.w))}, ${g.L.name} ${f1(pts(g.l))}`;
+  const headline = g1.margin < 5 && g2.margin < 5
+    ? `${f1(g1.margin)} points and ${f1(g2.margin)} points: week ${wk}'s two closest games went down to the last snap`
+    : `Decided by ${f1(g1.margin)}: ${fn(g1.W)} survives ${fn(g1.L)} in week ${wk}'s closest finish`;
+  const deck = [
+    `${line(g1)}. A ${f1(g1.margin)}-point game, the closest of the week.`,
+    r ? `It didn't have to end that way for ${fn(g1.L)}: ${nameOf(r.b)} scored ${f1(r.bp)} on the bench while ${nameOf(r.s)} started and scored ${f1(r.sp)}. That swap wins it.` : `${fn(g1.L)} will be replaying every lineup call all week.`,
+    `Next closest: ${line(g2)}, a ${f1(g2.margin)}-point margin.`,
+  ].join(' ');
+  return { type: 'nailbiter', kicker: 'Down to the wire', tone: 'neutral', stamp: 'Phew', rids: [g1.W.rid, g1.L.rid], headline, deck };
+}
+
+// the fan poll on top of the power rankings: the bottom six of the new ranks, one vote per network, no changes
+let POLL = null; // { enabled, options, counts, total, mine } once /api/poll answers
+// this device's poll id, kept here and (by the server) in a cookie, so clearing one doesn't make a new voter
+const pollDevice = () => store.get('ph-device') || '';
+const keepDevice = (b) => { if (b?.device) store.set('ph-device', b.device); };
+const pollChoices = () => POLL?.options || DATA.teams.slice(-6).map((t) => t.rid);
+function pollCard() {
+  if (!SHAKEUP?.poll || !shakeupOn() || DATA.liveMode || !POLL?.enabled) return '';
+  const opts = pollChoices().map(team).filter(Boolean), voted = POLL.mine != null, n = POLL.total || 0;
+  const choice = (t) => {
+    const c = POLL.counts?.[t.rid] || 0, share = n ? c / n : 0, mine = POLL.mine === t.rid;
+    return voted
+      ? `<li class="poll-res ${mine ? 'mine' : ''}" data-tip="${esc(`${t.name}: ${c} vote${c === 1 ? '' : 's'}`)}">${avatar(t)}<span class="pn"><b>${esc(t.name)}${mine ? ' <small>Your pick</small>' : ''}</b><span class="poll-bar"><i style="width:${share * 100}%"></i></span></span><b class="pp">${pct(share)}</b></li>`
+      : `<li><button type="button" class="poll-pick" data-poll="${t.rid}">${avatar(t)}<span class="pn"><b>${esc(t.name)}</b><small>No. ${t.powerRank} power, ${record(t)}, ${pct(t.playoffPct)} playoffs</small></span></button></li>`;
+  };
+  return `<section class="panel glass poll" id="poll" aria-label="Fan poll">
+      <h2>${esc(SHAKEUP.poll.question)}</h2>
+      <p class="sub">${voted ? `${n} vote${n === 1 ? '' : 's'} so far. Your vote is locked in.` : 'One vote per device, and no changing it once it\'s in. Choose wisely.'}</p>
+      <ol class="poll-list ${voted ? 'done' : ''}">${opts.map(choice).join('')}</ol>
+      ${POLL.err ? `<p class="adm-err" role="alert">${esc(POLL.err)}</p>` : ''}
+    </section>`;
+}
+async function loadPoll() {
+  if (!SHAKEUP?.poll || !shakeupOn()) return;
+  try { POLL = await getJSON(`/api/poll?id=${SHAKEUP.poll.id}&device=${encodeURIComponent(pollDevice())}`); keepDevice(POLL); } catch { POLL = null; }
+  paintPoll();
+}
+function paintPoll() {
+  const el = $('#poll-slot');
+  if (!el) return;
+  el.innerHTML = pollCard();
+  fixAvatars(el);
+}
+async function castPoll(rid) {
+  if (!confirm(`Lock in ${team(rid).name}? You can't change it.`)) return;
+  try {
+    const r = await fetch('/api/poll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: SHAKEUP.poll.id, pick: rid, options: pollChoices(), device: pollDevice() }) });
+    const body = await r.json().catch(() => ({}));
+    keepDevice(body);
+    POLL = body.enabled ? { ...body, err: r.ok ? '' : body.error } : { ...POLL, err: body.error || `Poll answered ${r.status}` };
+  } catch (e) { POLL = { ...POLL, err: String(e.message || e) }; }
+  paintPoll();
+}
+
 // ---------- live week: weekly rankings and projected standings ----------
 // every team this week: projected final (banked plus the rest projected, as on the matchup cards), what's banked, who's
 // still to play, and how its game stands (from the night desk's board: locked once the other side can't catch up)
@@ -386,7 +610,8 @@ function liveWeek() {
   const order = (list) => [...list].sort((a, b) => b.w - a.w || b.pf - a.pf);
   const base = DATA.teams.map((t) => ({ t, w: t.wins + 0.5 * t.ties, pf: t.pf }));
   const seedNow = new Map(order(base).map((x, i) => [x.t.rid, i + 1]));
-  const after = order(rows.map((r) => ({ t: r.t, r, w: r.t.wins + 0.5 * r.t.ties + (r.win >= 0.5 ? 1 : 0), pf: r.t.pf + r.proj })));
+  rows.forEach((r) => (r.won = r.final ? r.ahead : r.win >= 0.5)); // a finished game goes by the score, not the odds
+  const after = order(rows.map((r) => ({ t: r.t, r, w: r.t.wins + 0.5 * r.t.ties + (r.won ? 1 : 0), pf: r.t.pf + r.proj })));
   return { rows, standings: after.map((x, i) => ({ ...x, seed: i + 1, was: seedNow.get(x.t.rid) })) };
 }
 
@@ -440,6 +665,9 @@ function yourWeek(rows, standings) {
 }
 
 function viewLive() {
+  // after the reveal DATA holds the new rankings; this page keeps showing the week that just ended
+  if (DATA.after) return withData(DATA.after, viewLive);
+  const fin = !!DATA.finalCall;
   const wk = DATA.previews[0]?.week, { rows, standings } = liveWeek();
   const pt = DATA.meta.playoffTeams, n = rows.length;
   const max = Math.max(1, ...rows.map((r) => r.proj)) * 1.04;
@@ -457,11 +685,11 @@ function viewLive() {
         <span class="wr-n">${i + 1}</span>${avatar(t)}
         <div class="wr-who"><b>${esc(t.name)}${champTag(t, false)}</b>${status(r)}</div>
         <div class="wr-bar" data-tip="${esc(tip)}"><i class="bk" style="width:${(r.banked / max) * 100}%"></i><i class="rs" style="width:${(rest / max) * 100}%"></i></div>
-        <div class="wr-num"><b>${f1(r.proj)}</b><small>${f1(r.banked)} in, ${r.left.length ? `${r.left.length} to play` : 'all done'}</small></div>
+        <div class="wr-num"><b>${f1(r.proj)}</b><small>${fin ? 'Final' : `${f1(r.banked)} in, ${r.left.length ? `${r.left.length} to play` : 'all done'}`}</small></div>
       </li>`;
   };
   const srow = (x) => {
-    const t = x.t, r = x.r, won = r.win >= 0.5, mv = x.was - x.seed;
+    const t = x.t, r = x.r, won = r.won, mv = x.was - x.seed;
     const after = `${t.wins + (won ? 1 : 0)}-${t.losses + (won ? 0 : 1)}${t.ties ? `-${t.ties}` : ''}`;
     return `<tr class="${t.rid === myTeam ? 'mine' : ''} ${x.seed === pt ? 'cut' : ''}">
         <td class="num seed"><b>${x.seed}</b>${mv ? `<span class="move ${mv > 0 ? 'up' : 'down'}">${mv > 0 ? '▲' : '▼'}${Math.abs(mv)}</span>` : ''}</td>
@@ -473,34 +701,171 @@ function viewLive() {
         <td class="num"><b>${pct(t.playoffPct)}</b></td>
       </tr>`;
   };
-  return `
-    <div class="hero">
+  const head = fin
+    ? `<section class="view-head">
+        <div>
+          <h2 class="page-title"><span class="wk">Week ${wk} final</span>Final Scores</h2>
+          <p>Every game is in. The week, best score to worst, and the standings it leaves behind. Sleeper makes it official Tuesday; the new power rankings are ready now.</p>
+        </div>
+        <div class="sources"><span class="chip"><span class="dot"></span>All games final</span>${DATA.fetched ? `<span class="chip">Scores as of ${esc(DATA.fetched)}</span>` : ''}</div>
+      </section>`
+    : `<div class="hero">
       ${leadStory()}
       <section class="view-head">
         <div>
           <h2 class="page-title"><span class="wk">Week ${wk} live</span>Weekly Rankings</h2>
-          <p>How this week is going, best to worst: everything scored so far plus the projection for everyone still to play. The power rankings are on hold until the week is final and come back Tuesday morning.</p>
+          <p>How this week is going, best to worst: everything scored so far plus the projection for everyone still to play. The power rankings are on hold until the week is final and come back ${rankingsLocked() ? 'tonight after the game' : 'Tuesday morning'}.</p>
         </div>
         <div class="sources"><span class="chip"><span class="dot live"></span>${played} NFL team${played === 1 ? '' : 's'} played so far</span>${DATA.fetched ? `<span class="chip">Scores as of ${esc(DATA.fetched)}</span>` : ''}</div>
       </section>
-    </div>
-    ${yourWeek(rows, standings)}
+    </div>`;
+  return `
+    ${head}
+    ${fin ? revealCta(revealed) : yourWeek(rows, standings)}
     <div class="live-grid">
       <section class="panel glass live-panel wk-rank">
         <h2>Week ${wk}, top to bottom</h2>
-        <p class="sub">By projected final score. Dark is banked, striped is still to come. 12th is the worst week in the league.</p>
+        <p class="sub">${fin ? 'Final scores. 12th is the worst week in the league.' : 'By projected final score. Dark is banked, striped is still to come. 12th is the worst week in the league.'}</p>
         <ol class="wr-list">${rows.map(row).join('')}</ol>
       </section>
       <section class="panel glass live-panel wk-stand">
-        <h2>Projected standings</h2>
-        <p class="sub">The table after week ${wk} if every game ends the way it's trending, projected points added for the tiebreaker. The dashed line is the playoff cut (top ${pt}).</p>
+        <h2>${fin ? 'Standings after the week' : 'Projected standings'}</h2>
+        <p class="sub">${fin ? `The table with week ${wk} counted, points added for the tiebreaker.` : `The table after week ${wk} if every game ends the way it's trending, projected points added for the tiebreaker.`} The dashed line is the playoff cut (top ${pt}).</p>
         <div class="heat-wrap"><table class="table stand">
-          <thead><tr><th class="num">Seed</th><th>Team</th><th class="num">Now</th><th class="num">After</th><th class="num">This week</th><th class="num pf">PF after</th><th class="num">Playoffs</th></tr></thead>
+          <thead><tr><th class="num">Seed</th><th>Team</th><th class="num">Before</th><th class="num">After</th><th class="num">This week</th><th class="num pf">PF after</th><th class="num">Playoffs</th></tr></thead>
           <tbody>${standings.map(srow).join('')}</tbody>
         </table></div>
-        <p class="sub stand-note">Playoff odds are from 10,000 simulations of the season with this week's live scores in.</p>
+        <p class="sub stand-note">Playoff odds are from 10,000 simulations of the season with this week's ${fin ? 'final' : 'live'} scores in.</p>
       </section>
     </div>`;
+}
+
+// ---------- the final call: from the final scores to the new power rankings ----------
+// The button at the top of the final-scores page. Pressing it asks who you are, gives you the verdict on your week
+// (congratulations or a roast), then loads the new power rankings.
+function revealCta(seen) {
+  return `<div class="unveil-cta">${seen
+    ? '<a class="cta" href="#rankings">Back to the power rankings</a>'
+    : '<button type="button" class="cta" data-reveal>Done with Live Ranks, Show me the Power Ranking</button>'}</div>`;
+}
+
+// the verdict on one team's week, from the final scores
+function verdict(rid) {
+  const { rows, standings } = liveWeek();
+  const k = rows.findIndex((x) => x.t.rid === rid), r = rows[k];
+  if (!r) return null;
+  const o = rows.find((x) => x.t === r.opp), me = r.banked, them = o ? o.banked : 0, margin = Math.abs(me - them);
+  const t = r.t, N = esc(firstName(t)), OF = r.opp ? esc(firstName(r.opp)) : 'your opponent', O = r.opp ? esc(r.opp.name) : 'your opponent';
+  const kind = me > them ? 'won' : me < them ? 'lost' : 'tie';
+  const size = margin >= 30 ? 'big' : margin < 5 ? 'close' : 'mid';
+  const score = `${f1(me)} to ${f1(them)}`, back = `${f1(them)} to ${f1(me)}`;
+  const lines = {
+    won: {
+      big: [`${N}, you didn't beat ${OF}, you buried them. ${score}. Somebody check on ${OF}.`,
+        `${score}. ${N} took ${O} apart by ${f1(margin)} and didn't even say sorry.`],
+      close: [`${N}, you won by ${f1(margin)}. That's it. You'll tell everyone it was never in doubt. It was.`,
+        `Survived, ${N}. ${score} over ${OF}. Your heart rate can come down now.`],
+      mid: [`Congratulations, ${N}. ${score} over ${O}. Go talk your trash, you earned it.`,
+        `W secured, ${N}. ${score} over ${OF}. Screenshot it and send it to the group chat.`],
+    },
+    lost: {
+      big: [`${N}. ${back}. ${OF} didn't beat you, they filed a restraining order against your lineup.`,
+        `You lost by ${f1(margin)}, ${N}. That's not a loss, that's a cry for help.`],
+      close: [`${N}, you lost by ${f1(margin)}. One field goal. Think about that all week.`,
+        `${back}, ${N}. ${f1(margin)} points. Somewhere on your bench is the guy who would have won it.`],
+      mid: [`${N}, ${OF} beat you ${back}. Your lineup should be ashamed. So should you.`,
+        `Tough one, ${N}. Kidding, it wasn't tough, you just lost. ${back} to ${O}.`],
+    },
+    tie: { mid: [`A tie, ${N}. ${score}. Nobody wins. Mostly you.`] },
+  }[kind];
+  const pool = lines[size] || lines.mid;
+  const seed = [...`${chicagoDate()}${rid}`].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7);
+  let extra = '';
+  if (k === 0) extra = kind === 'won' ? 'Top score in the whole league, too.' : 'Top score in the whole league, and you still lost. Brutal.';
+  else if (k === rows.length - 1) extra = 'Also the lowest score in the league. Even your bench is embarrassed.';
+  else if (kind === 'lost' && k < 3) extra = `The ${ordinal(k + 1)} best score in the league, and it still wasn't enough.`;
+  else if (kind === 'won' && k >= rows.length - 3) extra = `Only the ${ordinal(k + 1)} best score in the league. ${OF} just had it worse.`;
+  const st = standings.find((x) => x.t.rid === rid), mv = st ? st.was - st.seed : 0;
+  const rec = `${t.wins + (kind === 'won' ? 1 : 0)}-${t.losses + (kind === 'lost' ? 1 : 0)}${t.ties + (kind === 'tie' ? 1 : 0) ? `-${t.ties + (kind === 'tie' ? 1 : 0)}` : ''}`;
+  const bull = DATA.bull?.rows?.[0]?.rid === rid ? `Closest to ${DATA.bull.target}: the $${MONEY_WEEK.prize} is yours` : '';
+  return { t, kind, me, them, opp: r.opp, msg: pool[Math.abs(seed) % pool.length], extra, rank: k + 1, rec, seed: st?.seed, mv, bull };
+}
+
+// the overlay: pick your team, get the verdict, then the new power rankings load in
+function openReveal() {
+  if ($('.unveil')) return;
+  const live = DATA;
+  const el = document.createElement('div');
+  el.className = 'unveil';
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('aria-labelledby', 'unveil-title');
+  const close = () => { el.remove(); document.documentElement.classList.remove('locked'); };
+  const pick = () => `
+    <div class="unveil-card glass rim">
+      <button type="button" class="unveil-x" aria-label="Close">×</button>
+      <h2 id="unveil-title">Which team is yours?</h2>
+      <p class="sub">The desk has your result. Brace yourself.</p>
+      <div class="unveil-teams">${[...live.teams].sort((a, b) => a.name.localeCompare(b.name)).map((t) => `
+        <button type="button" class="unveil-team ${t.rid === myTeam ? 'mine' : ''}" data-rid="${t.rid}">${avatar(t)}<span><b>${esc(t.name)}</b><small>${esc(firstName(t))}</small></span></button>`).join('')}
+      </div>
+    </div>`;
+  const told = (v) => `
+    <div class="unveil-card glass rim ${v.kind}">
+      <div class="verdict">
+        ${headshot(v.t, `verdict-face${v.kind === 'lost' ? ' drained' : ''}`)}
+        <div>
+          <p class="verdict-wl"><b>${v.kind === 'won' ? 'W' : v.kind === 'lost' ? 'L' : 'T'}</b><span>${f1(v.me)} to ${f1(v.them)}${v.opp ? ` vs ${esc(v.opp.name)}` : ''}</span></p>
+          <h2 id="unveil-title" class="verdict-msg">${v.msg}</h2>
+          ${v.extra ? `<p class="verdict-extra">${esc(v.extra)}</p>` : ''}
+          <div class="you-chips">
+            <span class="you-chip">${v.rec}</span>
+            <span class="you-chip">${ordinal(v.rank)} score of ${live.teams.length}</span>
+            ${v.seed ? `<span class="you-chip ${v.mv > 0 ? 'up' : v.mv < 0 ? 'down' : ''}">${ordinal(v.seed)} in the standings${v.mv ? ` (${v.mv > 0 ? 'up' : 'down'} ${Math.abs(v.mv)})` : ''}</span>` : ''}
+            ${v.bull ? `<span class="you-chip up">${esc(v.bull)}</span>` : ''}
+          </div>
+        </div>
+      </div>
+      <div class="unveil-load" role="status">
+        <video class="kick" autoplay muted loop playsinline poster="assets/kicker-poster.webp" aria-hidden="true"><source src="assets/kicker.webm" type="video/webm"><source src="assets/kicker.mp4" type="video/mp4"></video>
+        <p>Pulling in the new power rankings…</p>
+        <div class="unveil-bar"><i></i></div>
+      </div>
+    </div>`;
+  el.innerHTML = pick();
+  document.body.append(el);
+  document.documentElement.classList.add('locked');
+  fixAvatars(el);
+  el.querySelector('.unveil-team.mine, .unveil-team')?.focus();
+  el.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !el.classList.contains('going')) close(); });
+  el.addEventListener('click', async (e) => {
+    if (e.target.closest('.unveil-x') || e.target === el) { if (!el.classList.contains('going')) close(); return; }
+    const b = e.target.closest('.unveil-team');
+    if (!b || el.classList.contains('going')) return;
+    el.classList.add('going');
+    const rid = Number(b.dataset.rid);
+    myTeam = rid;
+    store.set('ph-my-team', String(rid));
+    $('#my-team').value = String(rid);
+    el.innerHTML = told(verdict(rid));
+    fixAvatars(el);
+    const v = el.querySelector('video');
+    if (calm()) v?.remove(); else v?.play?.().catch(() => {});
+    // let the verdict sink in while the bar fills; the new rankings are worked out underneath
+    const READ_MS = calm() ? 3500 : 6000;
+    el.querySelector('.unveil-bar i').style.animationDuration = `${READ_MS}ms`;
+    const t0 = performance.now();
+    await new Promise((r) => setTimeout(r, 60)); // paint the verdict before the heavy lifting
+    buildFinal();
+    store.set('ph-final-seen', finalSeenKey());
+    loadPoll(); // the shakeup poll sits on top of the new rankings
+    await new Promise((r) => setTimeout(r, Math.max(0, READ_MS - (performance.now() - t0))));
+    el.classList.add('out');
+    await new Promise((r) => setTimeout(r, calm() ? 0 : 350));
+    close();
+    paintTabs();
+    if (location.hash === '#rankings') route({ fresh: true }); else location.hash = '#rankings';
+  });
 }
 
 // ---------- championship futures ----------
@@ -1356,27 +1721,6 @@ async function adminCall(action, extra = {}) {
   return body;
 }
 
-// a snapshot with the week in progress counted as final: scores so far, or each team's projected finish
-function asFinal(raw, mode) {
-  if (mode === 'off') return raw;
-  const pre = computeLeague({ ...leagueInput(raw).input, sims: 500 });
-  const w = pre.previews[0]?.week;
-  if (!w) return raw;
-  const proj = Object.fromEntries(pre.previews.flatMap((p) => [[p.a, p.projA], [p.b, p.projB]]));
-  const rows = (raw.matchups[w] || []).map((m) => ({ ...m, points: mode === 'proj' ? proj[m.roster_id] ?? m.points ?? 0 : m.points || 0 }));
-  const byId = Object.fromEntries(rows.map((m) => [m.roster_id, m]));
-  const split = (x) => ({ i: Math.floor(x), d: Math.round((x - Math.floor(x)) * 100) });
-  const rosters = raw.rosters.map((r) => {
-    const m = byId[r.roster_id], o = m && rows.find((x) => x.matchup_id === m.matchup_id && x.roster_id !== r.roster_id);
-    if (!m || !o) return r;
-    const s = { ...r.settings }, pf = split((s.fpts || 0) + (s.fpts_decimal || 0) / 100 + m.points), pa = split((s.fpts_against || 0) + (s.fpts_against_decimal || 0) / 100 + o.points);
-    s.fpts = pf.i; s.fpts_decimal = pf.d; s.fpts_against = pa.i; s.fpts_against_decimal = pa.d;
-    if (m.points > o.points) s.wins = (s.wins || 0) + 1; else if (m.points < o.points) s.losses = (s.losses || 0) + 1; else s.ties = (s.ties || 0) + 1;
-    return { ...r, settings: s };
-  });
-  return { ...raw, rosters, matchups: { ...raw.matchups, [w]: rows }, league: { ...raw.league, settings: { ...raw.league.settings, last_scored_leg: w } }, state: { ...raw.state, week: w + 1 } };
-}
-
 function adminPreview() {
   const base = adminState.source === 'draft' && adminState.draft ? adminState.draft : RAW;
   const raw = asFinal(base, adminState.week);
@@ -1654,7 +1998,7 @@ function route({ fresh = false } = {}) {
   // while a week is being played the Live tab is the front page; it only exists then
   const home = DATA.liveMode ? 'live' : 'rankings';
   const v = (location.hash || `#${home}`).slice(1);
-  const key = VIEWS[v] && (v !== 'live' || DATA.liveMode) ? v : home;
+  const key = VIEWS[v] && (v !== 'live' || DATA.liveMode || DATA.after) ? v : home;
   const dir = !currentView || key === currentView ? 'same' : ORDER.indexOf(key) > ORDER.indexOf(currentView) ? 'fwd' : 'back';
   const render = () => {
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.view === key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
@@ -1683,8 +2027,11 @@ function bind(key) {
     }
   }
   if (key === 'live') bindCarousel();
+  document.querySelectorAll('[data-reveal]').forEach((b) => b.addEventListener('click', openReveal));
   if (key === 'rankings') {
+    bindLock();
     if (!DATA.liveMode) bindCarousel();
+    $('#poll-slot')?.addEventListener('click', (e) => { const b = e.target.closest('[data-poll]'); if (b) castPoll(Number(b.dataset.poll)); });
     document.querySelectorAll('.rank-btn').forEach((b) =>
       b.addEventListener('click', () => {
         const li = b.closest('.rank');
@@ -1737,6 +2084,16 @@ function bind(key) {
     $('[data-more]')?.addEventListener('click', () => { wireState.limit += 50; route(); });
     $('[data-more-trades]')?.addEventListener('click', () => { wireState.trades = Infinity; route(); });
   }
+}
+
+// the Live tab exists while a week is on, and reads "Final" once the week is (before and after the reveal)
+function paintTabs() {
+  const a = $('.tabs a[data-view="live"]'), fin = DATA.finalCall || DATA.after;
+  a.hidden = !DATA.liveMode && !DATA.after;
+  a.textContent = fin ? 'Final' : 'Live';
+  $('.tabs a[data-view="rankings"]').hidden = rankingsLocked(); // shut until the final call
+  $('.brand').setAttribute('href', DATA.liveMode ? '#live' : '#rankings');
+  placeInk({ settle: true });
 }
 
 // your own face next to the team picker once you have chosen a team
@@ -1820,10 +2177,7 @@ async function main() {
   $('#league-name').textContent = `${RAW.league.name} ${RAW.league.season}`;
   $('#footer-meta').textContent = `${RAW.isDemo ? 'Demo snapshot. ' : ''}Through week ${DATA.meta.lastScored}. ${updatedText() ? `${updatedText()}.` : ''}${DATA.overrides.length ? ` Manual fixes: ${DATA.overrides.map((o) => o.note).join('; ')}.` : ''}`;
   initTeamPicker();
-  if (DATA.liveMode) {
-    $('.tabs a[data-view="live"]').hidden = false;
-    $('.brand').setAttribute('href', '#live');
-  }
+  paintTabs();
   const ed = DATA.teams.find((t) => t.owner === EDITOR.user);
   if (ed && faceSrc(ed)) {
     const mh = $('#masthead');
@@ -1838,6 +2192,7 @@ async function main() {
   }
   window.addEventListener('hashchange', () => route({ fresh: true }));
   loadVotes();
+  loadPoll();
   let lastWidth = innerWidth;
   window.addEventListener('resize', () => {
     if (innerWidth === lastWidth) return; // height-only resizes are the browser toolbar, ignore them

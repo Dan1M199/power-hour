@@ -46,8 +46,12 @@ export default async function handler(req, res) {
     // the page asks for the plain key; it always redirects (cached a minute) to the current revision, which the admin
     // page bumps on publish (lib/published.js), so a publish reaches everyone without a new Sleeper pull
     const key = leagueKey(), canonical = revKey(key, await revision(key));
-    if (req.url && askedKey(req) !== canonical) {
-      res.setHeader('Cache-Control', 'public, s-maxage=60');
+    const asked = askedKey(req);
+    if (req.url && asked !== canonical) {
+      // a key that's about to become current (a page whose clock runs a little fast, just before a scheduled pull)
+      // mustn't have its redirect to the old snapshot cached, or that URL would serve the old one after the switch
+      const soon = leagueKey(new Date(Date.now() + 120000));
+      res.setHeader('Cache-Control', soon !== key && String(asked || '').split('.r')[0] === soon ? 'no-store' : 'public, s-maxage=60');
       res.setHeader('Location', `/api/league?d=${encodeURIComponent(canonical)}`);
       return res.status(307).end();
     }
