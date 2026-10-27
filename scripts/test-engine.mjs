@@ -27,3 +27,13 @@ for (const f of res.feed.slice(0, 6)) {
 console.log('\nfree agents', res.freeAgents.slice(0, 8).map((f) => `${res.helpers.nameOf(f.id)} ${f.pos} v${f.v}`).join(', '));
 console.log('divisive', res.divisive.slice(0, 5).map((d) => `${res.helpers.nameOf(d.id)} ${JSON.stringify(d.r)}`).join(', '));
 console.log('top perf', res.topPerformances.slice(0, 3).map((p) => `${res.helpers.nameOf(p.id)} ${p.pts} wk${p.week}`).join(', '));
+
+// The simulation is written for speed (typed arrays, team indexes), but it must draw the same random numbers in the
+// same order as the plain version it replaced, so every probability on the site stays exactly what it was. This is the
+// fingerprint of the fixture's odds from that plain version. If you change the simulation on purpose, print the new
+// fingerprint and paste it here.
+const { createHash } = await import('node:crypto');
+const odds = JSON.stringify(res.teams.map((t) => [t.rid, t.playoffPct, t.byePct, t.firstPct, t.lastPct, t.projWins, t.champPct, t.finalPct, t.playoffIfWin, t.playoffIfLoss, t.seedDist]));
+const print = createHash('sha256').update(odds).digest('hex').slice(0, 16);
+console.log(print === 'efeaf898f7d793cb' ? '\nok   simulation odds match the reference fingerprint' : `\nFAIL simulation odds changed: fingerprint ${print}`);
+if (print !== 'efeaf898f7d793cb') process.exitCode = 1;
