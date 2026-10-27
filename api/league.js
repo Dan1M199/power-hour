@@ -6,7 +6,6 @@
 // (lib/snapstore.js), so the CDN purge on every deploy, odd query strings or many visitors never cause another pull.
 import { leagueKey } from '../lib/newsclock.js';
 import { once } from '../lib/snapstore.js';
-import { revision, revKey, publishedConfig } from '../lib/published.js';
 
 const LEAGUE_ID = '1312001652454088704';
 const SLEEPER = 'https://api.sleeper.app/v1';
@@ -43,22 +42,19 @@ const askedKey = (req) => req.query?.d ?? (req.url ? new URL(req.url, 'http://x'
 
 export default async function handler(req, res) {
   try {
-    // the page asks for the plain key; it always redirects (cached a minute) to the current revision, which the admin
-    // page bumps on publish (lib/published.js), so a publish reaches everyone without a new Sleeper pull
-    const key = leagueKey(), canonical = revKey(key, await revision(key));
+    // only the current key is served; anything else redirects to it, so every visitor reads the same snapshot
+    const key = leagueKey(), canonical = key;
     const asked = askedKey(req);
     if (req.url && asked !== canonical) {
       // a key that's about to become current (a page whose clock runs a little fast, just before a scheduled pull)
       // mustn't have its redirect to the old snapshot cached, or that URL would serve the old one after the switch
       const soon = leagueKey(new Date(Date.now() + 120000));
-      res.setHeader('Cache-Control', soon !== key && String(asked || '').split('.r')[0] === soon ? 'no-store' : 'public, s-maxage=60');
+      res.setHeader('Cache-Control', soon !== key && String(asked || '') === soon ? 'no-store' : 'public, s-maxage=60');
       res.setHeader('Location', `/api/league?d=${encodeURIComponent(canonical)}`);
       return res.status(307).end();
     }
     // three days in the store: long enough to outlive any deploy, short enough to clean itself up
-    const { body: snap, from } = await once('league', key, async () => ({ body: await snapshot(), ttl: 3 * 86400 }));
-    // the published power-score weights ride along (null: the engine's defaults)
-    const body = { ...snap, config: await publishedConfig() };
+    const { body, from } = await once('league', key, async () => ({ body: await snapshot(), ttl: 3 * 86400 }));
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('X-Snapshot', `${canonical} ${from}`);
     res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600');

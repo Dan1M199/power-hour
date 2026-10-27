@@ -43,7 +43,7 @@ const call = async (handler, path) => {
 };
 const check = (label, cond, detail = '') => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${label}${cond ? '' : ` -> ${detail}`}`); if (!cond) process.exitCode = 1; };
 
-const L = `/api/league?d=${leagueKey()}.r0`, R = `/api/ros?d=${morningKey()}.r0`; // both URLs carry a revision (lib/published.js)
+const L = `/api/league?d=${leagueKey()}`, R = `/api/ros?d=${morningKey()}`;
 
 // no store connected: behaves as before (a CDN miss reads Sleeper), but odd keys still never do
 let r = await call(league, '/api/league?d=1999-01-01');

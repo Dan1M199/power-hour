@@ -5,12 +5,9 @@
 // The front end asks for /api/ros?d=<morning key> (lib/newsclock.js); any other key is redirected to it. Sleeper's
 // player map is read at most once per morning: it's kept slimmed in the store (lib/snapstore.js) under that key, so
 // deploys, CDN purges and the hourly retry while a ranking site is down all reuse it. The ranking sites are scraped
-// once per morning too (hourly while one of them is failing), or again on demand from the admin page, which stores the
-// new build and bumps the revision: the plain key always redirects (cached a minute) to /api/ros?d=<key>.r<revision>.
-// The admin rebuild reuses the stored player map, so it never calls Sleeper.
+// once per morning too (hourly while one of them is failing).
 import { morningKey } from '../lib/newsclock.js';
 import { once } from '../lib/snapstore.js';
-import { rosRevision, revKey } from '../lib/published.js';
 
 import {
   FANTASYPROS_URL, DRAFTSHARKS_URL, LEAGUELOGS_URL,
@@ -64,7 +61,7 @@ const askedKey = (req) => req.query?.d ?? (req.url ? new URL(req.url, 'http://x'
 
 export default async function handler(req, res) {
   try {
-    const key = morningKey(), canonical = revKey(key, await rosRevision(key));
+    const key = morningKey(), canonical = key;
     if (req.url && askedKey(req) !== canonical) {
       res.setHeader('Cache-Control', 'public, s-maxage=60');
       res.setHeader('Location', `/api/ros?d=${encodeURIComponent(canonical)}`);
@@ -88,7 +85,7 @@ export default async function handler(req, res) {
   }
 }
 
-// players: the stored Sleeper player map, when the caller already has it (the admin rebuild), so nothing reads Sleeper
+// players: the stored Sleeper player map, when the caller already has it, so nothing reads Sleeper
 export async function build(key, { players: stored = null } = {}) {
     const [sources, sleeper] = await Promise.all([
       Promise.all([

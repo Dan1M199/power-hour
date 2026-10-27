@@ -1,4 +1,4 @@
-import { computeLeague, WEIGHTS, WEIGHTS_PROPOSED } from './lib/engine.js';
+import { computeLeague, PARTS } from './lib/engine.js';
 import { bumpChart, scatter, radar, weeklyBars, divergingBars, heatTable, faceDot, TEAM_COLORS } from './lib/charts.js';
 import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
@@ -7,7 +7,7 @@ import { breakdown, shortName } from './lib/matchup.js';
 import { MEMBERS, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
-import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow, isFinalCall } from './lib/newsclock.js';
+import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
 
 // ---------- config ----------
 const SOURCE_NAMES = { fp: 'FantasyPros', ds: 'DraftSharks', ll: 'LeagueLogs' };
@@ -22,12 +22,8 @@ const MONEY_WEEK = {
 // The news clock (lib/newsclock.js): the hold on Sunday's news, the late pull after Sunday night football, the night
 // edition and the game window. ?at=2026-10-25T22:45-05:00 pretends it's that moment for the page (not for the data:
 // snapshot keys always follow the real clock, and the API redirects any other key to the current one).
-// ?rehearse=1 (linked from the admin page, and only with the admin password in this session): the final call as
-// visitors will get it, right now. The clock pretends it's 10:50pm tonight, the scores as they stand count as final,
-// and nothing is remembered (no "seen" flags, no poll votes). A strip along the bottom says it's a rehearsal.
-const REHEARSE = (() => { try { return new URLSearchParams(location.search).has('rehearse') && !!sessionStorage.getItem('ph-admin'); } catch { return false; } })();
 const AT = (() => {
-  const v = new URLSearchParams(location.search).get('at') || (REHEARSE ? '2026-10-26T22:50:00-05:00' : null);
+  const v = new URLSearchParams(location.search).get('at');
   const d = v && new Date(v);
   return d && !isNaN(d) ? d : null;
 })();
@@ -35,21 +31,9 @@ const clock = () => AT || new Date();
 const T0 = Date.now();
 const tick = () => (AT ? +AT + (Date.now() - T0) : Date.now()); // the clock still running, for countdowns under ?at=
 
-// Dan's call for week 7: the new formula is published, so the power rankings page stays shut until tonight's final call
-// at 10:45pm, its tab hidden and a countdown in its place. Past that time it stays shut while the week is still being
-// played (Monday night running long), until Tuesday 6am at the latest. Set to null to drop it.
-const RANKINGS_LOCK = { until: Date.parse('2026-10-26T22:45:00-05:00'), end: Date.parse('2026-10-27T06:00:00-05:00') };
-// before the final call the whole site waits behind the countdown (the admin page and a rehearsal excepted)
-const siteLocked = () => !!RANKINGS_LOCK && !REHEARSE && tick() < RANKINGS_LOCK.until;
-function rankingsLocked() {
-  if (!RANKINGS_LOCK || DATA.after || DATA.finalCall) return false;
-  const now = tick();
-  return now < RANKINGS_LOCK.until || (now < RANKINGS_LOCK.end && DATA.liveMode);
-}
 const onHold = () => isOnHold(clock());
 const gameWindow = () => inGameWindow(clock());
 const nightDesk = () => isNightDesk(clock());
-const finalCall = () => isFinalCall(clock());
 
 // last season's champion carries a trophy wherever their team shows up
 const CHAMPION = { user: '1004111276118761472', season: 2025 };
@@ -100,7 +84,7 @@ async function loadLive() {
   return { ...snap, ros };
 }
 
-// the engine input for a league snapshot (the public one, or the admin page's draft) with the morning ROS values
+// the engine input for a league snapshot with the morning ROS values
 function leagueInput(raw, extra = {}) {
   const ros = RAW.ros && !RAW.ros.error ? RAW.ros : null;
   const patched = ros ? applyOverrides(ros.values) : { values: {}, applied: [] };
@@ -109,15 +93,14 @@ function leagueInput(raw, extra = {}) {
       league: raw.league, users: raw.users, rosters: raw.rosters, matchups: raw.matchups, transactions: raw.transactions,
       players: ros ? ros.players : {}, ros: patched.values, byes: ros?.byes || {},
       currentWeek: raw.state.week, lastScored: raw.league.settings?.last_scored_leg,
-      // the published power-score weights ride on the snapshot (admin page); none means the engine's defaults
-      weights: raw.config?.weights || undefined,
+      // the power score always uses the engine's WEIGHTS: one formula, the same on every device
       ...extra,
     },
     ros, patched,
   };
 }
 
-// a snapshot with the week in progress counted as final (the admin preview, and the final call): scores so far, or each team's projected finish
+// a snapshot with the week in progress counted as final (the final call): scores so far, or each team's projected finish
 function asFinal(raw, mode) {
   if (mode === 'off') return raw;
   const pre = computeLeague({ ...leagueInput(raw).input, sims: 500 });
@@ -143,8 +126,9 @@ async function load() {
   RAW = window.__DEMO__ || (demo ? await getJSON('demo/demo.json') : await loadLive());
   RAW.isDemo = !!demo;
   build(RAW);
-  // anyone who has already been through the final-scores reveal this week goes straight to the new rankings
-  if (DATA.finalCall && !REHEARSE && store.get('ph-final-seen') === finalSeenKey()) buildFinal();
+  // once every game of the week is final the new rankings are what everyone sees, straight away: they depend only on
+  // the snapshot, never on this device's clock or on whether it went through the reveal
+  if (DATA.finalCall) buildFinal();
 }
 
 // computes a league snapshot into DATA (the helpers below all read DATA) and dresses it for the page
@@ -155,8 +139,9 @@ function build(raw) {
   DATA.rosMeta = ros;
   // live-week mode: games are on (or there are points on the board) and this week is still unscored
   DATA.liveMode = DATA.previews.length > 0 && (!!DATA.live || gameWindow());
-  // the final call: after Monday night football every game is done, so the week reads as final before Sleeper scores it
-  DATA.finalCall = DATA.liveMode && !!DATA.live && finalCall() && (REHEARSE || nightBoard(DATA).every((g) => g.final));
+  // the final call: every game of the week is done (from the data alone), so the week counts as final before Sleeper
+  // scores it
+  DATA.finalCall = DATA.liveMode && !!DATA.live && nightBoard(DATA).every((g) => g.final);
   DATA.fetched = RAW.fetched ? new Date(RAW.fetched).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' }) : null;
   DATA.overrides = patched.applied;
   DATA.rosError = RAW.ros && RAW.ros.error;
@@ -187,8 +172,8 @@ function build(raw) {
   return DATA;
 }
 
-// The new power rankings after the final call: this week's final scores counted into records and points for, ranked
-// with the live published weights. The final-scores page stays reachable from it (DATA.after).
+// The new power rankings after the final call: this week's final scores counted into records and points for. The
+// final-scores page stays reachable from it (DATA.after).
 function buildFinal() {
   const live = DATA;
   if (live.after || !live.finalCall) return live;
@@ -196,17 +181,15 @@ function buildFinal() {
   DATA.liveMode = false;
   DATA.after = live; // first: the shakeup compares against this week-in-progress snapshot
   DATA.stories = shakeupOn() ? shakeupStories() : null;
-  revealed = true;
   return DATA;
 }
-let revealed = false; // this visitor has been through the final-scores reveal
-const finalSeenKey = () => `${RAW.league.season}-w${(DATA.after || DATA).previews[0]?.week}`;
 // render with another computed league in DATA (the final-scores page after the reveal)
 function withData(D, fn) { const keep = DATA; DATA = D; try { return fn(); } finally { DATA = keep; } }
 
 // ---------- shared bits ----------
-const RESULT_KEYS = ['allPlay', 'pfPerGame', 'winPct', 'standing', 'form', 'lastWeek'];
 const weightTotal = () => Object.values(DATA.meta.weights).reduce((a, b) => a + b, 0) || 1;
+// one part's share of the power score, in whole percent (PARTS in lib/engine.js)
+const pctW = (g) => Math.round(PARTS[g].reduce((a, k) => a + (DATA.meta.weights[k] || 0), 0) * 100 / weightTotal());
 const team = (rid) => DATA.byRid[rid];
 const short = (name, n = 15) => (name.length > n ? name.slice(0, n - 1) + '…' : name);
 const nameOf = (id) => DATA.helpers.nameOf(id);
@@ -354,7 +337,6 @@ const updatedText = () => {
 
 // ---------- views ----------
 function viewRankings() {
-  if (rankingsLocked()) return viewLocked();
   const m = DATA.meta;
   const chips = DATA.rosMeta
     ? Object.entries(DATA.rosMeta.sources).map(([k, s]) => `<span class="chip ${s.ok ? '' : 'off'}" title="${s.ok ? `${s.matched} of ${s.rows} players matched` : esc(s.error)}"><span class="dot"></span>${SOURCE_NAMES[k] || k}</span>`).join('')
@@ -369,13 +351,11 @@ function viewRankings() {
       <section class="view-head">
         <div>
           <h2 class="page-title"><span class="wk">${held ? `On hold during week ${m.lastScored + 1}` : `Week ${m.lastScored + 1}`}</span>Power Rankings</h2>
-          <p>Rest-of-season roster strength, who's left on the schedule, and what's already happened. Tap any team to see why it sits where it does.</p>
+          <p>Where you sit in the standings, how much you score, who's left on your schedule and how your roster projects, in that order. Tap any team to see why it sits where it does.</p>
         </div>
         <div class="sources">${chips}${updatedText() ? `<span class="chip">${esc(updatedText())}</span>` : ''}${!held && MESSAGE_VIDEO && !window.__DEMO__ ? '<button type="button" class="chip to-again" data-message hidden>Watch the important message again</button>' : ''}</div>
       </section>`;
-  const hold = DATA.finalCall
-    ? `<div class="notice glass hold"><span><strong>Week ${m.lastScored + 1} is final.</strong> These are the ranks going into the week. The new ones are ready.</span></div>${revealCta(false)}`
-    : held ? `<div class="notice glass hold"><span><strong>Power rankings are on hold.</strong> Week ${m.lastScored + 1} is being played, so these are the ranks going into the week. They update Tuesday morning once every game is final. For how this week is going, see the <a href="#live">Live</a> tab.</span></div>` : '';
+  const hold = held ? `<div class="notice glass hold"><span><strong>Power rankings are on hold.</strong> Week ${m.lastScored + 1} is being played, so these are the ranks going into the week. They update as soon as every game is final. For how this week is going, see the <a href="#live">Live</a> tab.</span></div>` : '';
   return `
     ${held ? head : `<div class="hero">${leadStory()}${head}</div>`}
     ${hold}${notice}
@@ -385,49 +365,14 @@ function viewRankings() {
     <details class="panel glass method-box">
       <summary><h2>How the score works</h2>${XP}</summary>
       <div class="method">
-        <p><b>Rest-of-season roster (${Math.round(((DATA.meta.weights.rosProj || 0) + (DATA.meta.weights.depth || 0)) * 100 / weightTotal())}%).</b> Every player gets a consensus value from FantasyPros, DraftSharks and LeagueLogs half-PPR ROS rankings (LeagueLogs counts half, since it tracks the FantasyPros consensus closely). We build each team's best possible starting lineup from DraftSharks' weekly projections, discounted for games a player is expected to miss, then add the value of the top four bench pieces.</p>
-        <p><b>Remaining schedule (${Math.round((DATA.meta.weights.sos || 0) * 100 / weightTotal())}%).</b> Priced in wins: each team's expected wins against its actual remaining opponents, minus what it would expect against an average opponent. Opponent strength uses the same projection as the playoff odds (about two-thirds projected lineup, one-third points per game so far).</p>
-        <p><b>Results so far (${Math.round(RESULT_KEYS.reduce((a, k) => a + (DATA.meta.weights[k] || 0), 0) * 100 / weightTotal())}%).</b> All-play win rate (your record if you played every team every week) strips out schedule luck. Points per game, the actual record${DATA.meta.weights.standing ? ', your place in the standings' : ''}, the last three weeks${DATA.meta.weights.lastWeek ? ' and last week on its own' : ''} round it out.</p>
-        <p><b>Scale.</b> Each input is compared to the rest of the league, so 50 is a dead-average team. The bars under each score show the roster, schedule and results parts separately.</p>
+        <p><b>Standing (${pctW('standing')}%).</b> Your place in the real standings, wins first and points for as the tiebreaker, like Sleeper's table, plus the record itself so a two-game lead counts for more than a tiebreak.</p>
+        <p><b>Scoring (${pctW('scoring')}%).</b> Points per game carries most of it. All-play win rate (your record if you played every team every week) and the last three weeks add a little.</p>
+        <p><b>Schedule left (${pctW('schedule')}%).</b> Priced in wins: each team's expected wins against its actual remaining opponents, minus what it would expect against an average opponent. An easier road scores higher. Opponent strength uses the same projection as the playoff odds (about two-thirds projected lineup, one-third points per game so far).</p>
+        <p><b>Rest-of-season roster (${pctW('roster')}%).</b> Every player gets a consensus value from FantasyPros, DraftSharks and LeagueLogs half-PPR ROS rankings (LeagueLogs counts half, since it tracks the FantasyPros consensus closely). We build each team's best possible starting lineup from DraftSharks' weekly projections, discounted for games a player is expected to miss, then add a little for the bench.</p>
+        <p><b>Scale.</b> Each input is compared to the rest of the league, so 50 is a dead-average team. The bars under each score show the four parts separately.</p>
         <p><b>Playoff odds.</b> 10,000 simulations of the remaining regular-season schedule, using each team's projected lineup blended with its actual scoring. Ties in the standings go to points for, like Sleeper.</p>
       </div>
     </details>`;
-}
-
-// the rankings page while it's shut: a scoreboard counting down to the final call
-const hms = (ms) => { const t = Math.max(0, Math.floor(ms / 1000)); return [Math.floor(t / 3600), Math.floor(t / 60) % 60, t % 60].map((x) => String(x).padStart(2, '0')).join(':'); };
-function viewLocked(site = false) {
-  const left = RANKINGS_LOCK.until - tick();
-  return `
-    <section class="view-head"><div>
-      <h2 class="page-title"><span class="wk">Back at 10:45pm</span>${site ? 'The Power Hour' : 'Power Rankings'}</h2>
-      <p>Week ${DATA.meta.lastScored + 1} is wrapping up. Final scores and the new power rankings are on the way.</p>
-    </div></section>
-    <section class="lock glass rim" aria-label="Countdown to 10:45pm">
-      <p class="lock-msg">${site ? 'Check back in at 10:45pm.' : 'This page will be live after the game.'}</p>
-      ${left > 0
-        ? `<div class="lock-clock" data-lock role="timer" aria-live="off">${hms(left)}</div>
-          <p class="lock-sub">${site ? 'Tonight at 10:45pm Central the final scores go up and the new power rankings open. Keep this page open and it loads by itself.' : 'Tonight at 10:45pm Central. Until then, follow the games on the <a href="#live">Live</a> tab.'}</p>`
-        : `<div class="lock-clock wait">Final whistle pending</div>
-          <p class="lock-sub">The game is still going. The rankings open the moment every game is final. Check back soon.</p>`}
-    </section>`;
-}
-let lockTimer = 0;
-function bindLock() {
-  clearInterval(lockTimer);
-  const el = $('[data-lock]');
-  if (!el) return;
-  lockTimer = setInterval(() => {
-    const left = RANKINGS_LOCK.until - tick();
-    if (!document.body.contains(el)) return clearInterval(lockTimer);
-    el.textContent = hms(left);
-    if (left > 0) return;
-    clearInterval(lockTimer);
-    el.textContent = 'Pulling the final scores…';
-    // a fresh load picks up the final snapshot; a few seconds of spread so not every open page asks at once, and
-    // under ?at= (a fixed pretend time) there is no new snapshot to get, so it just re-renders
-    if (AT) { paintTabs(); route(); } else setTimeout(() => location.reload(), 3000 + Math.random() * 12000);
-  }, 1000);
 }
 
 // ---------- the important message: Dan's video, taking over the power rankings page ----------
@@ -436,8 +381,8 @@ function bindLock() {
 // the browser refuses it shows a "Tap to play" button instead. Seen once it ends or is skipped; a chip on the page plays
 // it again. It only appears once the file is actually there. Set MESSAGE_VIDEO to null to drop it.
 const MESSAGE_VIDEO = { id: 'w7-message', src: 'assets/important-message.mp4' };
-const messageSeen = () => !REHEARSE && store.get(`ph-video-${MESSAGE_VIDEO.id}`) === '1';
-const messageOn = () => !!MESSAGE_VIDEO && !window.__DEMO__ && !DATA.liveMode && !rankingsLocked();
+const messageSeen = () => store.get(`ph-video-${MESSAGE_VIDEO.id}`) === '1';
+const messageOn = () => !!MESSAGE_VIDEO && !window.__DEMO__ && !DATA.liveMode;
 let messageReady = null; // the HEAD check for the file, once
 async function maybeMessage(force = false) {
   if (!messageOn() || $('.takeover') || (!force && messageSeen())) return;
@@ -461,7 +406,7 @@ async function maybeMessage(force = false) {
   document.documentElement.classList.add('locked');
   const v = el.querySelector('video'), count = el.querySelector('.to-count'), play = el.querySelector('.to-play'), skip = el.querySelector('.to-skip');
   const done = () => {
-    if (!REHEARSE) store.set(`ph-video-${MESSAGE_VIDEO.id}`, '1');
+    store.set(`ph-video-${MESSAGE_VIDEO.id}`, '1');
     v.pause();
     el.classList.add('out');
     setTimeout(() => { el.remove(); document.documentElement.classList.remove('locked'); }, calm() ? 0 : 350);
@@ -537,13 +482,14 @@ function sassStory() {
 
 // ---------- the week 7 shakeup ----------
 // Once week 7 is final (from the final call, or Sleeper's own scoring), the power rankings page leads with the shakeup:
-// how far the new ranks moved from where teams stood after week 6 on the old formula (the engine's default weights),
+// how far the new ranks moved from where teams stood after week 6 on the old formula (OLD_WEIGHTS, what everyone saw),
 // then week 7's closest games, then the money week result. The bottom six of the new ranks get a fan poll
 // (api/poll.js). Set SHAKEUP to null to drop it all.
 // feature: team names the headline is about instead of the biggest riser and faller (Dan's pick for week 7)
 const SHAKEUP = { week: 7, feature: ['Anita Max Wynn', 'Chubb in my Jeanty'], poll: { id: 'w7-bottom6', question: 'Which one of the bottom 6 has the best chance at a playoff run?' } };
 const shakeupOn = () => !!SHAKEUP && DATA.meta.lastScored === SHAKEUP.week;
-const GROUPS = { roster: ['rosProj', 'depth'], schedule: ['sos'], results: RESULT_KEYS };
+// the formula the site ran through week 6, so the shakeup measures moves against the ranks people actually saw
+const OLD_WEIGHTS = { rosProj: 0.35, depth: 0.10, sos: 0.10, allPlay: 0.20, pfPerGame: 0.10, winPct: 0.10, form: 0.05 };
 const shareOf = (w, keys) => { const tot = Object.values(w).reduce((a, b) => a + b, 0) || 1; return keys.reduce((a, k) => a + (w[k] || 0), 0) / tot; };
 
 function shakeupStories() {
@@ -552,7 +498,7 @@ function shakeupStories() {
   // what the rankings page showed going into the week: the week-in-progress snapshot (DATA.after, the final call) on
   // the old formula; once Sleeper has scored the week there is no such snapshot, so the old formula's week 6 ranks
   const before = DATA.after?.raw;
-  const old = computeLeague({ ...leagueInput(before || DATA.raw).input, weights: WEIGHTS, sims: 200 });
+  const old = computeLeague({ ...leagueInput(before || DATA.raw).input, weights: OLD_WEIGHTS, sims: 200 });
   const moves = DATA.teams.map((t) => {
     const o = old.byRid[t.rid], was = before ? o.powerRank : o.rankHistory[wk - 2] ?? o.powerRank;
     t.movement = was - t.powerRank; // the arrows on the ranking rows tell the same story as the headline
@@ -561,11 +507,9 @@ function shakeupStories() {
   const moved = moves.filter((m) => m.d).length;
   const up = [...moves].sort((a, b) => b.d - a.d)[0], down = [...moves].sort((a, b) => a.d - b.d)[0];
   const top = DATA.teams[0], topWas = moves.find((m) => m.t === top).was;
-  const W = DATA.meta.weights, fresh = Object.keys({ ...W, ...WEIGHTS }).some((k) => Math.abs((W[k] || 0) / (Object.values(W).reduce((a, b) => a + b, 0) || 1) - (WEIGHTS[k] || 0) / (Object.values(WEIGHTS).reduce((a, b) => a + b, 0) || 1)) > 0.005);
-  const pctOf = (w, g) => Math.round(shareOf(w, GROUPS[g]) * 100);
-  const formula = fresh
-    ? `The formula got an upgrade: results now carry ${pctOf(W, 'results')}% of the score (was ${pctOf(WEIGHTS, 'results')}%), rest-of-season roster ${pctOf(W, 'roster')}% (was ${pctOf(WEIGHTS, 'roster')}%) and schedule ${pctOf(W, 'schedule')}% (was ${pctOf(WEIGHTS, 'schedule')}%)${W.standing && !WEIGHTS.standing ? ', and your place in the real standings counts for the first time' : ''}. More of what actually happened, less guessing.`
-    : '';
+  const W = DATA.meta.weights;
+  const pctOf = (w, g) => Math.round(shareOf(w, PARTS[g]) * 100);
+  const formula = `The formula got an overhaul: your place in the standings now drives ${pctOf(W, 'standing')}% of the score, scoring ${pctOf(W, 'scoring')}%, the schedule left ${pctOf(W, 'schedule')}% and the rest-of-season roster ${pctOf(W, 'roster')}% (it was ${pctOf(OLD_WEIGHTS, 'roster')}%). Win and score, and you climb.`;
   // the featured teams, worded from their actual moves
   const featured = (SHAKEUP.feature || []).map((n) => moves.find((m) => m.t.name === n)).filter(Boolean);
   const said = (m, verb) => (m.d > 0 ? `${m.t.name} ${verb} ${m.d} to ${ordinal(m.t.powerRank)}` : m.d < 0 ? `${m.t.name} drops ${-m.d} to ${ordinal(m.t.powerRank)}` : `${m.t.name} holds at ${ordinal(m.t.powerRank)}`);
@@ -578,7 +522,7 @@ function shakeupStories() {
       ? `Power rankings earthquake: ${firstName(up.t)} soars ${up.d}, ${firstName(down.t)} crashes ${-down.d}. Nobody is safe`
       : `Power rankings earthquake: ${moved} of ${DATA.teams.length} teams flipped. Nobody is safe`,
     deck: [
-      `${fresh ? 'A brand-new formula and a' : 'A'} wild week ${wk} just flipped ${moved} of ${DATA.teams.length} teams.`,
+      `A brand-new formula and a wild week ${wk} just flipped ${moved} of ${DATA.teams.length} teams.`,
       formula,
       ...(featured.length
         ? featured.map((m) => (m.d > 0 ? `${m.t.name} climbs into ${ordinal(m.t.powerRank)}${m.d > 1 ? `, up ${m.d} spots` : ''}.` : m.d < 0 ? `${m.t.name} slips to ${ordinal(m.t.powerRank)}.` : `${m.t.name} holds at ${ordinal(m.t.powerRank)}.`))
@@ -643,7 +587,7 @@ function pollCard() {
       <h2>${esc(SHAKEUP.poll.question)}</h2>
       <p class="sub">${voted ? `${n} vote${n === 1 ? '' : 's'} so far. Your vote is locked in.` : 'One vote per device, and no changing it once it\'s in. Choose wisely.'}</p>
       <ol class="poll-list ${voted ? 'done' : ''}">${opts.map(choice).join('')}</ol>
-      ${POLL.err ? `<p class="adm-err" role="alert">${esc(POLL.err)}</p>` : ''}
+      ${POLL.err ? `<p class="poll-err" role="alert">${esc(POLL.err)}</p>` : ''}
     </section>`;
 }
 async function loadPoll() {
@@ -658,7 +602,6 @@ function paintPoll() {
   fixAvatars(el);
 }
 async function castPoll(rid) {
-  if (REHEARSE) { POLL = { ...POLL, err: 'Rehearsal: votes are off. This is where the vote would lock in.' }; return paintPoll(); }
   if (!confirm(`Lock in ${team(rid).name}? You can't change it.`)) return;
   try {
     const r = await fetch('/api/poll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: SHAKEUP.poll.id, pick: rid, options: pollChoices(), device: pollDevice() }) });
@@ -788,14 +731,14 @@ function viewLive() {
       <section class="view-head">
         <div>
           <h2 class="page-title"><span class="wk">Week ${wk} live</span>Weekly Rankings</h2>
-          <p>How this week is going, best to worst: everything scored so far plus the projection for everyone still to play. The power rankings are on hold until the week is final and come back ${rankingsLocked() ? 'tonight after the game' : 'Tuesday morning'}.</p>
+          <p>How this week is going, best to worst: everything scored so far plus the projection for everyone still to play. The power rankings are on hold until every game is final.</p>
         </div>
         <div class="sources"><span class="chip"><span class="dot live"></span>${played} NFL team${played === 1 ? '' : 's'} played so far</span>${DATA.fetched ? `<span class="chip">Scores as of ${esc(DATA.fetched)}</span>` : ''}</div>
       </section>
     </div>`;
   return `
     ${head}
-    ${fin ? revealCta(revealed) : yourWeek(rows, standings)}
+    ${fin ? revealCta() : yourWeek(rows, standings)}
     <div class="live-grid">
       <section class="panel glass live-panel wk-rank">
         <h2>Week ${wk}, top to bottom</h2>
@@ -815,12 +758,10 @@ function viewLive() {
 }
 
 // ---------- the final call: from the final scores to the new power rankings ----------
-// The button at the top of the final-scores page. Pressing it asks who you are, gives you the verdict on your week
-// (congratulations or a roast), then loads the new power rankings.
-function revealCta(seen) {
-  return `<div class="unveil-cta">${seen
-    ? '<a class="cta" href="#rankings">Back to the power rankings</a>'
-    : '<button type="button" class="cta" data-reveal>Done with Live Ranks, Show me the Power Ranking</button>'}</div>`;
+// The button at the top of the final-scores page. The new power rankings are already live for everyone; pressing it
+// asks who you are, gives you the verdict on your week (congratulations or a roast), then shows them.
+function revealCta() {
+  return '<div class="unveil-cta"><button type="button" class="cta" data-reveal>Done with Live Ranks, Show me the Power Ranking</button></div>';
 }
 
 // the button turns into a football and flies off like a deep pass, then the team picker opens
@@ -899,7 +840,7 @@ function verdict(rid) {
 // the overlay: pick your team, get the verdict, then the new power rankings load in
 function openReveal() {
   if ($('.unveil')) return;
-  const live = DATA;
+  const live = DATA.after || DATA; // the week-in-progress snapshot the verdict reads
   const el = document.createElement('div');
   el.className = 'unveil';
   el.setAttribute('role', 'dialog');
@@ -952,7 +893,7 @@ function openReveal() {
     myTeam = rid;
     store.set('ph-my-team', String(rid));
     $('#my-team').value = String(rid);
-    el.innerHTML = told(verdict(rid));
+    el.innerHTML = told(withData(live, () => verdict(rid)));
     fixAvatars(el);
     const v = el.querySelector('video');
     if (calm()) v?.remove(); else v?.play?.().catch(() => {});
@@ -962,7 +903,6 @@ function openReveal() {
     const t0 = performance.now();
     await new Promise((r) => setTimeout(r, 60)); // paint the verdict before the heavy lifting
     buildFinal();
-    if (!REHEARSE) store.set('ph-final-seen', finalSeenKey());
     loadPoll(); // the shakeup poll sits on top of the new rankings
     await new Promise((r) => setTimeout(r, Math.max(0, READ_MS - (performance.now() - t0))));
     el.classList.add('out');
@@ -1108,7 +1048,15 @@ function rankRow(t, i) {
     : t.movement < 0 ? `<span class="move down" title="Down ${-t.movement} since last week">▼${-t.movement}</span>`
     : '<span class="move flat" title="No change since last week">–</span>';
   const mine = t.rid === myTeam;
-  const ros = t.rosScore != null ? `<div class="split-row"><span>Roster</span><span class="track"><i class="ros" style="width:${t.rosScore}%"></i></span><span>${Math.round(t.rosScore)}</span></div>` : '';
+  // the four parts of the score, in order of weight: standing, scoring, schedule, roster
+  const sw = `${t.schedWins >= 0 ? '+' : ''}${t.schedWins.toFixed(2)}`;
+  const parts = [
+    ['standing', 'Standing', 'res', `${t.name}: ${ordinal(t.seed)} in the standings at ${record(t)}`],
+    ['scoring', 'Scoring', 'pts', `${t.name}: ${f1(t.pfPerGame)} points per game, ${f1(t.form)} over the last three weeks`],
+    ['schedule', 'Schedule', 'sos', `${t.name}: ${sw} wins from the remaining schedule vs an average one`],
+    ['roster', 'Roster', 'ros', `${t.name}: best rest-of-season lineup projects ${f1(t.rosProj)} a week`],
+  ].filter(([k]) => t.parts?.[k] != null)
+    .map(([k, label, cls, tip]) => `<div class="split-row" data-tip="${esc(tip)}"><span>${label}</span><span class="track"><i class="${cls}" style="width:${t.parts[k]}%"></i></span><span>${Math.round(t.parts[k])}</span></div>`).join('');
   return `
   <li class="rank ${mine ? 'mine' : ''}" style="--i:${i}" data-rid="${t.rid}">
     <span class="jersey" aria-hidden="true">${t.powerRank}</span>
@@ -1121,7 +1069,7 @@ function rankRow(t, i) {
         </div>
         <div class="meter">
           <div class="meter-top"><span class="score">${t.score.toFixed(1)}</span><small>power score</small></div>
-          <div class="split">${ros}${t.sosScore != null ? `<div class="split-row" data-tip="${esc(`${t.name}: ${t.schedWins >= 0 ? '+' : ''}${t.schedWins.toFixed(2)} wins from the remaining schedule vs an average one`)}"><span>Schedule</span><span class="track"><i class="sos" style="width:${t.sosScore}%"></i></span><span>${Math.round(t.sosScore)}</span></div>` : ''}<div class="split-row"><span>Results</span><span class="track"><i class="res" style="width:${t.resultsScore}%"></i></span><span>${Math.round(t.resultsScore)}</span></div></div>
+          <div class="split">${parts}</div>
         </div>
         <div class="odds"><b>${pct(t.playoffPct)}</b><small>playoffs</small>${XP}</div>
       </button>
@@ -1779,7 +1727,7 @@ function viewLab() {
       <section class="panel glass span-12"><h2>Rank flow</h2><p class="sub">Power rank after each week. The roster half uses today's ROS values throughout, so the movement comes from results.</p>${bump}</section>
       <section class="panel glass span-6"><h2>Luck index</h2><p class="sub">Actual wins minus all-play expected wins. Orange teams are winning more than their scores deserve, blue teams less.</p>${divergingBars({ rows: luckRows })}</section>
       <section class="panel glass span-6"><h2>Points for vs against</h2><p class="sub">Dashed lines are the league average. Bottom right is where you want to live.</p>${sc}</section>
-      ${schedHeat ? `<section class="panel glass span-12"><h2>Schedule strength</h2><p class="sub">Each cell is that week's opponent by current power rank; red is a top team, green a bottom one. Teams run toughest to easiest, with the schedule's effect in expected wins next to the name. This counts for ${Math.round((DATA.meta.weights.sos || 0) * 100 / weightTotal())}% of the power score.</p>${schedHeat}</section>` : ''}
+      ${schedHeat ? `<section class="panel glass span-12"><h2>Schedule strength</h2><p class="sub">Each cell is that week's opponent by current power rank; red is a top team, green a bottom one. Teams run toughest to easiest, with the schedule's effect in expected wins next to the name. This counts for ${pctW('schedule')}% of the power score.</p>${schedHeat}</section>` : ''}
       <section class="panel glass span-12"><h2>Weekly finishes</h2><p class="sub">Each cell is that week's score; green finished near the top of the league, red near the bottom.</p>${weeklyHeat}</section>
       ${posHeat ? `<section class="panel glass span-7"><h2>Position group ranks</h2><p class="sub">League rank of each team's projected rest-of-season starters by position, flex spots included.</p>${posHeat}</section>` : ''}
       <section class="panel glass ${posHeat ? 'span-5' : 'span-12'}"><h2>Playoff odds</h2><p class="sub">From 10,000 simulated finishes to the regular season, top ${DATA.meta.playoffTeams} get in.</p>
@@ -1800,238 +1748,6 @@ function viewLab() {
     </div>`;
 }
 
-// ---------- admin (Dan only: #admin, reached from the footer logo) ----------
-// Every action goes to /api/admin with the password, which the server checks; this page only shows what the server
-// allows. A manual pull lands in a private draft; the preview recomputes the power rankings with any weights, on the
-// live snapshot or the draft, optionally counting the week in progress as final; nothing changes for anyone else
-// until Publish.
-const WEIGHT_INFO = {
-  rosProj: ['Roster: best lineup', 'Projected weekly points of the best rest-of-season starting lineup'],
-  depth: ['Roster: bench', 'Value of the best bench pieces'],
-  sos: ['Schedule left', 'Expected wins vs the actual remaining opponents, minus vs an average slate'],
-  allPlay: ['All-play', 'Record if you played every team every week'],
-  pfPerGame: ['Points per game', 'Season scoring average'],
-  winPct: ['Record', 'Actual win percentage'],
-  standing: ['Standings place', 'Place in the real standings: record, then points for'],
-  form: ['Last 3 weeks', 'Scoring average over the last three weeks'],
-  lastWeek: ['Last week', 'Last week\'s score on its own'],
-};
-const adminState = { pw: null, status: null, draft: null, source: 'live', week: 'off', weights: { ...WEIGHTS_PROPOSED }, msg: '', busy: false };
-try { adminState.pw = sessionStorage.getItem('ph-admin'); } catch { /* storage unavailable */ }
-
-async function adminCall(action, extra = {}) {
-  const r = await fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: adminState.pw, action, ...extra }) });
-  const body = await r.json().catch(() => ({ error: `Admin API answered ${r.status}` }));
-  if (!r.ok) { const e = new Error(body.error || `Admin API answered ${r.status}`); e.status = r.status; e.body = body; throw e; }
-  return body;
-}
-
-function adminPreview() {
-  const base = adminState.source === 'draft' && adminState.draft ? adminState.draft : RAW;
-  const raw = asFinal(base, adminState.week);
-  const D = computeLeague({ ...leagueInput(raw).input, weights: adminState.weights, sims: 2000 });
-  return { D, raw };
-}
-
-function adminLogin(err = '') {
-  return `
-    <section class="view-head"><div>
-      <h1><span class="wk">Admin</span>Front office</h1>
-      <p>For the commissioner\'s desk only.</p>
-    </div></section>
-    <form class="panel glass adm-login" id="adm-login">
-      <label for="adm-pw">Password</label>
-      <div class="adm-row"><input id="adm-pw" type="password" inputmode="numeric" autocomplete="current-password" required><button type="submit" class="adm-btn primary">Unlock</button></div>
-      ${err ? `<p class="adm-err" role="alert">${esc(err)}</p>` : ''}
-    </form>`;
-}
-
-function viewAdmin() {
-  if (!adminState.status) return adminLogin(adminState.loginErr || '');
-  const st = adminState.status, pub = st.config?.weights, staged = st.staged;
-  const wk = DATA.previews[0]?.week;
-  const when = (iso) => (iso ? new Date(iso).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'never');
-  const draftOk = st.draft && st.draft.key === st.key;
-  const seg = (name, val, label) => `<button type="button" data-${name}="${val}" aria-pressed="${adminState[name] === val}">${label}</button>`;
-  const total = Object.values(adminState.weights).reduce((a, b) => a + b, 0) || 1;
-  const slider = (k) => `
-    <label class="adm-w" title="${esc(WEIGHT_INFO[k][1])}">
-      <span class="adm-wn">${WEIGHT_INFO[k][0]}<small>${esc(WEIGHT_INFO[k][1])}</small></span>
-      <input type="range" min="0" max="0.4" step="0.01" value="${adminState.weights[k] || 0}" data-w="${k}">
-      <b data-wv="${k}">${Math.round(((adminState.weights[k] || 0) / total) * 100)}%</b>
-    </label>`;
-  return `
-    <section class="view-head"><div>
-      <h1><span class="wk">Admin</span>Front office</h1>
-      <p>Pull fresh data, try out power-score weights, and publish when it looks right. Published weights wait here until you press Update rankings live; nothing changes for anyone else before that.</p>
-    </div></section>
-    <div class="adm-grid">
-      <section class="panel glass adm-status">
-        <h2>What's live</h2>
-        <dl>
-          <div><dt>League snapshot</dt><dd>${esc(st.key)}, revision ${st.rev}<small>${RAW.isDemo ? 'Demo snapshot on this page' : `Fetched ${esc(when(RAW.fetched))}`}</small></dd></div>
-          <div><dt>Power-score weights</dt><dd>${pub ? 'Custom' : 'Default'}<small>${pub ? `Published ${esc(when(st.config.at))}` : 'The original 45 / 10 / 45 mix'}</small></dd></div>
-          ${staged ? `<div><dt>Waiting to go live</dt><dd>${staged.weights ? 'Custom weights' : 'Default weights'}<small>Published ${esc(when(staged.at))}, not live yet</small></dd></div>` : ''}
-          <div><dt>Rankings sources</dt><dd>${RAW.ros?.updated ? `Scraped ${esc(when(RAW.ros.updated))}` : 'Unavailable'}<small>FantasyPros, DraftSharks and LeagueLogs; normally once a morning</small></dd></div>
-          <div><dt>Your draft</dt><dd>${st.draft ? `Pulled ${esc(when(st.draft.fetched))}` : 'None yet'}<small>${st.draft ? (draftOk ? 'Ready to publish' : 'From an earlier snapshot window: pull again to publish') : 'Private until published'}</small></dd></div>
-        </dl>
-        <div class="adm-actions">
-          <button type="button" class="adm-btn primary" data-act="pull" ${st.nextPullIn ? 'disabled' : ''}>${st.nextPullIn ? `Pull again in ${st.nextPullIn}s` : 'Pull fresh from Sleeper'}</button>
-          <button type="button" class="adm-btn" data-act="pub-data" ${draftOk ? '' : 'disabled'}>Publish draft data</button>
-          <button type="button" class="adm-btn" data-act="ros">Refresh rankings sources</button>
-          <a class="adm-btn" href="./?rehearse=1#live">Rehearse the 10:45pm flow</a>
-        </div>
-        <p class="sub">One pull every two minutes at most. A pull goes to your draft only; the site keeps its once-a-morning schedule.</p>
-        ${adminState.msg ? `<p class="adm-msg" role="status">${esc(adminState.msg)}</p>` : ''}
-      </section>
-      <section class="panel glass adm-weights">
-        <h2>Power-score weights</h2>
-        <div class="filters adm-seg" role="group" aria-label="Data">${seg('source', 'live', 'Live snapshot')}${st.draft ? seg('source', 'draft', 'Your draft') : ''}</div>
-        <div class="filters adm-seg" role="group" aria-label="This week">${seg('week', 'off', `Through week ${DATA.meta.lastScored}`)}${wk ? `${seg('week', 'now', `Week ${wk} final as it stands`)}${seg('week', 'proj', `Week ${wk} projected finish`)}` : ''}</div>
-        <div class="filters adm-seg" role="group" aria-label="Presets">
-          <button type="button" data-preset="default">Load default</button><button type="button" data-preset="proposed">Load proposed</button>${pub ? '<button type="button" data-preset="published">Load live</button>' : ''}${staged?.weights ? '<button type="button" data-preset="staged">Load waiting</button>' : ''}
-        </div>
-        <div class="adm-sliders">${Object.keys(WEIGHT_INFO).map(slider).join('')}</div>
-        <div class="adm-actions">
-          <button type="button" class="adm-btn primary" data-act="pub-weights">Publish these weights</button>
-          ${pub ? '<button type="button" class="adm-btn" data-act="pub-default">Go back to default weights</button>' : ''}
-        </div>
-        <div class="adm-actions">
-          <button type="button" class="adm-btn primary" data-act="golive" ${staged ? '' : 'disabled'}>Update rankings live</button>
-          ${staged ? '<button type="button" class="adm-btn" data-act="unstage">Discard waiting weights</button>' : ''}
-        </div>
-        <p class="sub">${staged ? `Waiting to go live: ${staged.weights ? 'your published weights' : 'the default weights'}. The power rankings tab keeps the current weights until you press Update rankings live.` : 'Publishing saves the weights here first. The power rankings tab only changes when you press Update rankings live.'}</p>
-      </section>
-    </div>
-    <section class="panel glass adm-results" id="adm-results">${adminResults()}</section>`;
-}
-
-// the preview next to what everyone sees now: a slope chart from live rank to preview rank, then the table
-function adminResults() {
-  const { D } = adminPreview(), n = D.teams.length;
-  const H = 30 * n + 20, x0 = 150, x1 = 410, y = (r) => 20 + (r - 1) * 30;
-  const lines = D.teams.map((t) => {
-    const a = DATA.byRid[t.rid].powerRank, b = t.powerRank, c = DATA.color[t.rid], mine = t.rid === myTeam;
-    return `<g class="${mine ? 'mine' : ''}" data-tip="${esc(`${t.name}: ${ordinal(a)} now, ${ordinal(b)} in the preview`)}">
-      <line x1="${x0}" y1="${y(a)}" x2="${x1}" y2="${y(b)}" stroke="${c}" stroke-width="${mine ? 4 : 2.5}"/>
-      <circle cx="${x0}" cy="${y(a)}" r="5" fill="${c}"/><circle cx="${x1}" cy="${y(b)}" r="5" fill="${c}"/>
-      <text x="${x0 - 12}" y="${y(a) + 4}" text-anchor="end" class="label">${esc(short(t.name, 16))}</text>
-      <text x="${x1 + 12}" y="${y(b) + 4}" class="label">${b}. ${esc(short(t.name, 16))}</text></g>`;
-  }).join('');
-  const chart = `<svg class="chart adm-slope" viewBox="0 0 560 ${H}" role="img" aria-label="Live power rank to preview rank">
-    <text x="${x0}" y="10" text-anchor="middle" class="axis-title">Live</text><text x="${x1}" y="10" text-anchor="middle" class="axis-title">Preview</text>${lines}</svg>`;
-  const row = (t) => {
-    const was = DATA.byRid[t.rid].powerRank, mv = was - t.powerRank;
-    return `<tr class="${t.rid === myTeam ? 'mine' : ''}">
-      <td class="num"><b>${t.powerRank}</b></td>
-      <td>${mv ? `<span class="move ${mv > 0 ? 'up' : 'down'}">${mv > 0 ? '▲' : '▼'}${Math.abs(mv)}</span>` : '<span class="move-none">–</span>'}</td>
-      <td class="tm">${avatar(t, 'avatar xs')}${esc(short(t.name, 22))}</td>
-      <td class="num">${record(t)}</td>
-      <td class="num">${DATA.byRid[t.rid].score.toFixed(1)} → <b>${t.score.toFixed(1)}</b></td>
-      <td class="num">${t.rosScore != null ? Math.round(t.rosScore) : '–'}</td>
-      <td class="num">${t.sosScore != null ? Math.round(t.sosScore) : '–'}</td>
-      <td class="num">${Math.round(t.resultsScore)}</td>
-      <td class="num">${pct(t.playoffPct)}</td>
-    </tr>`;
-  };
-  const moved = D.teams.filter((t) => DATA.byRid[t.rid].powerRank !== t.powerRank).length;
-  return `<h2>Preview</h2>
-    <p class="sub">${moved ? `${moved} of ${n} teams move compared with what the site shows now.` : 'Same order as what the site shows now.'} ${adminState.week === 'off' ? '' : `Week ${DATA.previews[0]?.week} is counted as final (${adminState.week === 'now' ? 'scores so far' : 'projected finish'}), so records include it.`}</p>
-    <div class="adm-res">
-      <div class="adm-chart">${chart}</div>
-      <div class="heat-wrap"><table class="table">
-        <thead><tr><th class="num">Rank</th><th></th><th>Team</th><th class="num">Record</th><th class="num">Score</th><th class="num">Roster</th><th class="num">Sched</th><th class="num">Results</th><th class="num">Playoffs</th></tr></thead>
-        <tbody>${D.teams.map(row).join('')}</tbody>
-      </table></div>
-    </div>`;
-}
-
-let adminTimer = 0;
-function paintAdminResults() {
-  clearTimeout(adminTimer);
-  adminTimer = setTimeout(() => {
-    const el = $('#adm-results');
-    if (el) { el.innerHTML = adminResults(); fixAvatars(el); }
-    const total = Object.values(adminState.weights).reduce((a, b) => a + b, 0) || 1;
-    document.querySelectorAll('[data-wv]').forEach((b) => (b.textContent = `${Math.round(((adminState.weights[b.dataset.wv] || 0) / total) * 100)}%`));
-  }, 120);
-}
-
-async function adminAct(act) {
-  const confirmations = {
-    'pub-data': 'Publish the draft? Everyone gets this snapshot within a minute.',
-    'pub-weights': 'Publish these weights? They wait here until you press Update rankings live.',
-    'pub-default': 'Publish the default weights? They wait here until you press Update rankings live.',
-    golive: 'Update the power rankings for everyone with the waiting weights? Visitors see them within a minute.',
-    unstage: 'Discard the waiting weights? The live rankings stay as they are.',
-    ros: 'Re-scrape FantasyPros, DraftSharks and LeagueLogs now? Everyone gets the new values within a minute. No Sleeper call.',
-  };
-  if (confirmations[act] && !confirm(confirmations[act])) return;
-  adminState.msg = act === 'pull' ? 'Pulling from Sleeper…' : act === 'golive' ? 'Updating the live rankings…' : act === 'unstage' ? 'Discarding…' : act === 'ros' ? 'Scraping the ranking sites…' : 'Publishing…';
-  route();
-  try {
-    if (act === 'pull') {
-      const r = await adminCall('pull');
-      adminState.status = r; adminState.draft = r.snapshot; adminState.source = 'draft';
-      adminState.msg = `Pulled ${new Date(r.snapshot.fetched).toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' })}. The preview now uses your draft.`;
-    } else if (act === 'golive') {
-      const r = await adminCall('golive');
-      adminState.status = r;
-      adminState.msg = `Rankings updated live with the ${r.live} (revision ${r.rev}). Visitors pick it up within a minute; reload this page to see it as they will.`;
-    } else if (act === 'ros') {
-      const r = await adminCall('ros');
-      adminState.status = r;
-      const src = Object.entries(r.sources).map(([k, x]) => `${SOURCE_NAMES[k] || k} ${x.ok ? `${x.matched} players` : 'failed'}`).join(', ');
-      adminState.msg = `Rankings refreshed: ${src}. Visitors get them within a minute; reload this page to preview with them.`;
-    } else if (act === 'unstage') {
-      adminState.status = await adminCall('unstage');
-      adminState.msg = 'Waiting weights discarded. The live rankings are unchanged.';
-    } else {
-      const extra = act === 'pub-data' ? { data: true } : act === 'pub-weights' ? { weights: adminState.weights } : { weights: null };
-      const r = await adminCall('publish', extra);
-      adminState.status = r;
-      adminState.msg = act === 'pub-data'
-        ? `Published data (revision ${r.rev}). Visitors pick it up within a minute; reload this page to see it as they will.`
-        : `Published ${r.published.join(' and ')}. Nobody sees them yet: press Update rankings live when you're ready.`;
-    }
-  } catch (e) {
-    if (e.body?.key) adminState.status = e.body;
-    adminState.msg = e.message;
-  }
-  route();
-}
-
-async function adminUnlock(pw) {
-  adminState.pw = pw;
-  try {
-    adminState.status = await adminCall('status');
-    adminState.loginErr = '';
-    try { sessionStorage.setItem('ph-admin', pw); } catch { /* storage unavailable */ }
-    if (adminState.status.draft) adminState.draft = (await adminCall('draft')).snapshot;
-  } catch (e) {
-    adminState.status = null; adminState.pw = null;
-    try { sessionStorage.removeItem('ph-admin'); } catch { /* storage unavailable */ }
-    adminState.loginErr = e.message;
-  }
-  route();
-}
-
-function bindAdmin() {
-  $('#adm-login')?.addEventListener('submit', (e) => { e.preventDefault(); adminUnlock($('#adm-pw').value); });
-  $('#adm-pw')?.focus();
-  document.querySelectorAll('[data-w]').forEach((r) => r.addEventListener('input', () => { adminState.weights[r.dataset.w] = Number(r.value); paintAdminResults(); }));
-  document.querySelectorAll('[data-source], [data-week]').forEach((b) => b.addEventListener('click', () => {
-    if (b.dataset.source) adminState.source = b.dataset.source; else adminState.week = b.dataset.week;
-    route();
-  }));
-  document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => {
-    const p = b.dataset.preset;
-    adminState.weights = { ...(p === 'default' ? WEIGHTS : p === 'published' ? adminState.status.config.weights : p === 'staged' ? adminState.status.staged.weights : WEIGHTS_PROPOSED) };
-    route();
-  }));
-  document.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', () => adminAct(b.dataset.act)));
-}
-
 // ---------- shell ----------
 // ---------- motion ----------
 // Everything here animates transform/opacity only, runs when on screen, and is skipped under reduced motion.
@@ -2045,7 +1761,7 @@ let currentView = null;
 // gold pill behind the active tab; with view transitions the browser morphs it, otherwise CSS slides it
 function placeInk({ settle = false } = {}) {
   const ink = $('.tab-ink'), a = $('.tabs a[aria-current]');
-  if (ink && !a) { ink.style.width = '0px'; return; } // a page with no tab (the admin page)
+  if (ink && !a) { ink.style.width = '0px'; return; } // no tab to mark
   if (!ink || !a) return;
   if (settle) ink.classList.remove('live'); // a re-measure snaps into place instead of sliding
   ink.style.width = `${a.offsetWidth}px`;
@@ -2107,7 +1823,7 @@ function reveal(root) {
   root.querySelectorAll('.rank').forEach((el) => io.observe(el)); // ranking rows have their own rise; just count
 }
 
-const VIEWS = { admin: viewAdmin, live: viewLive, rankings: viewRankings, wire: viewWire, matchups: viewMatchups, trades: viewTrades, lab: viewLab };
+const VIEWS = { live: viewLive, rankings: viewRankings, wire: viewWire, matchups: viewMatchups, trades: viewTrades, lab: viewLab };
 function route({ fresh = false } = {}) {
   // while a week is being played the Live tab is the front page; it only exists then
   const home = DATA.liveMode ? 'live' : 'rankings';
@@ -2119,10 +1835,9 @@ function route({ fresh = false } = {}) {
     placeInk();
     paintMe();
     const app = $('#app');
-    const shut = siteLocked() && key !== 'admin';
-    app.innerHTML = shut ? viewLocked(true) : VIEWS[key]();
+    app.innerHTML = VIEWS[key]();
     fixAvatars(app);
-    if (shut) bindLock(); else bind(key);
+    bind(key);
     if (fresh) { app.focus({ preventScroll: true }); window.scrollTo({ top: 0 }); }
     reveal(app);
     currentView = key;
@@ -2133,18 +1848,9 @@ function route({ fresh = false } = {}) {
 }
 
 function bind(key) {
-  if (key === 'admin') {
-    bindAdmin();
-    // a password saved earlier this session unlocks straight away (the server still checks it)
-    if (adminState.pw && !adminState.status && !adminState.loginErr && !adminState.trying) {
-      adminState.trying = true;
-      adminUnlock(adminState.pw).finally(() => (adminState.trying = false));
-    }
-  }
   if (key === 'live') bindCarousel();
   document.querySelectorAll('[data-reveal]').forEach((b) => b.addEventListener('click', () => passThenReveal(b)));
   if (key === 'rankings') {
-    bindLock();
     if (!DATA.liveMode) bindCarousel();
     maybeMessage();
     const again = $('[data-message]');
@@ -2213,8 +1919,6 @@ function paintTabs() {
   const a = $('.tabs a[data-view="live"]'), fin = DATA.finalCall || DATA.after;
   a.hidden = !DATA.liveMode && !DATA.after;
   a.textContent = fin ? 'Final' : 'Live';
-  $('.tabs a[data-view="rankings"]').hidden = rankingsLocked(); // shut until the final call
-  $('.tabs').hidden = siteLocked(); // the whole site waits for the countdown
   $('.brand').setAttribute('href', DATA.liveMode ? '#live' : '#rankings');
   placeInk({ settle: true });
 }
@@ -2301,13 +2005,6 @@ async function main() {
   $('#footer-meta').textContent = `${RAW.isDemo ? 'Demo snapshot. ' : ''}Through week ${DATA.meta.lastScored}. ${updatedText() ? `${updatedText()}.` : ''}${DATA.overrides.length ? ` Manual fixes: ${DATA.overrides.map((o) => o.note).join('; ')}.` : ''}`;
   initTeamPicker();
   paintTabs();
-  if (REHEARSE) {
-    const b = document.createElement('div');
-    b.className = 'rehearse-strip';
-    b.setAttribute('role', 'status');
-    b.innerHTML = 'Rehearsal: the 10:45pm flow with the scores as they stand now. Nothing here is saved or seen by anyone. <a href="./?rehearse=1#live">Start over</a> <a href="./#admin">Back to admin</a>';
-    document.body.append(b);
-  }
   const ed = DATA.teams.find((t) => t.owner === EDITOR.user);
   if (ed && faceSrc(ed)) {
     const mh = $('#masthead');
