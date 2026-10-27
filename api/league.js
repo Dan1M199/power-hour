@@ -57,7 +57,9 @@ export default async function handler(req, res) {
     const { body, from } = await once('league', key, async () => ({ body: await snapshot(), ttl: 3 * 86400 }));
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('X-Snapshot', `${canonical} ${from}`);
-    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600');
+    // a key's snapshot never changes (a new pull is a new key), so browsers can keep it too: a second visit within the
+    // hour opens without asking for the data again
+    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=3600');
     res.status(200).send(JSON.stringify(body));
   } catch (e) {
     res.setHeader('Cache-Control', 'no-store');

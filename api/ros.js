@@ -74,10 +74,11 @@ export default async function handler(req, res) {
     });
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('X-Snapshot', `${canonical} ${from}`);
-    // A day at the edge, then serve stale for another day while a fresh copy is fetched in the background.
-    // If a source failed, only cache for an hour so the next visitor retries.
+    // A day at the edge, then serve stale for another day while a fresh copy is fetched in the background; browsers keep
+    // it for an hour (the morning's values don't change). If a source failed, only cache for an hour at the edge and not
+    // at all in the browser, so the next visit picks up the retry.
     const allOk = Object.values(body.sources).every((s) => s.ok);
-    res.setHeader('Cache-Control', allOk ? 'public, s-maxage=86400, stale-while-revalidate=86400' : 'public, s-maxage=3600');
+    res.setHeader('Cache-Control', allOk ? 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400' : 'public, s-maxage=3600');
     res.status(200).send(JSON.stringify(body));
   } catch (e) {
     res.setHeader('Cache-Control', 'no-store');

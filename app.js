@@ -67,21 +67,25 @@ const tradeState = { shape: 'all', cache: {} };
 let VOTES = null; // { week, open, counts: { "3-8": { "3": n } }, mine: { "3-8": "3" } } once /api/votes answers
 
 // ---------- data ----------
-const getJSON = async (url) => {
-  const r = await fetch(url);
+const getJSON = async (url, res = fetch(url)) => {
+  const r = await res;
   if (!r.ok) throw new Error(`${r.status} from ${url}`);
   return r.json();
 };
 const chicagoDate = () => centralDate(clock());
 
-// Sleeper is read once per morning through /api/league (CDN-cached per key), never straight from the browser
+// Sleeper is read once per morning through /api/league (CDN-cached per key), never straight from the browser. The
+// inline script in index.html has usually started both requests while the modules were downloading (window.__early);
+// one it made for a key that has since rolled over is left alone.
+const early = (name, url) => (window.__early?.[name]?.url === url ? window.__early[name].res : fetch(url));
 async function loadLive() {
-  const key = morningKey();
-  const [snap, ros] = await Promise.all([
-    getJSON(`/api/league?d=${leagueKey()}`),
-    getJSON(`/api/ros?d=${key}`).catch((e) => ({ error: String(e.message || e) })),
+  window.__early ||= {}; // no head start: make sure the inline script can't start a second copy now
+  const league = `/api/league?d=${leagueKey()}`, ros = `/api/ros?d=${morningKey()}`;
+  const [snap, rosData] = await Promise.all([
+    getJSON(league, early('league', league)),
+    getJSON(ros, early('ros', ros)).catch((e) => ({ error: String(e.message || e) })),
   ]);
-  return { ...snap, ros };
+  return { ...snap, ros: rosData };
 }
 
 // the engine input for a league snapshot with the morning ROS values
@@ -100,10 +104,11 @@ function leagueInput(raw, extra = {}) {
   };
 }
 
-// a snapshot with the week in progress counted as final (the final call): scores so far, or each team's projected finish
-function asFinal(raw, mode) {
+// a snapshot with the week in progress counted as final (the final call): scores so far, or each team's projected finish.
+// pre is the league already computed from this snapshot (the week and its projections don't depend on the simulation,
+// so one run will do when there isn't one)
+function asFinal(raw, mode, pre = computeLeague({ ...leagueInput(raw).input, sims: 1 })) {
   if (mode === 'off') return raw;
-  const pre = computeLeague({ ...leagueInput(raw).input, sims: 500 });
   const w = pre.previews[0]?.week;
   if (!w) return raw;
   const proj = Object.fromEntries(pre.previews.flatMap((p) => [[p.a, p.projA], [p.b, p.projB]]));
@@ -131,14 +136,17 @@ async function load() {
   if (DATA.finalCall) buildFinal();
 }
 
-// computes a league snapshot into DATA (the helpers below all read DATA) and dresses it for the page
-function build(raw) {
+// computes a league snapshot into DATA (the helpers below all read DATA) and dresses it for the page. after: the
+// week-in-progress league these are the new rankings of (the final call); its final-scores page stays reachable.
+function build(raw, after = null) {
   const { input, ros, patched } = leagueInput(raw);
   DATA = computeLeague(input);
+  seenRanks.clear(); // new rankings make their entrance again
   DATA.raw = raw;
+  DATA.after = after;
   DATA.rosMeta = ros;
   // live-week mode: games are on (or there are points on the board) and this week is still unscored
-  DATA.liveMode = DATA.previews.length > 0 && (!!DATA.live || gameWindow());
+  DATA.liveMode = !after && DATA.previews.length > 0 && (!!DATA.live || gameWindow());
   // the final call: every game of the week is done (from the data alone), so the week counts as final before Sleeper
   // scores it
   DATA.finalCall = DATA.liveMode && !!DATA.live && nightBoard(DATA).every((g) => g.final);
@@ -150,38 +158,40 @@ function build(raw) {
   // the demo snapshot is frozen in time, so "fresh" is measured from its newest move
   const now = RAW.isDemo && DATA.feed.length ? DATA.feed[0].ts + 6 * 36e5 : Date.now();
   DATA.now = now;
-  DATA.stories = buildStories(DATA, { now, dateKey: chicagoDate(), editor: EDITOR });
   DATA.bull = MONEY_WEEK ? bullseye(DATA, MONEY_WEEK) : null;
-  // money week leads the headlines for as long as it runs
-  // after Sunday night football the night desk takes over the headlines
-  if (nightDesk() && DATA.live) {
-    const people = Object.fromEntries(DATA.teams.map((t) => [t.rid, firstName(t)]));
-    const ed = nightEdition(DATA, { dateKey: chicagoDate(), editor: EDITOR, people });
-    if (ed?.length) DATA.stories = { lead: ed[0], more: ed.slice(1), night: true };
-  }
-  // a one-off from the editor's desk, after the rest, for as long as it runs
-  const sass = sassStory();
-  if (sass) DATA.stories = { ...DATA.stories, more: [...DATA.stories.more, sass], extra: true };
-  const ms = moneyStory();
-  if (ms) DATA.stories = { ...DATA.stories, lead: ms, more: [DATA.stories.lead, ...DATA.stories.more].filter(Boolean) };
-  // once the week is final the headlines come down; the week after, the shakeup leads
-  if (DATA.finalCall) DATA.stories = null;
-  else if (!DATA.liveMode && shakeupOn()) DATA.stories = shakeupStories();
+  DATA.stories = after ? (shakeupOn() ? shakeupStories() : null) : headlines();
   DATA.key = keyMatchup(DATA);
   DATA.quips = matchupQuips(DATA);
   return DATA;
 }
 
+// the headline carousel for a league being played or about to be (after the final call it's the shakeup or nothing)
+function headlines() {
+  // once the week is final the headlines come down; the week after, the shakeup leads
+  if (DATA.finalCall) return null;
+  if (!DATA.liveMode && shakeupOn()) return shakeupStories();
+  let stories = buildStories(DATA, { now: DATA.now, dateKey: chicagoDate(), editor: EDITOR });
+  // after Sunday night football the night desk takes over the headlines
+  if (nightDesk() && DATA.live) {
+    const people = Object.fromEntries(DATA.teams.map((t) => [t.rid, firstName(t)]));
+    const ed = nightEdition(DATA, { dateKey: chicagoDate(), editor: EDITOR, people });
+    if (ed?.length) stories = { lead: ed[0], more: ed.slice(1), night: true };
+  }
+  // a one-off from the editor's desk, after the rest, for as long as it runs
+  const sass = sassStory();
+  if (sass) stories = { ...stories, more: [...stories.more, sass], extra: true };
+  // money week leads the headlines for as long as it runs
+  const ms = moneyStory();
+  if (ms) stories = { ...stories, lead: ms, more: [stories.lead, ...stories.more].filter(Boolean) };
+  return stories;
+}
+
 // The new power rankings after the final call: this week's final scores counted into records and points for. The
-// final-scores page stays reachable from it (DATA.after).
+// final-scores page stays reachable from it (DATA.after), and the shakeup compares against that week-in-progress league.
 function buildFinal() {
   const live = DATA;
   if (live.after || !live.finalCall) return live;
-  build(asFinal(RAW, 'now'));
-  DATA.liveMode = false;
-  DATA.after = live; // first: the shakeup compares against this week-in-progress snapshot
-  DATA.stories = shakeupOn() ? shakeupStories() : null;
-  return DATA;
+  return build(asFinal(RAW, 'now', live), live);
 }
 // render with another computed league in DATA (the final-scores page after the reveal)
 function withData(D, fn) { const keep = DATA; DATA = D; try { return fn(); } finally { DATA = keep; } }
@@ -210,16 +220,18 @@ const headshot = (t, cls) => {
   const m = member(t);
   return m ? `<img class="${cls}" src="${photoUrl(m.photo)}" alt="${esc(m.first)}" decoding="async" data-initials="${esc(m.first[0])}">` : avatar(t, cls);
 };
-function fixAvatars(root) {
-  root.querySelectorAll('img[data-initials]').forEach((img) => {
-    img.addEventListener('error', () => {
-      const s = document.createElement('span');
-      s.className = img.className + ' ph';
-      s.textContent = img.dataset.initials;
-      s.setAttribute('aria-hidden', 'true');
-      img.replaceWith(s);
-    }, { once: true });
-  });
+// a picture that fails to load (a Sleeper avatar gone missing) turns into its initials. Load errors don't bubble, so one
+// capturing listener on the document covers every picture any render ever adds.
+function initAvatarFallback() {
+  document.addEventListener('error', (e) => {
+    const img = e.target;
+    if (!(img instanceof HTMLImageElement) || !img.dataset.initials) return;
+    const s = document.createElement('span');
+    s.className = img.className + ' ph';
+    s.textContent = img.dataset.initials;
+    s.setAttribute('aria-hidden', 'true');
+    img.replaceWith(s);
+  }, true);
 }
 // ---------- the defending champion ----------
 const TROPHY = '<svg class="trophy" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M7 2.5h10v2h3.2v3.2a4.2 4.2 0 0 1-4.3 4.2 5.2 5.2 0 0 1-2.9 3.1v2.6h3.3v3.9H7.7v-3.9H11v-2.6a5.2 5.2 0 0 1-2.9-3.1 4.2 4.2 0 0 1-4.3-4.2V4.5H7zm0 4H5.8v1.2A2.2 2.2 0 0 0 7 9.6zm10 0v3.1a2.2 2.2 0 0 0 1.2-2V6.5z" fill="#FFC107" stroke="#12301A" stroke-width="1.3" stroke-linejoin="round"/></svg>';
@@ -344,7 +356,7 @@ function viewRankings() {
   const notice = DATA.rosError
     ? `<div class="notice glass"><strong>Results-only mode.</strong> The rest-of-season rankings couldn't be loaded (${esc(DATA.rosError)}), so these ranks use this season's results alone until they come back.</div>`
     : '';
-  const items = DATA.teams.map((t, i) => rankRow(t, i)).join('');
+  const items = DATA.teams.map(rankRow).join('');
   // while a week is being played the headlines move to the Live tab and these ranks hold until the week is final
   const held = !!DATA.liveMode;
   const head = `
@@ -360,7 +372,7 @@ function viewRankings() {
     ${held ? head : `<div class="hero">${leadStory()}${head}</div>`}
     ${hold}${notice}
     <div id="poll-slot">${pollCard()}</div>
-    <ol class="ranks enter">${items}</ol>
+    <ol class="ranks">${items}</ol>
     ${futuresBoard()}
     <details class="panel glass method-box">
       <summary><h2>How the score works</h2>${XP}</summary>
@@ -498,7 +510,8 @@ function shakeupStories() {
   // what the rankings page showed going into the week: the week-in-progress snapshot (DATA.after, the final call) on
   // the old formula; once Sleeper has scored the week there is no such snapshot, so the old formula's week 6 ranks
   const before = DATA.after?.raw;
-  const old = computeLeague({ ...leagueInput(before || DATA.raw).input, weights: OLD_WEIGHTS, sims: 200 });
+  // ranks never depend on the simulation, so one run is plenty
+  const old = computeLeague({ ...leagueInput(before || DATA.raw).input, weights: OLD_WEIGHTS, sims: 1 });
   const moves = DATA.teams.map((t) => {
     const o = old.byRid[t.rid], was = before ? o.powerRank : o.rankHistory[wk - 2] ?? o.powerRank;
     t.movement = was - t.powerRank; // the arrows on the ranking rows tell the same story as the headline
@@ -599,7 +612,6 @@ function paintPoll() {
   const el = $('#poll-slot');
   if (!el) return;
   el.innerHTML = pollCard();
-  fixAvatars(el);
 }
 async function castPoll(rid) {
   if (!confirm(`Lock in ${team(rid).name}? You can't change it.`)) return;
@@ -881,7 +893,6 @@ function openReveal() {
   el.innerHTML = pick();
   document.body.append(el);
   document.documentElement.classList.add('locked');
-  fixAvatars(el);
   el.querySelector('.unveil-team.mine, .unveil-team')?.focus();
   el.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !el.classList.contains('going')) close(); });
   el.addEventListener('click', async (e) => {
@@ -894,7 +905,6 @@ function openReveal() {
     store.set('ph-my-team', String(rid));
     $('#my-team').value = String(rid);
     el.innerHTML = told(withData(live, () => verdict(rid)));
-    fixAvatars(el);
     const v = el.querySelector('video');
     if (calm()) v?.remove(); else v?.play?.().catch(() => {});
     // let the verdict sink in while the bar fills; the new rankings are worked out underneath
@@ -1022,7 +1032,7 @@ function bindCarousel() {
     sl.classList.add('enter');
     clearTimeout(steering);
     steering = setTimeout(() => (steering = 0), 700); // ignore scroll events from our own smooth scroll
-    track.scrollTo({ left: idx * track.clientWidth, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    track.scrollTo({ left: idx * track.clientWidth, behavior: calm() ? 'auto' : 'smooth' });
   };
   // during a finger swipe, move the dots right away but resize only once the slide has settled
   let settle = 0;
@@ -1043,7 +1053,7 @@ function bindCarousel() {
   ['pointerup', 'pointercancel'].forEach((e) => track.addEventListener(e, () => car.classList.remove('held')));
 }
 
-function rankRow(t, i) {
+function rankRow(t) {
   const mv = t.movement > 0 ? `<span class="move up" title="Up ${t.movement} since last week">▲${t.movement}</span>`
     : t.movement < 0 ? `<span class="move down" title="Down ${-t.movement} since last week">▼${-t.movement}</span>`
     : '<span class="move flat" title="No change since last week">–</span>';
@@ -1058,7 +1068,7 @@ function rankRow(t, i) {
   ].filter(([k]) => t.parts?.[k] != null)
     .map(([k, label, cls, tip]) => `<div class="split-row" data-tip="${esc(tip)}"><span>${label}</span><span class="track"><i class="${cls}" style="width:${t.parts[k]}%"></i></span><span>${Math.round(t.parts[k])}</span></div>`).join('');
   return `
-  <li class="rank ${mine ? 'mine' : ''}" style="--i:${i}" data-rid="${t.rid}">
+  <li class="rank ${mine ? 'mine' : ''}" data-rid="${t.rid}">
     <span class="jersey" aria-hidden="true">${t.powerRank}</span>
     <div class="rank-card glass ${t.powerRank <= 3 ? 'rim' : ''}">
       <button class="rank-btn" aria-expanded="false" aria-controls="d-${t.rid}">
@@ -1751,9 +1761,11 @@ function viewLab() {
 // ---------- shell ----------
 // ---------- motion ----------
 // Everything here animates transform/opacity only, runs when on screen, and is skipped under reduced motion.
-const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+// each media query is parsed once; its .matches stays live as the window or the settings change
+const mq = (q) => { const m = matchMedia(q); return () => m.matches; };
+const calm = mq('(prefers-reduced-motion: reduce)');
 // phones and touch screens get the light set: no page morphs or scroll reveals, which cost the most on mobile GPUs
-const lite = () => matchMedia('(max-width: 760px), (pointer: coarse)').matches;
+const lite = mq('(max-width: 760px), (pointer: coarse)');
 const morphs = () => !!document.startViewTransition && !calm() && !lite();
 const ORDER = ['live', 'rankings', 'wire', 'matchups', 'trades', 'lab'];
 let currentView = null;
@@ -1772,35 +1784,81 @@ function placeInk({ settle = false } = {}) {
 
 // count big numbers up from zero, keeping their format (decimals, sign, %)
 const COUNT = '.score, .wr-num b, .odds b, .wire-stats b, .mu-team .pr, .gotw-score b, .cast-odds b';
-function countAll(els) {
-  // measure every final width first, then write, so this costs one layout instead of one per number
-  const todo = els.filter((el) => !el.dataset.counted).map((el) => ({ el, w: el.getBoundingClientRect().width }));
-  todo.forEach(({ el, w }) => countUp(el, w));
+// Reads first (final widths and display, one layout for the whole batch), writes later in startCounts, so a batch never
+// interleaves reads and writes. Each number's width is locked so growing digits can't nudge the layout.
+function measureCounts(els) {
+  return els.filter((el) => !el.dataset.counted).map((el) => ({ el, w: el.getBoundingClientRect().width, inline: getComputedStyle(el).display === 'inline' }));
 }
-function countUp(el, w) {
-  el.dataset.counted = '1';
-  const m = el.textContent.trim().match(/^([+-]?)(\d+(?:\.\d+)?)(%?)$/);
-  if (!m) return;
-  if (getComputedStyle(el).display === 'inline') el.style.display = 'inline-block';
-  el.style.minWidth = `${Math.ceil(w)}px`;
-  const target = Number(m[2]), dec = (m[2].split('.')[1] || '').length, t0 = performance.now(), dur = 750;
-  const tick = (now) => {
-    const k = Math.min(1, (now - t0) / dur), e = 1 - (1 - k) ** 3;
-    el.textContent = `${m[1]}${(target * e).toFixed(dec)}${m[3]}`;
-    if (k < 1) requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
+// one animation-frame loop drives every number counting on the page
+const counting = new Set();
+let countRaf = 0;
+function startCounts(plan, delay = 0) {
+  const t0 = performance.now() + delay;
+  for (const { el, w, inline } of plan) {
+    el.dataset.counted = '1';
+    const m = el.textContent.trim().match(/^([+-]?)(\d+(?:\.\d+)?)(%?)$/);
+    if (!m) continue;
+    if (inline) el.style.display = 'inline-block';
+    el.style.minWidth = `${Math.ceil(w)}px`;
+    counting.add({ el, sign: m[1], target: Number(m[2]), dec: (m[2].split('.')[1] || '').length, unit: m[3], t0 });
+  }
+  if (counting.size && !countRaf) countRaf = requestAnimationFrame(countFrame);
+}
+function countFrame(now) {
+  for (const c of counting) {
+    const k = Math.min(1, Math.max(0, (now - c.t0) / 750)), e = 1 - (1 - k) ** 3;
+    c.el.textContent = `${c.sign}${(c.target * e).toFixed(c.dec)}${c.unit}`;
+    if (k === 1) counting.delete(c);
+  }
+  countRaf = counting.size ? requestAnimationFrame(countFrame) : 0;
+}
+const countAll = (els) => startCounts(measureCounts(els));
+
+// The power rankings arrive as you scroll: the first time a row comes into view it rises and grows into place (CSS
+// .rank.arrive), a few at a time, its numbers counting up. Phones get this too: it's transform and opacity only, and
+// the rows are the point of the page. Rows already seen this visit (another tab and back, a new team picked) render in
+// place, so each row makes its entrance once; a new computed league (the final call) starts the set over.
+const seenRanks = new Set();
+let rankIo = null;
+function revealRanks(root) {
+  rankIo?.disconnect();
+  const rows = [...root.querySelectorAll('.ranks > .rank')].filter((el) => !seenRanks.has(el.dataset.rid));
+  if (!rows.length) return;
+  rows.forEach((el) => el.classList.add('pending'));
+  rankIo = new IntersectionObserver((entries) => {
+    const arriving = entries.filter((e) => e.isIntersecting).map((e) => e.target);
+    if (!arriving.length) return;
+    // measure every row's numbers before any row scales, so their locked widths are the real ones
+    const plans = arriving.map((el) => measureCounts([...el.querySelectorAll(COUNT)]));
+    arriving.forEach((el, k) => {
+      const d = Math.min(k, 4) * 70;
+      rankIo.unobserve(el);
+      seenRanks.add(el.dataset.rid);
+      startCounts(plans[k], d + 120); // the count starts as its row shows up
+      el.style.setProperty('--d', `${d}ms`);
+      el.classList.replace('pending', 'arrive');
+      el.addEventListener('animationend', function done(ev) {
+        if (ev.target !== el) return;
+        el.classList.remove('arrive');
+        el.removeEventListener('animationend', done);
+      });
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+  rows.forEach((el) => rankIo.observe(el));
 }
 
 // cards and panels rise in as they scroll into view, staggered within each batch
-const REVEAL = '.hero > .lead-car, .live-panel, .you-card, .notice, .gotw, .bull, .matchups > .mu, .wire-stats, .sec-title, .moves > li, .day > h3, .two-col aside > .panel, .lab-grid > .panel, .trade-bar, .trade-legend, .ideas > .idea, .method-box, .empty';
+const REVEAL = '.hero > .lead-car, .live-panel, .you-card, .notice, .gotw, .bull, .matchups > .mu, .wire-stats, .sec-title, .moves > li, .day > h3, .two-col aside > .panel, .lab-grid > .panel, .trade-bar, .trade-legend, .ideas > .idea, .futures, .method-box, .empty';
 let io = null;
 function reveal(root) {
   io?.disconnect();
+  rankIo?.disconnect();
   if (calm() || !('IntersectionObserver' in window)) return;
+  revealRanks(root);
   if (lite()) {
-    // phones: count the numbers on the first screen once; nothing runs while scrolling
-    countAll([...root.querySelectorAll(COUNT)].filter((el) => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; }));
+    // phones: count the numbers on the first screen once (ranking rows count as they arrive); nothing else runs
+    // while scrolling
+    countAll([...root.querySelectorAll(COUNT)].filter((el) => { if (el.closest('.rank')) return false; const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; }));
     return;
   }
   io = new IntersectionObserver((entries) => {
@@ -1820,7 +1878,6 @@ function reveal(root) {
     });
   }, { rootMargin: '0px 0px -6% 0px' });
   root.querySelectorAll(REVEAL).forEach((el) => { el.classList.add('reveal'); io.observe(el); });
-  root.querySelectorAll('.rank').forEach((el) => io.observe(el)); // ranking rows have their own rise; just count
 }
 
 const VIEWS = { live: viewLive, rankings: viewRankings, wire: viewWire, matchups: viewMatchups, trades: viewTrades, lab: viewLab };
@@ -1836,7 +1893,6 @@ function route({ fresh = false } = {}) {
     paintMe();
     const app = $('#app');
     app.innerHTML = VIEWS[key]();
-    fixAvatars(app);
     bind(key);
     if (fresh) { app.focus({ preventScroll: true }); window.scrollTo({ top: 0 }); }
     reveal(app);
@@ -1880,7 +1936,6 @@ function bind(key) {
         b.setAttribute('aria-expanded', open);
       })
     );
-    setTimeout(() => $('.ranks')?.classList.remove('enter'), 1400);
   }
   if (key === 'matchups') {
     $('.matchups')?.addEventListener('click', (e) => { const b = e.target.closest('.pick'); if (b && VOTES?.open) castVote(b); });
@@ -1943,21 +1998,32 @@ function initTeamPicker() {
 
 function initTooltips() {
   const tip = $('#tip');
+  // the tip is measured only when it gets new text, and follows the mouse with a transform, so moving costs no layout
+  let shownFor = null, w = 0, h = 0;
   const show = (el, x, y) => {
-    tip.textContent = el.dataset.tip;
-    tip.hidden = false;
-    const r = tip.getBoundingClientRect();
-    tip.style.left = `${Math.min(window.innerWidth - r.width - 8, Math.max(8, x + 14))}px`;
-    tip.style.top = `${Math.min(window.innerHeight - r.height - 8, y + 16)}px`;
+    if (el !== shownFor || tip.hidden) {
+      tip.textContent = el.dataset.tip;
+      tip.hidden = false;
+      shownFor = el;
+      ({ width: w, height: h } = tip.getBoundingClientRect());
+    }
+    const left = Math.min(innerWidth - w - 8, Math.max(8, x + 14)), top = Math.min(innerHeight - h - 8, y + 16);
+    tip.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
   };
-  const hide = () => (tip.hidden = true);
-  let touch = false;
+  const hide = () => { if (!tip.hidden) { tip.hidden = true; shownFor = null; } };
+  let touch = false, moved = null;
   document.addEventListener('pointerdown', (e) => (touch = e.pointerType !== 'mouse'), { passive: true });
+  // at most one update per frame, however fast the mouse reports
   document.addEventListener('pointermove', (e) => {
     if (e.pointerType !== 'mouse') return; // a finger dragging over marks would flash tips mid-scroll
-    const el = e.target.closest?.('[data-tip]');
-    if (el && el.dataset.tip) show(el, e.clientX, e.clientY); else hide();
-  });
+    if (!moved) requestAnimationFrame(() => {
+      const { target, x, y } = moved;
+      moved = null;
+      const el = target.closest?.('[data-tip]');
+      if (el && el.dataset.tip) show(el, x, y); else hide();
+    });
+    moved = { target: e.target, x: e.clientX, y: e.clientY };
+  }, { passive: true });
   // touch: tap a mark to see its numbers, tap anywhere else (or scroll) to dismiss
   document.addEventListener('click', (e) => {
     if (!touch) return;
@@ -1965,7 +2031,7 @@ function initTooltips() {
     if (el && el.dataset.tip && !el.closest('button')) show(el, e.clientX, e.clientY); else hide();
   });
   window.addEventListener('scroll', hide, { passive: true });
-  document.addEventListener('pointerleave', hide);
+  document.documentElement.addEventListener('pointerleave', hide); // the mouse left the window
 }
 
 // The kicker loader (#loading in index.html). Its 300 ms timer is started by the inline script right after it, so it
@@ -1991,6 +2057,7 @@ function startLoader() {
 }
 
 async function main() {
+  initAvatarFallback();
   initTooltips();
   const loader = startLoader();
   try {
