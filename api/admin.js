@@ -8,15 +8,18 @@
 //   status  → what's live (snapshot key and revision, published weights) and the draft, if any
 //   pull    → one fresh Sleeper snapshot into the draft (private; at most one pull every 2 minutes)
 //   draft   → the draft snapshot, for the page to preview rankings from
-//   publish → { data: true } makes the draft today's snapshot, { weights } (or weights: null for the defaults)
-//             sets the published power-score weights; either bumps the revision so visitors see it within a minute
+//   publish → { data: true } makes the draft today's snapshot and bumps the revision so visitors see it within a
+//             minute; { weights } (or weights: null for the defaults) only stages the power-score weights: nobody
+//             sees them until golive
+//   golive  → the staged weights become the live ones and the revision is bumped
+//   unstage → drops the staged weights
 //
 // Needs the Upstash store (same env vars as the fan picks); without it every action answers 503.
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { snapshot } from './league.js';
 import { redis, storeEnabled, pack, unpack } from '../lib/snapstore.js';
 import { leagueKey } from '../lib/newsclock.js';
-import { revision, bumpRevision, publishedConfig, setConfig } from '../lib/published.js';
+import { revision, bumpRevision, publishedConfig, setConfig, stagedConfig, setStaged } from '../lib/published.js';
 import { WEIGHTS } from '../lib/engine.js';
 
 const DEFAULT_HASH = '3dab31dab247d9ae12c994a19393e6f3ef14d2e9a45f2bbbaf307386b1b98dc3'; // sha256 of the default PIN
@@ -45,7 +48,7 @@ async function status(key) {
   const [draftMeta, lastPull] = await redis([['GET', 'ph:admin:draft-meta'], ['TTL', 'ph:admin:pull-gap']]);
   return {
     key, rev: await revision(key),
-    config: await publishedConfig(), defaults: WEIGHTS,
+    config: await publishedConfig(), staged: await stagedConfig(), defaults: WEIGHTS,
     draft: draftMeta ? JSON.parse(draftMeta) : null,
     nextPullIn: lastPull > 0 ? lastPull : 0,
   };
@@ -99,14 +102,29 @@ export default async function handler(req, res) {
           did.push('data');
         }
         if ('weights' in body) {
+          // weights wait in the staging slot until Dan sends them live
           const w = validWeights(body.weights);
-          await setConfig(w ? { weights: w, at: new Date().toISOString() } : null);
+          await setStaged({ weights: w, at: new Date().toISOString() });
           did.push(w ? 'weights' : 'default weights');
         }
         if (!did.length) return res.status(400).json({ error: 'Nothing to publish' });
-        const rev = await bumpRevision(key);
+        // only new data needs a new revision; staged weights change nothing visitors see
+        const rev = body.data ? await bumpRevision(key) : await revision(key);
         return res.status(200).json({ published: did, ...(await status(key)), rev });
       }
+
+      case 'golive': {
+        const staged = await stagedConfig();
+        if (!staged) return res.status(400).json({ error: 'No staged weights. Publish some first' });
+        await setConfig(staged.weights ? { weights: staged.weights, at: new Date().toISOString() } : null);
+        await setStaged(null);
+        const rev = await bumpRevision(key);
+        return res.status(200).json({ live: staged.weights ? 'weights' : 'default weights', ...(await status(key)), rev });
+      }
+
+      case 'unstage':
+        await setStaged(null);
+        return res.status(200).json(await status(key));
 
       default:
         return res.status(400).json({ error: 'Unknown action' });

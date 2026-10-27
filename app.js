@@ -1399,7 +1399,7 @@ function adminLogin(err = '') {
 
 function viewAdmin() {
   if (!adminState.status) return adminLogin(adminState.loginErr || '');
-  const st = adminState.status, pub = st.config?.weights;
+  const st = adminState.status, pub = st.config?.weights, staged = st.staged;
   const wk = DATA.previews[0]?.week;
   const when = (iso) => (iso ? new Date(iso).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'never');
   const draftOk = st.draft && st.draft.key === st.key;
@@ -1414,7 +1414,7 @@ function viewAdmin() {
   return `
     <section class="view-head"><div>
       <h1><span class="wk">Admin</span>Front office</h1>
-      <p>Pull fresh data, try out power-score weights, and publish when it looks right. Nothing here changes what anyone else sees until you press Publish.</p>
+      <p>Pull fresh data, try out power-score weights, and publish when it looks right. Published weights wait here until you press Update rankings live; nothing changes for anyone else before that.</p>
     </div></section>
     <div class="adm-grid">
       <section class="panel glass adm-status">
@@ -1422,6 +1422,7 @@ function viewAdmin() {
         <dl>
           <div><dt>League snapshot</dt><dd>${esc(st.key)}, revision ${st.rev}<small>${RAW.isDemo ? 'Demo snapshot on this page' : `Fetched ${esc(when(RAW.fetched))}`}</small></dd></div>
           <div><dt>Power-score weights</dt><dd>${pub ? 'Custom' : 'Default'}<small>${pub ? `Published ${esc(when(st.config.at))}` : 'The original 45 / 10 / 45 mix'}</small></dd></div>
+          ${staged ? `<div><dt>Waiting to go live</dt><dd>${staged.weights ? 'Custom weights' : 'Default weights'}<small>Published ${esc(when(staged.at))}, not live yet</small></dd></div>` : ''}
           <div><dt>Your draft</dt><dd>${st.draft ? `Pulled ${esc(when(st.draft.fetched))}` : 'None yet'}<small>${st.draft ? (draftOk ? 'Ready to publish' : 'From an earlier snapshot window: pull again to publish') : 'Private until published'}</small></dd></div>
         </dl>
         <div class="adm-actions">
@@ -1436,13 +1437,18 @@ function viewAdmin() {
         <div class="filters adm-seg" role="group" aria-label="Data">${seg('source', 'live', 'Live snapshot')}${st.draft ? seg('source', 'draft', 'Your draft') : ''}</div>
         <div class="filters adm-seg" role="group" aria-label="This week">${seg('week', 'off', `Through week ${DATA.meta.lastScored}`)}${wk ? `${seg('week', 'now', `Week ${wk} final as it stands`)}${seg('week', 'proj', `Week ${wk} projected finish`)}` : ''}</div>
         <div class="filters adm-seg" role="group" aria-label="Presets">
-          <button type="button" data-preset="default">Load default</button><button type="button" data-preset="proposed">Load proposed</button>${pub ? '<button type="button" data-preset="published">Load published</button>' : ''}
+          <button type="button" data-preset="default">Load default</button><button type="button" data-preset="proposed">Load proposed</button>${pub ? '<button type="button" data-preset="published">Load live</button>' : ''}${staged?.weights ? '<button type="button" data-preset="staged">Load waiting</button>' : ''}
         </div>
         <div class="adm-sliders">${Object.keys(WEIGHT_INFO).map(slider).join('')}</div>
         <div class="adm-actions">
           <button type="button" class="adm-btn primary" data-act="pub-weights">Publish these weights</button>
           ${pub ? '<button type="button" class="adm-btn" data-act="pub-default">Go back to default weights</button>' : ''}
         </div>
+        <div class="adm-actions">
+          <button type="button" class="adm-btn primary" data-act="golive" ${staged ? '' : 'disabled'}>Update rankings live</button>
+          ${staged ? '<button type="button" class="adm-btn" data-act="unstage">Discard waiting weights</button>' : ''}
+        </div>
+        <p class="sub">${staged ? `Waiting to go live: ${staged.weights ? 'your published weights' : 'the default weights'}. The power rankings tab keeps the current weights until you press Update rankings live.` : 'Publishing saves the weights here first. The power rankings tab only changes when you press Update rankings live.'}</p>
       </section>
     </div>
     <section class="panel glass adm-results" id="adm-results">${adminResults()}</section>`;
@@ -1502,22 +1508,33 @@ function paintAdminResults() {
 async function adminAct(act) {
   const confirmations = {
     'pub-data': 'Publish the draft? Everyone gets this snapshot within a minute.',
-    'pub-weights': 'Publish these weights? Everyone\'s power rankings switch to them within a minute.',
-    'pub-default': 'Go back to the default weights for everyone?',
+    'pub-weights': 'Publish these weights? They wait here until you press Update rankings live.',
+    'pub-default': 'Publish the default weights? They wait here until you press Update rankings live.',
+    golive: 'Update the power rankings for everyone with the waiting weights? Visitors see them within a minute.',
+    unstage: 'Discard the waiting weights? The live rankings stay as they are.',
   };
   if (confirmations[act] && !confirm(confirmations[act])) return;
-  adminState.msg = act === 'pull' ? 'Pulling from Sleeper…' : 'Publishing…';
+  adminState.msg = act === 'pull' ? 'Pulling from Sleeper…' : act === 'golive' ? 'Updating the live rankings…' : act === 'unstage' ? 'Discarding…' : 'Publishing…';
   route();
   try {
     if (act === 'pull') {
       const r = await adminCall('pull');
       adminState.status = r; adminState.draft = r.snapshot; adminState.source = 'draft';
       adminState.msg = `Pulled ${new Date(r.snapshot.fetched).toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' })}. The preview now uses your draft.`;
+    } else if (act === 'golive') {
+      const r = await adminCall('golive');
+      adminState.status = r;
+      adminState.msg = `Rankings updated live with the ${r.live} (revision ${r.rev}). Visitors pick it up within a minute; reload this page to see it as they will.`;
+    } else if (act === 'unstage') {
+      adminState.status = await adminCall('unstage');
+      adminState.msg = 'Waiting weights discarded. The live rankings are unchanged.';
     } else {
       const extra = act === 'pub-data' ? { data: true } : act === 'pub-weights' ? { weights: adminState.weights } : { weights: null };
       const r = await adminCall('publish', extra);
       adminState.status = r;
-      adminState.msg = `Published ${r.published.join(' and ')} (revision ${r.rev}). Visitors pick it up within a minute; reload this page to see it as they will.`;
+      adminState.msg = act === 'pub-data'
+        ? `Published data (revision ${r.rev}). Visitors pick it up within a minute; reload this page to see it as they will.`
+        : `Published ${r.published.join(' and ')}. Nobody sees them yet: press Update rankings live when you're ready.`;
     }
   } catch (e) {
     if (e.body?.key) adminState.status = e.body;
@@ -1551,7 +1568,7 @@ function bindAdmin() {
   }));
   document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => {
     const p = b.dataset.preset;
-    adminState.weights = { ...(p === 'default' ? WEIGHTS : p === 'published' ? adminState.status.config.weights : WEIGHTS_PROPOSED) };
+    adminState.weights = { ...(p === 'default' ? WEIGHTS : p === 'published' ? adminState.status.config.weights : p === 'staged' ? adminState.status.staged.weights : WEIGHTS_PROPOSED) };
     route();
   }));
   document.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', () => adminAct(b.dataset.act)));

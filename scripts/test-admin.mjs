@@ -84,17 +84,31 @@ check('...which serves the snapshot with the default weights', v.code === 200 &&
 const W = { rosProj: 0.22, depth: 0.05, sos: 0.06, allPlay: 0.17, pfPerGame: 0.1, winPct: 0.1, standing: 0.12, form: 0.12, lastWeek: 0.06 };
 const calls = sleeperCalls;
 r = await A({ password: '6906', action: 'publish', weights: W, data: true }, '2.2.2.2');
-check('publish weights and the draft: revision 1', r.code === 200 && r.body.rev === 1 && r.body.published.join() === 'data,weights', r);
+check('publish weights and the draft: revision 1, weights staged not live', r.code === 200 && r.body.rev === 1 && r.body.published.join() === 'data,weights' && r.body.staged?.weights?.standing === 0.12 && r.body.config === null, r);
 v = await call(league, { method: 'GET', url: plain });
 check('visitors: the plain key now redirects to revision 1', v.code === 307 && v.headers.Location === `${plain}.r1`, v);
 v = await call(league, { method: 'GET', url: `${plain}.r1` });
-check('...which carries the published weights', v.code === 200 && v.body.config?.weights?.standing === 0.12, v.body?.config);
-check('...and no Sleeper call for any of it', sleeperCalls === calls, `${sleeperCalls - calls} calls`);
+check('...which still carries the default weights', v.code === 200 && v.body.config === null, v.body?.config);
 v = await call(league, { method: 'GET', url: `${plain}.r0` });
 check('the old revision URL redirects to the new one', v.code === 307 && v.headers.Location === `${plain}.r1`, v);
 
+r = await A({ password: '6906', action: 'publish', weights: W }, '2.2.2.2');
+check('publishing weights alone: no new revision', r.code === 200 && r.body.rev === 1 && r.body.config === null, r);
+r = await A({ password: '6906', action: 'golive' }, '2.2.2.2');
+check('go live: revision 2, staged weights now live, staging cleared', r.code === 200 && r.body.rev === 2 && r.body.config?.weights?.standing === 0.12 && r.body.staged === null, r);
+v = await call(league, { method: 'GET', url: `${plain}.r2` });
+check('...visitors get the weights', v.code === 200 && v.body.config?.weights?.standing === 0.12, v.body?.config);
+check('...and no Sleeper call for any of it', sleeperCalls === calls, `${sleeperCalls - calls} calls`);
+r = await A({ password: '6906', action: 'golive' }, '2.2.2.2');
+check('go live with nothing staged is refused', r.code === 400, r);
+
 r = await A({ password: '6906', action: 'publish', weights: null }, '2.2.2.2');
-check('back to default weights: revision 2, config cleared', r.code === 200 && r.body.rev === 2 && r.body.config === null, r);
+check('staging the default weights leaves the live ones alone', r.code === 200 && r.body.rev === 2 && r.body.config?.weights && r.body.staged?.weights === null, r);
+r = await A({ password: '6906', action: 'unstage' }, '2.2.2.2');
+check('discard: staging cleared, live unchanged', r.code === 200 && r.body.staged === null && r.body.config?.weights, r);
+await A({ password: '6906', action: 'publish', weights: null }, '2.2.2.2');
+r = await A({ password: '6906', action: 'golive' }, '2.2.2.2');
+check('back to default weights: revision 3, config cleared', r.code === 200 && r.body.rev === 3 && r.body.config === null, r);
 
 db.set('ph:admin:draft-meta', JSON.stringify({ key: '1999-01-01' }));
 r = await A({ password: '6906', action: 'publish', data: true }, '2.2.2.2');
