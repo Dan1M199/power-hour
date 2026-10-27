@@ -563,10 +563,11 @@ function shakeupStories() {
     : '';
   const lead = {
     type: 'shakeup', kicker: 'Power rankings shakeup', tone: 'good', stamp: 'Shakeup', rids: [up.t.rid, down.t.rid].filter((r, i, a) => a.indexOf(r) === i),
-    headline: fresh
-      ? `Huge power rankings shakeup: week ${wk} results and a sharper new algorithm move ${moved} of ${DATA.teams.length} teams`
-      : `Huge power rankings shakeup: week ${wk} results move ${moved} of ${DATA.teams.length} teams`,
+    headline: up.d > 0 && down.d < 0
+      ? `Power rankings earthquake: ${firstName(up.t)} soars ${up.d}, ${firstName(down.t)} crashes ${-down.d}. Nobody is safe`
+      : `Power rankings earthquake: ${moved} of ${DATA.teams.length} teams flipped. Nobody is safe`,
     deck: [
+      `${fresh ? 'A brand-new formula and a' : 'A'} wild week ${wk} just flipped ${moved} of ${DATA.teams.length} teams.`,
       formula,
       up.d > 0 ? `${up.t.name} is the big winner, up ${up.d} spot${up.d === 1 ? '' : 's'} to ${ordinal(up.t.powerRank)}.` : '',
       down.d < 0 ? `${down.t.name} takes the fall, down ${-down.d} to ${ordinal(down.t.powerRank)}.` : '',
@@ -809,6 +810,37 @@ function revealCta(seen) {
     : '<button type="button" class="cta" data-reveal>Done with Live Ranks, Show me the Power Ranking</button>'}</div>`;
 }
 
+// the button turns into a football and flies off like a deep pass, then the team picker opens
+const FOOTBALL = `<svg viewBox="-50 -50 100 100" aria-hidden="true"><defs><clipPath id="fb-clip"><path d="M-47 0Q0-42 47 0Q0 42-47 0Z"/></clipPath></defs>
+  <g transform="rotate(-38)"><path d="M-47 0Q0-42 47 0Q0 42-47 0Z" fill="#7B3735"/>
+  <g clip-path="url(#fb-clip)" fill="#FDE9E3"><rect x="-33" y="-40" width="9" height="80"/><rect x="24" y="-40" width="9" height="80"/></g>
+  <g stroke="#fff" stroke-width="3.4" stroke-linecap="round"><path d="M-17 0H17"/><path d="M-12-5V5M-6-5V5M0-5V5M6-5V5M12-5V5"/></g></g></svg>`;
+function passThenReveal(btn) {
+  if (calm() || !btn.animate || $('.unveil') || btn.classList.contains('thrown')) return openReveal();
+  btn.classList.add('thrown');
+  const r = btn.getBoundingClientRect(), size = 72;
+  const ball = document.createElement('div');
+  ball.className = 'pass-ball';
+  ball.innerHTML = FOOTBALL;
+  ball.style.left = `${r.left + r.width / 2 - size / 2}px`;
+  ball.style.top = `${r.top + r.height / 2 - size / 2}px`;
+  document.body.append(ball);
+  // the snap: the button squeezes down into the ball
+  btn.animate([{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(0.15)', opacity: 0 }], { duration: 260, easing: 'ease-in', fill: 'forwards' });
+  ball.animate([{ transform: 'scale(0.2) rotate(0deg)', opacity: 0 }, { transform: 'scale(1) rotate(0deg)', opacity: 1 }], { duration: 260, easing: 'ease-out', fill: 'forwards' });
+  // the throw: up over the field in an arc, a tight spiral, shrinking as it goes deep, out past the top right
+  const dx = innerWidth - r.left + 120, dy = -(r.top + 160), h = Math.min(260, innerHeight * 0.35), frames = [];
+  for (let k = 0; k <= 20; k++) {
+    const t = k / 20, x = dx * t, y = dy * t - h * 4 * t * (1 - t);
+    frames.push({ transform: `translate(${x}px, ${y}px) rotate(${-25 + 30 * t}deg) scale(${1 - 0.45 * t}, ${(1 - 0.45 * t) * (0.75 + 0.25 * Math.abs(Math.cos(t * Math.PI * 6)))})` });
+  }
+  setTimeout(() => {
+    const fly = ball.animate(frames, { duration: 1100, easing: 'cubic-bezier(0.3, 0.1, 0.6, 1)', fill: 'forwards' });
+    fly.finished.then(() => ball.remove());
+    setTimeout(() => { openReveal(); btn.getAnimations().forEach((a) => a.cancel()); btn.classList.remove('thrown'); }, 850);
+  }, 260);
+}
+
 // the verdict on one team's week, from the final scores
 function verdict(rid) {
   const { rows, standings } = liveWeek();
@@ -982,9 +1014,9 @@ function leadStory() {
       <span class="cast-odds"><b>${pct(t.playoffPct)}</b><small>playoffs</small></span>
     </div>`).join('');
   const slide = (st, i) => `
-    <article class="slide" id="slide-${i}" role="group" aria-roledescription="slide" aria-label="Headline ${i + 1} of ${stories.length}">
+    <article class="slide${st.type === 'shakeup' ? ' breaking' : ''}" id="slide-${i}" role="group" aria-roledescription="slide" aria-label="Headline ${i + 1} of ${stories.length}">
       <div class="slide-top">
-        <p class="kicker"><span>${i ? (st.type === 'monday' || st.type === 'locked' || (st.type === 'sass' && s.night) ? 'Tonight' : 'Also today') : esc(date)}</span><span class="k">${esc(st.kicker)}</span></p>
+        <p class="kicker">${st.type === 'shakeup' ? '<span class="brk"><i aria-hidden="true"></i>Breaking</span>' : ''}<span>${i ? (st.type === 'monday' || st.type === 'locked' || (st.type === 'sass' && s.night) ? 'Tonight' : 'Also today') : esc(date)}</span><span class="k">${esc(st.kicker)}</span></p>
         ${leadFaces(st)}
       </div>
       <${i ? 'h2' : 'h1'} class="lead-hed">${esc(st.headline)}</${i ? 'h2' : 'h1'}>
@@ -2097,7 +2129,7 @@ function bind(key) {
     }
   }
   if (key === 'live') bindCarousel();
-  document.querySelectorAll('[data-reveal]').forEach((b) => b.addEventListener('click', openReveal));
+  document.querySelectorAll('[data-reveal]').forEach((b) => b.addEventListener('click', () => passThenReveal(b)));
   if (key === 'rankings') {
     bindLock();
     if (!DATA.liveMode) bindCarousel();

@@ -1071,6 +1071,15 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .rehearse-strip a { color: var(--ink); font-weight: 800; }
 a.adm-btn { display: inline-block; text-decoration: none; }
 
+/* the reveal button's deep pass (passThenReveal) */
+.pass-ball { position: fixed; z-index: 65; width: 72px; height: 72px; pointer-events: none; will-change: transform; }
+.pass-ball svg { display: block; width: 100%; height: 100%; }
+/* the shakeup lead: a red breaking tag and a yellow headline */
+.slide.breaking .lead-hed { color: var(--yellow); }
+.brk { display: inline-flex; align-items: center; gap: 6px; color: var(--chalk) !important; background: var(--flag) !important; box-shadow: none !important; }
+.brk i { width: 8px; height: 8px; border-radius: 50%; background: var(--chalk); animation: brk-blink 1s steps(2, start) infinite; }
+@keyframes brk-blink { to { visibility: hidden; } }
+
 /* ---------- fan poll on top of the power rankings ---------- */
 .poll { margin: 0 0 26px; padding: 20px 22px; border-radius: var(--r-lg); }
 .poll h2 { margin: 0 0 4px; font: 900 clamp(24px, 2.6vw, 32px)/1.05 var(--display); color: var(--ink); }
