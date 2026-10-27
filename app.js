@@ -39,6 +39,8 @@ const tick = () => (AT ? +AT + (Date.now() - T0) : Date.now()); // the clock sti
 // at 10:45pm, its tab hidden and a countdown in its place. Past that time it stays shut while the week is still being
 // played (Monday night running long), until Tuesday 6am at the latest. Set to null to drop it.
 const RANKINGS_LOCK = { until: Date.parse('2026-10-26T22:45:00-05:00'), end: Date.parse('2026-10-27T06:00:00-05:00') };
+// before the final call the whole site waits behind the countdown (the admin page and a rehearsal excepted)
+const siteLocked = () => !!RANKINGS_LOCK && !REHEARSE && tick() < RANKINGS_LOCK.until;
 function rankingsLocked() {
   if (!RANKINGS_LOCK || DATA.after || DATA.finalCall) return false;
   const now = tick();
@@ -394,18 +396,18 @@ function viewRankings() {
 
 // the rankings page while it's shut: a scoreboard counting down to the final call
 const hms = (ms) => { const t = Math.max(0, Math.floor(ms / 1000)); return [Math.floor(t / 3600), Math.floor(t / 60) % 60, t % 60].map((x) => String(x).padStart(2, '0')).join(':'); };
-function viewLocked() {
+function viewLocked(site = false) {
   const left = RANKINGS_LOCK.until - tick();
   return `
     <section class="view-head"><div>
-      <h2 class="page-title"><span class="wk">Back after the game</span>Power Rankings</h2>
-      <p>Week ${DATA.meta.lastScored + 1} is wrapping up, and the new power rankings are on the way.</p>
+      <h2 class="page-title"><span class="wk">Back at 10:45pm</span>${site ? 'The Power Hour' : 'Power Rankings'}</h2>
+      <p>Week ${DATA.meta.lastScored + 1} is wrapping up. Final scores and the new power rankings are on the way.</p>
     </div></section>
-    <section class="lock glass rim" aria-label="Power rankings countdown">
-      <p class="lock-msg">This page will be live after the game.</p>
+    <section class="lock glass rim" aria-label="Countdown to 10:45pm">
+      <p class="lock-msg">${site ? 'Check back in at 10:45pm.' : 'This page will be live after the game.'}</p>
       ${left > 0
         ? `<div class="lock-clock" data-lock role="timer" aria-live="off">${hms(left)}</div>
-          <p class="lock-sub">Tonight at 10:45pm Central. Until then, follow the games on the <a href="#live">Live</a> tab.</p>`
+          <p class="lock-sub">${site ? 'Tonight at 10:45pm Central the final scores go up and the new power rankings open. Keep this page open and it loads by itself.' : 'Tonight at 10:45pm Central. Until then, follow the games on the <a href="#live">Live</a> tab.'}</p>`
         : `<div class="lock-clock wait">Final whistle pending</div>
           <p class="lock-sub">The game is still going. The rankings open the moment every game is final. Check back soon.</p>`}
     </section>`;
@@ -424,7 +426,7 @@ function bindLock() {
     el.textContent = 'Pulling the final scores…';
     // a fresh load picks up the final snapshot; a few seconds of spread so not every open page asks at once, and
     // under ?at= (a fixed pretend time) there is no new snapshot to get, so it just re-renders
-    if (AT) route(); else setTimeout(() => location.reload(), 3000 + Math.random() * 12000);
+    if (AT) { paintTabs(); route(); } else setTimeout(() => location.reload(), 3000 + Math.random() * 12000);
   }, 1000);
 }
 
@@ -2072,9 +2074,10 @@ function route({ fresh = false } = {}) {
     placeInk();
     paintMe();
     const app = $('#app');
-    app.innerHTML = VIEWS[key]();
+    const shut = siteLocked() && key !== 'admin';
+    app.innerHTML = shut ? viewLocked(true) : VIEWS[key]();
     fixAvatars(app);
-    bind(key);
+    if (shut) bindLock(); else bind(key);
     if (fresh) { app.focus({ preventScroll: true }); window.scrollTo({ top: 0 }); }
     reveal(app);
     currentView = key;
@@ -2166,6 +2169,7 @@ function paintTabs() {
   a.hidden = !DATA.liveMode && !DATA.after;
   a.textContent = fin ? 'Final' : 'Live';
   $('.tabs a[data-view="rankings"]').hidden = rankingsLocked(); // shut until the final call
+  $('.tabs').hidden = siteLocked(); // the whole site waits for the countdown
   $('.brand').setAttribute('href', DATA.liveMode ? '#live' : '#rankings');
   placeInk({ settle: true });
 }

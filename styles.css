@@ -85,6 +85,7 @@ button, select { font: inherit; color: inherit; }
 .brand-text { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
 .brand-text strong { font: 800 21px/1 var(--display); letter-spacing: 0.01em; }
 .brand-text small { color: var(--ink-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tabs[hidden] { display: none; }
 .tabs { position: relative; display: flex; gap: 4px; margin: 0 auto; padding: 4px; border-radius: 999px; background: var(--tile); }
 .tab-ink { position: absolute; top: 4px; bottom: 4px; left: 0; width: 0; border-radius: 999px; pointer-events: none; view-transition-name: tab-ink;
   background: var(--amber); box-shadow: 0 3px 0 var(--ledge-gold); }
