@@ -11,14 +11,14 @@ import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDe
 
 // ---------- config ----------
 const SOURCE_NAMES = { fp: 'FantasyPros', ds: 'DraftSharks', ll: 'LeagueLogs' };
-// the site's author: his own lineup blunders always make the lead story
-const EDITOR = { user: 'dmir9999', name: 'Dan' };
+// the site's author, by Sleeper display name: their own lineup blunders always make the lead story, and the footer
+// credits them. null for nobody. Example: { user: 'sleeperName', name: 'First name' }
+const EDITOR = null;
 // money week: whoever scores closest to the target, over or under, takes the doubled bonus (lib/bullseye.js). The board
-// shows from now through the week after, then disappears on its own; set to null to drop it early.
-const MONEY_WEEK = {
-  week: 7, target: 120, prize: 80, usual: 40, title: "Mo's birthday bullseye", honoree: '1004163936612089856',
-  why: "120 is 10/20, Commissioner Mo's birthday", flyer: 'assets/money-week-flyer.jpg',
-};
+// shows from now through the week after, then disappears on its own; null when there isn't one. Example:
+// { week: 9, target: 120, prize: 80, usual: 40, title: 'Money week bullseye', honoree: '<sleeper user_id>',
+//   why: 'Why 120', flyer: 'assets/money-week-flyer.jpg' }   (honoree and flyer are optional)
+const MONEY_WEEK = null;
 // The news clock (lib/newsclock.js): the hold on Sunday's news, the late pull after Sunday night football, the night
 // edition and the game window. ?at=2026-10-25T22:45-05:00 pretends it's that moment for the page (not for the data:
 // snapshot keys always follow the real clock, and the API redirects any other key to the current one).
@@ -35,8 +35,8 @@ const onHold = () => isOnHold(clock());
 const gameWindow = () => inGameWindow(clock());
 const nightDesk = () => isNightDesk(clock());
 
-// last season's champion carries a trophy wherever their team shows up
-const CHAMPION = { user: '1004111276118761472', season: 2025 };
+// last season's champion carries a trophy wherever their team shows up. Example: { user: '<sleeper user_id>', season: 2025 }
+const CHAMPION = null;
 
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -177,9 +177,6 @@ function headlines() {
     const ed = nightEdition(DATA, { dateKey: chicagoDate(), editor: EDITOR, people });
     if (ed?.length) stories = { lead: ed[0], more: ed.slice(1), night: true };
   }
-  // a one-off from the editor's desk, after the rest, for as long as it runs
-  const sass = sassStory();
-  if (sass) stories = { ...stories, more: [...stories.more, sass], extra: true };
   // money week leads the headlines for as long as it runs
   const ms = moneyStory();
   if (ms) stories = { ...stories, lead: ms, more: [stories.lead, ...stories.more].filter(Boolean) };
@@ -254,7 +251,7 @@ function moneyStory() {
   const [a, b] = B.rows, A = team(a.rid), Bt = team(b.rid);
   if (B.state === 'final') {
     return { ...base, rids: [a.rid], stamp: `+${money(M.prize)}`, headline: `${firstName(A)} hit the bullseye and banks ${money(M.prize)}`,
-      deck: `${A.name} scored ${f1(a.score)} in week ${M.week}, ${awayText(a)}, the closest anyone came to ${M.target}. ${Bt.name} missed by ${f1(b.dist)}. Happy birthday, Commish.` };
+      deck: `${A.name} scored ${f1(a.score)} in week ${M.week}, ${awayText(a)}, the closest anyone came to ${M.target}. ${Bt.name} missed by ${f1(b.dist)}.` };
   }
   const live = B.state === 'live';
   return { ...base, rids: [a.rid, b.rid],
@@ -323,9 +320,9 @@ function bullBoard() {
       <div class="bull-copy">
         <p class="kicker"><span>Money week</span><span class="k">Week ${M.week} bonus</span></p>
         <h2 id="bull-hed">${esc(M.title)}</h2>
-        <p class="lead-deck">Closest to ${M.target} points, over or under, wins it all. ${esc(M.why)}. Happy birthday, Commish.</p>
+        <p class="lead-deck">Closest to ${M.target} points, over or under, wins it all. ${esc(M.why || '')}</p>
         <div class="ticket" aria-label="Prize ${money(M.prize)}, doubled from ${money(M.usual)}"><s>${money(M.usual)}</s><b>${money(M.prize)}</b><small>prize, doubled</small></div>
-        <a class="flyer" href="${asset(M.flyer)}" target="_blank" rel="noopener"><img src="${asset(M.flyer)}" alt="Money week flyer: ${esc(M.title)}, closest to ${M.target} wins ${money(M.prize)}" loading="lazy"><span>Open the flyer</span></a>
+        ${M.flyer ? `<a class="flyer" href="${asset(M.flyer)}" target="_blank" rel="noopener"><img src="${asset(M.flyer)}" alt="Money week flyer: ${esc(M.title)}, closest to ${M.target} wins ${money(M.prize)}" loading="lazy"><span>Open the flyer</span></a>` : ''}
       </div>
       ${B.rows.length ? `<div class="bull-chart">${bullTarget(B)}<p class="sub">${status}</p></div>
       <div class="bull-list">
@@ -387,12 +384,13 @@ function viewRankings() {
     </details>`;
 }
 
-// ---------- the important message: Dan's video, taking over the power rankings page ----------
+// ---------- the important message: a video taking over the power rankings page ----------
 // The first time a device sees the power rankings (not the countdown or the on-hold page), a full-screen card says an
 // important message is incoming, counts down, then plays the video with sound. Phones block sound without a tap, so if
 // the browser refuses it shows a "Tap to play" button instead. Seen once it ends or is skipped; a chip on the page plays
 // it again. It only appears once the file is actually there. Set MESSAGE_VIDEO to null to drop it.
-const MESSAGE_VIDEO = { id: 'w7-message', src: 'assets/important-message.mp4' };
+// Example: { id: 'w7-message', src: 'assets/important-message.mp4' } (a new id shows it again to everyone)
+const MESSAGE_VIDEO = null;
 const messageSeen = () => store.get(`ph-video-${MESSAGE_VIDEO.id}`) === '1';
 const messageOn = () => !!MESSAGE_VIDEO && !window.__DEMO__ && !DATA.liveMode;
 let messageReady = null; // the HEAD check for the file, once
@@ -436,69 +434,15 @@ async function maybeMessage(force = false) {
   start();
 }
 
-// ---------- the editor's one-off headlines ----------
-// Dan's request for week 7: an extra headline for Chubb in my Jeanty bragging about Jaxon Smith-Njigba's big Sunday
-// night. JSN's points come from the live data once his game shows as played; until the snapshot catches up, the number
-// Dan reported stands in. Gone after Tuesday 6am Central. Set SASS to null to drop it.
-const SASS = { owner: '857297655477444608', week: 7, until: Date.parse('2026-10-27T06:00:00-05:00'), star: 'Jaxon Smith-Njigba', reported: 26.8 };
-function sassStory() {
-  if (!SASS || clock() >= SASS.until) return null;
-  const t = DATA.teams.find((x) => x.ownerId === SASS.owner);
-  const p = t && DATA.previews.find((x) => x.week === SASS.week && (x.a === t.rid || x.b === t.rid));
-  if (!p) return null;
-  const side = p.a === t.rid ? 'a' : 'b', opp = team(side === 'a' ? p.b : p.a);
-  const mine = side === 'a' ? { proj: p.projA, banked: p.liveA || 0, win: p.winA } : { proj: p.projB, banked: p.liveB || 0, win: 1 - p.winA };
-  const theirs = side === 'a' ? { banked: p.liveB || 0 } : { banked: p.liveA || 0 };
-  const bd = breakdown(DATA, p), other = side === 'a' ? 'b' : 'a';
-  const rows = bd.rows.map((r) => r[side]).filter(Boolean);
-  const jsn = rows.find((x) => x.name === SASS.star);
-  // who the other side still has on Monday night, best projection first
-  const still = (xs) => xs.filter((x) => x && !x.played && !x.out && !x.bye && x.proj > 0).sort((x, y) => y.proj - x.proj);
-  const oppLeft = still(bd.rows.map((r) => r[other]));
-  const pts = jsn?.played ? jsn.proj : SASS.reported, pre = jsn?.pre;
-  const left = rows.filter((x) => !x.played && !x.out && !x.bye && x.proj > 0 && x !== jsn);
-  const rank = DATA.previews.flatMap((q) => [q.projA, q.projB]).sort((x, y) => y - x).indexOf(mine.proj) + 1;
-  const N = firstName(t), O = opp.name, gap = Math.abs(mine.banked - theirs.banked);
-  // "a 16.7" but "an 11.6", "an 18", "an 8": the article follows how the number is said
-  const an = (x) => { const i = Math.floor(x); return i === 11 || i === 18 || String(i)[0] === '8' ? 'an' : 'a'; };
-  const seed = [...chicagoDate()].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7);
-  const pick = (xs) => xs[Math.abs(seed) % xs.length];
-  const ahead = mine.win >= 0.5;
-  const behind = mine.banked > theirs.banked, savior = oppLeft[0];
-  // ahead with the other side still playing Monday: the brag comes with the miracle they'd need
-  const headline = behind && savior
-    ? pick([
-      `JSN went nuclear for ${f1(pts)}. Now ${O} needs a Monday night miracle from ${savior.name}`,
-      `Jaxon Smith-Njigba hung ${f1(pts)} on ${O}, and only ${savior.name} can save them now`,
-    ])
-    : pick([
-      `Jaxon Smith-Njigba just hung ${f1(pts)} on the league. Chubb in my Jeanty would like a word`,
-      `JSN went nuclear for ${f1(pts)} and Chubb in my Jeanty is not being humble about it`,
-    ]);
-  const lead = mine.banked >= theirs.banked ? `${f1(gap)} behind` : `${f1(gap)} ahead, for now`;
-  const share = mine.banked > 0 && jsn?.played ? Math.round((pts / mine.banked) * 100) : null;
-  const deck = [
-    `${N} would never brag, so we will.`,
-    `Jaxon Smith-Njigba put up ${f1(pts)} points${pre ? ` on ${an(pre)} ${f1(pre)}-point projection, ${(pts / pre).toFixed(1)} times what the experts saw coming` : ''}${share ? `, ${share}% of everything Chubb in my Jeanty has scored this week` : ''}.`,
-    'Anyone who let him get away can sit quietly.',
-    left.length
-      ? `Chubb in my Jeanty is ${ordinal(rank)} in the league this week by projection, with ${left.slice(0, 2).map((x) => x.name).join(' and ')} still to play Monday.`
-      : `Chubb in my Jeanty is done for the week, ${ordinal(rank)} in the league by projection.`,
-    behind && savior
-      ? `${O} is ${f1(gap)} back with ${oppLeft.slice(0, 2).map((x) => x.name).join(' and ')} left on Monday night. ${oppLeft.length === 1 ? `${savior.name} would need ${f1(gap)} on his own` : `They'd need ${f1(gap)} between them`}, against ${oppLeft.length === 1 ? `${an(savior.pre ?? savior.proj)} ${f1(savior.pre ?? savior.proj)}-point projection${savior.ceil ? ` and ${an(savior.ceil)} ${f1(savior.ceil)}-point ceiling` : ''}` : `${f1(oppLeft.reduce((a, x) => a + (x.pre ?? x.proj), 0))} projected`}. That's not a comeback, that's a Monday night miracle. ${pct(mine.win)} to win.`
-      : `${O} is ${lead}. ${pct(mine.win)} to win.`,
-    ahead ? "You're welcome, league." : 'Whatever happens from here, JSN did his part. The rest of the lineup knows what it did.',
-  ].join(' ');
-  return { type: 'sass', kicker: 'A note from the desk', tone: 'good', stamp: 'JSN szn', rids: [t.rid, opp.rid], headline, deck };
-}
-
 // ---------- the week 7 shakeup ----------
 // Once week 7 is final (from the final call, or Sleeper's own scoring), the power rankings page leads with the shakeup:
 // how far the new ranks moved from where teams stood after week 6 on the old formula (OLD_WEIGHTS, what everyone saw),
 // then week 7's closest games, then the money week result. The bottom six of the new ranks get a fan poll
 // (api/poll.js). Set SHAKEUP to null to drop it all.
-// feature: team names the headline is about instead of the biggest riser and faller (Dan's pick for week 7)
-const SHAKEUP = { week: 7, feature: ['Anita Max Wynn', 'Chubb in my Jeanty'], poll: { id: 'w7-bottom6', question: 'Which one of the bottom 6 has the best chance at a playoff run?' } };
+// feature: team names the headline is about instead of the biggest riser and faller. null when there isn't one. Example:
+// { week: 7, feature: ['Team A', 'Team B'], poll: { id: 'w7-bottom6', question: 'Which one of the bottom 6 ...?' } }
+// (a poll id also has to be listed in POLLS in api/poll.js)
+const SHAKEUP = null;
 const shakeupOn = () => !!SHAKEUP && DATA.meta.lastScored === SHAKEUP.week;
 // the formula the site ran through week 6, so the shakeup measures moves against the ranks people actually saw
 const OLD_WEIGHTS = { rosProj: 0.35, depth: 0.10, sos: 0.10, allPlay: 0.20, pfPerGame: 0.10, winPct: 0.10, form: 0.05 };
@@ -585,14 +529,12 @@ function closeGames(wk) {
 }
 
 // ---------- the video headline ----------
-// Dan's request after week 7: Tony Pollard scored the most points in the league for Mo the week after Akrm traded him
-// there, and the headline card plays the "Tony ya Tony" clip. Every number comes from the snapshot: his points and
-// where they rank, the trade and what came back, Akrm's game and the starter Pollard could have replaced. It leads the
-// headlines while week 7 is the latest result (as long as the shakeup runs). Set CLIP to null to drop it.
-const CLIP = {
-  week: 7, player: '5967', seller: '1004101289912926208', kicker: 'Tony ya Tony', stamp: 'Sold low',
-  src: 'assets/tony_ya_tony.mp4', poster: 'assets/tony_ya_tony-poster.webp', label: 'Video: the Tony ya Tony chant',
-};
+// A player who blew up the week after being traded away, with a video clip playing in the headline card. Every number
+// comes from the snapshot: his points and where they rank, the trade and what came back, the seller's game and the
+// starter he could have replaced. It leads the shakeup carousel (week the latest result). null when there isn't one.
+// Example: { week: 7, player: '<sleeper player id>', seller: '<seller user_id>', kicker: 'Sold low', stamp: 'Sold low',
+//   src: 'assets/clip.mp4', poster: 'assets/clip-poster.webp', label: 'Video: what the clip shows' }
+const CLIP = null;
 const SLOT_WORD = { QB: 'quarterback', RB: 'running back', WR: 'receiver', TE: 'tight end', K: 'kicker', DEF: 'defense' };
 const say = (n) => ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][n] ?? String(n);
 const n1 = (x) => f1(x).replace(/\.0$/, ''); // 35 rather than 35.0 in a headline
@@ -2235,7 +2177,7 @@ async function main() {
   $('#footer-meta').textContent = `${RAW.isDemo ? 'Demo snapshot. ' : ''}Through week ${DATA.meta.lastScored}. ${updatedText() ? `${updatedText()}.` : ''}${DATA.overrides.length ? ` Manual fixes: ${DATA.overrides.map((o) => o.note).join('; ')}.` : ''}`;
   initTeamPicker();
   paintTabs();
-  const ed = DATA.teams.find((t) => t.owner === EDITOR.user);
+  const ed = EDITOR && DATA.teams.find((t) => t.owner === EDITOR.user);
   if (ed && faceSrc(ed)) {
     const mh = $('#masthead');
     mh.innerHTML = `<img src="${faceSrc(ed)}" alt="" width="44" height="44"><span>The Power Hour is put together by <b>${esc(EDITOR.name)}</b>, whose own lineup mistakes are always front-page news.</span>`;

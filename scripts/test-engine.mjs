@@ -15,7 +15,7 @@ for (const t of res.teams) {
     `${String(t.powerRank).padStart(2)}  ${(t.movement > 0 ? '+' + t.movement : String(t.movement)).padStart(3)}  ${t.name.padEnd(24).slice(0, 24)} ${t.wins}-${t.losses}  ${t.score.toFixed(1).padStart(5)} ${t.rosScore.toFixed(0).padStart(3)} ${t.resultsScore.toFixed(0).padStart(4)}  ${t.rosProj.toFixed(1).padStart(7)} ${t.pfPerGame.toFixed(1).padStart(6)}  ${t.allPlayW.toFixed(0).padStart(3)}-${t.allPlayL.toFixed(0).padEnd(3)} ${t.luck.toFixed(1).padStart(5)}  ${pct(t.playoffPct)}  ${t.tier.label}`
   );
 }
-const me = res.teams.find((t) => t.owner === 'dmir9999');
+const me = res.teams.find((t) => t.owner === 'manager2');
 console.log('\nWHY for', me.name);
 me.why.forEach((w) => console.log(` [${w.tone}] ${w.title} — ${w.text}`));
 console.log('lineup', me.rosLineup.map((l) => l && `${l.slot}:${res.helpers.nameOf(l.id)} ${l.pts}`).join(' | '));

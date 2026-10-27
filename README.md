@@ -1,8 +1,16 @@
 # The Power Hour
 
-Power rankings, a live waiver-wire feed and data-nerd stats for the **NFL Fantasy Championship** Sleeper league.
+Power rankings, a live waiver-wire feed and data-nerd stats for a Sleeper fantasy football league.
 
-- **Rankings**: a 0–100 power score per team, half rest-of-season roster strength and half results. Tap a team for the reasons behind its rank, a position-group radar, its best ROS lineup, weekly scoring and simulated playoff seeds.
+## Connect your league
+
+1. Find your league ID: open your league on sleeper.com; it's the long number in the URL (`sleeper.com/leagues/<league ID>/...`).
+2. Either put it in `api/league.js` (`const LEAGUE_ID = '...'`) or, in Vercel, add an environment variable `SLEEPER_LEAGUE_ID` with that number (Project, Settings, Environment Variables), then redeploy.
+3. Optional personal touches, all in `app.js` and off by default: `EDITOR` (the site's author), `CHAMPION` (last season's winner gets a trophy), `MONEY_WEEK`, `SHAKEUP`, `MESSAGE_VIDEO`, `CLIP`. Manager headshots go in `MEMBERS` in `lib/members.js` with photos in `assets/heads/`.
+
+The page reads Sleeper only through the site's own `/api/league` and `/api/ros`, once each morning. Your league needs the same scoring the projections assume to be most accurate (half-PPR), but any Sleeper league loads.
+
+- **Rankings**: a 0–100 power score per team from standing (40%), scoring (28%), schedule left (17%) and rest-of-season roster (15%). Tap a team for the reasons behind its rank, a position-group radar, its best ROS lineup, weekly scoring and simulated playoff seeds.
 - **Wire**: every add, drop and trade, newest first. Each move is graded by the consensus ROS value gained or lost. Also shows the best available free agents and a trade ledger.
 - **This week**: projected scores and win odds for every matchup.
 - **Nerd lab**: rank flow, luck index, points for vs against, weekly finishes heatmap, position-group ranks, playoff odds, lineup efficiency, biggest games, players the experts disagree on, and waiver/trade ROI.
@@ -24,7 +32,7 @@ No cron job: the page requests `/api/ros?d=YYYY-MM-DD`, so each new day is a new
 
 Nothing needs installing: there are no npm dependencies. The serverless function runs on Vercel's default Node runtime (18+).
 
-To preview locally: `npx vercel dev`, then open http://localhost:3000. Add `?demo=1` to the URL to see the saved Week 7 snapshot without calling any APIs.
+To preview locally: `npx vercel dev`, then open http://localhost:3000. Add `?demo=1` to the URL to see a saved Week 7 snapshot (made-up team names) without calling any APIs.
 
 ## Turn on fan picks (one-time)
 
@@ -42,7 +50,8 @@ How it works: each phone keeps a random voter id, so voting again from the same 
 
 | What | Where |
 | --- | --- |
-| League ID, time zone | top of `app.js` (`LEAGUE_ID`, `TZ`) |
+| League ID | `LEAGUE_ID` in `api/league.js`, or the `SLEEPER_LEAGUE_ID` environment variable |
+| Time zone (news clock) | `TZ` in `lib/newsclock.js` |
 | Power-score weights | `WEIGHTS` in `lib/engine.js` |
 | Source weights (LeagueLogs counts half by default) | `SOURCE_WEIGHTS` in `lib/consensus.js` |
 | Rank-to-value curve | `VALUE_DECAY` in `lib/consensus.js` |

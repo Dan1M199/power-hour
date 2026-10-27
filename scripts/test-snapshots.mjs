@@ -53,6 +53,7 @@ check('...any odd key', r.code === 307 && sleeperCalls === 0);
 r = await call(ros, '/api/ros?d=nope');
 check('an odd ros key is redirected, no Sleeper call', r.code === 307 && r.headers.Location === R && sleeperCalls === 0);
 
+process.env.SLEEPER_LEAGUE_ID = '1'; // any league: Sleeper is mocked
 process.env.KV_REST_API_URL = 'https://example.upstash.io';
 process.env.KV_REST_API_TOKEN = 'test';
 

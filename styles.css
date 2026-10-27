@@ -723,11 +723,6 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .footer::before { content: ''; position: absolute; z-index: -1; inset: 0 calc(50% - 50vw); background: var(--turf); box-shadow: inset 0 6px 0 var(--chalk); }
 .footer p { margin: 0 0 6px; max-width: 80ch; }
 .footer-logo { display: block; width: auto; height: 160px; margin: 6px 0 14px; }
-.footer .sponsor { display: flex; align-items: center; gap: 14px; margin: 10px 0 12px; }
-.footer .sponsor img { width: 72px; height: auto; flex: none; }
-.footer .sponsor p { margin: 0; color: var(--chalk); font-size: 14px; }
-.footer .sponsor .was { text-decoration: line-through; text-decoration-color: #FF8A80; text-decoration-thickness: 2px; margin-right: 4px; }
-.footer .sponsor b { color: var(--yellow); font-weight: 700; }
 
 /* ---------- faces: the managers' headshots (lib/members.js) ---------- */
 /* a 12-point burst for the "vs" badges */
@@ -1107,7 +1102,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .bull { grid-template-columns: 300px minmax(0, 1fr); }
   .bull-copy { grid-column: 1 / -1; }
 }
-/* ---------- the important message: a full-screen takeover that plays Dan's video ---------- */
+/* ---------- the important message: a full-screen takeover that plays a video ---------- */
 .takeover { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 20px; background: var(--board); animation: unveil-in 0.3s ease-out; }
 .takeover.out { opacity: 0; transition: opacity 0.35s ease; }
 .takeover [hidden] { display: none; } /* .cta and the video set their own display */

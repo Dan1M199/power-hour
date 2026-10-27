@@ -7,7 +7,9 @@
 import { leagueKey } from '../lib/newsclock.js';
 import { once } from '../lib/snapstore.js';
 
-const LEAGUE_ID = '1312001652454088704';
+// Your Sleeper league: the number at the end of your league's URL (sleeper.com/leagues/<LEAGUE_ID>/...). Set it here, or
+// as the SLEEPER_LEAGUE_ID environment variable in Vercel (that wins if both are set).
+const LEAGUE_ID = '';
 const SLEEPER = 'https://api.sleeper.app/v1';
 
 async function getJSON(path) {
@@ -17,18 +19,20 @@ async function getJSON(path) {
 }
 
 export async function snapshot() {
+  const id = process.env.SLEEPER_LEAGUE_ID || LEAGUE_ID;
+  if (!/^\d+$/.test(id)) throw new Error('No Sleeper league set up yet: put your league ID in api/league.js or the SLEEPER_LEAGUE_ID environment variable');
   const [state, league, users, rosters] = await Promise.all([
     getJSON('/state/nfl'),
-    getJSON(`/league/${LEAGUE_ID}`),
-    getJSON(`/league/${LEAGUE_ID}/users`),
-    getJSON(`/league/${LEAGUE_ID}/rosters`),
+    getJSON(`/league/${id}`),
+    getJSON(`/league/${id}/users`),
+    getJSON(`/league/${id}/rosters`),
   ]);
   const regEnd = (league.settings?.playoff_week_start || 15) - 1;
   const weeks = Array.from({ length: regEnd }, (_, i) => i + 1);
   const txWeeks = Array.from({ length: Math.max(1, Math.min(18, state.leg || state.week || 1)) }, (_, i) => i + 1);
   const [mus, txs] = await Promise.all([
-    Promise.all(weeks.map((w) => getJSON(`/league/${LEAGUE_ID}/matchups/${w}`).catch(() => []))),
-    Promise.all(txWeeks.map((w) => getJSON(`/league/${LEAGUE_ID}/transactions/${w}`).catch(() => []))),
+    Promise.all(weeks.map((w) => getJSON(`/league/${id}/matchups/${w}`).catch(() => []))),
+    Promise.all(txWeeks.map((w) => getJSON(`/league/${id}/transactions/${w}`).catch(() => []))),
   ]);
   return {
     fetched: new Date().toISOString(),

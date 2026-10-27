@@ -39,7 +39,7 @@ console.log(`Monday night: ${mnf.join(' at ')}. Played: ${D.live.teams.length} N
 for (const g of nightBoard(D)) {
   console.log(`${g.locked ? 'LOCKED ' : 'MONDAY '} ${g.lead.t.name.padEnd(24).slice(0, 24)} ${g.lead.banked.toFixed(1).padStart(6)} vs ${g.trail.banked.toFixed(1).padStart(6)} ${g.trail.t.name.padEnd(24).slice(0, 24)} gap ${g.gap.toFixed(1).padStart(5)}  trail left ${g.trail.left.map((x) => x.name).join(', ') || '-'} (ceil ${g.trail.ceil.toFixed(1)})  trail wins ${(g.trail.win * 100).toFixed(0)}%`);
 }
-const ed = nightEdition(D, { dateKey: '2026-10-25', editor: { user: 'dmir9999' }, people });
+const ed = nightEdition(D, { dateKey: '2026-10-25', editor: { user: 'manager2' }, people });
 if (!ed || ed.length !== 3) throw new Error('expected three night headlines');
 console.log('\nNight edition:');
 ed.forEach((st) => console.log(`\n[${st.type}/${st.stamp}] ${st.headline}\n  ${st.deck}`));
