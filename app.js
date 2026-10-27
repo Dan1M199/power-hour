@@ -540,7 +540,8 @@ function sassStory() {
 // how far the new ranks moved from where teams stood after week 6 on the old formula (the engine's default weights),
 // then week 7's closest games, then the money week result. The bottom six of the new ranks get a fan poll
 // (api/poll.js). Set SHAKEUP to null to drop it all.
-const SHAKEUP = { week: 7, poll: { id: 'w7-bottom6', question: 'Which one of the bottom 6 has the best chance at a playoff run?' } };
+// feature: team names the headline is about instead of the biggest riser and faller (Dan's pick for week 7)
+const SHAKEUP = { week: 7, feature: ['Anita Max Wynn', 'Chubb in my Jeanty'], poll: { id: 'w7-bottom6', question: 'Which one of the bottom 6 has the best chance at a playoff run?' } };
 const shakeupOn = () => !!SHAKEUP && DATA.meta.lastScored === SHAKEUP.week;
 const GROUPS = { roster: ['rosProj', 'depth'], schedule: ['sos'], results: RESULT_KEYS };
 const shareOf = (w, keys) => { const tot = Object.values(w).reduce((a, b) => a + b, 0) || 1; return keys.reduce((a, k) => a + (w[k] || 0), 0) / tot; };
@@ -565,9 +566,15 @@ function shakeupStories() {
   const formula = fresh
     ? `The formula got an upgrade: results now carry ${pctOf(W, 'results')}% of the score (was ${pctOf(WEIGHTS, 'results')}%), rest-of-season roster ${pctOf(W, 'roster')}% (was ${pctOf(WEIGHTS, 'roster')}%) and schedule ${pctOf(W, 'schedule')}% (was ${pctOf(WEIGHTS, 'schedule')}%)${W.standing && !WEIGHTS.standing ? ', and your place in the real standings counts for the first time' : ''}. More of what actually happened, less guessing.`
     : '';
+  // the featured teams, worded from their actual moves
+  const featured = (SHAKEUP.feature || []).map((n) => moves.find((m) => m.t.name === n)).filter(Boolean);
+  const said = (m, verb) => (m.d > 0 ? `${m.t.name} ${verb} ${m.d} to ${ordinal(m.t.powerRank)}` : m.d < 0 ? `${m.t.name} drops ${-m.d} to ${ordinal(m.t.powerRank)}` : `${m.t.name} holds at ${ordinal(m.t.powerRank)}`);
   const lead = {
-    type: 'shakeup', kicker: 'Power rankings shakeup', tone: 'good', stamp: 'Shakeup', rids: [up.t.rid, down.t.rid].filter((r, i, a) => a.indexOf(r) === i),
-    headline: up.d > 0 && down.d < 0
+    type: 'shakeup', kicker: 'Power rankings shakeup', tone: 'good', stamp: 'Shakeup',
+    rids: (featured.length ? featured.map((m) => m.t) : [up.t, down.t]).map((t) => t.rid).filter((r, i, a) => a.indexOf(r) === i),
+    headline: featured.length === 2
+      ? `Power rankings earthquake: ${said(featured[0], 'jumps')}, ${said(featured[1], 'soars')}. Nobody is safe`
+      : up.d > 0 && down.d < 0
       ? `Power rankings earthquake: ${firstName(up.t)} soars ${up.d}, ${firstName(down.t)} crashes ${-down.d}. Nobody is safe`
       : `Power rankings earthquake: ${moved} of ${DATA.teams.length} teams flipped. Nobody is safe`,
     deck: [
