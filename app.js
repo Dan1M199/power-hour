@@ -3,7 +3,7 @@ import { bumpChart, scatter, radar, weeklyBars, divergingBars, heatTable, faceDo
 import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
 import { tradeIdeas } from './lib/trades.js';
-import { breakdown, shortName } from './lib/matchup.js';
+import { breakdown, shortName, fits } from './lib/matchup.js';
 import { MEMBERS, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
@@ -544,7 +544,10 @@ function shakeupStories() {
       topWas === 1 ? `${top.name} holds on to No. 1.` : `${top.name} is the new No. 1, up from ${ordinal(topWas)}.`,
     ].filter(Boolean).join(' '),
   };
-  return { lead, more: [closeGames(wk), moneyStory()].filter(Boolean) };
+  const rest = [closeGames(wk), moneyStory()].filter(Boolean);
+  // the video headline goes on top while it runs, with the shakeup right behind it
+  const clip = clipStory();
+  return clip ? { lead: clip, more: [lead, ...rest], extra: true } : { lead, more: rest };
 }
 
 // week 7's two closest finishes, and the bench points the loser of the closest one left sitting
@@ -579,6 +582,71 @@ function closeGames(wk) {
     `Next closest: ${line(g2)}, a ${f1(g2.margin)}-point margin.`,
   ].join(' ');
   return { type: 'nailbiter', kicker: 'Down to the wire', tone: 'neutral', stamp: 'Phew', rids: [g1.W.rid, g1.L.rid], headline, deck };
+}
+
+// ---------- the video headline ----------
+// Dan's request after week 7: Tony Pollard scored the most points in the league for Mo the week after Akrm traded him
+// there, and the headline card plays the "Tony ya Tony" clip. Every number comes from the snapshot: his points and
+// where they rank, the trade and what came back, Akrm's game and the starter Pollard could have replaced. It leads the
+// headlines while week 7 is the latest result (as long as the shakeup runs). Set CLIP to null to drop it.
+const CLIP = {
+  week: 7, player: '5967', seller: '1004101289912926208', kicker: 'Tony ya Tony', stamp: 'Sold low',
+  src: 'assets/tony_ya_tony.mp4', poster: 'assets/tony_ya_tony-poster.webp', label: 'Video: the Tony ya Tony chant',
+};
+const SLOT_WORD = { QB: 'quarterback', RB: 'running back', WR: 'receiver', TE: 'tight end', K: 'kicker', DEF: 'defense' };
+const say = (n) => ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][n] ?? String(n);
+const n1 = (x) => f1(x).replace(/\.0$/, ''); // 35 rather than 35.0 in a headline
+function clipStory() {
+  if (!CLIP || DATA.meta.lastScored !== CLIP.week) return null;
+  const wk = CLIP.week, id = CLIP.player, M = DATA.raw.matchups || {}, rows = M[wk] || [];
+  const seller = DATA.teams.find((t) => t.ownerId === CLIP.seller);
+  const row = rows.find((m) => m.players?.includes(id)), sold = seller && rows.find((m) => m.roster_id === seller.rid);
+  const pts = row?.players_points?.[id];
+  // the trade that sent him away (the latest one, should there be more)
+  const deal = (DATA.raw.transactions || []).flat().filter((x) => x?.type === 'trade' && x.status === 'complete' && x.drops?.[id] === seller?.rid)
+    .sort((a, b) => (b.status_updated || 0) - (a.status_updated || 0))[0];
+  if (!deal || !row || !sold || row === sold || pts == null) return null;
+  const owner = team(row.roster_id), to = team(deal.adds?.[id]);
+  const S = firstName(seller), O = firstName(owner), P = nameOf(id), last = P.split(' ').slice(1).join(' ') || P;
+  // where his week ranks among every rostered player in the league
+  const rank = 1 + rows.flatMap((m) => (m.players || []).map((p) => m.players_points?.[p] || 0)).filter((x) => x > pts).length;
+  const gap = wk - deal.leg, when = gap <= 0 ? 'days' : gap === 1 ? 'a week' : `${say(gap)} weeks`;
+  const headline = `${P} went off for ${rank === 1 ? 'a league-best ' : ''}${n1(pts)}, ${when} after ${S} traded him away`;
+
+  // what came back, and what it scored for the seller this week
+  const pp = sold.players_points || {}, st = sold.starters || [];
+  const back = Object.keys(deal.adds || {}).filter((p) => deal.adds[p] === seller.rid), kept = back.filter((p) => sold.players?.includes(p));
+  const got = back.length ? back.map(nameOf).join(' and ') : deal.draft_picks?.length ? 'draft picks' : '';
+  const date = new Date(deal.status_updated || deal.created).toLocaleDateString('en-US', { timeZone: TZ, month: 'long', day: 'numeric' });
+  const sent = `${S} sent ${last} to ${to ? firstName(to) : 'a rival'} on ${date}${got ? ` for ${got}` : ''}${kept.length
+    ? `, who ${kept.length > 1 ? 'combined for' : 'put up'} ${f1(kept.reduce((a, p) => a + (pp[p] || 0), 0))}${kept.some((p) => st.includes(p)) ? '' : ' on the bench'} this week` : ''}.`;
+
+  // the seller's weakest starter in a spot he could have filled, against the margin of their game
+  const pos = posOf(id), slots = DATA.meta.slots;
+  const weak = st.map((p, i) => ({ p, slot: slots[i], x: pp[p] || 0 })).filter((s) => s.p && s.p !== '0' && fits(s.slot, pos)).sort((a, b) => a.x - b.x)[0];
+  const opp = rows.find((m) => m.matchup_id === sold.matchup_id && m.roster_id !== sold.roster_id);
+  let used = '';
+  if (weak && opp && pts > weak.x) {
+    const score = (m) => m.custom_points ?? m.points ?? 0, margin = score(opp) - score(sold), swing = pts - weak.x;
+    const W = `${nameOf(weak.p)} scored ${f1(weak.x)} at ${SLOT_WORD[weak.slot] || 'flex'}`, T = team(opp.roster_id).name;
+    used = margin > 0
+      ? `And ${S} could have used him: ${W} in a ${f1(margin)}-point loss to ${T}. ${last} in that spot ${swing > margin ? `wins it by ${f1(swing - margin)}` : `claws back ${f1(swing)} of it`}.`
+      : `${S} still beat ${T} by ${f1(-margin)}, but ${W}. ${last} in that spot is ${f1(swing)} more.`;
+  }
+
+  // his points on each roster, week by week
+  const tally = (rid) => {
+    let n = 0, sum = 0;
+    for (let w = 1; w <= wk; w++) {
+      const m = M[w]?.find((x) => x.roster_id === rid);
+      if (m?.players?.includes(id)) { n++; sum += m.players_points?.[id] || 0; }
+    }
+    return { n, sum };
+  };
+  const was = tally(seller.rid), now = tally(owner.rid);
+  const since = now.n < was.n && now.sum > was.sum ? `The tally: ${f1(was.sum)} points in ${say(was.n)} weeks with ${S}, ${f1(now.sum)} in ${say(now.n)} with ${O}.` : '';
+  return { type: 'clip', kicker: CLIP.kicker, tone: 'bad', stamp: CLIP.stamp, rids: [owner.rid, seller.rid], face: seller.rid, clip: CLIP,
+    headline, deck: [sent, used, since].filter(Boolean).join(' ') };
 }
 
 // the fan poll on top of the power rankings: the bottom six of the new ranks, one vote per network, no changes
@@ -962,6 +1030,26 @@ function leadFaces(st) {
     </div>`;
 }
 
+// a video story's clip, printed like the headline photos: the stamp on its corner and the face of whoever the joke is on.
+// It plays muted on a loop while its slide is showing (bindClip); a tap anywhere on it starts it over with sound.
+const CLIP_ICONS = {
+  play: '<path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/>',
+  muted: '<path d="M3.5 9.5v5h3.8l4.7 4v-13l-4.7 4z" fill="currentColor"/><path d="m15.5 9.5 5 5m0-5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  sound: '<path d="M3.5 9.5v5h3.8l4.7 4v-13l-4.7 4z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>',
+};
+const clipButton = (state) => `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">${CLIP_ICONS[state]}</svg><span>${state === 'play' ? 'Play' : 'Sound'}</span>`;
+function clipPrint(st) {
+  const C = st.clip, who = team(st.face), m = member(who);
+  return `<figure class="clip-print ${esc(st.tone || '')}">
+      <div class="clip-frame">
+        <video class="clip" muted playsinline loop preload="none" poster="${esc(asset(C.poster))}" aria-label="${esc(C.label)}"><source src="${esc(asset(C.src))}" type="video/mp4"></video>
+        <button type="button" class="clip-sound">${clipButton('play')}</button>
+      </div>
+      ${C.stamp ? `<em class="stamp" aria-hidden="true">${esc(C.stamp)}</em>` : ''}
+      ${m ? `<span class="lf clip-who" aria-hidden="true">${headshot(who, 'lead-face')}<span class="cap">${esc(m.first)}</span></span>` : ''}
+    </figure>`;
+}
+
 // three headlines in one square card (four on night-edition nights): swipe, arrows or dots; the active dot's fill is the
 // auto-advance timer
 const CAROUSEL_SIZE = 3;
@@ -976,16 +1064,20 @@ function leadStory() {
       ${rankSpark(t)}
       <span class="cast-odds"><b>${pct(t.playoffPct)}</b><small>playoffs</small></span>
     </div>`).join('');
-  const slide = (st, i) => `
-    <article class="slide${st.type === 'shakeup' ? ' breaking' : ''}" id="slide-${i}" role="group" aria-roledescription="slide" aria-label="Headline ${i + 1} of ${stories.length}">
-      <div class="slide-top">
+  const slide = (st, i) => {
+    const top = `<div class="slide-top">
         <p class="kicker">${st.type === 'shakeup' ? '<span class="brk"><i aria-hidden="true"></i>Breaking</span>' : ''}<span>${i ? (st.type === 'monday' || st.type === 'locked' || (st.type === 'sass' && s.night) ? 'Tonight' : 'Also today') : esc(date)}</span><span class="k">${esc(st.kicker)}</span></p>
-        ${leadFaces(st)}
-      </div>
-      <${i ? 'h2' : 'h1'} class="lead-hed">${esc(st.headline)}</${i ? 'h2' : 'h1'}>
+        ${st.clip ? '' : leadFaces(st)}
+      </div>`;
+    const hed = `<${i ? 'h2' : 'h1'} class="lead-hed">${esc(st.headline)}</${i ? 'h2' : 'h1'}>`;
+    // a video story puts its clip beside the kicker and headline, where the photos would be
+    return `
+    <article class="slide${st.type === 'shakeup' ? ' breaking' : ''}${st.clip ? ' has-clip' : ''}" id="slide-${i}" role="group" aria-roledescription="slide" aria-label="Headline ${i + 1} of ${stories.length}">
+      ${st.clip ? `<div class="clip-head">${top}${hed}</div>${clipPrint(st)}` : `${top}${hed}`}
       <p class="lead-deck">${esc(st.deck)}</p>
       <div class="cast">${cast(st)}</div>
     </article>`;
+  };
   const arrow = (dir, label, d) => `<button type="button" class="car-arrow" data-dir="${dir}" aria-label="${label}"><svg width="9" height="14" viewBox="0 0 9 14" aria-hidden="true"><path d="${d}" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
   return `
     <section class="lead-car glass rim" aria-roledescription="carousel" aria-label="Today's headlines">
@@ -999,16 +1091,22 @@ function leadStory() {
     </section>`;
 }
 
-let carouselFit = null, carouselSeen = null;
+let carouselFit = null, carouselSeen = null, clipSync = null;
 function bindCarousel() {
   carouselFit = null;
+  clipSync = null;
   carouselSeen?.disconnect();
   const car = $('.lead-car'), track = car?.querySelector('.car-track');
   if (!track) return;
   const dots = [...car.querySelectorAll('.car-dot')], n = dots.length;
-  if (n < 2) return;
-  let idx = 0, steering = 0;
   const slides = [...track.querySelectorAll('.slide')];
+  let idx = 0, steering = 0;
+  clipSync = bindClip(car, slides, dots, () => idx);
+  // Only rotate (or play a clip) while the card is mostly on screen. A rotation changes the card's height on phones,
+  // and iPhone Safari doesn't anchor scrolling, so rotating while someone reads further down would jolt the whole page.
+  carouselSeen = new IntersectionObserver(([e]) => { car.classList.toggle('away', e.intersectionRatio < 0.6); clipSync?.(); }, { threshold: [0, 0.6] });
+  carouselSeen.observe(car);
+  if (n < 2) return;
   // on phones the card hugs the story that's showing instead of the tallest one, so short stories leave no gap
   const phone = matchMedia('(max-width: 760px)');
   const fit = () => { track.style.height = phone.matches ? `${slides[idx].offsetHeight}px` : ''; };
@@ -1016,14 +1114,11 @@ function bindCarousel() {
     idx = (i + n) % n;
     dots.forEach((d, k) => (k === idx ? d.setAttribute('aria-current', 'true') : d.removeAttribute('aria-current')));
     if (resize) fit();
+    clipSync?.();
   };
   fit();
   document.fonts?.ready.then(fit); // headline height changes once the display font arrives
   carouselFit = fit; // re-run on real width changes (see onWidthChange)
-  // Only rotate while the card is mostly on screen. A rotation changes the card's height on phones, and iPhone
-  // Safari doesn't anchor scrolling, so rotating while someone reads further down would jolt the whole page.
-  carouselSeen = new IntersectionObserver(([e]) => car.classList.toggle('away', e.intersectionRatio < 0.6), { threshold: [0, 0.6] });
-  carouselSeen.observe(car);
   const go = (i) => {
     show(i);
     const sl = slides[idx];
@@ -1051,6 +1146,74 @@ function bindCarousel() {
   // touch has no hover, so hold the timer while a finger is down
   track.addEventListener('pointerdown', () => car.classList.add('held'));
   ['pointerup', 'pointercancel'].forEach((e) => track.addEventListener(e, () => car.classList.remove('held')));
+}
+
+// A video story's clip plays muted on a loop, and only while its slide is showing, the card is mostly on screen, the tab
+// is visible and nothing covers the page (the important message and the reveal lock it with html.locked). Its dot runs
+// as long as the clip and holds while the video loads, so the two finish together. A tap starts the clip over with
+// sound, and the dot with it; leaving the slide mutes it again. Under reduced motion or Save-Data, or when the browser
+// refuses to autoplay (iPhone Low Power Mode), it shows the still until tapped. Returns the check to re-run on changes.
+function bindClip(car, slides, dots, current) {
+  const v = car.querySelector('video.clip');
+  if (!v) return null;
+  const slide = v.closest('.slide'), btn = slide.querySelector('.clip-sound'), dot = dots[slides.indexOf(slide)];
+  const auto = !calm() && !navigator.connection?.saveData;
+  let blocked = false, sound = false, here = false, hold = 0;
+  const paint = () => {
+    const state = v.paused ? 'play' : v.muted ? 'muted' : 'sound';
+    if (btn.dataset.state === state) return;
+    btn.dataset.state = state;
+    btn.innerHTML = clipButton(state);
+    if (state === 'play') btn.removeAttribute('aria-pressed'); else btn.setAttribute('aria-pressed', String(state === 'sound'));
+  };
+  const hush = () => { sound = false; v.muted = true; v.loop = true; };
+  // the dot waits for the frames to move ('playing'), though never more than 3 s on a slow connection
+  const wait = (on) => { clearTimeout(hold); car.classList.toggle('buffering', on); if (on) hold = setTimeout(() => wait(false), 3000); };
+  const play = () => {
+    if (v.paused) wait(true); // a clip already running (a tap for sound) just starts over; 'waiting' covers a stall
+    if (!v.readyState && v.networkState !== v.NETWORK_LOADING) v.load(); // Safari won't fetch a preload="none" clip on play() alone
+    // a refusal blocks autoplay from here on; a start cut short by pause() (a swipe, the takeover) doesn't
+    v.play()?.catch((e) => { if (e?.name !== 'AbortError' && !sound) blocked = true; wait(false); paint(); });
+  };
+  const showing = () => slides[current()] === slide && !car.classList.contains('away') && !document.hidden && !document.documentElement.classList.contains('locked');
+  const sync = () => {
+    if (!v.isConnected) { v.pause(); if (clipSync === sync) clipSync = null; return; } // another page replaced it
+    const was = here;
+    here = slides[current()] === slide;
+    if (!showing()) {
+      if (!v.paused) v.pause();
+      wait(false);
+      if (!here) hush(); // it comes back silent, from the top
+      return paint();
+    }
+    if (!was) v.currentTime = 0;
+    if (v.paused && (sound || (auto && !blocked))) play();
+    paint();
+  };
+  const tap = () => {
+    if (!v.paused && !v.muted) { // sound off: back to the silent loop, or a stop where nothing autoplays
+      hush();
+      if (!auto || blocked) v.pause();
+      return paint();
+    }
+    sound = true; blocked = false;
+    v.muted = false; v.loop = false; v.currentTime = 0;
+    // start the dot over with the clip (it only runs on the slide that's showing)
+    const fill = dot?.querySelector('i');
+    if (fill) { fill.style.animation = 'none'; void fill.offsetWidth; fill.style.animation = ''; }
+    play();
+    paint();
+  };
+  v.addEventListener('playing', () => { wait(false); paint(); });
+  v.addEventListener('waiting', () => { if (showing()) wait(true); });
+  v.addEventListener('pause', paint);
+  v.addEventListener('loadedmetadata', () => dot?.style.setProperty('--fill', `${v.duration}s`));
+  // only a clip with sound ends (the silent one loops): back to the silent loop, from the top
+  v.addEventListener('ended', () => { hush(); v.currentTime = 0; if (auto && !blocked && showing()) play(); paint(); });
+  btn.addEventListener('click', tap);
+  v.addEventListener('click', tap);
+  sync();
+  return sync;
 }
 
 function rankRow(t) {
@@ -2085,6 +2248,9 @@ async function main() {
     el.hidden = false;
   }
   window.addEventListener('hashchange', () => route({ fresh: true }));
+  // a headline clip stops while the tab is hidden or an overlay locks the page (html.locked), and picks up after
+  document.addEventListener('visibilitychange', () => clipSync?.());
+  new MutationObserver(() => clipSync?.()).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
   loadVotes();
   loadPoll();
   let lastWidth = innerWidth;
