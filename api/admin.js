@@ -13,13 +13,17 @@
 //             sees them until golive
 //   golive  → the staged weights become the live ones and the revision is bumped
 //   unstage → drops the staged weights
+//   ros     → re-scrapes FantasyPros, DraftSharks and LeagueLogs now (at most every 5 minutes) with this morning's stored
+//             Sleeper player map, stores it as today's ROS rankings and bumps their revision; refused, keeping the old
+//             copy, if FantasyPros fails or the player map isn't stored (no Sleeper call either way)
 //
 // Needs the Upstash store (same env vars as the fan picks); without it every action answers 503.
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { snapshot } from './league.js';
+import { build as buildRos } from './ros.js';
 import { redis, storeEnabled, pack, unpack } from '../lib/snapstore.js';
-import { leagueKey } from '../lib/newsclock.js';
-import { revision, bumpRevision, publishedConfig, setConfig, stagedConfig, setStaged } from '../lib/published.js';
+import { leagueKey, morningKey } from '../lib/newsclock.js';
+import { bumpRosRevision, revision, bumpRevision, publishedConfig, setConfig, stagedConfig, setStaged } from '../lib/published.js';
 import { WEIGHTS } from '../lib/engine.js';
 
 const DEFAULT_HASH = '3dab31dab247d9ae12c994a19393e6f3ef14d2e9a45f2bbbaf307386b1b98dc3'; // sha256 of the default PIN
@@ -120,6 +124,19 @@ export default async function handler(req, res) {
         await setStaged(null);
         const rev = await bumpRevision(key);
         return res.status(200).json({ live: staged.weights ? 'weights' : 'default weights', ...(await status(key)), rev });
+      }
+
+      case 'ros': {
+        const day = morningKey();
+        const [players] = await redis([['GET', `ph:snap:players:${day}`]]);
+        if (!players) return res.status(400).json({ error: "This morning's Sleeper player list isn't stored yet, so a rebuild would need a Sleeper call. It refreshes itself at 6am" });
+        const [ok] = await redis([['SET', 'ph:admin:ros-gap', '1', 'NX', 'EX', '300']]);
+        if (ok !== 'OK') return res.status(429).json({ error: 'Rankings were refreshed less than five minutes ago' });
+        const body = await buildRos(day, { players: unpack(players) });
+        if (!body.sources.fp?.ok) return res.status(502).json({ error: `FantasyPros failed (${body.sources.fp?.error}). Kept the rankings from this morning`, sources: body.sources });
+        await redis([['SET', `ph:snap:ros:${day}`, pack(body), 'EX', String(3 * 86400)]]);
+        const rosRev = await bumpRosRevision(day);
+        return res.status(200).json({ ...(await status(key)), rosRev, sources: body.sources, updated: body.updated });
       }
 
       case 'unstage':

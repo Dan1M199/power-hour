@@ -22,7 +22,15 @@ const MONEY_WEEK = {
 // The news clock (lib/newsclock.js): the hold on Sunday's news, the late pull after Sunday night football, the night
 // edition and the game window. ?at=2026-10-25T22:45-05:00 pretends it's that moment for the page (not for the data:
 // snapshot keys always follow the real clock, and the API redirects any other key to the current one).
-const AT = (() => { const v = new URLSearchParams(location.search).get('at'); const d = v && new Date(v); return d && !isNaN(d) ? d : null; })();
+// ?rehearse=1 (linked from the admin page, and only with the admin password in this session): the final call as
+// visitors will get it, right now. The clock pretends it's 10:50pm tonight, the scores as they stand count as final,
+// and nothing is remembered (no "seen" flags, no poll votes). A strip along the bottom says it's a rehearsal.
+const REHEARSE = (() => { try { return new URLSearchParams(location.search).has('rehearse') && !!sessionStorage.getItem('ph-admin'); } catch { return false; } })();
+const AT = (() => {
+  const v = new URLSearchParams(location.search).get('at') || (REHEARSE ? '2026-10-26T22:50:00-05:00' : null);
+  const d = v && new Date(v);
+  return d && !isNaN(d) ? d : null;
+})();
 const clock = () => AT || new Date();
 const T0 = Date.now();
 const tick = () => (AT ? +AT + (Date.now() - T0) : Date.now()); // the clock still running, for countdowns under ?at=
@@ -134,7 +142,7 @@ async function load() {
   RAW.isDemo = !!demo;
   build(RAW);
   // anyone who has already been through the final-scores reveal this week goes straight to the new rankings
-  if (DATA.finalCall && store.get('ph-final-seen') === finalSeenKey()) buildFinal();
+  if (DATA.finalCall && !REHEARSE && store.get('ph-final-seen') === finalSeenKey()) buildFinal();
 }
 
 // computes a league snapshot into DATA (the helpers below all read DATA) and dresses it for the page
@@ -146,7 +154,7 @@ function build(raw) {
   // live-week mode: games are on (or there are points on the board) and this week is still unscored
   DATA.liveMode = DATA.previews.length > 0 && (!!DATA.live || gameWindow());
   // the final call: after Monday night football every game is done, so the week reads as final before Sleeper scores it
-  DATA.finalCall = DATA.liveMode && !!DATA.live && finalCall() && nightBoard(DATA).every((g) => g.final);
+  DATA.finalCall = DATA.liveMode && !!DATA.live && finalCall() && (REHEARSE || nightBoard(DATA).every((g) => g.final));
   DATA.fetched = RAW.fetched ? new Date(RAW.fetched).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' }) : null;
   DATA.overrides = patched.applied;
   DATA.rosError = RAW.ros && RAW.ros.error;
@@ -361,7 +369,7 @@ function viewRankings() {
           <h2 class="page-title"><span class="wk">${held ? `On hold during week ${m.lastScored + 1}` : `Week ${m.lastScored + 1}`}</span>Power Rankings</h2>
           <p>Rest-of-season roster strength, who's left on the schedule, and what's already happened. Tap any team to see why it sits where it does.</p>
         </div>
-        <div class="sources">${chips}${updatedText() ? `<span class="chip">${esc(updatedText())}</span>` : ''}</div>
+        <div class="sources">${chips}${updatedText() ? `<span class="chip">${esc(updatedText())}</span>` : ''}${!held && MESSAGE_VIDEO && !window.__DEMO__ ? '<button type="button" class="chip to-again" data-message hidden>Watch the important message again</button>' : ''}</div>
       </section>`;
   const hold = DATA.finalCall
     ? `<div class="notice glass hold"><span><strong>Week ${m.lastScored + 1} is final.</strong> These are the ranks going into the week. The new ones are ready.</span></div>${revealCta(false)}`
@@ -418,6 +426,55 @@ function bindLock() {
     // under ?at= (a fixed pretend time) there is no new snapshot to get, so it just re-renders
     if (AT) route(); else setTimeout(() => location.reload(), 3000 + Math.random() * 12000);
   }, 1000);
+}
+
+// ---------- the important message: Dan's video, taking over the power rankings page ----------
+// The first time a device sees the power rankings (not the countdown or the on-hold page), a full-screen card says an
+// important message is incoming, counts down, then plays the video with sound. Phones block sound without a tap, so if
+// the browser refuses it shows a "Tap to play" button instead. Seen once it ends or is skipped; a chip on the page plays
+// it again. It only appears once the file is actually there. Set MESSAGE_VIDEO to null to drop it.
+const MESSAGE_VIDEO = { id: 'w7-message', src: 'assets/important-message.mp4' };
+const messageSeen = () => !REHEARSE && store.get(`ph-video-${MESSAGE_VIDEO.id}`) === '1';
+const messageOn = () => !!MESSAGE_VIDEO && !window.__DEMO__ && !DATA.liveMode && !rankingsLocked();
+let messageReady = null; // the HEAD check for the file, once
+async function maybeMessage(force = false) {
+  if (!messageOn() || $('.takeover') || (!force && messageSeen())) return;
+  messageReady ||= fetch(MESSAGE_VIDEO.src, { method: 'HEAD' }).then((r) => r.ok).catch(() => false);
+  if (!(await messageReady) || $('.takeover') || currentView !== 'rankings') return; // moved on while checking
+  const el = document.createElement('div');
+  el.className = 'takeover';
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('aria-labelledby', 'to-title');
+  el.innerHTML = `
+    <div class="to-card">
+      <h2 id="to-title">Important Message Incoming</h2>
+      <p class="to-sub">Please watch.</p>
+      <div class="to-count" aria-hidden="true">3</div>
+      <video class="to-video" src="${MESSAGE_VIDEO.src}" playsinline controls preload="auto" hidden></video>
+      <button type="button" class="cta to-play" hidden>Tap to play</button>
+      <button type="button" class="to-skip" hidden>Skip</button>
+    </div>`;
+  document.body.append(el);
+  document.documentElement.classList.add('locked');
+  const v = el.querySelector('video'), count = el.querySelector('.to-count'), play = el.querySelector('.to-play'), skip = el.querySelector('.to-skip');
+  const done = () => {
+    if (!REHEARSE) store.set(`ph-video-${MESSAGE_VIDEO.id}`, '1');
+    v.pause();
+    el.classList.add('out');
+    setTimeout(() => { el.remove(); document.documentElement.classList.remove('locked'); }, calm() ? 0 : 350);
+  };
+  const start = () => {
+    count.hidden = true; play.hidden = true; v.hidden = false;
+    v.play().then(() => setTimeout(() => (skip.hidden = false), 5000)).catch(() => { play.hidden = false; play.focus(); });
+  };
+  v.addEventListener('ended', done);
+  v.addEventListener('error', () => { el.remove(); document.documentElement.classList.remove('locked'); });
+  play.addEventListener('click', start);
+  skip.addEventListener('click', done);
+  el.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !skip.hidden) done(); });
+  for (let n = 3; n > 0; n--) { count.textContent = n; await new Promise((r) => setTimeout(r, 1000)); }
+  start();
 }
 
 // ---------- the editor's one-off headlines ----------
@@ -585,6 +642,7 @@ function paintPoll() {
   fixAvatars(el);
 }
 async function castPoll(rid) {
+  if (REHEARSE) { POLL = { ...POLL, err: 'Rehearsal: votes are off. This is where the vote would lock in.' }; return paintPoll(); }
   if (!confirm(`Lock in ${team(rid).name}? You can't change it.`)) return;
   try {
     const r = await fetch('/api/poll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: SHAKEUP.poll.id, pick: rid, options: pollChoices(), device: pollDevice() }) });
@@ -857,7 +915,7 @@ function openReveal() {
     const t0 = performance.now();
     await new Promise((r) => setTimeout(r, 60)); // paint the verdict before the heavy lifting
     buildFinal();
-    store.set('ph-final-seen', finalSeenKey());
+    if (!REHEARSE) store.set('ph-final-seen', finalSeenKey());
     loadPoll(); // the shakeup poll sits on top of the new rankings
     await new Promise((r) => setTimeout(r, Math.max(0, READ_MS - (performance.now() - t0))));
     el.classList.add('out');
@@ -1767,11 +1825,14 @@ function viewAdmin() {
           <div><dt>League snapshot</dt><dd>${esc(st.key)}, revision ${st.rev}<small>${RAW.isDemo ? 'Demo snapshot on this page' : `Fetched ${esc(when(RAW.fetched))}`}</small></dd></div>
           <div><dt>Power-score weights</dt><dd>${pub ? 'Custom' : 'Default'}<small>${pub ? `Published ${esc(when(st.config.at))}` : 'The original 45 / 10 / 45 mix'}</small></dd></div>
           ${staged ? `<div><dt>Waiting to go live</dt><dd>${staged.weights ? 'Custom weights' : 'Default weights'}<small>Published ${esc(when(staged.at))}, not live yet</small></dd></div>` : ''}
+          <div><dt>Rankings sources</dt><dd>${RAW.ros?.updated ? `Scraped ${esc(when(RAW.ros.updated))}` : 'Unavailable'}<small>FantasyPros, DraftSharks and LeagueLogs; normally once a morning</small></dd></div>
           <div><dt>Your draft</dt><dd>${st.draft ? `Pulled ${esc(when(st.draft.fetched))}` : 'None yet'}<small>${st.draft ? (draftOk ? 'Ready to publish' : 'From an earlier snapshot window: pull again to publish') : 'Private until published'}</small></dd></div>
         </dl>
         <div class="adm-actions">
           <button type="button" class="adm-btn primary" data-act="pull" ${st.nextPullIn ? 'disabled' : ''}>${st.nextPullIn ? `Pull again in ${st.nextPullIn}s` : 'Pull fresh from Sleeper'}</button>
           <button type="button" class="adm-btn" data-act="pub-data" ${draftOk ? '' : 'disabled'}>Publish draft data</button>
+          <button type="button" class="adm-btn" data-act="ros">Refresh rankings sources</button>
+          <a class="adm-btn" href="./?rehearse=1#live" target="_blank" rel="noopener">Rehearse the 10:45pm flow</a>
         </div>
         <p class="sub">One pull every two minutes at most. A pull goes to your draft only; the site keeps its once-a-morning schedule.</p>
         ${adminState.msg ? `<p class="adm-msg" role="status">${esc(adminState.msg)}</p>` : ''}
@@ -1856,9 +1917,10 @@ async function adminAct(act) {
     'pub-default': 'Publish the default weights? They wait here until you press Update rankings live.',
     golive: 'Update the power rankings for everyone with the waiting weights? Visitors see them within a minute.',
     unstage: 'Discard the waiting weights? The live rankings stay as they are.',
+    ros: 'Re-scrape FantasyPros, DraftSharks and LeagueLogs now? Everyone gets the new values within a minute. No Sleeper call.',
   };
   if (confirmations[act] && !confirm(confirmations[act])) return;
-  adminState.msg = act === 'pull' ? 'Pulling from Sleeper…' : act === 'golive' ? 'Updating the live rankings…' : act === 'unstage' ? 'Discarding…' : 'Publishing…';
+  adminState.msg = act === 'pull' ? 'Pulling from Sleeper…' : act === 'golive' ? 'Updating the live rankings…' : act === 'unstage' ? 'Discarding…' : act === 'ros' ? 'Scraping the ranking sites…' : 'Publishing…';
   route();
   try {
     if (act === 'pull') {
@@ -1869,6 +1931,11 @@ async function adminAct(act) {
       const r = await adminCall('golive');
       adminState.status = r;
       adminState.msg = `Rankings updated live with the ${r.live} (revision ${r.rev}). Visitors pick it up within a minute; reload this page to see it as they will.`;
+    } else if (act === 'ros') {
+      const r = await adminCall('ros');
+      adminState.status = r;
+      const src = Object.entries(r.sources).map(([k, x]) => `${SOURCE_NAMES[k] || k} ${x.ok ? `${x.matched} players` : 'failed'}`).join(', ');
+      adminState.msg = `Rankings refreshed: ${src}. Visitors get them within a minute; reload this page to preview with them.`;
     } else if (act === 'unstage') {
       adminState.status = await adminCall('unstage');
       adminState.msg = 'Waiting weights discarded. The live rankings are unchanged.';
@@ -2031,6 +2098,13 @@ function bind(key) {
   if (key === 'rankings') {
     bindLock();
     if (!DATA.liveMode) bindCarousel();
+    maybeMessage();
+    const again = $('[data-message]');
+    if (again) {
+      messageReady?.then((ok) => (again.hidden = !ok));
+      if (!messageReady) fetch(MESSAGE_VIDEO.src, { method: 'HEAD' }).then((r) => (again.hidden = !r.ok)).catch(() => {});
+      again.addEventListener('click', () => maybeMessage(true));
+    }
     $('#poll-slot')?.addEventListener('click', (e) => { const b = e.target.closest('[data-poll]'); if (b) castPoll(Number(b.dataset.poll)); });
     document.querySelectorAll('.rank-btn').forEach((b) =>
       b.addEventListener('click', () => {
@@ -2178,6 +2252,13 @@ async function main() {
   $('#footer-meta').textContent = `${RAW.isDemo ? 'Demo snapshot. ' : ''}Through week ${DATA.meta.lastScored}. ${updatedText() ? `${updatedText()}.` : ''}${DATA.overrides.length ? ` Manual fixes: ${DATA.overrides.map((o) => o.note).join('; ')}.` : ''}`;
   initTeamPicker();
   paintTabs();
+  if (REHEARSE) {
+    const b = document.createElement('div');
+    b.className = 'rehearse-strip';
+    b.setAttribute('role', 'status');
+    b.innerHTML = 'Rehearsal: the 10:45pm flow with the scores as they stand now. Nothing here is saved or seen by anyone. <a href="./?rehearse=1#live">Start over</a>';
+    document.body.append(b);
+  }
   const ed = DATA.teams.find((t) => t.owner === EDITOR.user);
   if (ed && faceSrc(ed)) {
     const mh = $('#masthead');

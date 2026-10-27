@@ -5,9 +5,12 @@
 // The front end asks for /api/ros?d=<morning key> (lib/newsclock.js); any other key is redirected to it. Sleeper's
 // player map is read at most once per morning: it's kept slimmed in the store (lib/snapstore.js) under that key, so
 // deploys, CDN purges and the hourly retry while a ranking site is down all reuse it. The ranking sites are scraped
-// once per morning too (hourly while one of them is failing).
+// once per morning too (hourly while one of them is failing), or again on demand from the admin page, which stores the
+// new build and bumps the revision: the plain key always redirects (cached a minute) to /api/ros?d=<key>.r<revision>.
+// The admin rebuild reuses the stored player map, so it never calls Sleeper.
 import { morningKey } from '../lib/newsclock.js';
 import { once } from '../lib/snapstore.js';
+import { rosRevision, revKey } from '../lib/published.js';
 
 import {
   FANTASYPROS_URL, DRAFTSHARKS_URL, LEAGUELOGS_URL,
@@ -61,10 +64,10 @@ const askedKey = (req) => req.query?.d ?? (req.url ? new URL(req.url, 'http://x'
 
 export default async function handler(req, res) {
   try {
-    const key = morningKey();
-    if (req.url && askedKey(req) !== key) {
+    const key = morningKey(), canonical = revKey(key, await rosRevision(key));
+    if (req.url && askedKey(req) !== canonical) {
       res.setHeader('Cache-Control', 'public, s-maxage=60');
-      res.setHeader('Location', `/api/ros?d=${encodeURIComponent(key)}`);
+      res.setHeader('Location', `/api/ros?d=${encodeURIComponent(canonical)}`);
       return res.status(307).end();
     }
     const { body, from } = await once('ros', key, async () => {
@@ -73,7 +76,7 @@ export default async function handler(req, res) {
       return { body, ttl: allOk ? 3 * 86400 : 3600 }; // a failed source gets retried after an hour
     });
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.setHeader('X-Snapshot', `${key} ${from}`);
+    res.setHeader('X-Snapshot', `${canonical} ${from}`);
     // A day at the edge, then serve stale for another day while a fresh copy is fetched in the background.
     // If a source failed, only cache for an hour so the next visitor retries.
     const allOk = Object.values(body.sources).every((s) => s.ok);
@@ -85,14 +88,15 @@ export default async function handler(req, res) {
   }
 }
 
-async function build(key) {
+// players: the stored Sleeper player map, when the caller already has it (the admin rebuild), so nothing reads Sleeper
+export async function build(key, { players: stored = null } = {}) {
     const [sources, sleeper] = await Promise.all([
       Promise.all([
         loadSource('fp', FANTASYPROS_URL, parseFantasyPros),
         loadSource('ds', DRAFTSHARKS_URL, parseDraftSharks),
         loadSource('ll', LEAGUELOGS_URL, parseLeagueLogs),
       ]).then(Object.fromEntries),
-      once('players', key, async () => ({ body: await sleeperPlayers(), ttl: 3 * 86400 })).then((x) => x.body),
+      stored || once('players', key, async () => ({ body: await sleeperPlayers(), ttl: 3 * 86400 })).then((x) => x.body),
     ]);
 
     const idx = buildIndex(sleeper);

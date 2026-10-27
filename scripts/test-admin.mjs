@@ -3,7 +3,9 @@
 // new snapshot revision without any extra Sleeper call.
 import admin from '../api/admin.js';
 import league from '../api/league.js';
-import { leagueKey } from '../lib/newsclock.js';
+import { pack } from '../lib/snapstore.js';
+import ros from '../api/ros.js';
+import { leagueKey, morningKey } from '../lib/newsclock.js';
 
 const db = new Map();
 const redisCmd = ([cmd, k, ...a]) => {
@@ -27,8 +29,12 @@ globalThis.fetch = async (u, opts = {}) => {
     if (/\/league\/\d+$/.test(u)) return ok({ settings: { playoff_week_start: 15 } });
     return ok([]);
   }
+  // the ranking sites: FantasyPros answers with two players, the other two are down
+  if (u.includes('fantasypros')) { siteCalls++; return { ok: !fpDown, status: fpDown ? 503 : 200, statusText: 'x', text: async () => `<script>var ecrData = ${JSON.stringify({ players: [{ player_name: 'Ja\'Marr Chase', player_position_id: 'WR', player_team_id: 'CIN', rank_ecr: 1, player_bye_week: 10 }, { player_name: 'Bijan Robinson', player_position_id: 'RB', player_team_id: 'ATL', rank_ecr: 2, player_bye_week: 5 }] })};\n</script>` }; }
+  if (u.includes('draftsharks') || u.includes('leaguelogs')) { siteCalls++; return { ok: false, status: 404, statusText: 'Not Found' }; }
   throw new Error('unexpected ' + u);
 };
+let siteCalls = 0, fpDown = false;
 
 const call = async (handler, { method = 'POST', body, url, ip = '1.1.1.1' } = {}) => {
   const out = { headers: {} };
@@ -113,6 +119,27 @@ check('back to default weights: revision 3, config cleared', r.code === 200 && r
 db.set('ph:admin:draft-meta', JSON.stringify({ key: '1999-01-01' }));
 r = await A({ password: '6906', action: 'publish', data: true }, '2.2.2.2');
 check('a draft from an earlier window cannot overwrite today\'s snapshot', r.code === 400, r);
+
+// refreshing the ROS rankings mid-day: re-scrapes the sites, never Sleeper
+const day = morningKey(), plainRos = `/api/ros?d=${day}`;
+let sc = sleeperCalls;
+r = await A({ password: '6906', action: 'ros' }, '2.2.2.2');
+check('ros refresh without a stored player map is refused, no Sleeper call', r.code === 400 && sleeperCalls === sc && siteCalls === 0, r);
+db.set(`ph:snap:players:${day}`, pack({ 7564: { full_name: "Ja'Marr Chase", first_name: "Ja'Marr", last_name: 'Chase', position: 'WR', team: 'CIN', active: true }, 4866: { full_name: 'Bijan Robinson', first_name: 'Bijan', last_name: 'Robinson', position: 'RB', team: 'ATL', active: true } }));
+v = await call(ros, { method: 'GET', url: plainRos });
+check('visitors: the plain ros key redirects to revision 0', v.code === 307 && v.headers.Location === `${plainRos}.r0`, v);
+fpDown = true;
+r = await A({ password: '6906', action: 'ros' }, '2.2.2.2');
+check('FantasyPros down: refused, the morning copy is kept', r.code === 502 && !db.has(`ph:snap:ros:${day}`), r);
+db.delete('ph:admin:ros-gap'); fpDown = false;
+r = await A({ password: '6906', action: 'ros' }, '2.2.2.2');
+check('ros refresh: rebuilt from the sites with the stored players, revision 1, no Sleeper call', r.code === 200 && r.body.rosRev === 1 && r.body.sources.fp.ok && r.body.sources.fp.matched === 2 && sleeperCalls === sc, r.body);
+v = await call(ros, { method: 'GET', url: plainRos });
+check('visitors: the plain ros key now redirects to revision 1', v.code === 307 && v.headers.Location === `${plainRos}.r1`, v);
+v = await call(ros, { method: 'GET', url: `${plainRos}.r1` });
+check('...which serves the refreshed values', v.code === 200 && v.body.values['7564'] && sleeperCalls === sc, v.code);
+r = await A({ password: '6906', action: 'ros' }, '2.2.2.2');
+check('a second refresh within five minutes is refused', r.code === 429, r);
 
 process.env.ADMIN_PASSWORD = 'a much longer passphrase';
 r = await A({ password: '6906', action: 'status' }, '3.3.3.3');

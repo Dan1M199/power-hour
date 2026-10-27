@@ -1052,6 +1052,24 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .lock-sub { margin: 0; max-width: 46ch; font-weight: 600; color: rgba(255, 255, 255, 0.86); }
 .lock-sub a { color: var(--yellow); font-weight: 800; }
 
+/* ---------- the important message: a full-screen takeover that plays Dan's video ---------- */
+.takeover { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 20px; background: var(--board); animation: unveil-in 0.3s ease-out; }
+.takeover.out { opacity: 0; transition: opacity 0.35s ease; }
+.takeover [hidden] { display: none; } /* .cta and the video set their own display */
+.to-card { display: grid; justify-items: center; gap: 12px; width: min(960px, 100%); text-align: center; }
+.to-card h2 { margin: 0; font: 900 clamp(40px, 7vw, 92px)/0.95 var(--display); color: var(--yellow); text-wrap: balance; }
+.to-sub { margin: 0; font: 800 clamp(20px, 2.6vw, 30px)/1.1 var(--display); color: var(--chalk); }
+.to-count { font: 900 clamp(90px, 16vw, 180px)/1 var(--display); color: var(--chalk); font-variant-numeric: tabular-nums; }
+.to-video { width: 100%; max-height: 70vh; border-radius: var(--r-md); background: #000; }
+.to-skip { cursor: pointer; padding: 8px 16px; border: 0; border-radius: 999px; font: 700 14px/1 var(--body); color: var(--chalk); background: rgba(255, 255, 255, 0.14); }
+.chip.to-again { cursor: pointer; border: 0; font: inherit; background: var(--amber); color: var(--ink); }
+
+/* the admin's rehearsal of the final call (?rehearse=1): a strip along the bottom so it's never mistaken for the real thing */
+.rehearse-strip { position: fixed; left: 0; right: 0; bottom: 0; z-index: 80; padding: 10px 16px; text-align: center; font: 700 13.5px/1.35 var(--body);
+  color: var(--ink); background: var(--yellow); box-shadow: 0 -3px 0 var(--ledge-gold); }
+.rehearse-strip a { color: var(--ink); font-weight: 800; }
+a.adm-btn { display: inline-block; text-decoration: none; }
+
 /* ---------- fan poll on top of the power rankings ---------- */
 .poll { margin: 0 0 26px; padding: 20px 22px; border-radius: var(--r-lg); }
 .poll h2 { margin: 0 0 4px; font: 900 clamp(24px, 2.6vw, 32px)/1.05 var(--display); color: var(--ink); }
