@@ -259,6 +259,12 @@ Glossy and pressable cartoon pills.
 ### Navigation
 A solid pill-shaped sticky header in Header Sky holding the logo, the wordmark (hidden on phones), the tab strip and the team picker. Tabs sit in a Tray groove; the active tab is an amber glossy pill (`.tab-ink`) that slides between tabs. Phones get short labels (Live, Power, Wire, Games, Trades, Lab).
 
+### Charts (cartoon glass)
+Charts follow the cards. Every plot stands on a plate: a Tray with chalk-white gridlines on a card, or a white plate inside a tray. Lines carry an ink casing under the team colour and a thin white gloss along the top; the focus team's line is heavier. Dots have a 2px ink ring and a white glint; photo marks get an ink ring around their colour ring. Bars have a 2px ink edge, a hard ledge 3px underneath and a gloss strip (at most 12px) over the top. Chart labels wear a white halo. The scatter's quadrants are tinted by how good a place they are (green bottom right, red top left). Heat cells are glossy tiles with a shaded foot. The position-group radar is a white dartboard on a ledge. Playoff odds read as a filled glossy pill.
+
+### Manager stat tiles
+The tiles in the manager card are toned by league rank: top third gets a green tint, a green number and a green ledge; bottom third gets the same in red; the middle stays white. Moves stay neutral. The tooltip says where the number ranks ("3rd of 12 in the league").
+
 ### You strip
 On the power rankings, right under the page head: a glass button wearing the yellow ring and a gold ledge, with your headshot, "You're No. 6", tier and move, and playoff odds. Tapping it scrolls to your row and opens it. On phones it's the first thing under the carousel, so nobody scrolls three screens to find themselves.
 

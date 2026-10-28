@@ -685,41 +685,84 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 
 /* ---------- charts ---------- */
 .chart { width: 100%; height: auto; display: block; overflow: visible; }
-.chart .grid { stroke: #E2EDD8; fill: none; }
-.chart .axis { fill: var(--ink-3); font: 500 11px var(--body); }
-.chart .axis-title { fill: var(--ink-3); font: 600 12px var(--body); }
-.chart .ref { stroke: var(--ink-3); stroke-opacity: 0.6; stroke-dasharray: 4 5; }
-.chart .quad { fill: var(--ink-3); font: 600 12px var(--body); }
-/* labels wear ink; the line or dot beside them carries the team colour */
+/* every plot stands on a plate: a tray on a card (chalk gridlines, like the field), or white inside a tray (.light) */
+.chart .plate { fill: var(--tile); stroke: rgba(18, 48, 26, 0.12); stroke-width: 1.5; }
+.chart .plate.light { fill: var(--chalk); stroke: var(--line); }
+.chart .grid { stroke: var(--chalk); stroke-width: 1.5; fill: none; }
+.chart .axis { fill: var(--ink-3); font: 600 11.5px var(--body); }
+.chart .axis-title { fill: var(--ink-3); font: 700 12px var(--body); }
+.chart .ref { stroke: var(--ink); stroke-opacity: 0.45; stroke-width: 1.5; stroke-dasharray: 5 5; }
+.chart .mid { stroke: var(--ink); stroke-width: 2; }
+/* labels wear ink with a white halo, so they read over any line or tint; the mark beside them carries the colour */
+.chart :is(.label, .pt-label, .quad) { paint-order: stroke; stroke: var(--chalk); stroke-width: 4px; stroke-linejoin: round; }
+.chart .quad { fill: var(--ink-2); font: 800 12.5px var(--display); letter-spacing: 0.03em; }
 .chart .label { fill: var(--ink); font: 700 13px var(--display); letter-spacing: 0.02em; }
-.chart .pt-label { fill: var(--ink-2); font: 600 11.5px var(--body); }
-.chart .line { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
-.chart .dim :is(path, circle, image) { opacity: 0.22; }
+.chart .pt-label { fill: var(--ink-2); font: 700 11.5px var(--body); }
+/* lines: an ink casing under the team colour and a thin gloss along the top */
+.chart .line { fill: none; stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round; }
+.chart .line.case { stroke: var(--ink); stroke-width: 6.5; }
+.chart .line.shine { stroke: var(--chalk); stroke-width: 1.2; stroke-opacity: 0.6; }
+.chart .focus .line { stroke-width: 5; }
+.chart .focus .line.case { stroke-width: 9; }
+.chart .focus .line.shine { stroke-width: 1.6; }
+.chart .dim :is(.case, .shine, .glint) { display: none; }
+.chart .dim :is(path, circle, image) { opacity: 0.38; }
+.chart.scatter .dim :is(circle, image) { opacity: 0.7; } /* the faces are the fun part; dim them less */
 .chart .dim text { fill: var(--ink-3); }
-.chart .mine-band { fill: var(--mine-bg); }
+/* dots: an ink ring and a glint; photo marks get the same ink ring around their colour ring */
+.chart .dot { stroke: var(--ink); stroke-width: 2; }
+.chart .glint { fill: var(--chalk); opacity: 0.85; pointer-events: none; }
+.chart .face-ring { fill: var(--ink); }
+/* bars: a hard ledge underneath, an ink edge and a gloss over the top half */
+.chart .bar { stroke: var(--ink); stroke-width: 2; }
+.chart .bar-ledge { fill: rgba(14, 46, 22, 0.3); pointer-events: none; }
+.chart .bar-gloss { fill: var(--chalk); opacity: 0.42; pointer-events: none; }
+.chart .mine-band { fill: var(--mine-bg); stroke: #F2C200; stroke-width: 2; }
 .chart .row-label.mine { fill: var(--ink); font-weight: 800; }
-/* a white ring keeps overlapping dots apart from each other and from the lines */
-.chart:is(.bump, .scatter) circle { stroke: var(--chalk); stroke-width: 2; }
+/* scatter quadrants, tinted by how good a place they are to be */
+.chart .q { opacity: 0.16; }
+.chart .q-tl { fill: var(--flag); }
+.chart .q-tr { fill: var(--amber); }
+.chart .q-bl { fill: var(--a); }
+.chart .q-br { fill: var(--grass); opacity: 0.22; }
+/* radar: a white dartboard on a ledge */
+.chart .radar-ledge { fill: rgba(14, 46, 22, 0.25); }
+.chart .radar-plate { fill: var(--chalk); stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
+.chart .radar-band { fill: #EEF4E7; }
+.chart .radar-band.alt { fill: var(--chalk); stroke: var(--line); stroke-width: 1; }
+.chart .radar-case { fill: none; stroke: var(--ink); stroke-width: 5.5; stroke-linejoin: round; }
+.chart.radar { max-width: 280px; margin-inline: auto; }
+.chart.radar .grid { stroke: var(--line); stroke-width: 1; }
+.chart.radar .axis { font: 800 11.5px var(--body); fill: var(--ink-2); }
 .chart [data-tip] { cursor: default; }
-.chart.weekly .bar { fill: #D6E5CB; }
+.chart.weekly .bar { fill: #C9D9BC; }
 .chart.weekly .bar.win { fill: var(--grass); }
 .chart.weekly .bar.loss { fill: #E57373; }
 .chart.weekly { max-width: 620px; }
 .chart.weekly .axis { font-size: 13px; }
-.chart.weekly .avg-line { fill: none; stroke: var(--ink-2); stroke-width: 2; stroke-dasharray: 3 4; }
+.chart.weekly .avg-line { fill: none; stroke: var(--ink); stroke-width: 2; stroke-dasharray: 4 4; }
 .chart.diverging .bar.pos { fill: #FFA000; }
 .chart.diverging .bar.neg { fill: var(--a); }
 .chart .row-label { fill: var(--ink-2); font: 600 12.5px var(--body); dominant-baseline: middle; }
-.chart .val { fill: var(--ink); font: 700 12.5px var(--body); dominant-baseline: middle; }
+.chart .val { fill: var(--ink); font: 800 12.5px var(--body); dominant-baseline: middle; paint-order: stroke; stroke: var(--tile); stroke-width: 4px; stroke-linejoin: round; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--ink-3); margin-top: 10px; }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+/* heat tables: every cell a little glossy tile with a shaded foot */
 .heat-wrap { overflow-x: auto; }
-.heat { border-collapse: separate; border-spacing: 3px; width: 100%; font-size: 13px; }
+.heat { border-collapse: separate; border-spacing: 4px; width: 100%; font-size: 13px; }
 .heat th { color: var(--ink-3); font-weight: 600; font-size: 12px; padding: 4px 6px; text-align: left; white-space: nowrap; }
-.heat thead th { text-align: center; }
+.heat thead th { text-align: center; font-weight: 800; color: var(--ink-2); }
 .heat tbody th { position: sticky; left: 0; z-index: 1; padding-inline: 10px; border-radius: 8px; background-color: var(--chalk); }
 .heat tr.mine th { color: var(--ink); font-weight: 800; background-color: var(--mine-bg); box-shadow: inset 0 0 0 2px #F2C200; }
-.heat td { text-align: center; padding: 7px 4px; border-radius: 8px; font-weight: 700; color: var(--ink); background: hsla(var(--h), 72%, 50%, var(--a)); min-width: 34px; }
+.heat td { text-align: center; padding: 7px 4px 8px; border-radius: 9px; font-weight: 800; color: var(--ink); min-width: 34px;
+  background-color: var(--chalk); background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.36) 0 40%, rgba(255, 255, 255, 0) 44%), linear-gradient(hsla(var(--h), 72%, 50%, var(--a)), hsla(var(--h), 72%, 50%, var(--a)));
+  box-shadow: inset 0 0 0 1.5px rgba(18, 48, 26, 0.16), inset 0 -3px 0 rgba(18, 48, 26, 0.12); }
+.heat tr.mine td { box-shadow: inset 0 0 0 2px #F2C200, inset 0 -3px 0 rgba(18, 48, 26, 0.12); }
+/* playoff odds: a filled glossy pill */
+.pbar { position: relative; isolation: isolate; display: inline-block; min-width: 86px; padding: 3px 9px; border-radius: 999px; overflow: hidden; text-align: right;
+  background: var(--tile-2); box-shadow: inset 0 0 0 1.5px rgba(18, 48, 26, 0.14); }
+.pbar::before { content: ''; position: absolute; z-index: -1; inset: 0 auto 0 0; width: var(--v); border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0 42%, rgba(255, 255, 255, 0) 46%), var(--grass); box-shadow: inset -2px 0 0 rgba(18, 48, 26, 0.35); }
 .table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .table th { text-align: left; color: var(--ink-3); font-weight: 700; font-size: 12px; padding: 6px 8px; border-bottom: 2px solid var(--line); }
 .table td { padding: 8px; border-bottom: 1px solid var(--line); }
@@ -812,6 +855,11 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .mgr-stats { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
 .mgr-stats > div { display: grid; gap: 2px; padding: 7px 12px 6px; border-radius: 12px; text-align: center; line-height: 1.1; background: var(--chalk); box-shadow: 0 0 0 1.5px var(--line), 0 3px 0 1.5px var(--line); }
 .mgr-stats b { font: 800 21px/1 var(--display); color: var(--ink); }
+/* a stat in the league's top third wears green, bottom third red: tinted face, coloured number, a ledge in the same hue */
+.mgr-stats > div.good { background: #E7F4E0; box-shadow: 0 0 0 1.5px #8FC27F, 0 3px 0 1.5px #5E9E4F; }
+.mgr-stats > div.good b { color: var(--good); }
+.mgr-stats > div.bad { background: #FDECEC; box-shadow: 0 0 0 1.5px #E9A3A3, 0 3px 0 1.5px #D16F6F; }
+.mgr-stats > div.bad b { color: var(--bad); }
 .mgr-stats small { font-size: 11.5px; color: var(--ink-3); white-space: nowrap; }
 .mgr-sup { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
 .sup { padding: 5px 11px; border-radius: 999px; font: 700 12.5px/1.1 var(--body); color: var(--good); background: #EEF7E9; }

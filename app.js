@@ -1215,20 +1215,34 @@ function superlatives(t) {
   add(DATA.meta.hasRos && top((x) => mv(x).tradeNet, -1) === t && mv(t).tradeNet < -1, 'Got fleeced', `Worst trade ledger in the league (${signed(mv(t).tradeNet)} ROS value)`, 'bad');
   return out;
 }
+// a team's best single week
+const bestWeek = (t) => t.weeks.reduce((a, w) => (!a || (w.pts || 0) > a.pts ? w : a), null);
+// where a team's number sits in the league: top third reads good, bottom third bad, the middle stays plain
+function leagueTone(t, val) {
+  const all = DATA.teams.map(val).filter((v) => v != null), mine = val(t);
+  if (mine == null || all.length < 3) return { tone: '', place: '' };
+  const k = all.filter((v) => v > mine).length, third = all.length / 3;
+  return { tone: k < third ? 'good' : k >= all.length - third ? 'bad' : '', place: `${ordinal(k + 1)} of ${all.length} in the league` };
+}
+
 function managerCard(t) {
   const m = member(t);
-  const bestWk = t.weeks.reduce((a, w) => (!a || (w.pts || 0) > a.pts ? w : a), null);
+  const bestWk = bestWeek(t);
   const moves = DATA.managerMoves[t.rid]?.moves || 0;
-  const stat = (v, l, tip) => `<div${tip ? ` data-tip="${esc(tip)}"` : ''}><b>${v}</b><small>${l}</small></div>`;
+  const stat = (v, l, tip, val) => {
+    const { tone, place } = val ? leagueTone(t, val) : { tone: '', place: '' };
+    const full = [tip, place].filter(Boolean).join('. ');
+    return `<div${tone ? ` class="${tone}"` : ''}${full ? ` data-tip="${esc(full)}"` : ''}><b>${v}</b><small>${l}</small></div>`;
+  };
   const sup = superlatives(t);
   return `<div class="mgr">
       <span class="mgr-ph">${headshot(t, `mgr-face${t.tier.key === 'stinks' ? ' drained' : ''}`)}${champBadge(t)}</span>
       <div class="mgr-id"><small>Manager</small><b>${esc(m ? m.first : t.owner)}</b><span>@${esc(t.owner)}</span></div>
       <div class="mgr-stats">
-        ${stat(record(t), 'record')}
-        ${bestWk ? stat(f1(bestWk.pts), `best, week ${bestWk.week}`) : ''}
-        ${t.efficiency != null ? stat(pct(t.efficiency), 'lineup IQ', `Started ${(t.efficiency * 100).toFixed(1)}% of their best possible lineup`) : ''}
-        ${stat(signed(t.luck), 'luck (wins)', `${record(t)} actual vs ${f1(t.expectedWins)} expected wins from all-play`)}
+        ${stat(record(t), 'record', '', (x) => (x.wins + 0.5 * (x.ties || 0)) / Math.max(1, x.wins + x.losses + (x.ties || 0)))}
+        ${bestWk ? stat(f1(bestWk.pts), `best, week ${bestWk.week}`, '', (x) => bestWeek(x)?.pts) : ''}
+        ${t.efficiency != null ? stat(pct(t.efficiency), 'lineup IQ', `Started ${(t.efficiency * 100).toFixed(1)}% of their best possible lineup`, (x) => x.efficiency) : ''}
+        ${stat(signed(t.luck), 'luck (wins)', `${record(t)} actual vs ${f1(t.expectedWins)} expected wins from all-play`, (x) => x.luck)}
         ${stat(moves, moves === 1 ? 'move' : 'moves')}
       </div>
       ${sup.length ? `<div class="mgr-sup">${sup.map((s) => `<span class="sup ${s.tone}" data-tip="${esc(s.tip)}">${esc(s.label)}</span>`).join('')}</div>` : ''}
@@ -1852,7 +1866,7 @@ function viewLab() {
       ${posHeat ? `<section class="panel glass span-7"><h2>Position group ranks</h2><p class="sub">League rank of each team's projected rest-of-season starters by position, flex spots included.</p>${posHeat}</section>` : ''}
       <section class="panel glass ${posHeat ? 'span-5' : 'span-12'}"><h2>Playoff odds</h2><p class="sub">From 10,000 simulated finishes to the regular season, top ${DATA.meta.playoffTeams} get in.</p>
         <table class="table"><thead><tr><th>Team</th><th class="num">Playoffs</th><th class="num">Bye</th><th class="num">Proj W</th><th class="num">Last</th></tr></thead><tbody>
-        ${oddsRows.map((t) => `<tr${t.rid === myTeam ? ' class="mine"' : ''}><td class="tm">${avatar(t, "avatar xs")}${esc(short(t.name, 20))}</td><td class="num"><b>${pct(t.playoffPct)}</b></td><td class="num">${pct(t.byePct)}</td><td class="num">${f1(t.projWins)}</td><td class="num">${pct(t.lastPct)}</td></tr>`).join('')}
+        ${oddsRows.map((t) => `<tr${t.rid === myTeam ? ' class="mine"' : ''}><td class="tm">${avatar(t, "avatar xs")}${esc(short(t.name, 20))}</td><td class="num"><span class="pbar" style="--v:${(t.playoffPct * 100).toFixed(1)}%"><b>${pct(t.playoffPct)}</b></span></td><td class="num">${pct(t.byePct)}</td><td class="num">${f1(t.projWins)}</td><td class="num">${pct(t.lastPct)}</td></tr>`).join('')}
         </tbody></table></section>
       <section class="panel glass span-6"><h2>Lineup efficiency</h2><p class="sub">Share of their best possible lineup each manager actually started, compared with the league average of ${(effAvg * 100).toFixed(1)}%.</p>${divergingBars({ rows: effRows, unit: ' pts' }).replace(/ pts</g, '%<')}</section>
       <section class="panel glass span-6"><h2>Biggest single games</h2><p class="sub">Top individual starter performances this season.</p>
