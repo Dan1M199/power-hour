@@ -14,13 +14,13 @@ colors:
   turf: "#1B5E20"
   board: "#13301C"
   chalk: "#FFFFFF"
-  tile: "#F1F8E9"
-  tile-2: "#E6F2DA"
-  line: "#DCEBD0"
+  tile: "#E8F0DF"
+  tile-2: "#D6E3C9"
+  line: "#D2E0C4"
   ink: "#12301A"
   ink-2: "#3C5A43"
   ink-3: "#55705A"
-  good: "#2E7D32"
+  good: "#28702C"
   bad: "#C62828"
   flag: "#D32F2F"
   side-a: "#29B6F6"
@@ -78,12 +78,12 @@ spacing:
   xl: "44px"
 components:
   card:
-    backgroundColor: "rgba(255, 255, 255, 0.88)"
+    backgroundColor: "rgba(255, 255, 255, 0.96)"
     textColor: "{colors.ink}"
     rounded: "{rounded.lg}"
     padding: "18px"
   card-featured:
-    backgroundColor: "rgba(255, 255, 255, 0.88)"
+    backgroundColor: "rgba(255, 255, 255, 0.96)"
     textColor: "{colors.ink}"
     rounded: "{rounded.xl}"
   scoreboard:
@@ -131,7 +131,7 @@ components:
 
 A flat sky over a mowed football field at one in the afternoon. Every surface is cartoon glass on a hard ledge: an inked outline, a bright sheen across the top, a hint of the field showing through, and a solid ledge under it like a toy you could press down. Nothing is blurred and nothing casts a soft shadow, so a phone draws exactly what a desktop does.
 
-The page is a stadium in layers. The sky (flat bands of blue and three cartoon clouds) sits behind everything. The field starts right under each page heading: mowing stripes, a chalk yard line every two stripes and a chalk sideline, bleeding to the window edges. Cards stand on the grass. The footer is the end zone, with a white goal line. Dark scoreboards (the headline carousel, the game of the week, the money-week board) are smoked glass with a cartoon glint in the corner, the one place type turns white.
+The page is a stadium in layers. The sky (flat bands of blue and three cartoon clouds) sits behind everything. The field starts right under each page heading: mowing stripes, a chalk yard line every two stripes and a chalk sideline, bleeding to the window edges. Cards stand on the grass. The footer is the end zone, with a white goal line. Dark scoreboards (the headline carousel and the game of the week) are smoked glass with a cartoon glint in the corner, the one place type turns white.
 
 The energy comes from a single bold move, the power rank painted on the grass like a yard number, half under its card. Everything else stays quiet: one yellow for "you", one amber for actions, ink for all text.
 
@@ -162,9 +162,9 @@ A sunny sports palette: field greens and sky blues for the setting, one yellow a
 
 ### Neutral
 - **Ink** (ink): every heading and all body copy; also the outline on every card and button.
-- **Ink 2 / Ink 3** (ink-2, ink-3): secondary and tertiary text. Both clear 4.5:1 on white, Tile and the 88% card face, but not on grass.
+- **Ink 2 / Ink 3** (ink-2, ink-3): secondary and tertiary text. Both clear 4.5:1 on white, the 96% card face and the Tray, but not on grass.
 - **Chalk** (chalk): white type on scoreboards and yard numbers, chip and sign faces.
-- **Tile / Tile 2 / Line** (tile, tile-2, line): layers inside a card, bar tracks, hover fills and dividers.
+- **Tray / Tray 2 / Line** (tile, tile-2, line): the recessed panels inside a card, bar tracks and hover fills a step darker again, and dividers.
 - **Scoreboard** (board) and **End Zone** (turf): the dark panels and the footer.
 - **Header Sky** (header): the solid sticky header, opaque because the page scrolls beneath it.
 
@@ -216,7 +216,16 @@ Depth is built from hard, flat layers, never blur. Every card carries one shadow
 - **Pill button** (`box-shadow: 0 0 0 2px #12301A, 0 3px 0 2px rgba(14,46,22,.26)`): buttons on light surfaces; pressed drops to `0 1px 0 2px` with `translateY(2px)`.
 - **Chip** (`box-shadow: 0 2px 0 rgba(14,46,22,.26)`): small tags, no outline.
 
+### Three layers
+Every surface sits on one of three steps, and the step is never ambiguous:
+1. **Raised glass card** on the field: the 96% white face, ink outline and ledge.
+2. **Recessed tray** inside a card (manager card, position groups, schedule, trade sides, trade-idea give/get, the breakdown's side column, odds tiles, fan picks, futures rows): Tray fill with `--tray-edge`, a hard 3px inner shadow under its top edge and a faint 1.5px inked rim, no blur and no ledge.
+3. **Raised chip** inside a tray: white with a 1.5px Line rim and a 3px Line ledge (the manager's stat tiles), or a full pill button.
+Bar tracks inside a tray use Tray 2 so they still read.
+
 ### Named Rules
+**The Three-Step Rule.** A panel inside a card is always pressed in (Tray plus tray edge), never another raised card and never the same tone as the card face. If two neighbouring surfaces look alike, one of them is on the wrong step.
+
 **The Hard-Ledge Rule.** No blur, no `backdrop-filter`, no soft drop shadows. If something needs to stand up, give it an ink outline and a solid ledge.
 
 **The One-Soft-Edge Rule.** The kicker loader's feathered mask is the only soft edge on the site, by request. Don't add another.
@@ -242,13 +251,13 @@ Glossy and pressable cartoon pills.
 
 ### Cards / Containers
 - **Corner Style:** 24px (32px featured, 16px nested).
-- **Background:** 88% white face over the field, a fixed 150px sheen band across the top, Tile layers inside.
+- **Background:** a 96% white face over the field, a fixed 150px sheen band across the top, Tray panels inside.
 - **Shadow Strategy:** the glass card stack; gold ledge when featured.
 - **Border:** none; the outline is part of the shadow stack.
 - **Internal Padding:** 18px (14–28px by size).
 
 ### Navigation
-A solid pill-shaped sticky header in Header Sky holding the logo, the wordmark (hidden on phones), the tab strip and the team picker. Tabs sit in a Tile track; the active tab is an amber glossy pill (`.tab-ink`) that slides between tabs. Phones get short labels (Live, Power, Wire, Games, Trades, Lab).
+A solid pill-shaped sticky header in Header Sky holding the logo, the wordmark (hidden on phones), the tab strip and the team picker. Tabs sit in a Tray groove; the active tab is an amber glossy pill (`.tab-ink`) that slides between tabs. Phones get short labels (Live, Power, Wire, Games, Trades, Lab).
 
 ### You strip
 On the power rankings, right under the page head: a glass button wearing the yellow ring and a gold ledge, with your headshot, "You're No. 6", tier and move, and playoff odds. Tapping it scrolls to your row and opens it. On phones it's the first thing under the carousel, so nobody scrolls three screens to find themselves.

@@ -1,5 +1,5 @@
 import { computeLeague, PARTS } from './lib/engine.js';
-import { bumpChart, scatter, radar, weeklyBars, divergingBars, heatTable, faceDot, TEAM_COLORS } from './lib/charts.js';
+import { bumpChart, scatter, radar, weeklyBars, divergingBars, heatTable, TEAM_COLORS } from './lib/charts.js';
 import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
 import { tradeIdeas } from './lib/trades.js';
@@ -269,70 +269,6 @@ function bullTag(rid) {
   if (!B || !B.rows.length || B.state === 'final') return '';
   const k = B.rows.findIndex((r) => r.rid === rid), r = B.rows[k];
   return `<small class="bull-tag${k === 0 ? ' lead' : ''}" data-tip="${esc(`Money week: closest to ${MONEY_WEEK.target} wins ${money(MONEY_WEEK.prize)}. ${team(rid).name} is ${ordinal(k + 1)} closest.`)}">${k === 0 ? `${money(MONEY_WEEK.prize)} pace, ` : ''}${awayText(r)}</small>`;
-}
-// the target: rings every few points from the target, over on the top half, under on the bottom; the closest three
-// wear their manager's face
-function bullTarget(B) {
-  const S = 300, c = S / 2, R = 132, core = 22, max = 15;
-  // square-root scale: the race near the bullseye gets the room, long shots bunch at the rim
-  const rad = (d) => core + Math.sqrt(Math.min(d, max + 2) / max) * (R - core);
-  const rings = [[15, 'w'], [10, 'o'], [5, 'w'], [2, 'o']];
-  let s = `<svg class="chart target" viewBox="0 0 ${S} ${S}" role="img" aria-label="Distance from ${B.target} for every team">`;
-  rings.forEach(([d, k]) => (s += `<circle cx="${c}" cy="${c}" r="${rad(d)}" class="ring ${k}"/>`));
-  s += `<circle cx="${c}" cy="${c}" r="${core}" class="core"/><text x="${c}" y="${c + 7}" class="core-t" text-anchor="middle">${B.target}</text>`;
-  [2, 5, 10, 15].forEach((d) => (s += `<text x="${c + rad(d) - 4}" y="${c - 4}" class="ring-t" text-anchor="end">${d}</text>`));
-  s += `<text x="${c}" y="12" class="side-t" text-anchor="middle">Over</text><text x="${c}" y="${S - 4}" class="side-t" text-anchor="middle">Under</text>`;
-  const halves = { over: B.rows.filter((r) => r.side !== 'under'), under: B.rows.filter((r) => r.side === 'under') };
-  const marks = [];
-  for (const [side, rs] of Object.entries(halves)) {
-    // spread each half evenly, over teams across the top and under across the bottom; stepping through the slots
-    // (rather than filling them in order) keeps the closest few, who sit near the middle, from stacking on each other
-    const n = rs.length, gcd = (x, y) => (y ? gcd(y, x % y) : x);
-    let step = Math.max(1, Math.round(n * 0.4));
-    while (n > 1 && gcd(step, n) !== 1) step++;
-    rs.forEach((r, i) => {
-      const ang = (side === 'over' ? Math.PI : 0) + ((((i * step) % n) + 1) / (n + 1)) * Math.PI;
-      marks.push({ r, x: c + Math.cos(ang) * rad(r.dist), y: c + Math.sin(ang) * rad(r.dist) });
-    });
-  }
-  const rank = new Map(B.rows.map((r, i) => [r.rid, i]));
-  marks.sort((p, q) => rank.get(q.r.rid) - rank.get(p.r.rid)); // closest drawn last, on top
-  for (const { r, x, y } of marks) {
-    const t = team(r.rid), k = rank.get(r.rid), tip = `${t.name}: ${f1(r.score)}${B.state === 'final' ? '' : ' projected'}, ${awayText(r)}`;
-    const img = k < 3 ? faceSrc(t) : null;
-    s += img ? faceDot(x.toFixed(1), y.toFixed(1), 13, img, DATA.color[t.rid], tip) : `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="6" fill="${DATA.color[t.rid]}" class="mk" data-tip="${esc(tip)}"/>`;
-  }
-  return s + '</svg>';
-}
-function bullBoard() {
-  const B = DATA.bull, M = MONEY_WEEK;
-  if (!B) return '';
-  const status = { soon: `Coming in week ${M.week}.`, upcoming: `Before kickoff, by projection. Every team is still live: a typical week swings about ${Math.round(DATA.meta.sd)} points either way.`, live: 'Games are underway: banked points plus the rest projected.', final: 'Final scores.' }[B.state];
-  const list = B.rows.map((r, i) => {
-    const t = team(r.rid);
-    return `<li class="${i === 0 ? 'lead' : ''} ${r.rid === myTeam ? 'mine' : ''}">
-        <span class="n">${i + 1}</span>${avatar(t)}
-        <span class="who"><b>${esc(t.name)}${champTag(t, false)}</b><small>${esc(firstName(t))}${r.banked ? `, ${f1(r.banked)} banked` : ''}</small></span>
-        <span class="sc">${f1(r.score)}</span>
-        <span class="away ${r.side}">${awayText(r)}</span>
-        ${B.state === 'final' ? (i === 0 ? `<span class="pw won">${money(M.prize)}</span>` : '<span class="pw"></span>') : `<span class="pw" data-tip="${esc(`${t.name} lands closest to ${M.target} in ${(r.pWin * 100).toFixed(1)}% of 20,000 simulated weeks`)}">${pct(r.pWin)}</span>`}
-      </li>`;
-  }).join('');
-  return `
-    <section class="bull glass rim" aria-labelledby="bull-hed">
-      <div class="bull-copy">
-        <p class="kicker"><span>Money week</span><span class="k">Week ${M.week} bonus</span></p>
-        <h2 id="bull-hed">${esc(M.title)}</h2>
-        <p class="lead-deck">Closest to ${M.target} points, over or under, wins it all. ${esc(M.why)}. Happy birthday, Commish.</p>
-        <div class="ticket" aria-label="Prize ${money(M.prize)}, doubled from ${money(M.usual)}"><s>${money(M.usual)}</s><b>${money(M.prize)}</b><small>prize, doubled</small></div>
-        <a class="flyer" href="${asset(M.flyer)}" target="_blank" rel="noopener"><img src="${asset(M.flyer)}" alt="Money week flyer: ${esc(M.title)}, closest to ${M.target} wins ${money(M.prize)}" loading="lazy"><span>Open the flyer</span></a>
-      </div>
-      ${B.rows.length ? `<div class="bull-chart">${bullTarget(B)}<p class="sub">${status}</p></div>
-      <div class="bull-list">
-        <div class="bull-head"><span>Team</span><span>${B.state === 'final' ? 'Score' : 'Proj'}</span><span>From ${M.target}</span><span>${B.state === 'final' ? 'Prize' : 'Wins it'}</span></div>
-        <ol>${list}</ol>
-      </div>` : `<div class="bull-chart"><p class="sub">${status}</p></div>`}
-    </section>`;
 }
 // files the single-file preview inlines (window.__ASSETS__); served from the site otherwise
 const asset = (p) => window.__ASSETS__?.[p] || p;
@@ -1484,7 +1420,6 @@ function viewMatchups() {
       </div>
     </section>
     ${gameOfTheWeek()}
-    ${bullBoard()}
     ${pv.length ? `<div class="matchups">${pv.map((p, i) => {
       const a = team(p.a), b = team(p.b);
       const isKey = DATA.key && DATA.key.i === i;
@@ -2023,7 +1958,7 @@ function revealRanks(root) {
 }
 
 // cards and panels rise in as they scroll into view, staggered within each batch
-const REVEAL = '.hero > .lead-car, .live-panel, .you-card, .notice, .gotw, .bull, .matchups > .mu, .wire-stats, .sec-title, .moves > li, .day > h3, .two-col aside > .panel, .lab-grid > .panel, .trade-bar, .trade-legend, .ideas > .idea, .futures, .method-box, .empty';
+const REVEAL = '.hero > .lead-car, .live-panel, .you-card, .notice, .gotw, .matchups > .mu, .wire-stats, .sec-title, .moves > li, .day > h3, .two-col aside > .panel, .lab-grid > .panel, .trade-bar, .trade-legend, .ideas > .idea, .futures, .method-box, .empty';
 let io = null;
 function reveal(root) {
   io?.disconnect();

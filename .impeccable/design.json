@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-28T00:37:07.208Z",
+  "generatedAt": "2026-10-28T00:51:54.751Z",
   "title": "Design System: The Power Hour",
   "extensions": {
     "colorMeta": {
@@ -186,8 +186,8 @@
       },
       "tile": {
         "role": "neutral",
-        "displayName": "Tile",
-        "canonical": "#F1F8E9",
+        "displayName": "Tray",
+        "canonical": "#E8F0DF",
         "tonalRamp": [
           "#27321A",
           "#42611F",
@@ -201,8 +201,8 @@
       },
       "tile-2": {
         "role": "neutral",
-        "displayName": "Tile 2",
-        "canonical": "#E6F2DA",
+        "displayName": "Tray 2",
+        "canonical": "#D6E3C9",
         "tonalRamp": [
           "#26311B",
           "#405E21",
@@ -217,7 +217,7 @@
       "line": {
         "role": "neutral",
         "displayName": "Line",
-        "canonical": "#DCEBD0",
+        "canonical": "#D2E0C4",
         "tonalRamp": [
           "#252F1D",
           "#3D5926",
@@ -277,7 +277,7 @@
       "good": {
         "role": "tertiary",
         "displayName": "Good",
-        "canonical": "#2E7D32",
+        "canonical": "#28702C",
         "tonalRamp": [
           "#1C311D",
           "#225D25",
@@ -476,6 +476,11 @@
         "name": "chip",
         "value": "0 2px 0 rgba(14,46,22,0.26)",
         "purpose": "Small tags."
+      },
+      {
+        "name": "tray-edge",
+        "value": "inset 0 3px 0 rgba(18,48,26,0.07), inset 0 0 0 1.5px rgba(18,48,26,0.1)",
+        "purpose": "Recessed panels inside a card: a hard inner top shadow and a faint inked rim."
       }
     ],
     "motion": [
@@ -546,7 +551,7 @@
       "refersTo": "card",
       "description": "Cartoon glass on a hard ledge: the base surface for every card.",
       "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Dynasty Dan</h3><p class=\"ds-card-body\">Third in points for and the easiest schedule left.</p></div>",
-      "css": ".ds-card{background-color:rgba(255,255,255,.88);background-image:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(255,255,255,.6) 46%,rgba(255,255,255,0) 100%);background-size:100% 150px;background-repeat:no-repeat;padding:18px;border-radius:24px;color:#12301A;box-shadow:inset 0 2px 0 #FFFFFF,inset 0 -3px 0 rgba(18,48,26,.05),0 0 0 2.5px #12301A,0 5px 0 2.5px rgba(14,46,22,.26);transition:transform .2s,box-shadow .2s}.ds-card:hover{transform:translateY(-2px);box-shadow:inset 0 2px 0 #FFFFFF,inset 0 -3px 0 rgba(18,48,26,.05),0 0 0 2.5px #12301A,0 7px 0 2.5px rgba(14,46,22,.26)}.ds-card-title{margin:0 0 6px;font:800 21px/1.1 'Big Shoulders Display','Arial Narrow',sans-serif}.ds-card-body{margin:0;font:400 16px/1.55 'Albert Sans',system-ui,sans-serif;color:#3C5A43}"
+      "css": ".ds-card{background-color:rgba(255,255,255,.96);background-image:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(255,255,255,.6) 46%,rgba(255,255,255,0) 100%);background-size:100% 150px;background-repeat:no-repeat;padding:18px;border-radius:24px;color:#12301A;box-shadow:inset 0 2px 0 #FFFFFF,inset 0 -3px 0 rgba(18,48,26,.05),0 0 0 2.5px #12301A,0 5px 0 2.5px rgba(14,46,22,.26);transition:transform .2s,box-shadow .2s}.ds-card:hover{transform:translateY(-2px);box-shadow:inset 0 2px 0 #FFFFFF,inset 0 -3px 0 rgba(18,48,26,.05),0 0 0 2.5px #12301A,0 7px 0 2.5px rgba(14,46,22,.26)}.ds-card-title{margin:0 0 6px;font:800 21px/1.1 'Big Shoulders Display','Arial Narrow',sans-serif}.ds-card-body{margin:0;font:400 16px/1.55 'Albert Sans',system-ui,sans-serif;color:#3C5A43}"
     },
     {
       "name": "Your Card",
@@ -586,11 +591,18 @@
       "description": "Smoked-glass dark panel with white type, yellow accents and a corner glint.",
       "html": "<div class=\"ds-board\"><h2>Mo takes the lead</h2><p>Up 14.2 with two players left.</p></div>",
       "css": ".ds-board{position:relative;padding:26px 28px;border-radius:32px;color:#FFFFFF;background-color:#13301C;background-image:linear-gradient(180deg,rgba(255,255,255,.1) 0,rgba(255,255,255,.03) 55%,rgba(255,255,255,0) 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.2),inset 0 -3px 0 rgba(0,0,0,.18),0 0 0 2.5px #12301A,0 5px 0 2.5px #E0A100}.ds-board h2{margin:0 0 8px;font:900 44px/.94 'Big Shoulders Display',sans-serif}.ds-board p{margin:0;color:#FFEB3B;font:700 15px/1.4 'Albert Sans',system-ui,sans-serif}"
+    },
+    {
+      "name": "Tray",
+      "kind": "card",
+      "description": "A panel pressed into a card: Tray fill, hard inner top shadow, faint inked rim.",
+      "html": "<div class=\"ds-card\" style=\"padding:18px;border-radius:24px;background:#fff;box-shadow:0 0 0 2.5px #12301A,0 5px 0 2.5px rgba(14,46,22,.26)\"><div class=\"ds-tray\"><b>Position groups</b><span class=\"ds-chip2\">94% lineup IQ</span></div></div>",
+      "css": ".ds-tray{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#E8F0DF;box-shadow:inset 0 3px 0 rgba(18,48,26,.07),inset 0 0 0 1.5px rgba(18,48,26,.1);font:700 13px/1.2 'Albert Sans',system-ui,sans-serif;color:#55705A}.ds-chip2{padding:7px 12px 6px;border-radius:12px;background:#fff;color:#12301A;box-shadow:0 0 0 1.5px #D2E0C4,0 3px 0 1.5px #D2E0C4}"
     }
   ],
   "narrative": {
     "northStar": "The Day Game",
-    "overview": "A flat sky over a mowed football field at one in the afternoon. Every surface is cartoon glass on a hard ledge: an inked outline, a bright sheen across the top, a hint of the field showing through, and a solid ledge under it like a toy you could press down. Nothing is blurred and nothing casts a soft shadow, so a phone draws exactly what a desktop does.\n\nThe page is a stadium in layers. The sky (flat bands of blue and three cartoon clouds) sits behind everything. The field starts right under each page heading: mowing stripes, a chalk yard line every two stripes and a chalk sideline, bleeding to the window edges. Cards stand on the grass. The footer is the end zone, with a white goal line. Dark scoreboards (the headline carousel, the game of the week, the money-week board) are smoked glass with a cartoon glint in the corner, the one place type turns white.\n\nThe energy comes from a single bold move, the power rank painted on the grass like a yard number, half under its card. Everything else stays quiet: one yellow for \"you\", one amber for actions, ink for all text.",
+    "overview": "A flat sky over a mowed football field at one in the afternoon. Every surface is cartoon glass on a hard ledge: an inked outline, a bright sheen across the top, a hint of the field showing through, and a solid ledge under it like a toy you could press down. Nothing is blurred and nothing casts a soft shadow, so a phone draws exactly what a desktop does.\n\nThe page is a stadium in layers. The sky (flat bands of blue and three cartoon clouds) sits behind everything. The field starts right under each page heading: mowing stripes, a chalk yard line every two stripes and a chalk sideline, bleeding to the window edges. Cards stand on the grass. The footer is the end zone, with a white goal line. Dark scoreboards (the headline carousel and the game of the week) are smoked glass with a cartoon glint in the corner, the one place type turns white.\n\nThe energy comes from a single bold move, the power rank painted on the grass like a yard number, half under its card. Everything else stays quiet: one yellow for \"you\", one amber for actions, ink for all text.",
     "keyCharacteristics": [
       "Light only: a daytime world, no dark theme.",
       "Hard edges everywhere: inked outlines, solid ledges, no blur, no `backdrop-filter`, no ambient shadows.",
@@ -628,6 +640,11 @@
         "name": "The Numbers-Wear-Display Rule",
         "body": "Any figure a manager would read aloud (rank, score, points, odds) is set in Big Shoulders; prose stays in Albert Sans.",
         "section": "typography"
+      },
+      {
+        "name": "The Three-Step Rule",
+        "body": "A panel inside a card is always pressed in (Tray plus tray edge), never another raised card and never the same tone as the card face. If two neighbouring surfaces look alike, one of them is on the wrong step.",
+        "section": "elevation"
       },
       {
         "name": "The Hard-Ledge Rule",
