@@ -979,6 +979,9 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .footer .sponsor p { margin: 0; color: var(--chalk); font-size: 14px; }
 .footer .sponsor .was { text-decoration: line-through; text-decoration-color: #FF8A80; text-decoration-thickness: 2px; margin-right: 4px; }
 .footer .sponsor b { color: var(--yellow); font-weight: 700; }
+/* the signature line: the last thing on the page, under a faint chalk rule */
+.footer .version { max-width: none; margin: 22px 0 0; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.18);
+  font: 700 13px/1.2 var(--display); letter-spacing: 0.06em; color: var(--tile); }
 
 /* ---------- faces: the managers' headshots (lib/members.js) ---------- */
 /* a 12-point burst for the "vs" badges */
@@ -1456,6 +1459,7 @@ html.locked { overflow: hidden; }
   .footer { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 48px; align-items: start; align-content: start; }
   .footer-logo { grid-row: 1 / span 6; margin-top: 0; }
   .footer > :not(.footer-logo) { grid-column: 2; }
+  .footer > .version { grid-column: 1 / -1; }
 }
 
 /* touch screens: the small pills grow to a 40px target */
