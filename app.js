@@ -324,7 +324,7 @@ function viewRankings() {
       </section>`;
   const hold = held ? `<div class="notice glass hold"><span><strong>Power rankings are on hold.</strong> Week ${m.lastScored + 1} is being played, so these are the ranks going into the week. They update as soon as every game is final. For how this week is going, see the <a href="#live">Live</a> tab.</span></div>` : '';
   return `
-    ${held ? head : `<div class="hero">${leadStory()}${head}</div>`}
+    ${held ? head : `<div class="hero">${leadStory()}${head}${talkSlot()}</div>`}
     ${hold}${notice}${strip}
     <div id="poll-slot">${pollCard()}</div>
     <ol class="ranks">${items}</ol>
@@ -939,6 +939,7 @@ function viewLive() {
         </div>
         <div class="sources"><span class="chip"><span class="dot live"></span>${played} NFL team${played === 1 ? '' : 's'} played so far</span>${DATA.fetched ? `<span class="chip">Scores as of ${esc(DATA.fetched)}</span>` : ''}</div>
       </section>
+      ${talkSlot()}
     </div>`;
   return `
     ${head}
@@ -1198,6 +1199,7 @@ function leadStory() {
   const s = DATA.stories;
   if (!s?.lead) return '';
   const stories = [s.lead, ...s.more].slice(0, s.size || CAROUSEL_SIZE + (s.night ? 1 : 0) + (s.extra ? 1 : 0));
+  carouselStories = stories; // the league desk tags comments with these
   const date = new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' });
   const cast = (st) => st.rids.map(team).filter(Boolean).map((t) => `
     <div class="cast-team">${avatar(t)}
@@ -1236,6 +1238,7 @@ let carouselFit = null, carouselSeen = null, clipSync = null;
 function bindCarousel() {
   carouselFit = null;
   clipSync = null;
+  carouselNow = null;
   carouselSeen?.disconnect();
   const car = $('.lead-car'), track = car?.querySelector('.car-track');
   if (!track) return;
@@ -1260,6 +1263,7 @@ function bindCarousel() {
   fit();
   document.fonts?.ready.then(fit); // headline height changes once the display font arrives
   carouselFit = fit; // re-run on real width changes (see onWidthChange)
+  carouselNow = { at: () => idx, go: (i) => go(i) }; // for the league desk's headline chips
   const go = (i) => {
     show(i);
     const sl = slides[idx];
@@ -2333,6 +2337,7 @@ function route({ fresh = false } = {}) {
 
 function bind(key) {
   if (key === 'live') bindCarousel();
+  if (key === 'live' || key === 'rankings') mountTalk();
   document.querySelectorAll('[data-reveal]').forEach((b) => b.addEventListener('click', () => passThenReveal(b)));
   if (key === 'rankings') {
     if (!DATA.liveMode) bindCarousel();
@@ -2507,7 +2512,206 @@ function startLoader() {
   };
 }
 
+// ---------- the league desk: one discussion thread a week, beside the headlines ----------
+// Anyone can read; managers post once they've opened their personal link from Dan (api/talk.js). The panel stays put
+// while the headlines rotate: a comment can carry the headline it's about (taken from the slide on screen when its
+// author starts typing), shown as a chip that turns the carousel back to that slide. Authors can edit for a minute;
+// only Dan deletes. It refreshes every 25 seconds while the tab is visible. The demo and the preview bundle skip it.
+const TALK = { data: null, ref: null, refTouched: false, editing: null, flash: '', error: '', join: null, invites: null, links: {} };
+let carouselNow = null, carouselStories = [];
+const talkWeek = () => DATA.meta.lastScored + 1;
+const talkSlot = () => (RAW.isDemo || window.__DEMO__ ? '' : '<aside class="talk glass" id="talk" aria-label="League desk" hidden></aside>');
+// a headline's thread key: the week and its story type (a second story of the same type gets a number)
+const storyKeys = (stories) => { const seen = {}; return stories.map((st) => { const n = (seen[st.type] = (seen[st.type] || 0) + 1); return `w${talkWeek()}:${st.type}${n > 1 ? `-${n}` : ''}`; }); };
+const talkNow = () => Date.now() + (TALK.data?.skew || 0);
+
+async function talkCall(body) {
+  const r = await fetch(body ? '/api/talk' : `/api/talk?week=${talkWeek()}`, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : undefined);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `Something went wrong (${r.status})`);
+  return j;
+}
+const keepTalk = (d) => { if (d && 'comments' in d) TALK.data = { ...d, skew: d.now ? d.now - Date.now() : 0 }; };
+
+async function loadTalk() {
+  if (RAW.isDemo || window.__DEMO__) return;
+  try { keepTalk(await talkCall()); } catch { /* keep what's on screen */ }
+  paintTalk();
+}
+
+// a personal link (#join=<token>) opened on this device: trade it for a session, and make their team "yours"
+async function claimTalk() {
+  const token = TALK.join;
+  TALK.join = null;
+  try {
+    const r = await talkCall({ action: 'claim', token });
+    const t = DATA.teams.find((x) => x.ownerId === r.me);
+    TALK.flash = `You're in, ${MEMBERS[r.me]?.first || 'friend'}. Your comments post as ${t ? t.name : 'you'}.`;
+    if (t && !myTeam) { myTeam = t.rid; store.set('ph-my-team', String(t.rid)); $('#my-team').value = String(t.rid); paintMe(); }
+  } catch (e) {
+    TALK.flash = e.message;
+  }
+  await loadTalk();
+}
+
+function mountTalk() {
+  const el = $('#talk');
+  if (!el) return;
+  el.addEventListener('click', onTalkClick);
+  el.addEventListener('input', onTalkInput);
+  el.addEventListener('submit', onTalkSubmit);
+  if (TALK.data) paintTalk(true); else loadTalk();
+}
+
+const ago = (ts) => {
+  const s = (talkNow() - ts) / 1000;
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return new Date(ts).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'short' });
+};
+const refChip = (ref) => {
+  const i = storyKeys(carouselStories).indexOf(ref.key);
+  return `<button type="button" class="tc-ref" data-goto="${i}"${i < 0 ? ' disabled' : ''} data-tip="${esc(i < 0 ? `${ref.title} (no longer in the headlines)` : `Show this headline: ${ref.title}`)}">On: ${esc(short(ref.title, 56))}</button>`;
+};
+function talkItem(c) {
+  const D = TALK.data, t = DATA.teams.find((x) => x.ownerId === c.uid), m = MEMBERS[c.uid];
+  const mine = D.me === c.uid, left = D.editMs - (talkNow() - c.ts);
+  const editing = TALK.editing === c.id;
+  const acts = [
+    mine && left > 0 && !editing ? `<button type="button" class="tc-act" data-edit="${esc(c.id)}">Edit<small>${Math.ceil(left / 1000)}s left</small></button>` : '',
+    D.admin ? `<button type="button" class="tc-act bad" data-del="${esc(c.id)}">Delete</button>` : '',
+  ].join('');
+  return `<li class="tc${mine ? ' mine' : ''}" data-id="${esc(c.id)}">
+      ${t ? headshot(t, 'tc-face') : `<span class="tc-face ph">${esc((m?.first || '?')[0])}</span>`}
+      <div class="tc-body">
+        <p class="tc-who"><b>${esc(m?.first || 'Manager')}</b>${t ? `<span>${esc(t.name)}</span>` : ''}<time>${ago(c.ts)}${c.edited ? ', edited' : ''}</time></p>
+        ${c.ref ? refChip(c.ref) : ''}
+        ${editing
+          ? `<form class="tc-edit" data-id="${esc(c.id)}"><textarea rows="3" maxlength="${D.maxLen}" aria-label="Edit your comment">${esc(c.text)}</textarea><div class="talk-row"><button type="button" class="talk-btn" data-cancel>Cancel</button><button type="submit" class="talk-btn primary">Save</button></div></form>`
+          : `<p class="tc-text">${esc(c.text)}</p>`}
+        ${acts ? `<div class="tc-acts">${acts}</div>` : ''}
+      </div>
+    </li>`;
+}
+function talkList() {
+  const cs = TALK.data?.comments || [];
+  return cs.length ? cs.map(talkItem).join('') : '<li class="tc-empty">Nothing yet. Start the argument.</li>';
+}
+const aboutChip = () => (TALK.ref
+  ? `<span class="talk-about-on"><span>About: <b>${esc(short(TALK.ref.title, 64))}</b></span><button type="button" class="tc-x" data-unref aria-label="Not about this headline"><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="m2 2 8 8m0-8-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></span>`
+  : '<button type="button" class="tc-tag" data-tag>Tag the headline on screen</button>');
+function talkForm() {
+  const D = TALK.data;
+  if (!D.me) return '<p class="talk-note">Reading only. Ask Dan for your personal link to join in.</p>';
+  return `<form class="talk-form">
+      <div class="talk-about">${aboutChip()}</div>
+      <textarea rows="3" maxlength="${D.maxLen}" placeholder="Say something to the league" aria-label="Your comment"></textarea>
+      <div class="talk-row"><small class="talk-count">0/${D.maxLen}</small><span class="talk-err" role="status"></span><button type="submit" class="talk-btn primary">Post</button></div>
+    </form>`;
+}
+function invitePanel() {
+  if (!TALK.invites) return '';
+  const people = Object.entries(MEMBERS).sort((a, b) => a[1].first.localeCompare(b[1].first));
+  return `<div class="talk-invites">
+      <p class="talk-note">Each link signs one manager in, on as many of their devices as they like. A new link replaces the old one and signs those devices out.</p>
+      <ul>${people.map(([uid, m]) => {
+        const t = DATA.teams.find((x) => x.ownerId === uid), url = TALK.links[uid];
+        return `<li><span><b>${esc(m.first)}</b>${t ? `<small>${esc(t.name)}</small>` : ''}</span>
+          ${url ? `<input readonly value="${esc(url)}" aria-label="${esc(m.first)}'s link"><button type="button" class="talk-btn" data-copy="${esc(uid)}">Copy</button>` : `<button type="button" class="talk-btn" data-invite="${esc(uid)}">New link</button>`}</li>`;
+      }).join('')}</ul>
+    </div>`;
+}
+
+// full paint the first time (or after sign-in changes); after that only the list, so a draft is never wiped
+function paintTalk(full = false) {
+  const el = $('#talk'), D = TALK.data;
+  if (!el) return;
+  if (!D?.enabled) { el.hidden = true; el.closest('.hero')?.classList.remove('with-talk'); return; }
+  el.hidden = false;
+  el.closest('.hero')?.classList.add('with-talk');
+  const n = D.comments.length;
+  const signed = D.me ? `<span class="talk-me">Posting as <b>${esc(MEMBERS[D.me]?.first || '')}</b><button type="button" class="tc-link" data-signout>Sign out</button></span>` : '';
+  const head = `<div class="talk-head"><h2>League desk</h2><span class="talk-n">Week ${D.week}, ${n} comment${n === 1 ? '' : 's'}</span>${D.admin ? `<button type="button" class="talk-btn" data-invites aria-expanded="${!!TALK.invites}">Invite links</button>` : ''}${signed}</div>`;
+  const flash = TALK.flash ? `<p class="talk-flash" role="status">${esc(TALK.flash)}</p>` : '';
+  const signedIn = el.dataset.me ?? '';
+  if (full || !el.querySelector('.talk-list') || signedIn !== String(D.me || '') || el.dataset.inv !== String(!!TALK.invites)) {
+    el.dataset.me = String(D.me || ''); el.dataset.inv = String(!!TALK.invites);
+    el.innerHTML = `<div class="talk-in">${head}${flash}${invitePanel()}<ol class="talk-list">${talkList()}</ol>${talkForm()}</div>`;
+  } else {
+    el.querySelector('.talk-head').outerHTML = head;
+    if (TALK.editing == null) el.querySelector('.talk-list').innerHTML = talkList();
+  }
+  const list = el.querySelector('.talk-list');
+  if (list && !TALK.editing && list.dataset.n !== String(n)) { list.scrollTop = list.scrollHeight; list.dataset.n = String(n); }
+  // the edit buttons come off when their minute is up
+  clearTimeout(TALK.tick);
+  const next = D.comments.filter((c) => c.uid === D.me).map((c) => D.editMs - (talkNow() - c.ts)).filter((x) => x > 0);
+  if (next.length) TALK.tick = setTimeout(() => paintTalk(), Math.min(...next, 10000) + 50);
+}
+
+const currentHeadline = () => {
+  const i = carouselNow?.at() ?? 0, st = carouselStories[i];
+  return st ? { key: storyKeys(carouselStories)[i], title: st.headline } : null;
+};
+function onTalkInput(e) {
+  const f = e.target.closest('.talk-form');
+  if (!f || e.target.tagName !== 'TEXTAREA') return;
+  f.querySelector('.talk-count').textContent = `${e.target.value.length}/${TALK.data.maxLen}`;
+  // the first keystroke tags the headline on screen, unless the author already chose
+  if (!TALK.refTouched && e.target.value.trim()) { TALK.refTouched = true; TALK.ref = currentHeadline(); f.querySelector('.talk-about').innerHTML = aboutChip(); }
+}
+async function onTalkSubmit(e) {
+  e.preventDefault();
+  const f = e.target, ta = f.querySelector('textarea'), btn = f.querySelector('[type=submit]'), err = f.querySelector('.talk-err');
+  const text = ta.value.trim();
+  if (!text) return;
+  btn.disabled = true;
+  try {
+    if (f.classList.contains('tc-edit')) { keepTalk(await talkCall({ action: 'edit', week: talkWeek(), id: f.dataset.id, text })); TALK.editing = null; }
+    else {
+      keepTalk(await talkCall({ action: 'post', week: talkWeek(), text, ref: TALK.ref }));
+      ta.value = ''; TALK.ref = null; TALK.refTouched = false;
+      f.querySelector('.talk-about').innerHTML = aboutChip();
+      f.querySelector('.talk-count').textContent = `0/${TALK.data.maxLen}`;
+    }
+    TALK.flash = '';
+    paintTalk();
+  } catch (x) {
+    if (err) err.textContent = x.message; else TALK.flash = x.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+async function onTalkClick(e) {
+  const b = e.target.closest('button');
+  if (!b) return;
+  const d = b.dataset;
+  if (d.goto != null && !b.disabled) { carouselNow?.go(Number(d.goto)); $('.lead-car')?.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'nearest' }); }
+  else if ('unref' in d) { TALK.ref = null; TALK.refTouched = true; b.closest('.talk-about').innerHTML = aboutChip(); }
+  else if ('tag' in d) { TALK.ref = currentHeadline(); TALK.refTouched = true; b.closest('.talk-about').innerHTML = aboutChip(); }
+  else if (d.edit) { TALK.editing = d.edit; paintTalk(true); $('#talk .tc-edit textarea')?.focus(); }
+  else if ('cancel' in d) { TALK.editing = null; paintTalk(true); }
+  else if (d.del) {
+    if (!confirm('Delete this comment for everyone?')) return;
+    try { keepTalk(await talkCall({ action: 'delete', week: talkWeek(), id: d.del })); paintTalk(); } catch (x) { TALK.flash = x.message; paintTalk(true); }
+  } else if ('invites' in d) { TALK.invites = !TALK.invites; paintTalk(true); }
+  else if (d.invite) {
+    if (!confirm(`Make a new link for ${MEMBERS[d.invite]?.first}? Their old link stops working.`)) return;
+    try { const r = await talkCall({ action: 'invite', uid: d.invite }); TALK.links[d.invite] = `${location.origin}${location.pathname}#join=${r.token}`; paintTalk(true); }
+    catch (x) { TALK.flash = x.message; paintTalk(true); }
+  } else if (d.copy) {
+    try { await navigator.clipboard.writeText(TALK.links[d.copy]); b.textContent = 'Copied'; } catch { b.closest('li').querySelector('input')?.select(); }
+  } else if ('signout' in d) {
+    try { await talkCall({ action: 'signout' }); } catch { /* the cookie goes either way */ }
+    TALK.flash = ''; await loadTalk();
+  }
+}
+
 async function main() {
+  // a personal link for the league desk: take the token off the address bar before anything routes or gets shared
+  const join = /^#join=([A-Za-z0-9_-]{16,128})$/.exec(location.hash);
+  if (join) { TALK.join = join[1]; history.replaceState(null, '', location.pathname + location.search); }
   initAvatarFallback();
   initTooltips();
   const loader = startLoader();
@@ -2541,6 +2745,9 @@ async function main() {
   new MutationObserver(() => clipSync?.()).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
   loadVotes();
   loadPoll();
+  if (TALK.join) claimTalk();
+  setInterval(() => { if (document.visibilityState === 'visible' && $('#talk') && TALK.editing == null) loadTalk(); }, 25000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && $('#talk') && TALK.editing == null) loadTalk(); });
   let lastWidth = innerWidth;
   window.addEventListener('resize', () => {
     if (innerWidth === lastWidth) return; // height-only resizes are the browser toolbar, ignore them
