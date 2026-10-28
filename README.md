@@ -4,7 +4,7 @@ Power rankings, a live waiver-wire feed and data-nerd stats for the **NFL Fantas
 
 - **Rankings**: a 0–100 power score per team, half rest-of-season roster strength and half results. Tap a team for the reasons behind its rank, a position-group radar, its best ROS lineup, weekly scoring and simulated playoff seeds.
 - **Wire**: every add, drop and trade, newest first. Each move is graded by the consensus ROS value gained or lost. Also shows the best available free agents and a trade ledger.
-- **This week**: projected scores and win odds for every matchup.
+- **Games**: projected scores and win odds for every matchup.
 - **Nerd lab**: rank flow, luck index, points for vs against, weekly finishes heatmap, position-group ranks, playoff odds, lineup efficiency, biggest games, players the experts disagree on, and waiver/trade ROI.
 
 ## How it stays up to date
@@ -33,7 +33,7 @@ The Games tab projects each matchup from this week's player projections: Fantasy
 
 ## Turn on fan picks (one-time)
 
-Fan votes on the This week page need somewhere shared to live. Everything else works without it; until it's connected the voting box just doesn't appear.
+Fan votes on the Games page need somewhere shared to live. Everything else works without it; until it's connected the voting box just doesn't appear.
 
 1. In the Vercel dashboard, open the project and go to **Storage**.
 2. Choose **Create Database**, pick **Upstash for Redis** (the free plan is plenty), and connect it to this project for all environments.

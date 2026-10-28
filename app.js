@@ -1430,8 +1430,8 @@ function viewMatchups() {
   return `
     <section class="view-head">
       <div>
-        <h1><span class="wk">${wk ? `Week ${wk}` : 'Off week'}</span>Matchups</h1>
-        <p>${DATA.meta.hasWeekly ? "Projections add up each lineup as set in Sleeper (the best one where it isn't set yet), using this week's player projections from FantasyPros and Sleeper, averaged (byes and players ruled out count as zero)." : "Projections use each team's best healthy lineup for the week (byes and injuries count as zero), blended with how they've actually been scoring."} Win odds assume a typical week-to-week swing of about ${Math.round(DATA.meta.sd)} points. Open any game for the lineups slot by slot, and get your pick in before kickoff.</p>
+        <h1><span class="wk">${wk ? `Week ${wk}` : 'Off week'}</span>Games</h1>
+        <p>Every game this week, projected from the lineups as they stand. Open one for the slot-by-slot breakdown, and make your pick before kickoff.</p>
       </div>
     </section>
     ${gameOfTheWeek()}
@@ -1450,7 +1450,7 @@ function viewMatchups() {
           <div class="mu-team right">${avatar(b)}<span class="tn">${esc(b.name)}${champTag(b, false)}</span><small>#${b.powerRank} power, ${record(b)}</small>${liveTag(p.liveB)}<span class="pr">${f1(p.projB)}</span>${bullTag(p.b)}</div>
         </div>
         <div class="wp"><div class="wp-bar" role="img" aria-label="${esc(a.name)} ${pct(p.winA)}, ${esc(b.name)} ${pct(1 - p.winA)}"><i style="width:${p.winA * 100}%"></i><i style="width:${(1 - p.winA) * 100}%"></i></div>
-          <div class="wp-labels"><span>${pct(p.winA)}</span><span>${pct(1 - p.winA)}</span></div></div>
+          <div class="wp-labels odds"><span class="a">${pct(p.winA)}<small>to win</small></span><span class="b">${pct(1 - p.winA)}<small>to win</small></span></div></div>
         ${betLine(p, a, b, i, stakes)}
         <div class="fan-slot" data-i="${i}">${fanBlock(p)}</div>
         <button type="button" class="mu-more" aria-expanded="false" aria-controls="mud-${i}"><span>Lineup breakdown</span>${XP}</button>
@@ -1595,9 +1595,10 @@ function matchupDetail(i) {
       <div class="h2h-bar"><span class="a"><i style="width:${(pa / max) * 100}%"></i></span><span class="b"><i style="width:${(pb / max) * 100}%"></i></span></div>
     </div>`;
   };
-  const src = bd.source.a === 'set' && bd.source.b === 'set' ? 'Starting lineups as set in Sleeper'
-    : bd.source.a !== 'set' && bd.source.b !== 'set' ? "Lineups aren't set yet, so these are each team's best projected starters"
-    : `${esc((bd.source.a === 'set' ? B : A).name)} hasn't set a lineup, so theirs is the best projected one`;
+  // where each lineup comes from: the one set in Sleeper, or the best projected one standing in until it's set
+  const src = (k) => bd.source[k] === 'set'
+    ? '<small class="chip lu-src" data-tip="The starters set in Sleeper for this week"><span class="dot"></span>Set in Sleeper</small>'
+    : `<small class="chip lu-src off" data-tip="${esc(`${(k === 'a' ? A : B).name} hasn't set a lineup, so this is their best projected one`)}"><span class="dot"></span>Not set, best lineup</small>`;
   const gmax = Math.max(1, ...bd.groups.map((g) => Math.abs(g.edge)));
   const grp = (g) => {
     const side = g.edge > 0.25 ? 'a' : g.edge < -0.25 ? 'b' : 'n';
@@ -1607,7 +1608,7 @@ function matchupDetail(i) {
   return `
     <div class="bd">
       <div class="bd-main">
-        <div class="bd-head"><div class="a">${avatar(A)}<b>${f1(bd.totals.a)}</b><span>${esc(A.name)}</span></div><p>${src}</p><div class="b">${avatar(B)}<b>${f1(bd.totals.b)}</b><span>${esc(B.name)}</span></div></div>
+        <div class="bd-head"><div class="a">${avatar(A)}<b>${f1(bd.totals.a)}</b><span>${esc(A.name)}</span>${src('a')}</div><div class="b">${avatar(B)}<b>${f1(bd.totals.b)}</b><span>${esc(B.name)}</span>${src('b')}</div></div>
         <div class="h2h">${bd.rows.map(row).join('')}</div>
       </div>
       <div class="bd-side">
@@ -1615,10 +1616,20 @@ function matchupDetail(i) {
         <div class="grp-legend"><span class="a">${esc(short(A.name, 16))}</span><span class="b">${esc(short(B.name, 16))}</span></div>
         ${bd.groups.map(grp).join('')}
         <h4>Things to watch</h4>
-        <ul class="watch">${bd.watch.map((w) => `<li class="${w.tone}">${esc(w.text)}</li>`).join('') || '<li class="n">Nothing unusual: both lineups are set and healthy.</li>'}</ul>
+        <ul class="watch">${bd.watch.map(watchItem).join('') || '<li class="n">Nothing unusual: both lineups are set and healthy.</li>'}</ul>
       </div>
     </div>
-    <p class="bd-note">${DATA.live ? 'Players marked final show their actual points, locked in for the week. ' : ''}${DATA.meta.hasWeekly ? `Player projections are this week's, the average of FantasyPros and Sleeper (whichever has the player), and the team totals add up the lineup shown.` : 'Player projections are DraftSharks rest-of-season weekly averages, since this week\'s projections are unavailable.'} Players on a bye or ruled out count as zero. Hover or tap a row for each source and the floor to ceiling.</p>`;
+    <p class="bd-note">${DATA.live ? 'Players marked final show their actual points, locked in for the week. ' : ''}${DATA.meta.hasWeekly ? `Player projections are this week's, the average of FantasyPros and Sleeper (whichever has the player), and the team totals add up the lineup shown.` : "Player projections are DraftSharks rest-of-season weekly averages, since this week's projections are unavailable; the card's total also blends in how each team has been scoring."} Players on a bye or ruled out count as zero. Win odds allow for a typical swing of about ${Math.round(DATA.meta.sd)} points a week. Hover or tap a row for each source and the floor to ceiling.</p>`;
+}
+
+// one "things to watch" line: an urgent one (a sure zero, an empty slot, points left on the bench) leads with its first
+// sentence in bold on a flag pip; player names are bold so the list scans
+function watchItem(w) {
+  const names = [...new Set(w.names || [])].sort((x, y) => y.length - x.length).map(esc);
+  const bold = (html) => names.reduce((h, n) => h.split(n).join(`<b>${n}</b>`), html);
+  if (!w.urgent) return `<li class="${w.tone}">${bold(esc(w.text))}</li>`;
+  const cut = w.text.search(/\.(\s|$)/) + 1 || w.text.length;
+  return `<li class="${w.tone} urgent"><strong>${esc(w.text.slice(0, cut))}</strong>${bold(esc(w.text.slice(cut)))}</li>`;
 }
 
 function toggleMatchup(card) {

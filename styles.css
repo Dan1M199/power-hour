@@ -410,6 +410,10 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .wp-bar i:first-child { background: var(--a); }
 .wp-bar i:last-child { background: var(--b); }
 .wp-labels { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-2); margin-top: 6px; font-weight: 700; }
+.wp-labels.odds { margin-top: 8px; font: 900 24px/1 var(--display); }
+.wp-labels.odds .a { color: var(--a-ink); }
+.wp-labels.odds .b { color: var(--b-ink); }
+.wp-labels.odds small { margin-left: 4px; font: 700 12px/1 var(--body); color: var(--ink-3); }
 .mu-note { margin: 10px 0 0; font-size: 13.5px; color: var(--ink-3); }
 .key-tag { position: absolute; top: -11px; right: 16px; padding: 5px 11px; border-radius: 999px; font: 800 11.5px/1 var(--body); color: var(--ink); background: var(--amber); box-shadow: 0 2px 0 var(--ledge-gold); }
 .mu-quip { margin: 0 0 14px; padding-bottom: 12px; border-bottom: 2px solid var(--line); font: 700 18px/1.2 var(--display); letter-spacing: 0.01em; color: var(--ink); text-wrap: pretty; }
@@ -537,8 +541,8 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .fut.fav .odds-tag { padding: 4px 9px 3px; border-radius: 999px; background: var(--amber); box-shadow: 0 2px 0 var(--ledge-gold); }
 .fut.mine { background: var(--mine-bg); box-shadow: inset 0 0 0 2px #F2C200; }
 /* one moneyline on the card, lined up under each side of the win bar */
-.ml { display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; gap: 8px; margin-top: 6px; }
-.ml b { font: 800 17px/1 var(--display); }
+.ml { display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; gap: 8px; margin-top: 4px; }
+.ml b { font: 800 15px/1 var(--display); }
 .ml .a { color: var(--a-ink); }
 .ml .b { color: var(--b-ink); text-align: right; }
 .ml small { font-size: 11.5px; font-weight: 600; color: var(--ink-3); }
@@ -553,8 +557,9 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .line { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding-top: 10px; }
 .line > span { display: grid; gap: 3px; align-content: start; padding: 7px 10px; border-radius: 12px; background: var(--tile); box-shadow: var(--tray-edge); min-width: 0; }
 .line small { font-size: 11.5px; color: var(--ink-3); }
-.line b { font: 800 15px/1.1 var(--display); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.line b { font: 800 19px/1.05 var(--display); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .line .pair { grid-template-columns: 1fr 1fr; column-gap: 8px; }
+@media (max-width: 760px) { .line > span { padding: 7px 8px; } .line b { font-size: 17px; } .line .pair { column-gap: 4px; } }
 .line .pair small { grid-column: 1 / -1; }
 .line .pair .a { color: var(--a-ink); }
 .line .pair .b { color: var(--b-ink); text-align: right; }
@@ -587,14 +592,15 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .mu.open > .mu-quip { text-align: center; text-wrap: balance; }
 }
 .bd { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 24px; padding-top: 18px; }
-.bd-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: end; margin-bottom: 8px; }
+.bd-head { display: flex; justify-content: space-between; gap: 12px; align-items: end; margin-bottom: 10px; }
+.bd-head .lu-src { justify-self: start; margin-top: 6px; padding: 4px 9px; font-size: 11.5px; box-shadow: 0 0 0 1.5px var(--line), 0 2px 0 1.5px var(--line); }
+.bd-head .b .lu-src { justify-self: end; }
 .bd-head > div { display: grid; gap: 2px; line-height: 1.1; min-width: 0; }
 .bd-head .b { text-align: right; }
 .bd-head b { font: 900 30px/1 var(--display); }
 .bd-head .a b { color: var(--a-ink); }
 .bd-head .b b { color: var(--b-ink); }
 .bd-head span { font-size: 12px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 16ch; }
-.bd-head p { margin: 0; text-align: center; font-size: 12px; color: var(--ink-3); }
 .h2h-row { display: grid; grid-template-columns: minmax(0, 1fr) 44px 40px 44px minmax(0, 1fr); align-items: center; column-gap: 6px; padding: 8px 0; border-bottom: 1px solid var(--line); }
 .h2h-p { min-width: 0; line-height: 1.2; }
 .h2h-p b { display: block; font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -635,9 +641,11 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .grp.b b { color: var(--b-ink); }
 .grp.n b { color: var(--ink-3); font-weight: 500; }
 .watch { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; font-size: 13.5px; color: var(--ink-2); }
-.watch li { --pip: var(--grass-2); }
+.watch li { --pip: var(--chalk); }
+.watch b, .watch strong { font-weight: 700; color: var(--ink); }
 .watch li.a { --pip: var(--a); }
 .watch li.b { --pip: var(--b); }
+.watch li.urgent { --pip: var(--flag); }
 .bd-note { margin: 14px 0 0; font-size: 11.5px; color: var(--ink-3); }
 
 /* ---------- trade lab ---------- */
