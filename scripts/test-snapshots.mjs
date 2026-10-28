@@ -2,7 +2,7 @@
 // stand-in for the Upstash store, across a "deploy" (fresh CDN, same store), odd keys, simultaneous first visitors
 // and a ranking-site outage.
 import league from '../api/league.js';
-import ros from '../api/ros.js';
+import ros, { ROS_SHAPE } from '../api/ros.js';
 import { leagueKey, morningKey } from '../lib/newsclock.js';
 
 const db = new Map();
@@ -73,7 +73,7 @@ dsDown = true;
 r = await call(ros, R);
 check('ros with DraftSharks down: one players pull, an hour on the CDN', r.code === 200 && playersCalls === 1 && /s-maxage=3600/.test(r.headers['Cache-Control']), `${playersCalls} players pulls, ${r.code} ${r.body}`);
 dsDown = false;
-db.delete(`ph:snap:ros:${morningKey()}`); // the hour is up: the outage copy expires and the next visitor rebuilds
+db.delete(`ph:snap:ros${ROS_SHAPE}:${morningKey()}`); // the hour is up: the outage copy expires and the next visitor rebuilds
 r = await call(ros, R);
 check('...the hourly retry re-scrapes the rankings but reuses the players file', r.code === 200 && playersCalls === 1, `${playersCalls} players pulls`);
 for (let i = 0; i < 5; i++) await call(ros, R);

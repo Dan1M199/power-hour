@@ -9,7 +9,7 @@ const sleeper = Object.fromEntries(Object.entries(P).map(([id, [n, pos, t, i]]) 
 // this week's projections: FantasyPros gives every asked-for player 10 + a tenth of their id, Sleeper 8 to Ja'Marr Chase
 process.env.FANTASYPROS_API_KEY = 'test';
 const fpProj = (url) => ({ players: new URL(url).searchParams.get('players').split(':').map(Number).map((id) => { const [n, pos, t] = fp[id - 1000];
-  return { fpid: id, name: n, position_id: pos === 'DEF' ? 'DST' : pos, team_id: t, stats: { points_half: 10 + (id - 1000) / 10 } }; }) });
+  return { fpid: id, name: n, position_id: pos === 'DEF' ? 'DST' : pos, team_id: t, stats: { points_half: 10 + (id - 1000) / 10, rec_yds: 40 } }; }) });
 async function run(failDs) {
   globalThis.fetch = async (url) => {
     const ok = (body, json) => ({ ok: true, status: 200, text: async () => body, json: async () => json });

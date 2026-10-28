@@ -99,6 +99,12 @@ async function weeklyFantasyPros(key, week, fpids) {
   }).then((x) => x.body);
 }
 
+// The stored body's shape. Bump it when build() adds or changes a field: a deploy empties the CDN but not the store,
+// so without a new name the morning's body from before the deploy keeps being served (week 8: the first deploy of
+// `weekly` kept serving a body without it, and the matchups fell back to ROS averages for the day). The players
+// file is stored on its own, so a bump re-scrapes the rankings but never re-reads Sleeper's player map.
+export const ROS_SHAPE = 2;
+
 const askedKey = (req) => req.query?.d ?? (req.url ? new URL(req.url, 'http://x').searchParams.get('d') : null);
 
 export default async function handler(req, res) {
@@ -109,7 +115,7 @@ export default async function handler(req, res) {
       res.setHeader('Location', `/api/ros?d=${encodeURIComponent(canonical)}`);
       return res.status(307).end();
     }
-    const { body, from } = await once('ros', key, async () => {
+    const { body, from } = await once(`ros${ROS_SHAPE}`, key, async () => {
       const body = await build(key);
       const allOk = Object.values(body.sources).every((s) => s.ok) && Object.values(body.weekly.sources).every((s) => s.ok || s.off);
       return { body, ttl: allOk ? 3 * 86400 : 3600 }; // a failed source gets retried after an hour
