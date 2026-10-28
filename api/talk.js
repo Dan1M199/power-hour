@@ -6,7 +6,7 @@
 //   POST /api/talk { action: 'post', week, text, ref }    ref: { key: 'w8:leak', title: 'the headline' } or null
 //   POST /api/talk { action: 'edit', week, id, text }     the author only, within EDIT_MS of posting
 //   POST /api/talk { action: 'delete', week, id }         Dan only
-//   POST /api/talk { action: 'invite', uid }              Dan only: a new personal link for a manager (the old one and its
+//   POST /api/talk { action: 'invite', uid }              Dan only: a new personal link for a manager or guest (the old one and its
 //                                                         devices stop working)
 //   POST /api/talk { action: 'signout' }
 //
@@ -21,7 +21,7 @@
 // answers { enabled: false } and the page hides the panel. Never touches Sleeper.
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { redis, storeEnabled } from '../lib/snapstore.js';
-import { MEMBERS } from '../lib/members.js';
+import { DESK_PEOPLE } from '../lib/members.js';
 
 export const ADMIN = '964343481231593472'; // Dan
 export const EDIT_MS = 60 * 1000;
@@ -87,7 +87,7 @@ export default async function handler(req, res) {
       const adminKey = process.env.TALK_ADMIN_KEY;
       let uid = adminKey && adminKey.length >= 16 && same(token, adminKey) ? ADMIN : null;
       if (!uid) [uid] = await redis([['GET', k('tok', sha(token))]]);
-      if (!uid || !MEMBERS[uid]) return res.status(403).json({ error: 'That link has expired. Ask Dan for a new one.' });
+      if (!uid || !DESK_PEOPLE[uid]) return res.status(403).json({ error: 'That link has expired. Ask Dan for a new one.' });
       const [gen] = await redis([['GET', k('gen', uid)]]);
       const sid = randomBytes(24).toString('base64url');
       await redis([['SET', k('sess', sha(sid)), `${uid}:${gen || 0}`, 'EX', String(SESSION_TTL)]]);
@@ -107,7 +107,7 @@ export default async function handler(req, res) {
     if (action === 'invite') {
       if (me !== ADMIN) return res.status(403).json({ error: 'Only Dan can make links' });
       const uid = String(body.uid || '');
-      if (!MEMBERS[uid]) return res.status(400).json({ error: 'Not a league manager' });
+      if (!DESK_PEOPLE[uid]) return res.status(400).json({ error: 'Not a league manager or guest' });
       const token = randomBytes(18).toString('base64url');
       const [old] = await redis([['GET', k('tokof', uid)]]);
       // the new link replaces the old one, and the bumped generation signs out every device the old one signed in

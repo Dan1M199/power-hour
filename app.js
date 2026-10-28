@@ -4,7 +4,7 @@ import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
 import { tradeIdeas } from './lib/trades.js';
 import { breakdown, shortName, fits, nfl } from './lib/matchup.js';
-import { MEMBERS, photoUrl } from './lib/members.js';
+import { MEMBERS, GUESTS, DESK_PEOPLE, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
 import { whatItTakes, trueTalent } from './lib/labmodels.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
@@ -2560,7 +2560,7 @@ async function claimTalk() {
   try {
     const r = await talkCall({ action: 'claim', token });
     const t = DATA.teams.find((x) => x.ownerId === r.me);
-    TALK.flash = `You're in, ${MEMBERS[r.me]?.first || 'friend'}. Your comments post as ${t ? t.name : 'you'}.`;
+    TALK.flash = `You're in, ${DESK_PEOPLE[r.me]?.first || 'friend'}. Your comments post as ${t ? t.name : 'you'}.`;
     if (t && !myTeam) { myTeam = t.rid; store.set('ph-my-team', String(t.rid)); $('#my-team').value = String(t.rid); paintMe(); }
   } catch (e) {
     TALK.flash = e.message;
@@ -2596,7 +2596,7 @@ const refChip = (ref) => {
   return `<button type="button" class="tc-ref" data-goto="${i}"${i < 0 ? ' disabled' : ''} data-tip="${esc(i < 0 ? `${ref.title} (no longer in the headlines)` : `Show this headline: ${ref.title}`)}">On: ${esc(short(ref.title, 56))}</button>`;
 };
 function talkItem(c) {
-  const D = TALK.data, t = DATA.teams.find((x) => x.ownerId === c.uid), m = MEMBERS[c.uid];
+  const D = TALK.data, t = DATA.teams.find((x) => x.ownerId === c.uid), m = DESK_PEOPLE[c.uid];
   const mine = D.me === c.uid, left = D.editMs - (talkNow() - c.ts);
   const editing = TALK.editing === c.id;
   const acts = [
@@ -2604,9 +2604,9 @@ function talkItem(c) {
     D.admin ? `<button type="button" class="tc-act bad" data-del="${esc(c.id)}">Delete</button>` : '',
   ].join('');
   return `<li class="tc${mine ? ' mine' : ''}" data-id="${esc(c.id)}">
-      ${t ? headshot(t, 'tc-face') : `<span class="tc-face ph">${esc((m?.first || '?')[0])}</span>`}
+      ${t ? headshot(t, 'tc-face') : m?.icon ? `<img class="tc-face icon" src="${m.icon}" alt="" decoding="async">` : `<span class="tc-face ph">${esc((m?.first || '?')[0])}</span>`}
       <div class="tc-body">
-        <p class="tc-who"><b>${esc(m?.first || 'Manager')}</b>${t ? `<span>${esc(t.name)}</span>` : ''}<time>${ago(c.ts)}${c.edited ? ', edited' : ''}</time></p>
+        <p class="tc-who"><b>${esc(m?.first || 'Manager')}</b>${t ? `<span>${esc(t.name)}</span>` : GUESTS[c.uid] ? '<span>Guest</span>' : ''}<time>${ago(c.ts)}${c.edited ? ', edited' : ''}</time></p>
         ${c.ref ? refChip(c.ref) : ''}
         ${editing
           ? `<form class="tc-edit" data-id="${esc(c.id)}"><textarea rows="3" maxlength="${D.maxLen}" aria-label="Edit your comment">${esc(c.text)}</textarea><div class="talk-row"><button type="button" class="talk-btn" data-cancel>Cancel</button><button type="submit" class="talk-btn primary">Save</button></div></form>`
@@ -2634,12 +2634,12 @@ function talkForm() {
 }
 function invitePanel() {
   if (!TALK.invites) return '';
-  const people = Object.entries(MEMBERS).sort((a, b) => a[1].first.localeCompare(b[1].first));
+  const people = [...Object.entries(MEMBERS).sort((a, b) => a[1].first.localeCompare(b[1].first)), ...Object.entries(GUESTS)];
   return `<div class="talk-invites">
       <p class="talk-note">Each link signs one manager in, on as many of their devices as they like. A new link replaces the old one and signs those devices out.</p>
       <ul>${people.map(([uid, m]) => {
         const t = DATA.teams.find((x) => x.ownerId === uid), url = TALK.links[uid];
-        return `<li><span><b>${esc(m.first)}</b>${t ? `<small>${esc(t.name)}</small>` : ''}</span>
+        return `<li><span><b>${esc(m.first)}</b>${t ? `<small>${esc(t.name)}</small>` : GUESTS[uid] ? '<small>Guest</small>' : ''}</span>
           ${url ? `<input readonly value="${esc(url)}" aria-label="${esc(m.first)}'s link"><button type="button" class="talk-btn" data-copy="${esc(uid)}">Copy</button>` : `<button type="button" class="talk-btn" data-invite="${esc(uid)}">New link</button>`}</li>`;
       }).join('')}</ul>
     </div>`;
@@ -2653,7 +2653,7 @@ function paintTalk(full = false) {
   el.hidden = false;
   el.closest('.hero')?.classList.add('with-talk');
   const n = D.comments.length;
-  const signed = D.me ? `<span class="talk-me">Posting as <b>${esc(MEMBERS[D.me]?.first || '')}</b><button type="button" class="tc-pill" data-signout>Sign out</button></span>` : '';
+  const signed = D.me ? `<span class="talk-me">Posting as <b>${esc(DESK_PEOPLE[D.me]?.first || '')}</b><button type="button" class="tc-pill" data-signout>Sign out</button></span>` : '';
   // earlier weeks' threads stay readable: pick one to read back through
   const cur = talkWeek(), weeks = Array.from({ length: cur }, (_, i) => cur - i);
   const picker = cur > 1 ? `<label class="talk-wk"><span>Week</span><select data-week aria-label="Which week's thread">${weeks.map((w) => `<option value="${w}"${w === D.week ? ' selected' : ''}>${w}${w === cur ? ', this week' : ''}</option>`).join('')}</select></label>` : `<span class="talk-n">Week ${D.week}</span>`;
@@ -2726,7 +2726,7 @@ async function onTalkClick(e) {
     try { keepTalk(await talkCall({ action: 'delete', week: viewWeek(), id: d.del })); paintTalk(); } catch (x) { TALK.flash = x.message; paintTalk(true); }
   } else if ('invites' in d) { TALK.invites = !TALK.invites; paintTalk(true); }
   else if (d.invite) {
-    if (!confirm(`Make a new link for ${MEMBERS[d.invite]?.first}? Their old link stops working.`)) return;
+    if (!confirm(`Make a new link for ${DESK_PEOPLE[d.invite]?.first}? Their old link stops working.`)) return;
     try { const r = await talkCall({ action: 'invite', uid: d.invite }); TALK.links[d.invite] = `${location.origin}${location.pathname}#join=${r.token}`; paintTalk(true); }
     catch (x) { TALK.flash = x.message; paintTalk(true); }
   } else if (d.copy) {

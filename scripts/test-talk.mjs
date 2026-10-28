@@ -62,6 +62,10 @@ check('only Dan can make links', r.code === 401, r);
 r = await dan('POST', { action: 'invite', uid: AKRM });
 const link1 = r.body.token;
 check('Dan makes a link for Akrm', r.code === 200 && link1, r);
+r = await dan('POST', { action: 'invite', uid: 'guest-saad' });
+const saad = device();
+const sr = await saad('POST', { action: 'claim', token: r.body.token || '' });
+check('a guest Dan lists gets a link and signs in as that guest', r.code === 200 && sr.code === 200 && sr.body.me === 'guest-saad' && !sr.body.admin, [r, sr]);
 r = await dan('POST', { action: 'invite', uid: 'nobody' });
 check('...not for someone outside the league', r.code === 400, r);
 
