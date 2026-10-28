@@ -578,15 +578,20 @@ function leakStory() {
   const spare = block && block.players.filter((id) => id !== L.block && posOf(id) === 'TE').sort((a, b) => valueOf(b) - valueOf(a))[0];
   const gap = Math.abs(valueOf(L.player) - valueOf(L.block));
   const kittleSwap = block === buyer;
+  const info = DATA.helpers.player(L.player), r = RAW.ros?.values?.[L.player] || {}, age = RAW.ros?.players?.[L.player]?.a;
   return {
-    type: 'leak', breaking: true, kicker: 'Trade desk', tone: 'trade', stamp: 'Leak', rids: [buyer.rid, seller.rid],
-    headline: `${pSur} to ${buyer.name} is in the works, and ${kSur} is on the table`,
+    type: 'leak', breaking: true, kicker: 'Trade desk', tone: 'trade', stamp: 'On the move', rids: [buyer.rid, seller.rid],
+    // the player is the story: his name leads the headline in yellow, and his card stands where the photos go
+    player: { id: L.player, name: P, short: shortName(info), line: `${info.pos}, ${nfl(info.team)}`, to: buyer },
+    mark: [P],
+    headline: `${P} to ${buyer.name} is in the works, and ${kSur} is on the table`,
     deck: [
       `Sources tell the desk ${buyer.name} and ${seller.name} are working on a trade that sends ${P} to ${firstName(buyer)} in exchange for a high-value player. More to come.`,
-      block ? `Separately, sources say ${K} is on the table${block !== buyer ? `, and ${firstName(block)} is listening` : ''}${RAW.ros?.byes?.[DATA.helpers.player(L.block)?.team] === DESK.week ? ` (he's on a bye this week anyway)` : ''}.` : '',
+      r.prk ? `${age ? `He's ${age}, the` : `${pSur} is the`} ${ordinal(r.prk)}-ranked running back in the consensus, worth ${f1(valueOf(L.player))} and projected for ${f1(r.wk)} a week the rest of the way.` : '',
       kittleSwap
-        ? `On paper it fits: ${seller.name} has ${roomRank(seller, 'RB')} running back room and ${roomRank(seller, 'TE')} tight ends, while ${buyer.name} has ${roomRank(buyer, 'TE')} tight ends${spare ? ` (${K} and ${nameOf(spare)})` : ''} and ${roomRank(buyer, 'RB')} backs. If ${kSur} is the piece coming back, the consensus has them ${f1(gap)} apart: ${pSur} ${f1(valueOf(L.player))}, ${kSur} ${f1(valueOf(L.block))}.`
+        ? `On paper it fits: ${seller.name} has ${roomRank(seller, 'RB')} running back room and ${roomRank(seller, 'TE')} tight ends, while ${buyer.name} has ${roomRank(buyer, 'TE')} tight ends${spare ? ` (${K} and ${nameOf(spare)})` : ''} and ${roomRank(buyer, 'RB')} backs.`
         : `${seller.name} has ${roomRank(seller, 'RB')} running back room; ${buyer.name}'s backs rank ${ordinal(buyer.posRanks.RB)}.`,
+      block ? `Separately, sources say ${K} is on the table${block !== buyer ? `, and ${firstName(block)} is listening` : ''}${RAW.ros?.byes?.[DATA.helpers.player(L.block)?.team] === DESK.week ? ` (he's on a bye this week anyway)` : ''}.${kittleSwap ? ` If ${kSur} is the piece coming back, the two are ${f1(gap)} apart in consensus value (${kSur} ${f1(valueOf(L.block))}).` : ''}` : '',
       `${firstName(buyer)} is buying at ${record(buyer)} with ${pct(buyer.playoffPct)} playoff odds. Nothing is signed.`,
     ].filter(Boolean).join(' '),
   };
@@ -1169,6 +1174,23 @@ function clipPrint(st) {
     </figure>`;
 }
 
+// a story's key name in yellow, in the headline and the deck (st.mark)
+const marked = (text, marks = []) => marks.reduce((h, m) => h.split(esc(m)).join(`<mark class="hl">${esc(m)}</mark>`), esc(text));
+// the player a story is about, printed like a trading card where the headline photos go: his Sleeper headshot, name and
+// position, the stamp, and the face of the manager he's headed to pinned on the corner
+function playerPrint(st) {
+  const P = st.player, to = P.to, m = to && member(to);
+  const initials = P.name.split(' ').map((w) => w[0]).slice(0, 2).join('');
+  return `<figure class="player-print ${esc(st.tone || '')}" aria-hidden="true">
+      <div class="pp-card">
+        <img class="pp-img" src="https://sleepercdn.com/content/nfl/players/${esc(P.id)}.jpg" alt="" decoding="async" data-initials="${esc(initials)}">
+        <figcaption><b>${esc(P.short)}</b><small>${esc(P.line)}</small></figcaption>
+      </div>
+      ${st.stamp ? `<em class="stamp">${esc(st.stamp)}</em>` : ''}
+      ${m ? `<span class="lf pp-who">${headshot(to, 'lead-face')}<span class="cap">To ${esc(m.first)}</span></span>` : ''}
+    </figure>`;
+}
+
 // three headlines in one square card (four on night-edition nights): swipe, arrows or dots; the active dot's fill is the
 // auto-advance timer
 const CAROUSEL_SIZE = 3;
@@ -1186,14 +1208,14 @@ function leadStory() {
   const slide = (st, i) => {
     const top = `<div class="slide-top">
         <p class="kicker">${st.type === 'shakeup' || st.breaking ? '<span class="brk"><i aria-hidden="true"></i>Breaking</span>' : ''}<span>${i ? (st.type === 'monday' || st.type === 'locked' || (st.type === 'sass' && s.night) ? 'Tonight' : 'Also today') : esc(date)}</span><span class="k">${esc(st.kicker)}</span></p>
-        ${st.clip ? '' : leadFaces(st)}
+        ${st.clip ? '' : st.player ? playerPrint(st) : leadFaces(st)}
       </div>`;
-    const hed = `<${i ? 'h2' : 'h1'} class="lead-hed">${esc(st.headline)}</${i ? 'h2' : 'h1'}>`;
+    const hed = `<${i ? 'h2' : 'h1'} class="lead-hed${st.mark ? ' marked' : ''}">${marked(st.headline, st.mark)}</${i ? 'h2' : 'h1'}>`;
     // a video story puts its clip beside the kicker and headline, where the photos would be
     return `
     <article class="slide${st.type === 'shakeup' || st.breaking ? ' breaking' : ''}${st.clip ? ' has-clip' : ''}" id="slide-${i}" role="group" aria-roledescription="slide" aria-label="Headline ${i + 1} of ${stories.length}">
       ${st.clip ? `<div class="clip-head">${top}${hed}</div>${clipPrint(st)}` : `${top}${hed}`}
-      <p class="lead-deck">${esc(st.deck)}</p>
+      <p class="lead-deck">${marked(st.deck, st.mark)}</p>
       <div class="cast">${cast(st)}</div>
     </article>`;
   };
