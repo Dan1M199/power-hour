@@ -1,0 +1,662 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-28T00:37:07.208Z",
+  "title": "Design System: The Power Hour",
+  "extensions": {
+    "colorMeta": {
+      "grass": {
+        "role": "secondary",
+        "displayName": "Mowed Grass",
+        "canonical": "#4CAF50",
+        "tonalRamp": [
+          "#1D2F1E",
+          "#275929",
+          "#38803B",
+          "#4AAB4E",
+          "#71C174",
+          "#9BD49E",
+          "#C6E6C7",
+          "#EFF5EF"
+        ]
+      },
+      "grass-2": {
+        "role": "secondary",
+        "displayName": "Spring Grass",
+        "canonical": "#8BC34A",
+        "tonalRamp": [
+          "#27321B",
+          "#426020",
+          "#5F8A2E",
+          "#7FB83D",
+          "#9DCC66",
+          "#BADB94",
+          "#D8EBC2",
+          "#F3F6EE"
+        ]
+      },
+      "stripe": {
+        "role": "secondary",
+        "displayName": "Light Stripe",
+        "canonical": "#5AB34F",
+        "tonalRamp": [
+          "#1F2F1D",
+          "#2C5926",
+          "#3F8037",
+          "#55AB4A",
+          "#79C171",
+          "#A2D49B",
+          "#CAE6C6",
+          "#F0F5EF"
+        ]
+      },
+      "lime": {
+        "role": "secondary",
+        "displayName": "Lime",
+        "canonical": "#CDDC39",
+        "tonalRamp": [
+          "#333616",
+          "#646C13",
+          "#909C1C",
+          "#C0D025",
+          "#D3E052",
+          "#E0EA86",
+          "#EDF3BA",
+          "#F7F8ED"
+        ]
+      },
+      "yellow": {
+        "role": "primary",
+        "displayName": "First-Down Yellow",
+        "canonical": "#FFEB3B",
+        "tonalRamp": [
+          "#3D390F",
+          "#807200",
+          "#B8A500",
+          "#F5DC00",
+          "#FFEA33",
+          "#FFF070",
+          "#FFF7AD",
+          "#FAF8EB"
+        ]
+      },
+      "amber": {
+        "role": "primary",
+        "displayName": "Goalpost Amber",
+        "canonical": "#FFC107",
+        "tonalRamp": [
+          "#3D320F",
+          "#806000",
+          "#B88A00",
+          "#F5B800",
+          "#FFCC33",
+          "#FFDB70",
+          "#FFEBAD",
+          "#FAF6EB"
+        ]
+      },
+      "sky-1": {
+        "role": "secondary",
+        "displayName": "Sky",
+        "canonical": "#81D4FA",
+        "tonalRamp": [
+          "#112E3B",
+          "#05567B",
+          "#077BB1",
+          "#09A4EB",
+          "#3BBCF7",
+          "#76D0FA",
+          "#B1E4FC",
+          "#EBF5F9"
+        ]
+      },
+      "sky-2": {
+        "role": "secondary",
+        "displayName": "Middle Sky",
+        "canonical": "#9EDDFB",
+        "tonalRamp": [
+          "#112E3B",
+          "#05557A",
+          "#077AB0",
+          "#0AA2EB",
+          "#3BBAF7",
+          "#76CFF9",
+          "#B1E4FC",
+          "#EBF5F9"
+        ]
+      },
+      "sky-3": {
+        "role": "secondary",
+        "displayName": "Low Sky",
+        "canonical": "#B3E5FC",
+        "tonalRamp": [
+          "#112E3B",
+          "#05567B",
+          "#077BB1",
+          "#09A4EC",
+          "#3BBCF7",
+          "#76D0FA",
+          "#B0E4FC",
+          "#EBF5F9"
+        ]
+      },
+      "turf": {
+        "role": "neutral",
+        "displayName": "End Zone",
+        "canonical": "#1B5E20",
+        "tonalRamp": [
+          "#1A331B",
+          "#1C6322",
+          "#298F31",
+          "#37BE41",
+          "#61D169",
+          "#90DF96",
+          "#C0EDC3",
+          "#EEF6EF"
+        ]
+      },
+      "board": {
+        "role": "neutral",
+        "displayName": "Scoreboard",
+        "canonical": "#13301C",
+        "tonalRamp": [
+          "#1C3022",
+          "#245B35",
+          "#34844D",
+          "#45AF66",
+          "#6DC588",
+          "#99D7AC",
+          "#C5E8D0",
+          "#EFF6F1"
+        ]
+      },
+      "chalk": {
+        "role": "neutral",
+        "displayName": "Chalk",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#262626",
+          "#404040",
+          "#5C5C5C",
+          "#7A7A7A",
+          "#999999",
+          "#B8B8B8",
+          "#D6D6D6",
+          "#F2F2F2"
+        ]
+      },
+      "tile": {
+        "role": "neutral",
+        "displayName": "Tile",
+        "canonical": "#F1F8E9",
+        "tonalRamp": [
+          "#27321A",
+          "#42611F",
+          "#5F8B2C",
+          "#7FBA3B",
+          "#9DCE64",
+          "#BADD93",
+          "#D8EBC1",
+          "#F3F6EE"
+        ]
+      },
+      "tile-2": {
+        "role": "neutral",
+        "displayName": "Tile 2",
+        "canonical": "#E6F2DA",
+        "tonalRamp": [
+          "#26311B",
+          "#405E21",
+          "#5C8830",
+          "#7AB540",
+          "#99CA68",
+          "#B8DA95",
+          "#D6EAC3",
+          "#F2F6EF"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "canonical": "#DCEBD0",
+        "tonalRamp": [
+          "#252F1D",
+          "#3D5926",
+          "#588137",
+          "#75AC49",
+          "#94C270",
+          "#B4D49B",
+          "#D4E7C6",
+          "#F2F5EF"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#12301A",
+        "tonalRamp": [
+          "#1C3121",
+          "#235D32",
+          "#328648",
+          "#43B260",
+          "#6BC783",
+          "#97D8A8",
+          "#C4E9CE",
+          "#EFF6F1"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "canonical": "#3C5A43",
+        "tonalRamp": [
+          "#222B24",
+          "#334D39",
+          "#496E52",
+          "#62936D",
+          "#85AD8E",
+          "#A9C6B0",
+          "#CEDED2",
+          "#F1F4F1"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "canonical": "#55705A",
+        "tonalRamp": [
+          "#232924",
+          "#37483A",
+          "#4F6854",
+          "#6A8B70",
+          "#8BA790",
+          "#AEC1B1",
+          "#D1DCD3",
+          "#F1F3F2"
+        ]
+      },
+      "good": {
+        "role": "tertiary",
+        "displayName": "Good",
+        "canonical": "#2E7D32",
+        "tonalRamp": [
+          "#1C311D",
+          "#225D25",
+          "#318636",
+          "#42B348",
+          "#6AC86F",
+          "#97D99A",
+          "#C3E9C5",
+          "#EFF6EF"
+        ]
+      },
+      "bad": {
+        "role": "tertiary",
+        "displayName": "Bad",
+        "canonical": "#C62828",
+        "tonalRamp": [
+          "#351717",
+          "#6A1515",
+          "#991F1F",
+          "#CC2929",
+          "#DD5555",
+          "#E78888",
+          "#F1BBBB",
+          "#F7EDED"
+        ]
+      },
+      "flag": {
+        "role": "tertiary",
+        "displayName": "Flag",
+        "canonical": "#D32F2F",
+        "tonalRamp": [
+          "#351717",
+          "#691616",
+          "#982020",
+          "#CA2B2B",
+          "#DB5757",
+          "#E68989",
+          "#F1BCBC",
+          "#F7EDED"
+        ]
+      },
+      "side-a": {
+        "role": "tertiary",
+        "displayName": "Matchup Blue",
+        "canonical": "#29B6F6",
+        "tonalRamp": [
+          "#112E3B",
+          "#05567A",
+          "#077BB0",
+          "#0AA5EB",
+          "#3BBCF7",
+          "#76D0F9",
+          "#B1E4FC",
+          "#EBF5F9"
+        ]
+      },
+      "side-a-ink": {
+        "role": "tertiary",
+        "displayName": "Matchup Blue Ink",
+        "canonical": "#0266A3",
+        "tonalRamp": [
+          "#102C3D",
+          "#024F7E",
+          "#0271B5",
+          "#0397F2",
+          "#35B1FD",
+          "#72C8FD",
+          "#AEE0FE",
+          "#EBF4FA"
+        ]
+      },
+      "side-b": {
+        "role": "tertiary",
+        "displayName": "Matchup Amber",
+        "canonical": "#FFC107",
+        "tonalRamp": [
+          "#3D320F",
+          "#806000",
+          "#B88A00",
+          "#F5B800",
+          "#FFCC33",
+          "#FFDB70",
+          "#FFEBAD",
+          "#FAF6EB"
+        ]
+      },
+      "side-b-ink": {
+        "role": "tertiary",
+        "displayName": "Matchup Amber Ink",
+        "canonical": "#985700",
+        "tonalRamp": [
+          "#3D2A0F",
+          "#804900",
+          "#B86900",
+          "#F58C00",
+          "#FFA833",
+          "#FFC270",
+          "#FFDCAD",
+          "#FAF3EB"
+        ]
+      },
+      "mine-bg": {
+        "role": "primary",
+        "displayName": "Your Row",
+        "canonical": "#FFF9C4",
+        "tonalRamp": [
+          "#3D390F",
+          "#807300",
+          "#B8A500",
+          "#F5DC00",
+          "#FFEA33",
+          "#FFF070",
+          "#FFF7AD",
+          "#FAF8EB"
+        ]
+      },
+      "ledge-gold": {
+        "role": "primary",
+        "displayName": "Ledge Gold",
+        "canonical": "#E0A100",
+        "tonalRamp": [
+          "#3D300F",
+          "#805C00",
+          "#B88400",
+          "#F5B000",
+          "#FFC633",
+          "#FFD770",
+          "#FFE8AD",
+          "#FAF6EB"
+        ]
+      },
+      "header": {
+        "role": "neutral",
+        "displayName": "Header Sky",
+        "canonical": "#EAF6FC",
+        "tonalRamp": [
+          "#152C37",
+          "#105070",
+          "#1773A1",
+          "#1F99D6",
+          "#4CB2E6",
+          "#82C9ED",
+          "#B8E0F5",
+          "#EDF4F8"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page titles only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings; scoreboard headlines run larger."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Team names and card heads."
+      },
+      "numeral": {
+        "displayName": "Numeral",
+        "purpose": "Scores, points, odds, stat values."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Explanations and decks, about 62ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Chips, tabs, filters, small in-card headings."
+      }
+    },
+    "shadows": [
+      {
+        "name": "glass-card",
+        "value": "inset 0 2px 0 #FFFFFF, inset 0 -3px 0 rgba(18,48,26,0.05), 0 0 0 var(--ring-w) #FFEB3B, 0 0 0 calc(var(--ring-w) + 2.5px) #12301A, 0 5px 0 calc(var(--ring-w) + 2.5px) rgba(14,46,22,0.26)",
+        "purpose": "Every card: rim, your yellow ring, ink outline, hard ledge."
+      },
+      {
+        "name": "gold-ledge",
+        "value": "same stack with ledge #E0A100",
+        "purpose": "Featured cards: top three, trades, best trade idea, scoreboards."
+      },
+      {
+        "name": "pill-button",
+        "value": "0 0 0 2px #12301A, 0 3px 0 2px rgba(14,46,22,0.26)",
+        "purpose": "Buttons on light surfaces."
+      },
+      {
+        "name": "pill-pressed",
+        "value": "0 0 0 2px #12301A, 0 1px 0 2px rgba(14,46,22,0.26)",
+        "purpose": "Active state with translateY(2px)."
+      },
+      {
+        "name": "chip",
+        "value": "0 2px 0 rgba(14,46,22,0.26)",
+        "purpose": "Small tags."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-slide",
+        "value": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        "purpose": "Tab pill slide (0.45s)."
+      },
+      {
+        "name": "rank-stagger",
+        "value": "70ms",
+        "purpose": "Ranking rows rise in, staggered within a batch."
+      },
+      {
+        "name": "carousel-dwell",
+        "value": "7s",
+        "purpose": "Headline carousel auto-advance per story."
+      },
+      {
+        "name": "loader-fade",
+        "value": "0.35s ease",
+        "purpose": "Kicker loader fade-out."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "760px"
+      },
+      {
+        "name": "tablet",
+        "value": "980px"
+      },
+      {
+        "name": "wide",
+        "value": "1100px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Glossy amber pill for actions and the pressed filter.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Show me the power ranking</button>",
+      "css": ".ds-btn{position:relative;isolation:isolate;overflow:hidden;cursor:pointer;border:0;border-radius:999px;padding:8px 15px;font:700 13.5px/1.2 'Albert Sans',system-ui,sans-serif;transition:transform .12s,box-shadow .12s}.ds-btn::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.2) 48%,rgba(255,255,255,0) 50%);pointer-events:none}.ds-btn:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-btn-primary{background:#FFC107;color:#12301A;box-shadow:0 0 0 2px #12301A,0 3px 0 2px #E0A100}.ds-btn-primary:hover{transform:translateY(-1px)}.ds-btn-primary:active{transform:translateY(2px);box-shadow:0 0 0 2px #12301A,0 1px 0 2px #E0A100}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "White glossy pill for filters and secondary choices.",
+      "html": "<button class=\"ds-btn ds-btn-secondary\">Trades</button>",
+      "css": ".ds-btn{position:relative;isolation:isolate;overflow:hidden;cursor:pointer;border:0;border-radius:999px;padding:8px 15px;font:700 13.5px/1.2 'Albert Sans',system-ui,sans-serif;transition:transform .12s,box-shadow .12s}.ds-btn::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.2) 48%,rgba(255,255,255,0) 50%);pointer-events:none}.ds-btn:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-btn-secondary{background:#FFFFFF;color:#3C5A43;box-shadow:0 0 0 2px #12301A,0 3px 0 2px rgba(14,46,22,.26)}.ds-btn-secondary:hover{background:#E1F5FE;color:#12301A}.ds-btn-secondary:active{transform:translateY(2px);box-shadow:0 0 0 2px #12301A,0 1px 0 2px rgba(14,46,22,.26)}"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Small white tag with a short ledge and optional status dot.",
+      "html": "<span class=\"ds-chip\"><i class=\"ds-dot\"></i>FantasyPros</span> <span class=\"ds-you\">You</span>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font:700 12.5px/1.2 'Albert Sans',system-ui,sans-serif;color:#3C5A43;background:#FFFFFF;box-shadow:0 2px 0 rgba(14,46,22,.26)}.ds-dot{width:8px;height:8px;border-radius:50%;background:#4CAF50}.ds-you{display:inline-block;font:800 11px/1 'Albert Sans',system-ui,sans-serif;color:#12301A;background:#FFEB3B;padding:5px 8px;border-radius:999px;box-shadow:0 2px 0 #E0A100}"
+    },
+    {
+      "name": "Glass Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Cartoon glass on a hard ledge: the base surface for every card.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Dynasty Dan</h3><p class=\"ds-card-body\">Third in points for and the easiest schedule left.</p></div>",
+      "css": ".ds-card{background-color:rgba(255,255,255,.88);background-image:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(255,255,255,.6) 46%,rgba(255,255,255,0) 100%);background-size:100% 150px;background-repeat:no-repeat;padding:18px;border-radius:24px;color:#12301A;box-shadow:inset 0 2px 0 #FFFFFF,inset 0 -3px 0 rgba(18,48,26,.05),0 0 0 2.5px #12301A,0 5px 0 2.5px rgba(14,46,22,.26);transition:transform .2s,box-shadow .2s}.ds-card:hover{transform:translateY(-2px);box-shadow:inset 0 2px 0 #FFFFFF,inset 0 -3px 0 rgba(18,48,26,.05),0 0 0 2.5px #12301A,0 7px 0 2.5px rgba(14,46,22,.26)}.ds-card-title{margin:0 0 6px;font:800 21px/1.1 'Big Shoulders Display','Arial Narrow',sans-serif}.ds-card-body{margin:0;font:400 16px/1.55 'Albert Sans',system-ui,sans-serif;color:#3C5A43}"
+    },
+    {
+      "name": "Your Card",
+      "kind": "card",
+      "refersTo": "card-featured",
+      "description": "Your own team: a 4px First-Down Yellow ring inside the outline, on a gold ledge.",
+      "html": "<div class=\"ds-card-mine\"><b>Your team</b></div>",
+      "css": ".ds-card-mine{background-color:rgba(255,255,255,.88);background-image:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(255,255,255,.6) 46%,rgba(255,255,255,0) 100%);background-size:100% 150px;background-repeat:no-repeat;padding:18px;border-radius:32px;color:#12301A;font:800 21px/1.1 'Big Shoulders Display',sans-serif;box-shadow:inset 0 2px 0 #FFFFFF,0 0 0 4px #FFEB3B,0 0 0 6.5px #12301A,0 5px 0 6.5px #E0A100}"
+    },
+    {
+      "name": "Tab Strip",
+      "kind": "nav",
+      "refersTo": "tab-active",
+      "description": "Tabs in a Tile track; the active one is an amber glossy pill.",
+      "html": "<nav class=\"ds-tabs\"><a class=\"ds-tab ds-on\" href=\"#\">Power</a><a class=\"ds-tab\" href=\"#\">Wire</a><a class=\"ds-tab\" href=\"#\">Games</a></nav>",
+      "css": ".ds-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:#F1F8E9}.ds-tab{padding:8px 16px;border-radius:999px;color:#3C5A43;text-decoration:none;font:700 14px/1.2 'Albert Sans',system-ui,sans-serif}.ds-tab:hover{color:#12301A}.ds-tab:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-on{color:#12301A;background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.2) 48%,rgba(255,255,255,0) 50%),#FFC107;box-shadow:0 0 0 2px #12301A,0 3px 0 2px #E0A100}"
+    },
+    {
+      "name": "Section Sign",
+      "kind": "custom",
+      "refersTo": "section-sign",
+      "description": "White pill sign that carries section titles on the grass.",
+      "html": "<div class=\"ds-field\"><h2 class=\"ds-sign\">Best available <small>top free agents</small></h2></div>",
+      "css": ".ds-field{padding:20px;background:repeating-linear-gradient(180deg,#4CAF50 0 40px,#5AB34F 40px 80px)}.ds-sign{display:flex;width:fit-content;align-items:baseline;gap:12px;margin:0;padding:10px 18px 9px;border-radius:999px;background:#FFFFFF;color:#12301A;font:800 24px/1 'Big Shoulders Display',sans-serif;box-shadow:inset 0 2px 0 #FFFFFF,0 0 0 2.5px #12301A,0 4px 0 2.5px rgba(14,46,22,.26)}.ds-sign small{font:600 13px/1 'Albert Sans',system-ui,sans-serif;color:#55705A}"
+    },
+    {
+      "name": "Yard Number Rank",
+      "kind": "custom",
+      "description": "The signature: a rank painted on the grass, half under its card.",
+      "html": "<div class=\"ds-field2\"><div class=\"ds-rank\"><span class=\"ds-jersey\">1</span><div class=\"ds-rcard\"><b>Mo Money</b><span>87</span></div></div></div>",
+      "css": ".ds-field2{padding:24px 20px;background:repeating-linear-gradient(180deg,#4CAF50 0 60px,#5AB34F 60px 120px)}.ds-rank{position:relative;padding-left:74px}.ds-jersey{position:absolute;left:0;top:50%;transform:translateY(-50%);font:900 150px/0.8 'Big Shoulders Display',sans-serif;letter-spacing:-.04em;color:#FFEB3B;text-shadow:5px 5px 0 rgba(14,46,22,.35)}.ds-rcard{position:relative;display:flex;justify-content:space-between;align-items:center;padding:22px;border-radius:32px;background-color:rgba(255,255,255,.88);background-image:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(255,255,255,.6) 46%,rgba(255,255,255,0) 100%);background-size:100% 150px;background-repeat:no-repeat;box-shadow:inset 0 2px 0 #FFFFFF,0 0 0 2.5px #12301A,0 5px 0 2.5px #E0A100}.ds-rcard b{font:800 32px/1.05 'Big Shoulders Display',sans-serif;color:#12301A}.ds-rcard span{font:900 48px/.9 'Big Shoulders Display',sans-serif;color:#12301A}"
+    },
+    {
+      "name": "Scoreboard",
+      "kind": "card",
+      "refersTo": "scoreboard",
+      "description": "Smoked-glass dark panel with white type, yellow accents and a corner glint.",
+      "html": "<div class=\"ds-board\"><h2>Mo takes the lead</h2><p>Up 14.2 with two players left.</p></div>",
+      "css": ".ds-board{position:relative;padding:26px 28px;border-radius:32px;color:#FFFFFF;background-color:#13301C;background-image:linear-gradient(180deg,rgba(255,255,255,.1) 0,rgba(255,255,255,.03) 55%,rgba(255,255,255,0) 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.2),inset 0 -3px 0 rgba(0,0,0,.18),0 0 0 2.5px #12301A,0 5px 0 2.5px #E0A100}.ds-board h2{margin:0 0 8px;font:900 44px/.94 'Big Shoulders Display',sans-serif}.ds-board p{margin:0;color:#FFEB3B;font:700 15px/1.4 'Albert Sans',system-ui,sans-serif}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Day Game",
+    "overview": "A flat sky over a mowed football field at one in the afternoon. Every surface is cartoon glass on a hard ledge: an inked outline, a bright sheen across the top, a hint of the field showing through, and a solid ledge under it like a toy you could press down. Nothing is blurred and nothing casts a soft shadow, so a phone draws exactly what a desktop does.\n\nThe page is a stadium in layers. The sky (flat bands of blue and three cartoon clouds) sits behind everything. The field starts right under each page heading: mowing stripes, a chalk yard line every two stripes and a chalk sideline, bleeding to the window edges. Cards stand on the grass. The footer is the end zone, with a white goal line. Dark scoreboards (the headline carousel, the game of the week, the money-week board) are smoked glass with a cartoon glint in the corner, the one place type turns white.\n\nThe energy comes from a single bold move, the power rank painted on the grass like a yard number, half under its card. Everything else stays quiet: one yellow for \"you\", one amber for actions, ink for all text.",
+    "keyCharacteristics": [
+      "Light only: a daytime world, no dark theme.",
+      "Hard edges everywhere: inked outlines, solid ledges, no blur, no `backdrop-filter`, no ambient shadows.",
+      "Glossy and pressable: cards and buttons look like glass toys and press down when touched.",
+      "Condensed display numerals for everything that's a score, rank or name; a warm geometric sans for reading.",
+      "Data first: charts are hand-drawn SVG, labels wear ink, never the series colour."
+    ],
+    "rules": [
+      {
+        "name": "The First-Down Rule",
+        "body": "Yellow means \"this is you\". It never decorates, never marks an action, never highlights someone else's team. Leaders and winners wear Goalpost Amber (the money-week leader, for one). \"You\" takes one of two forms: the 4px yellow ring on a card (`--ring-w`), or Your Row (mine-bg) with a 2px `#F2C200` inset on a row, cell or table line. Yellow type on a dark scoreboard is an accent, not a \"you\" mark.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink-On-Grass Rule",
+        "body": "Text sitting directly on the field must be Ink (5.2:1). Muted inks fail on green, so small text there goes on a white chip or sign.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two-Ended Heat Rule",
+        "body": "Heat tables run sky blue (the good end) to amber (the bad end) and fade to white in the middle, never green to red, so every kind of colour vision reads them. Chart labels never fade: other teams' lines and dots dim to 22%, their names stay at Ink 3.",
+        "section": "colors"
+      },
+      {
+        "name": "The Background-Color Rule",
+        "body": "Set a card's colour with `background-color`, never the `background` shorthand, or the glass sheen disappears.",
+        "section": "colors"
+      },
+      {
+        "name": "The Sentence-Case Rule",
+        "body": "Sentence case everywhere, no ALL-CAPS eyebrow labels, no emoji, no \"A · B · C\" middle-dot strings.",
+        "section": "typography"
+      },
+      {
+        "name": "The Numbers-Wear-Display Rule",
+        "body": "Any figure a manager would read aloud (rank, score, points, odds) is set in Big Shoulders; prose stays in Albert Sans.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hard-Ledge Rule",
+        "body": "No blur, no `backdrop-filter`, no soft drop shadows. If something needs to stand up, give it an ink outline and a solid ledge.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One-Soft-Edge Rule",
+        "body": "The kicker loader's feathered mask is the only soft edge on the site, by request. Don't add another.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep every surface on the glass card stack and change only its variables for state.",
+      "Do reserve First-Down Yellow for the viewer's own team and Goalpost Amber for actions and the active state.",
+      "Do set figures in Big Shoulders with tabular numbers, and prose in Albert Sans.",
+      "Do put small text that sits on the field onto a white chip or sign.",
+      "Do keep manager headshots to one or two personal moments per page.",
+      "Do honour `prefers-reduced-motion` and keep phones on the light motion set (transform and opacity only)."
+    ],
+    "donts": [
+      "Don't use emoji or ALL-CAPS labels anywhere.",
+      "Don't add blur, `backdrop-filter` or soft drop shadows; depth is outline plus ledge.",
+      "Don't use the `background` shorthand on a glass card; it wipes the sheen.",
+      "Don't colour chart labels with their series colour; labels wear ink, and they never fade with their dimmed line.",
+      "Don't mark a list item or callout with a coloured `border-left`; use a reason pip.",
+      "Don't let a paragraph sit straight on the grass; it goes on a card or a white chip.",
+      "Don't add a second bold signature next to the yard numbers.",
+      "Don't introduce a dark theme; this is a day game."
+    ]
+  }
+}

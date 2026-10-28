@@ -357,6 +357,14 @@ function viewRankings() {
     ? `<div class="notice glass"><strong>Results-only mode.</strong> The rest-of-season rankings couldn't be loaded (${esc(DATA.rosError)}), so these ranks use this season's results alone until they come back.</div>`
     : '';
   const items = DATA.teams.map(rankRow).join('');
+  // your rank, right under the page head, so a phone doesn't scroll three screens to find you
+  const me = !DATA.liveMode && myTeam != null ? DATA.teams.find((t) => t.rid === myTeam) : null;
+  const strip = me ? `<button type="button" class="you-strip glass" data-jump aria-label="Jump to your team, ${esc(me.name)}, ranked ${me.powerRank}">
+      ${headshot(me, 'strip-face')}
+      <span class="ys-rank"><small>You're</small><b>No. ${me.powerRank}</b></span>
+      <span class="ys-body"><b>${esc(me.name)}</b><span class="ys-tags"><span class="tier ${me.tier.key}">${me.tier.label}</span>${moveTag(me)}</span></span>
+      <span class="ys-odds"><b>${pct(me.playoffPct)}</b><small>playoffs</small></span>${XP}
+    </button>` : '';
   // while a week is being played the headlines move to the Live tab and these ranks hold until the week is final
   const held = !!DATA.liveMode;
   const head = `
@@ -370,7 +378,7 @@ function viewRankings() {
   const hold = held ? `<div class="notice glass hold"><span><strong>Power rankings are on hold.</strong> Week ${m.lastScored + 1} is being played, so these are the ranks going into the week. They update as soon as every game is final. For how this week is going, see the <a href="#live">Live</a> tab.</span></div>` : '';
   return `
     ${held ? head : `<div class="hero">${leadStory()}${head}</div>`}
-    ${hold}${notice}
+    ${hold}${notice}${strip}
     <div id="poll-slot">${pollCard()}</div>
     <ol class="ranks">${items}</ol>
     ${futuresBoard()}
@@ -938,7 +946,7 @@ function openReveal() {
     </div>`;
   const told = (v) => `
     <div class="unveil-card glass rim ${v.kind}">
-      <div class="verdict">
+      <div class="unveil-verdict">
         ${headshot(v.t, `verdict-face${v.kind === 'lost' ? ' drained' : ''}`)}
         <div>
           <p class="verdict-wl"><b>${v.kind === 'won' ? 'W' : v.kind === 'lost' ? 'L' : 'T'}</b><span>${f1(v.me)} to ${f1(v.them)}${v.opp ? ` vs ${esc(v.opp.name)}` : ''}</span></p>
@@ -1216,10 +1224,11 @@ function bindClip(car, slides, dots, current) {
   return sync;
 }
 
+const moveTag = (t) => t.movement > 0 ? `<span class="move up" title="Up ${t.movement} since last week">▲${t.movement}</span>`
+  : t.movement < 0 ? `<span class="move down" title="Down ${-t.movement} since last week">▼${-t.movement}</span>`
+  : '<span class="move flat" title="No change since last week">–</span>';
 function rankRow(t) {
-  const mv = t.movement > 0 ? `<span class="move up" title="Up ${t.movement} since last week">▲${t.movement}</span>`
-    : t.movement < 0 ? `<span class="move down" title="Down ${-t.movement} since last week">▼${-t.movement}</span>`
-    : '<span class="move flat" title="No change since last week">–</span>';
+  const mv = moveTag(t);
   const mine = t.rid === myTeam;
   // the four parts of the score, in order of weight: standing, scoring, schedule, roster
   const sw = `${t.schedWins >= 0 ? '+' : ''}${t.schedWins.toFixed(2)}`;
@@ -1337,7 +1346,7 @@ function dayLabel(ts) {
 const timeLabel = (ts) => new Date(ts).toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' });
 
 const signed = (x) => `${x > 0 ? '+' : ''}${f1(x)}`;
-const tone = (x) => (x > 0.4 ? 'plus' : x < -0.4 ? 'minus' : 'flat');
+const tone = (x, d = 0.4) => (x > d ? 'plus' : x < -d ? 'minus' : 'flat');
 
 // in uneven trades the side receiving fewer players gets a credit for the roster spot it frees up
 function spotNote(sides) {
@@ -1362,8 +1371,8 @@ function tradeCard(item) {
   return `<li class="trade glass rim">
     <div class="trade-head">${dealFaces(sides)}<span class="when">${esc(dayLabel(item.ts))}, ${timeLabel(item.ts)}, week ${item.week}</span></div>
     <div class="trade-sides">${sides.map((s) => `
-      <div class="trade-side ${winner && winner.rid === s.rid ? 'won' : ''}">
-        <h4>${avatar(team(s.rid))}<span class="tn">${esc(team(s.rid).name)}</span>${DATA.meta.hasRos ? `<span class="${tone(s.net)}">${signed(s.net)}</span>` : ''}</h4>
+      <div class="trade-side ${winner && winner.rid === s.rid ? 'won' : ''} ${s.rid === myTeam ? 'mine' : ''}">
+        <h3>${avatar(team(s.rid))}<span class="tn">${esc(team(s.rid).name)}</span>${DATA.meta.hasRos ? `<span class="${winner ? tone(s.net, 0) : 'flat'}">${signed(s.net)}</span>` : ''}</h3>
         <p class="gets">Receives</p>
         <ul>${s.adds.map((p) => `<li>${posTag(p.id)}${esc(nameOf(p.id))}${DATA.meta.hasRos ? `<span class="pv">${f1(p.v)}</span>` : ''}</li>`).join('')}${s.picks.filter((p) => p.dir === 'in').map((p) => `<li>${pick(p)}</li>`).join('')}${s.faabIn ? `<li>$${s.faabIn} FAAB</li>` : ''}</ul>
       </div>`).join('')}</div>
@@ -1742,9 +1751,9 @@ function playoffDrive(a, b) {
   return `
     <div class="drive" data-s="now" data-a="${esc(a.name)}" data-b="${esc(b.name)}" data-states='${JSON.stringify(states)}'>
       <div class="drive-head">
-        <h4>The playoff drive</h4>
+        <h3>The playoff drive</h3>
         <p class="drive-key"><span class="a">${headshot(a, 'avatar')}${esc(a.name)}</span><span class="b">${headshot(b, 'avatar')}${esc(b.name)}</span></p>
-        <div class="drive-pick" role="group" aria-label="Show playoff odds after a result">${btn('now', 'Today')}${btn('a', `${esc(short(a.name, 14))} win`)}${btn('b', `${esc(short(b.name, 14))} win`)}</div>
+        <div class="drive-pick" role="group" aria-label="Show playoff odds after a result">${btn('now', 'Today')}${btn('a', `${esc(firstName(a))} wins`)}${btn('b', `${esc(firstName(b))} wins`)}</div>
       </div>
       <div class="drive-field">
         <span class="endzone" aria-hidden="true">Playoffs</span>
@@ -1798,7 +1807,7 @@ function viewTrades() {
   const all = (tradeState.cache[myTeam] ||= tradeIdeas(DATA, myTeam));
   const ideas = tradeState.shape === 'all' ? all : all.filter((i) => i.shape === tradeState.shape);
   const count = (k) => (k === 'all' ? all.length : all.filter((i) => i.shape === k).length);
-  const btn = (k, label) => `<button type="button" data-shape="${k}" aria-pressed="${tradeState.shape === k}">${label} (${count(k)})</button>`;
+  const btn = (k, label) => `<button type="button" data-shape="${k}" aria-pressed="${tradeState.shape === k}"${count(k) || tradeState.shape === k ? '' : ' disabled'}>${label} (${count(k)})</button>`;
   const needs = ['QB', 'RB', 'WR', 'TE'].map((p) => {
     const r = me.posRanks[p], cls = r >= n - 3 ? 'need' : r <= 3 ? 'strong' : '';
     return `<span class="need-chip ${cls}" data-tip="${esc(`${p}: ${ordinal(r)} of ${n} in projected starter points (${f1(me.posGroups[p])} pts/wk)`)}"><b>${p}</b>${ordinal(r)}</span>`;
@@ -1845,11 +1854,11 @@ function viewLab() {
   const weeks = DATA.history.map((h) => h.week);
   const focus = myTeam || null;
   const bump = bumpChart({
-    series: teams.map((t) => ({ id: t.rid, label: t.name, short: short(t.name, 14), color: DATA.color[t.rid], values: t.rankHistory, img: t.rid === focus ? faceSrc(t) : null })),
+    series: teams.map((t) => ({ id: t.rid, label: t.name, short: short(t.name, 21), color: DATA.color[t.rid], values: t.rankHistory, img: t.rid === focus ? faceSrc(t) : null })),
     weeks, n, focus,
   });
   const luckRows = [...teams].sort((a, b) => b.luck - a.luck).map((t) => ({
-    label: short(t.name, 20), value: t.luck,
+    label: short(t.name, 20), value: t.luck, mine: t.rid === myTeam,
     tip: `${t.name}: ${record(t)} actual vs ${f1(t.expectedWins)} expected wins from a ${t.allPlayW.toFixed(0)}-${t.allPlayL.toFixed(0)} all-play record`,
   }));
   const avgPf = teams.reduce((a, t) => a + t.pfPerGame, 0) / n;
@@ -1860,7 +1869,8 @@ function viewLab() {
   });
   const weeklyHeat = heatTable({
     caption: 'Weekly scoring finish',
-    rows: teams.map((t) => short(t.name, 18)),
+    rows: teams.map((t) => short(t.name, 22)),
+    mine: teams.findIndex((t) => t.rid === myTeam),
     cols: DATA.weekly.map((w) => `W${w.week}`),
     n,
     cells: teams.map((t) => DATA.weekly.map((w) => {
@@ -1870,7 +1880,8 @@ function viewLab() {
   });
   const posHeat = DATA.meta.hasRos ? heatTable({
     caption: 'Position group rank',
-    rows: teams.map((t) => short(t.name, 18)),
+    rows: teams.map((t) => short(t.name, 22)),
+    mine: teams.findIndex((t) => t.rid === myTeam),
     cols: ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'],
     n,
     cells: teams.map((t) => ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'].map((p) => ({ rank: t.posRanks[p], label: t.posRanks[p], tip: `${t.name} ${p}: ${ordinal(t.posRanks[p])} (${f1(t.posGroups[p])} proj pts/wk)` }))),
@@ -1878,7 +1889,8 @@ function viewLab() {
   const schedTeams = [...teams].sort((a, b) => a.schedWins - b.schedWins);
   const schedHeat = schedTeams[0]?.schedule.length ? heatTable({
     caption: 'Remaining schedule',
-    rows: schedTeams.map((t) => `${short(t.name, 16)} (${t.schedWins >= 0 ? '+' : ''}${t.schedWins.toFixed(2)})`),
+    mine: schedTeams.findIndex((t) => t.rid === myTeam),
+    rows: schedTeams.map((t) => `${short(t.name, 22)} (${t.schedWins >= 0 ? '+' : ''}${t.schedWins.toFixed(2)})`),
     cols: schedTeams[0].schedule.map((g) => `W${g.week}`),
     n,
     cells: schedTeams.map((t) => t.schedule.map((g) => {
@@ -1889,7 +1901,7 @@ function viewLab() {
   const oddsRows = [...teams].sort((a, b) => b.playoffPct - a.playoffPct || b.projWins - a.projWins);
   const eff = [...teams].filter((t) => t.efficiency != null).sort((a, b) => b.efficiency - a.efficiency);
   const effAvg = eff.reduce((a, t) => a + t.efficiency, 0) / (eff.length || 1);
-  const effRows = eff.map((t) => ({ label: short(t.name, 20), value: (t.efficiency - effAvg) * 100, tip: `${t.name}: started ${(t.efficiency * 100).toFixed(1)}% of their best possible lineup, ${f1(t.leftOnBench)} pts/wk left on the bench` }));
+  const effRows = eff.map((t) => ({ label: short(t.name, 20), mine: t.rid === myTeam, value: (t.efficiency - effAvg) * 100, tip: `${t.name}: started ${(t.efficiency * 100).toFixed(1)}% of their best possible lineup, ${f1(t.leftOnBench)} pts/wk left on the bench` }));
 
   return `
     <section class="view-head"><div>
@@ -1900,8 +1912,8 @@ function viewLab() {
       <section class="panel glass span-12"><h2>Rank flow</h2><p class="sub">Power rank after each week. The roster half uses today's ROS values throughout, so the movement comes from results.</p>${bump}</section>
       <section class="panel glass span-6"><h2>Luck index</h2><p class="sub">Actual wins minus all-play expected wins. Orange teams are winning more than their scores deserve, blue teams less.</p>${divergingBars({ rows: luckRows })}</section>
       <section class="panel glass span-6"><h2>Points for vs against</h2><p class="sub">Dashed lines are the league average. Bottom right is where you want to live.</p>${sc}</section>
-      ${schedHeat ? `<section class="panel glass span-12"><h2>Schedule strength</h2><p class="sub">Each cell is that week's opponent by current power rank; red is a top team, green a bottom one. Teams run toughest to easiest, with the schedule's effect in expected wins next to the name. This counts for ${pctW('schedule')}% of the power score.</p>${schedHeat}</section>` : ''}
-      <section class="panel glass span-12"><h2>Weekly finishes</h2><p class="sub">Each cell is that week's score; green finished near the top of the league, red near the bottom.</p>${weeklyHeat}</section>
+      ${schedHeat ? `<section class="panel glass span-12"><h2>Schedule strength</h2><p class="sub">Each cell is that week's opponent by current power rank; amber is a top team, blue a bottom one. Teams run toughest to easiest, with the schedule's effect in expected wins next to the name. This counts for ${pctW('schedule')}% of the power score.</p>${schedHeat}</section>` : ''}
+      <section class="panel glass span-12"><h2>Weekly finishes</h2><p class="sub">Each cell is that week's score; blue finished near the top of the league, amber near the bottom.</p>${weeklyHeat}</section>
       ${posHeat ? `<section class="panel glass span-7"><h2>Position group ranks</h2><p class="sub">League rank of each team's projected rest-of-season starters by position, flex spots included.</p>${posHeat}</section>` : ''}
       <section class="panel glass ${posHeat ? 'span-5' : 'span-12'}"><h2>Playoff odds</h2><p class="sub">From 10,000 simulated finishes to the regular season, top ${DATA.meta.playoffTeams} get in.</p>
         <table class="table"><thead><tr><th>Team</th><th class="num">Playoffs</th><th class="num">Bye</th><th class="num">Proj W</th><th class="num">Last</th></tr></thead><tbody>
@@ -1917,7 +1929,7 @@ function viewLab() {
         ${DATA.divisive.map((d) => `<tr><td>${posTag(d.id)}${esc(nameOf(d.id))}<br><small class="when">${esc(team(d.rid)?.name || '')}</small></td><td class="num">${d.r.fp ?? '–'}</td><td class="num">${d.r.ds ?? '–'}</td><td class="num">${d.r.ll ?? '–'}</td></tr>`).join('')}
         </tbody></table></section>` : ''}
       ${DATA.meta.hasRos ? `<section class="panel glass span-6"><h2>Waiver and trade ROI</h2><p class="sub">Consensus ROS value added through moves, valued at today's rankings. Uneven trades credit each freed roster spot as one top free agent.</p>
-        ${divergingBars({ rows: Object.values(DATA.managerMoves).sort((a, b) => b.net - a.net).map((m) => ({ label: short(team(m.rid).name, 20), value: m.net, tip: `${team(m.rid).name}: ${f1(m.waiverNet)} from adds and drops, ${f1(m.tradeNet)} from trades over ${m.moves} moves` })) })}</section>` : ''}
+        ${divergingBars({ rows: Object.values(DATA.managerMoves).sort((a, b) => b.net - a.net).map((m) => ({ label: short(team(m.rid).name, 20), mine: m.rid === myTeam, value: m.net, tip: `${team(m.rid).name}: ${f1(m.waiverNet)} from adds and drops, ${f1(m.tradeNet)} from trades over ${m.moves} moves` })) })}</section>` : ''}
     </div>`;
 }
 
@@ -2040,7 +2052,12 @@ function reveal(root) {
       });
     });
   }, { rootMargin: '0px 0px -6% 0px' });
-  root.querySelectorAll(REVEAL).forEach((el) => { el.classList.add('reveal'); io.observe(el); });
+  // cards already on the first screen show at once (the tab change slides the whole page in anyway), so a new tab
+  // never opens on an empty field; only what's further down rises in as it scrolls into view
+  const first = [], below = [];
+  root.querySelectorAll(REVEAL).forEach((el) => { const r = el.getBoundingClientRect(); (r.top < innerHeight * 0.94 && r.bottom > 0 ? first : below).push(el); });
+  countAll(first.flatMap((el) => [...el.querySelectorAll(COUNT)]));
+  below.forEach((el) => { el.classList.add('reveal'); io.observe(el); });
 }
 
 const VIEWS = { live: viewLive, rankings: viewRankings, wire: viewWire, matchups: viewMatchups, trades: viewTrades, lab: viewLab };
@@ -2079,12 +2096,26 @@ function bind(key) {
       again.addEventListener('click', () => maybeMessage(true));
     }
     $('#poll-slot')?.addEventListener('click', (e) => { const b = e.target.closest('[data-poll]'); if (b) castPoll(Number(b.dataset.poll)); });
+    $('[data-jump]')?.addEventListener('click', () => {
+      const li = $('.rank.mine');
+      if (!li) return;
+      li.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'start' });
+      if (!li.classList.contains('open')) li.querySelector('.rank-btn').click();
+    });
+    $('.ranks')?.addEventListener('click', (e) => {
+      const c = e.target.closest('.detail-close');
+      if (!c) return;
+      const li = c.closest('.rank'), b = li.querySelector('.rank-btn');
+      b.click();
+      if (li.getBoundingClientRect().top < 0) li.scrollIntoView({ block: 'start' });
+      b.focus({ preventScroll: true });
+    });
     document.querySelectorAll('.rank-btn').forEach((b) =>
       b.addEventListener('click', () => {
         const li = b.closest('.rank');
         const open = !li.classList.contains('open');
         const holder = li.querySelector('.detail > div');
-        if (open && !holder.innerHTML) holder.innerHTML = rankDetail(team(Number(li.dataset.rid)));
+        if (open && !holder.innerHTML) holder.innerHTML = `${rankDetail(team(Number(li.dataset.rid)))}<button type="button" class="odds-more detail-close"><span>Close</span>${XP}</button>`;
         // The jersey number is centred on the row. Pin it at its current pixel spot while the row is open so it
         // neither jumps nor drifts as the row grows; release the pin once the row has finished closing.
         const jersey = li.querySelector('.jersey');

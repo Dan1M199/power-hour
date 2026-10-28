@@ -2,3 +2,11 @@ node_modules/
 .vercel/
 dist/
 .DS_Store
+# Impeccable: per-machine state (the shared config, DESIGN.md sidecar and critiques are committed)
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+.impeccable/live/roots.json
+.impeccable/live/sessions/
+.impeccable/live/inject-journal.json
+# local preview server settings for the desktop app
+.claude/
