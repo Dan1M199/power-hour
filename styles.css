@@ -758,6 +758,68 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   background-color: var(--chalk); background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.36) 0 40%, rgba(255, 255, 255, 0) 44%), linear-gradient(hsla(var(--h), 72%, 50%, var(--a)), hsla(var(--h), 72%, 50%, var(--a)));
   box-shadow: inset 0 0 0 1.5px rgba(18, 48, 26, 0.16), inset 0 -3px 0 rgba(18, 48, 26, 0.12); }
 .heat tr.mine td { box-shadow: inset 0 0 0 2px #F2C200, inset 0 -3px 0 rgba(18, 48, 26, 0.12); }
+/* ---------- Nerd lab: "What it takes" ---------- */
+.lab-grid .panel > .sub { max-width: 75ch; }
+/* the desk's one-line read of a chart, for the people who won't read the chart */
+.lab-lede { margin: 2px 0 14px; padding: 10px 14px; border-radius: var(--r-md); font: 800 clamp(17px, 1.9vw, 21px)/1.2 var(--display); letter-spacing: 0.01em; color: var(--ink);
+  background: var(--mine-bg); box-shadow: 0 0 0 2px #F2C200, 0 3px 0 2px var(--ledge-gold); text-wrap: pretty; }
+.heat.wit td { --h: 122; min-width: 46px; }
+.heat.wit td.thin { color: var(--ink-3); background-image: none; background-color: transparent; box-shadow: inset 0 0 0 1.5px rgba(18, 48, 26, 0.08); }
+.heat.wit td.na { background: none; box-shadow: none; }
+/* the win total the sims land on most: an inked ring with a little ledge */
+.heat.wit td.likely { box-shadow: inset 0 0 0 2.5px var(--ink), 0 3px 0 0 var(--ink); }
+.heat.wit tbody th { min-width: 150px; }
+.heat.wit .wit-name { display: block; font-weight: 800; color: var(--ink); }
+.heat.wit tbody th small { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink-3); }
+.heat.wit .wit-corner { position: sticky; left: 0; z-index: 2; text-align: left; font-weight: 700; color: var(--ink-3); border-radius: 8px; background-color: var(--chalk); }
+.heat.wit td.need { padding: 0 2px 0 8px; background: none; box-shadow: none; text-align: left; }
+.magic-chip { display: inline-block; padding: 4px 10px; border-radius: 999px; font: 800 12.5px/1.2 var(--body); white-space: nowrap; color: var(--ink);
+  background: var(--chalk); box-shadow: 0 0 0 1.5px var(--outline), 0 2px 0 1.5px var(--ledge); }
+.magic-chip.in { background: var(--grass-2); }
+.magic-chip.no { color: var(--chalk); background: var(--bad); }
+
+/* ---------- Nerd lab: "Fluke or for real?" ---------- */
+.talent { display: grid; gap: 6px; }
+.tl-row { display: grid; grid-template-columns: 180px minmax(0, 1fr) 112px; gap: 14px; align-items: center; }
+.tl-name { min-width: 0; line-height: 1.15; }
+.tl-name b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 16px/1.15 var(--display); letter-spacing: 0.01em; }
+.tl-name small { font-size: 12px; color: var(--ink-3); }
+.tl-row.mine .tl-name b { display: inline-block; max-width: 100%; padding: 1px 8px; border-radius: 999px; background: var(--mine-bg); box-shadow: inset 0 0 0 2px #F2C200; }
+/* each team's lane is a tray with chalk ticks, like the chart plates */
+.tl-track { position: relative; height: 34px; border-radius: 10px; background: var(--tile); box-shadow: var(--tray-edge); }
+.tl-row.mine .tl-track { box-shadow: var(--tray-edge), 0 0 0 2px #F2C200; }
+.tl-track > i { position: absolute; top: 50%; }
+.tl-tick { top: 3px !important; bottom: 3px; width: 1.5px; margin-left: -0.75px; background: var(--chalk); }
+.tl-avg { top: 2px !important; bottom: 2px; width: 0; margin-left: -1px; border-left: 2px dashed rgba(18, 48, 26, 0.45); }
+/* the 80% range: a glossy inked pill in the verdict's colour */
+.tl-range { height: 14px; margin-top: -7px; border-radius: 999px; box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0 40%, rgba(255, 255, 255, 0) 45%); }
+.tl-range.hot { background-color: var(--amber); }
+.tl-range.real { background-color: var(--grass-2); }
+.tl-range.under { background-color: var(--a); }
+/* the pull back toward earth: an ink arrow from the scoring so far to the best guess */
+.tl-move { height: 2.5px; margin-top: -1.25px; background: var(--ink); }
+.tl-move::after { content: ''; position: absolute; top: 50%; width: 0; height: 0; margin-top: -5px; border: 5px solid transparent; }
+.tl-move.left::after { left: -2px; border-right: 7px solid var(--ink); border-left: 0; }
+.tl-move.right::after { right: -2px; border-left: 7px solid var(--ink); border-right: 0; }
+.tl-obs, .tl-est { width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; }
+.tl-obs { background: var(--chalk); box-shadow: 0 0 0 2.5px var(--ink); }
+.tl-est { width: 16px; height: 16px; margin: -8px 0 0 -8px; background: radial-gradient(circle at 34% 32%, rgba(255, 255, 255, 0.9) 0 2.5px, transparent 3px), var(--ink); box-shadow: 0 2px 0 var(--ledge); }
+.tl-verdict { justify-self: start; padding: 4px 10px; border-radius: 999px; font: 800 12.5px/1.2 var(--body); white-space: nowrap; color: var(--ink);
+  box-shadow: 0 0 0 1.5px var(--outline), 0 2px 0 1.5px var(--ledge); }
+.tl-verdict.hot { background: var(--amber); }
+.tl-verdict.real { background: var(--grass-2); }
+.tl-verdict.under { background: var(--sky-1); }
+.tl-axis { margin-bottom: -2px; }
+.tl-scale { position: relative; height: 16px; }
+.tl-scale span { position: absolute; transform: translateX(-50%); font: 700 11.5px/1 var(--body); color: var(--ink-3); }
+.tl-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 14px 0 0; font-size: 12.5px; color: var(--ink-3); }
+.tl-legend span { display: inline-flex; align-items: center; gap: 8px; }
+.tl-legend i { position: relative; display: inline-block; margin: 0; }
+.tl-legend .tl-range { width: 26px; margin-top: 0; }
+.tl-legend .tl-obs, .tl-legend .tl-est { margin: 0; }
+.tl-avg-key { width: 0; height: 14px; border-left: 2px dashed rgba(18, 48, 26, 0.45); }
+
 /* playoff odds: a filled glossy pill */
 .pbar { position: relative; isolation: isolate; display: inline-block; min-width: 86px; padding: 3px 9px; border-radius: 999px; overflow: hidden; text-align: right;
   background: var(--tile-2); box-shadow: inset 0 0 0 1.5px rgba(18, 48, 26, 0.14); }
@@ -1404,4 +1466,20 @@ html.locked { overflow: hidden; }
   /* an opened row takes the full width: the yard number steps aside instead of squeezing the read into 320px */
   .rank.open, .rank.open:nth-child(-n + 3) { padding-left: 0; }
   .rank.open .jersey { opacity: 0; }
+}
+
+@media (max-width: 760px) {
+  /* phones: name and verdict share a line, the lane gets the full width underneath */
+  .talent { gap: 12px; }
+  .tl-row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'name verdict' 'track track'; gap: 5px 10px; }
+  .tl-name { grid-area: name; display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .tl-name b { min-width: 0; font-size: 15px; }
+  .tl-name small { flex: none; }
+  .tl-track, .tl-scale { grid-area: track; }
+  .tl-verdict { grid-area: verdict; padding: 3px 8px; font-size: 11.5px; }
+  .tl-axis > span:not(.tl-scale) { display: none; }
+  .tl-axis { margin-bottom: -6px; }
+  .heat.wit tbody th { min-width: 112px; max-width: 128px; }
+  .heat.wit .wit-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lab-lede { font-size: 17px; }
 }

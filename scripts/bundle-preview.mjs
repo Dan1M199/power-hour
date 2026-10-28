@@ -7,7 +7,7 @@ const wrap = (src) => {
   const names = [...src.matchAll(/^export (?:const|function|async function) ([A-Za-z0-9_]+)/gm)].map((m) => m[1]);
   return `const { ${names.join(', ')} } = (() => {\n${strip(src)}\nreturn { ${names.join(', ')} };\n})();`;
 };
-const js = [wrap(r('lib/newsclock.js')), wrap(r('lib/charts.js')), wrap(r('lib/engine.js')), wrap(r('lib/matchup.js')), wrap(r('lib/stories.js')), wrap(r('lib/overrides.js')), wrap(r('lib/trades.js')), wrap(r('lib/members.js')), wrap(r('lib/bullseye.js')), wrap(r('lib/nightdesk.js')), strip(r('app.js'))].join('\n');
+const js = [wrap(r('lib/newsclock.js')), wrap(r('lib/charts.js')), wrap(r('lib/engine.js')), wrap(r('lib/matchup.js')), wrap(r('lib/stories.js')), wrap(r('lib/overrides.js')), wrap(r('lib/trades.js')), wrap(r('lib/members.js')), wrap(r('lib/bullseye.js')), wrap(r('lib/nightdesk.js')), wrap(r('lib/labmodels.js')), strip(r('app.js'))].join('\n');
 // manager headshots as data URIs (photoUrl in lib/members.js reads window.__HEADS__)
 const heads = Object.fromEntries(readdirSync(new URL('../assets/heads', import.meta.url)).filter((f) => f.endsWith('.jpg'))
   .map((f) => [f.slice(0, -4), `data:image/jpeg;base64,${readFileSync(new URL(`../assets/heads/${f}`, import.meta.url)).toString('base64')}`]));

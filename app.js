@@ -6,6 +6,7 @@ import { tradeIdeas } from './lib/trades.js';
 import { breakdown, shortName, fits } from './lib/matchup.js';
 import { MEMBERS, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
+import { whatItTakes, trueTalent } from './lib/labmodels.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
 import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
 
@@ -1797,6 +1798,95 @@ function viewTrades() {
 }
 
 // ---------- nerd lab ----------
+// "What it takes": P(playoffs | win k more), from simulated rest-of-seasons (lib/labmodels.js). One row per team,
+// one column per number of remaining wins; the ring marks the win total the sims land on most.
+function witPanel() {
+  const W = (DATA._wit ||= whatItTakes(DATA));
+  if (!W) return '';
+  const R = Math.max(...W.rows.map((r) => r.left));
+  const rows = [...W.rows].sort((a, b) => b.overall - a.overall || b.likely - a.likely);
+  const p0 = (x) => `${Math.round(x * 100)}%`;
+  const odds = (r, k) => r.cells[k]?.odds;
+  const me = rows.find((r) => r.rid === myTeam);
+  let lede;
+  if (me) {
+    const N = esc(firstName(team(me.rid))), L = me.left;
+    if (me.magic === 0) lede = `${N}, you're in ${p0(odds(me, 0) ?? me.overall)} of the time even if you lose out. Relax, but not too much.`;
+    else if (me.magic == null) { const best = me.cells.filter((c) => c.odds != null).at(-1); lede = `${N}, even winning ${best ? best.k : L} of your last ${L} only gets you in ${best ? p0(best.odds) : '–'} of the time. You need help.`; }
+    else {
+      const below = odds(me, me.magic - 1);
+      lede = `${N}: win ${me.magic} of your last ${L} and you're in ${p0(odds(me, me.magic))} of the time${below != null ? `; win ${me.magic - 1} and it's ${p0(below)}` : ''}. The sims have you winning ${me.likely}${odds(me, me.likely) != null ? `, which gets you in ${p0(odds(me, me.likely))} of the time` : ''}.`;
+    }
+  } else {
+    const need = rows.filter((r) => r.magic != null && r.magic > 0).map((r) => r.magic);
+    const typical = need.length ? need.sort((a, b) => a - b)[Math.floor(need.length / 2)] : null;
+    lede = typical != null ? `The bubble in one number: most teams need ${typical} more wins to be 90% safe. Pick your team up top to see your own path.` : '';
+  }
+  const head = Array.from({ length: R + 1 }, (_, k) => `<th scope="col">${k}</th>`).join('');
+  const body = rows.map((r) => {
+    const t = team(r.rid);
+    const cells = Array.from({ length: R + 1 }, (_, k) => {
+      const c = r.cells[k];
+      if (!c) return '<td class="na"></td>';
+      const tip = `${t.name}, ${k} more ${k === 1 ? 'win' : 'wins'} (${(c.share * 100).toFixed(c.share < 0.01 ? 1 : 0)}% of simulated seasons end here): ${c.odds == null ? 'too rare to call' : `in the playoffs ${p0(c.odds)} of the time`}`;
+      if (c.odds == null) return `<td class="thin${k === r.likely ? ' likely' : ''}" data-tip="${esc(tip)}">·</td>`;
+      return `<td class="${k === r.likely ? 'likely' : ''}" style="--a:${(0.04 + c.odds * 0.86).toFixed(2)}" data-tip="${esc(tip)}">${Math.round(c.odds * 100)}%</td>`;
+    }).join('');
+    const need = r.magic == null ? '<span class="magic-chip no">Needs help</span>' : r.magic === 0 ? '<span class="magic-chip in">Safe</span>' : `<span class="magic-chip">${r.magic} of ${r.left}</span>`;
+    return `<tr${r.rid === myTeam ? ' class="mine"' : ''}><th scope="row"><span class="wit-name">${esc(short(t.name, 22))}</span><small>${record(t)}, ${p0(r.overall)} now</small></th>${cells}<td class="need">${need}</td></tr>`;
+  }).join('');
+  return `<section class="panel glass span-12 wit-panel"><h2>What it takes</h2>
+      <p class="sub">We played out the rest of the regular season ${W.sims.toLocaleString('en-US')} times, then grouped the seasons by how many of their last ${R} games each team won. Each cell is how often that many wins got them into the top ${DATA.meta.playoffTeams}. The ringed cell is the win total the sims land on most; the last column is the fewest wins that get a team in 9 times out of 10.</p>
+      ${lede ? `<p class="lab-lede">${lede}</p>` : ''}
+      <div class="heat-wrap"><table class="heat wit"><caption class="sr-only">Playoff odds by wins in the remaining games</caption>
+        <thead><tr><th scope="col" class="wit-corner">Wins from here</th>${head}<th scope="col">For 90%</th></tr></thead><tbody>${body}</tbody></table></div>
+    </section>`;
+}
+
+// "Fluke or for real?": empirical-Bayes shrinkage of each team's scoring toward what its roster projects
+// (lib/labmodels.js). The ring is the scoring so far, the dot the best guess from here, the pill its 80% range.
+function talentPanel() {
+  const T = (DATA._talent ||= trueTalent(DATA));
+  if (!T) return '';
+  const vals = T.rows.flatMap((r) => [r.obs, r.lo, r.hi]);
+  const step = 5, min = Math.floor((Math.min(...vals) - 2) / step) * step, max = Math.ceil((Math.max(...vals) + 2) / step) * step;
+  const X = (v) => `${(((v - min) / (max - min)) * 100).toFixed(2)}%`;
+  const tickStep = max - min > 40 ? 10 : 5;
+  const ticks = []; for (let v = Math.ceil(min / tickStep) * tickStep; v <= max; v += tickStep) ticks.push(v);
+  const VERDICT = { hot: 'Running hot', real: 'For real', under: 'Underrated' };
+  const hot = T.rows.filter((r) => r.verdict === 'hot').sort((a, b) => a.shift - b.shift)[0];
+  const under = T.rows.filter((r) => r.verdict === 'under').sort((a, b) => b.shift - a.shift)[0];
+  const me = T.rows.find((r) => r.rid === myTeam);
+  const nm = (r) => esc(team(r.rid).name);
+  const games = Math.round(T.rows.reduce((a, r) => a + r.games, 0) / T.rows.length);
+  let lede = [hot && `Biggest fluke: ${nm(hot)}, scoring ${f1(hot.obs)} a week but really more like ${f1(hot.est)}.`,
+    under && `Most underrated: ${nm(under)}, stuck at ${f1(under.obs)} with a roster built for ${f1(under.est)}.`].filter(Boolean).join(' ');
+  if (me && me !== hot && me !== under) lede += ` You: ${f1(me.obs)} so far, ${f1(me.est)} from here. ${me.verdict === 'hot' ? 'Enjoy it while it lasts.' : me.verdict === 'under' ? 'Better days are coming.' : 'What you see is what you get.'}`;
+  const grid = ticks.map((v) => `<i class="tl-tick" style="left:${X(v)}"></i>`).join('') + `<i class="tl-avg" style="left:${X(T.avg)}"></i>`;
+  const rows = T.rows.map((r, i) => {
+    const t = team(r.rid), lo = Math.min(r.obs, r.est), d = Math.abs(r.est - r.obs);
+    const tip = `${t.name}: ${f1(r.obs)} a week over ${r.games} games; the roster projects ${f1(r.prior)}. Best guess from here ${f1(r.est)}, 80% sure it lands between ${f1(r.lo)} and ${f1(r.hi)}.`;
+    return `<div class="tl-row${r.rid === myTeam ? ' mine' : ''}" style="--k:${i}">
+        <span class="tl-name"><b>${esc(t.name)}</b><small>${f1(r.est)} from here</small></span>
+        <span class="tl-track" data-tip="${esc(tip)}">${grid}
+          <i class="tl-range ${r.verdict}" style="left:${X(r.lo)};width:calc(${X(r.hi)} - ${X(r.lo)})"></i>
+          ${d >= 0.6 ? `<i class="tl-move ${r.est < r.obs ? 'left' : 'right'}" style="left:${X(lo)};width:calc(${X(lo + d)} - ${X(lo)})"></i>` : ''}
+          <i class="tl-obs" style="left:${X(r.obs)}"></i><i class="tl-est" style="left:${X(r.est)}"></i>
+        </span>
+        <span class="tl-verdict ${r.verdict}">${VERDICT[r.verdict]}</span>
+      </div>`;
+  }).join('');
+  return `<section class="panel glass span-12 talent-panel"><h2>Fluke or for real?</h2>
+      <p class="sub">${games} games is a small sample, so a hot start can be half luck. This blends each team's scoring so far with what its roster ${T.hasRos ? 'projects' : 'should score'}, weighted by how noisy weekly scores are in this league (a team's own scores count for about ${Math.round(T.rows[0].weight * 100)}% right now, more every week). The arrow is how far each start should come back toward earth. Teams are ordered by the best guess, so this is also a true-talent ranking.</p>
+      ${lede ? `<p class="lab-lede">${lede}</p>` : ''}
+      <div class="talent">
+        <div class="tl-row tl-axis"><span></span><span class="tl-scale">${ticks.map((v) => `<span style="left:${X(v)}">${v}</span>`).join('')}</span><span></span></div>
+        ${rows}
+      </div>
+      <p class="tl-legend"><span><i class="tl-obs"></i>Scoring so far</span><span><i class="tl-est"></i>Best guess from here</span><span><i class="tl-range real"></i>80% range</span><span><i class="tl-avg-key"></i>League average, ${f1(T.avg)}</span></p>
+    </section>`;
+}
+
 function viewLab() {
   const teams = DATA.teams;
   const n = teams.length;
@@ -1859,8 +1949,10 @@ function viewLab() {
     </div></section>
     <div class="lab-grid">
       <section class="panel glass span-12"><h2>Rank flow</h2><p class="sub">Power rank after each week. The roster half uses today's ROS values throughout, so the movement comes from results.</p>${bump}</section>
+      ${witPanel()}
       <section class="panel glass span-6"><h2>Luck index</h2><p class="sub">Actual wins minus all-play expected wins. Orange teams are winning more than their scores deserve, blue teams less.</p>${divergingBars({ rows: luckRows })}</section>
       <section class="panel glass span-6"><h2>Points for vs against</h2><p class="sub">Dashed lines are the league average. Bottom right is where you want to live.</p>${sc}</section>
+      ${talentPanel()}
       ${schedHeat ? `<section class="panel glass span-12"><h2>Schedule strength</h2><p class="sub">Each cell is that week's opponent by current power rank; amber is a top team, blue a bottom one. Teams run toughest to easiest, with the schedule's effect in expected wins next to the name. This counts for ${pctW('schedule')}% of the power score.</p>${schedHeat}</section>` : ''}
       <section class="panel glass span-12"><h2>Weekly finishes</h2><p class="sub">Each cell is that week's score; blue finished near the top of the league, amber near the bottom.</p>${weeklyHeat}</section>
       ${posHeat ? `<section class="panel glass span-7"><h2>Position group ranks</h2><p class="sub">League rank of each team's projected rest-of-season starters by position, flex spots included.</p>${posHeat}</section>` : ''}
@@ -2109,6 +2201,15 @@ function bind(key) {
     $('[data-mine]')?.addEventListener('click', () => { wireState.mine = !wireState.mine; route(); });
     $('[data-more]')?.addEventListener('click', () => { wireState.limit += 50; route(); });
     $('[data-more-trades]')?.addEventListener('click', () => { wireState.trades = Infinity; route(); });
+  }
+  if (key === 'lab') {
+    // "What it takes" is wider than a phone: open it scrolled to your expected win total (or the bubble's), not to 0
+    const wrap = $('.wit-panel .heat-wrap');
+    const cell = wrap && (wrap.querySelector('tr.mine td.likely') || wrap.querySelectorAll('td.likely')[5]);
+    if (cell && wrap.scrollWidth > wrap.clientWidth) {
+      const head = wrap.querySelector('tbody th')?.offsetWidth || 0;
+      wrap.scrollLeft = Math.max(0, cell.offsetLeft - head - (wrap.clientWidth - head - cell.offsetWidth) / 2);
+    }
   }
 }
 

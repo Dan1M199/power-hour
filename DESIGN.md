@@ -262,6 +262,9 @@ A solid pill-shaped sticky header in Header Sky holding the logo, the wordmark (
 ### Charts (cartoon glass)
 Charts follow the cards. Every plot stands on a plate: a Tray with chalk-white gridlines on a card, or a white plate inside a tray. Lines carry an ink casing under the team colour and a thin white gloss along the top; the focus team's line is heavier. Dots have a 2px ink ring and a white glint; photo marks get an ink ring around their colour ring. Bars have a 2px ink edge, a hard ledge 3px underneath and a gloss strip (at most 12px) over the top. Chart labels wear a white halo. The scatter's quadrants are tinted by how good a place they are (green bottom right, red top left). Heat cells are glossy tiles with a shaded foot. The position-group radar is a white dartboard on a ledge. Playoff odds read as a filled glossy pill.
 
+### Lab ledes
+A chart that answers a question opens with the desk's one-line read in a yellow callout (`.lab-lede`, Your Row fill on a gold ledge), written to the picked team when there is one ("Dan: win 5 of your last 8 and you're in 91% of the time"). The chart is the evidence; the lede is what a casual manager takes back to the group chat.
+
 ### Manager stat tiles
 The tiles in the manager card are toned by league rank: top third gets a green tint, a green number and a green ledge; bottom third gets the same in red; the middle stays white. Moves stay neutral. The tooltip says where the number ranks ("3rd of 12 in the league").
 
