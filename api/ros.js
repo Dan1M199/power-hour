@@ -82,8 +82,12 @@ async function weeklyFantasyPros(key, week, fpids) {
     const batches = [];
     for (let i = 0; i < fpids.length; i += FP_BATCH) batches.push(fpids.slice(i, i + FP_BATCH));
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    // a 429 is either a burst (wait and retry) or the key's quota used up ("Limit Exceeded"): then stop asking at all
+    let spent = false;
     const call = async (ids, tries = 3) => {
+      if (spent) throw new Error('quota used up');
       const r = await fetch(fpProjUrl(SEASON, week, ids), { headers: { 'x-api-key': apiKey } });
+      if (r.status === 429 && /limit exceeded/i.test(await r.clone().text().catch(() => ''))) { spent = true; throw new Error('429 quota used up (Limit Exceeded)'); }
       if (r.status === 429 && tries > 1) { await wait(1200); return call(ids, tries - 1); }
       if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
       return r.json();

@@ -3,7 +3,7 @@ import { bumpChart, scatter, radar, weeklyBars, divergingBars, heatTable, TEAM_C
 import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
 import { tradeIdeas } from './lib/trades.js';
-import { breakdown, shortName, fits } from './lib/matchup.js';
+import { breakdown, shortName, fits, nfl } from './lib/matchup.js';
 import { MEMBERS, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
 import { whatItTakes, trueTalent } from './lib/labmodels.js';
@@ -170,8 +170,18 @@ function build(raw, after = null) {
 function headlines() {
   // once the week is final the headlines come down; the week after, the shakeup leads
   if (DATA.finalCall) return null;
-  if (!DATA.liveMode && shakeupOn()) return shakeupStories();
+  if (!DATA.liveMode && shakeupOn()) {
+    const shake = shakeupStories(); // always run: it also sets the week's movement arrows on the ranking rows
+    return (deskOn() && deskStories()) || shake;
+  }
   let stories = buildStories(DATA, { now: DATA.now, dateKey: chicagoDate(), editor: EDITOR });
+  // the week's desk: no recaps of last week once the new week is being played, and the leak stays on top
+  if (deskOn()) {
+    const recap = new Set(['upset', 'blowout', 'nailbiter', 'explosion', 'climb', 'fall']);
+    const keep = [stories.lead, ...stories.more].filter((st) => st && !recap.has(st.type));
+    const leak = leakStory();
+    stories = { ...stories, lead: leak || keep[0], more: leak ? keep : keep.slice(1) };
+  }
   // after Sunday night football the night desk takes over the headlines
   if (nightDesk() && DATA.live) {
     const people = Object.fromEntries(DATA.teams.map((t) => [t.rid, firstName(t)]));
@@ -182,7 +192,7 @@ function headlines() {
   const sass = sassStory();
   if (sass) stories = { ...stories, more: [...stories.more, sass], extra: true };
   // money week leads the headlines for as long as it runs
-  const ms = moneyStory();
+  const ms = deskOn() ? null : moneyStory();
   if (ms) stories = { ...stories, lead: ms, more: [stories.lead, ...stories.more].filter(Boolean) };
   return stories;
 }
@@ -527,6 +537,170 @@ function closeGames(wk) {
     `Next closest: ${line(g2)}, a ${f1(g2.margin)}-point margin.`,
   ].join(' ');
   return { type: 'nailbiter', kicker: 'Down to the wire', tone: 'neutral', stamp: 'Phew', rids: [g1.W.rid, g1.L.rid], headline, deck };
+}
+
+// ---------- the week's desk ----------
+// Dan's forward-facing headlines for the week ahead, from Wednesday once waivers have run: a breaking lead from a tip he
+// passed on, then the wire since `since`, the games with the most playoff odds on them, the Sunday traps (byes, empty
+// slots, injuries) and an upset watch. Nothing about last week. Every number comes from the morning snapshot, so the
+// slides keep up as lineups change. Runs while `week` is the week ahead and replaces the shakeup carousel (the poll
+// stays). Once the games start, the leak stays on top of the live headlines. Set DESK to null to drop it.
+const DESK = {
+  week: 8, since: Date.parse('2026-10-27T06:00:00-05:00'),
+  // Dan's tip, Oct 28: WarreningU and Anita Max Wynn are working on Judkins to WarreningU for a high-value player, more
+  // to come; separately, Kittle is on the table. It comes down on its own once Judkins changes teams.
+  leak: { buyer: '1266185245770661888', seller: '1004099157217685504', player: '12512', block: '4217' },
+};
+const deskOn = () => !!DESK && DATA.meta.lastScored === DESK.week - 1;
+const ownerTeam = (owner) => DATA.teams.find((t) => t.ownerId === owner);
+const rosterOf = (id) => DATA.teams.find((t) => t.players.includes(id));
+const valueOf = (id) => DATA.helpers.valueOf(id);
+const clockTime = (ts) => new Date(ts).toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }).replace(' ', '').toLowerCase();
+const listOf = (xs) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+const roomRank = (t, pos) => (t.posRanks[pos] === 1 ? "the league's best" : `the ${ordinal(t.posRanks[pos])}-ranked`);
+const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const count = (n) => WORDS[n] || String(n);
+const capital = (s) => s[0].toUpperCase() + s.slice(1);
+// a player as a sentence names him; a defense reads "the Texans defense"
+const playerSaid = (x) => (x.pos === 'DEF' ? `the ${nfl(x.team)} defense` : x.name);
+
+function deskStories() {
+  const sel = [leakStory(), wireStory(), raceStory(), trapStory(), upsetStory()].filter(Boolean);
+  return sel.length ? { lead: sel[0], more: sel.slice(1), size: sel.length } : null;
+}
+
+// the tip: who's talking, why the pieces fit, and how far apart they are by consensus value
+function leakStory() {
+  const L = DESK.leak, buyer = ownerTeam(L.buyer), seller = ownerTeam(L.seller);
+  if (!buyer || !seller || rosterOf(L.player) !== seller) return null; // the deal happened (or fell apart into a new home)
+  const block = rosterOf(L.block), P = nameOf(L.player), K = nameOf(L.block), kSur = K.split(' ').pop(), pSur = P.split(' ').pop();
+  // the other tight end on the team shopping Kittle: the reason he's spare
+  const spare = block && block.players.filter((id) => id !== L.block && posOf(id) === 'TE').sort((a, b) => valueOf(b) - valueOf(a))[0];
+  const gap = Math.abs(valueOf(L.player) - valueOf(L.block));
+  const kittleSwap = block === buyer;
+  return {
+    type: 'leak', breaking: true, kicker: 'Trade desk', tone: 'trade', stamp: 'Leak', rids: [buyer.rid, seller.rid],
+    headline: `${pSur} to ${buyer.name} is in the works, and ${kSur} is on the table`,
+    deck: [
+      `Sources tell the desk ${buyer.name} and ${seller.name} are working on a trade that sends ${P} to ${firstName(buyer)} in exchange for a high-value player. More to come.`,
+      block ? `Separately, sources say ${K} is on the table${block !== buyer ? `, and ${firstName(block)} is listening` : ''}${RAW.ros?.byes?.[DATA.helpers.player(L.block)?.team] === DESK.week ? ` (he's on a bye this week anyway)` : ''}.` : '',
+      kittleSwap
+        ? `On paper it fits: ${seller.name} has ${roomRank(seller, 'RB')} running back room and ${roomRank(seller, 'TE')} tight ends, while ${buyer.name} has ${roomRank(buyer, 'TE')} tight ends${spare ? ` (${K} and ${nameOf(spare)})` : ''} and ${roomRank(buyer, 'RB')} backs. If ${kSur} is the piece coming back, the consensus has them ${f1(gap)} apart: ${pSur} ${f1(valueOf(L.player))}, ${kSur} ${f1(valueOf(L.block))}.`
+        : `${seller.name} has ${roomRank(seller, 'RB')} running back room; ${buyer.name}'s backs rank ${ordinal(buyer.posRanks.RB)}.`,
+      `${firstName(buyer)} is buying at ${record(buyer)} with ${pct(buyer.playoffPct)} playoff odds. Nothing is signed.`,
+    ].filter(Boolean).join(' '),
+  };
+}
+
+// the wire since waivers: the player who changed hands the most, then the best claims and the busiest manager
+function wireStory() {
+  const moves = DATA.feed.filter((f) => f.ts >= DESK.since && (f.type === 'waiver' || f.type === 'free_agent')).sort((a, b) => a.ts - b.ts);
+  if (!moves.length) return null;
+  const events = moves.flatMap((f) => f.sides.flatMap((s) => [
+    ...s.adds.map((a) => ({ id: a.id, rid: s.rid, ts: f.ts, add: true, waiver: f.type === 'waiver', v: a.v })),
+    ...s.drops.map((d) => ({ id: d.id, rid: s.rid, ts: f.ts, add: false })),
+  ]));
+  const teamsAdding = (id) => new Set(events.filter((e) => e.add && e.id === id).map((e) => e.rid));
+  const hot = [...new Set(events.map((e) => e.id))].map((id) => ({ id, n: teamsAdding(id).size })).sort((a, b) => b.n - a.n || valueOf(b.id) - valueOf(a.id))[0];
+  const claims = events.filter((e) => e.add && e.waiver).sort((a, b) => valueOf(b.id) - valueOf(a.id)).slice(0, 2);
+  const busy = Object.entries(moves.reduce((m, f) => (f.sides.forEach((s) => (m[s.rid] = (m[s.rid] || 0) + 1)), m), {})).sort((a, b) => b[1] - a[1])[0];
+  const lines = [];
+  let headline, rids = [];
+  if (hot && hot.n >= 2) {
+    const steps = events.filter((e) => e.id === hot.id), now = rosterOf(hot.id), name = nameOf(hot.id);
+    // one clause per manager, in order: added (and dropped, with how long he lasted)
+    const stints = [];
+    steps.forEach((e) => {
+      if (e.add) stints.push({ rid: e.rid, in: e.ts });
+      else { const s = [...stints].reverse().find((x) => x.rid === e.rid && x.out == null); if (s) s.out = e.ts; }
+    });
+    const said = stints.map((s) => s.out != null
+      ? `${firstName(team(s.rid))} added him at ${clockTime(s.in)} and ${s.out - s.in < 60000 ? 'cut him the same minute' : `cut him ${Math.round((s.out - s.in) / 60000)} minutes later`}`
+      : `${firstName(team(s.rid))} grabbed him at ${clockTime(s.in)} and kept him`);
+    headline = now ? `${name} went through ${count(hot.n)} rosters overnight. ${firstName(now)} kept him` : `${name} went through ${count(hot.n)} rosters overnight and nobody kept him`;
+    lines.push(`${said.map((x) => `${x}.`).join(' ')}${now ? ` At ${f1(valueOf(hot.id))} in consensus value, he was the best player to change hands.` : ''}`);
+    rids = now ? [now.rid] : [];
+  }
+  if (claims.length) lines.push(`Top waiver claims by value: ${listOf(claims.map((c) => `${firstName(team(c.rid))} landed ${nameOf(c.id)}`))}.`);
+  if (busy && busy[1] >= 3) lines.push(`${firstName(team(Number(busy[0])))} made ${busy[1]} moves, the most in the league.`);
+  if (!headline) {
+    const top = claims[0];
+    if (!top) return null;
+    headline = `${firstName(team(top.rid))} won the wire with ${nameOf(top.id)}`;
+    rids = [top.rid];
+  }
+  if (busy && !rids.includes(Number(busy[0]))) rids.push(Number(busy[0]));
+  return { type: 'wire', kicker: 'Waiver wire', tone: 'good', stamp: 'Pickup', rids: rids.slice(0, 2), headline, deck: lines.join(' ') };
+}
+
+// the two games with the most playoff odds riding on them
+function raceStory() {
+  const swing = (t) => (t.playoffIfWin ?? t.playoffPct) - (t.playoffIfLoss ?? t.playoffPct);
+  const games = [...DATA.previews].sort((a, b) => b.stakes - a.stakes).slice(0, 2).filter((p) => p.stakes >= 0.2);
+  if (!games.length) return null;
+  const leak = DESK.leak ? [ownerTeam(DESK.leak.buyer), ownerTeam(DESK.leak.seller)] : [];
+  const vs = (p) => `${firstName(team(p.a))} vs ${firstName(team(p.b))}`;
+  const side = (t) => `${t.name} (${record(t)}) goes to ${pct(t.playoffIfWin)} with a win and ${pct(t.playoffIfLoss)} with a loss`;
+  const deck = games.map((p) => {
+    const A = team(p.a), B = team(p.b), fav = p.winA >= 0.5 ? A : B;
+    const mid = leak.find((t) => t === A || t === B);
+    const favSaid = `${firstName(fav)} is the ${pct(Math.max(p.winA, 1 - p.winA))} favourite`;
+    return `${side(A)}; ${side(B)}. ${mid === fav ? `${favSaid}, in the middle of trade talks.` : `${favSaid}.${mid ? ` ${firstName(mid)} is playing it in the middle of trade talks.` : ''}`}`;
+  });
+  return {
+    type: 'race', kicker: 'Playoff picture', tone: 'neutral', stamp: 'Big game', rids: [games[0].a, games[0].b],
+    headline: games.length === 2 ? `${vs(games[0])} and ${vs(games[1])}: the two games that swing the playoff race` : `${vs(games[0])} is the week's playoff swing game`,
+    deck: deck.join(' '),
+  };
+}
+
+// Sunday's traps: starters on a bye or ruled out, empty slots, and the biggest questionable names
+function trapStory() {
+  const wk = DESK.week;
+  const off = Object.entries(RAW.ros?.byes || {}).filter(([, w]) => w === wk).map(([t]) => nfl(t));
+  const zeros = [], doubts = [];
+  for (const p of DATA.previews) {
+    const bd = breakdown(DATA, p);
+    for (const k of ['a', 'b']) {
+      if (bd.source[k] !== 'set') continue;
+      const t = team(k === 'a' ? p.a : p.b), mine = bd.rows.map((r) => r[k]);
+      const dead = mine.filter((x) => x && !x.played && (x.bye || x.out)).map(playerSaid);
+      const empty = bd.rows.filter((r) => !r[k]).map((r) => r.slot);
+      if (dead.length || empty.length) zeros.push({ t, dead, empty, n: dead.length + empty.length });
+      mine.filter((x) => x && !x.played && x.status === 'Questionable' && x.proj > 0).forEach((x) => doubts.push({ ...x, t }));
+    }
+  }
+  const n = zeros.reduce((a, z) => a + z.n, 0);
+  zeros.sort((a, b) => b.n - a.n);
+  const top = doubts.sort((a, b) => b.proj - a.proj).slice(0, 2);
+  const lines = [];
+  if (off.length) lines.push(`The ${listOf(off)} are off this week.`);
+  zeros.forEach((z) => {
+    const bits = [z.dead.length && `still starting ${listOf(z.dead)}`, z.empty.length && `nobody at ${listOf(z.empty)}`].filter(Boolean);
+    lines.push(`${firstName(z.t)} has ${bits.join(' and ')}.`.replace('has still', 'is still'));
+  });
+  if (top.length) lines.push(`On the injury report: ${listOf(top.map((x) => `${firstName(x.t)}'s ${playerSaid(x)} (${f1(x.proj)} projected)`))} ${top.length === 1 ? 'is' : 'are'} questionable.`);
+  if (!n && !top.length) return null;
+  return {
+    type: 'trap', kicker: 'Sunday traps', tone: 'bad', stamp: 'Check it', rids: zeros.slice(0, 2).map((z) => z.t.rid),
+    headline: n ? `${capital(count(n))} starting spot${n === 1 ? '' : 's'} will score zero if nobody touches a lineup` : `${top[0].name} is questionable, and ${firstName(top[0].t)} is sweating it`,
+    deck: lines.join(' '),
+  };
+}
+
+// the best record in the league playing as an underdog
+function upsetStory() {
+  const dogs = DATA.previews.flatMap((p) => [[p.a, p.winA, p.b, p.projA, p.projB], [p.b, 1 - p.winA, p.a, p.projB, p.projA]])
+    .filter(([, w]) => w < 0.4).map(([rid, w, opp, mine, theirs]) => ({ t: team(rid), w, opp: team(opp), mine, theirs }))
+    .sort((a, b) => b.t.wins - a.t.wins || a.t.losses - b.t.losses);
+  const d = dogs[0];
+  if (!d || d.t.wins < 4) return null;
+  const all = DATA.previews.flatMap((p) => [p.projA, p.projB]).sort((a, b) => b - a), oppRank = all.indexOf(d.theirs) + 1;
+  return {
+    type: 'upset', kicker: 'Upset watch', tone: 'neutral', stamp: 'Upset?', rids: [d.t.rid, d.opp.rid],
+    headline: `${firstName(d.t)}'s ${d.t.losses ? `${record(d.t)} ` : 'unbeaten '}${d.t.name.replace(/^The /, '')} is a ${pct(d.w)} underdog this week`,
+    deck: `${firstName(d.t)} is ${record(d.t)}${d.t.playoffPct > 0.99 ? ' and already a lock for the playoffs' : ` with ${pct(d.t.playoffPct)} playoff odds`}, but ${firstName(d.opp)}'s ${d.opp.name} projects ${f1(d.theirs)} to ${f1(d.mine)}${oppRank === 1 ? ', the highest projected score in the league this week' : ''}. If the favourite holds, ${firstName(d.opp)} moves to ${pct(d.opp.playoffIfWin)} playoff odds.`,
+  };
 }
 
 // ---------- the video headline ----------
@@ -1001,7 +1175,7 @@ const CAROUSEL_SIZE = 3;
 function leadStory() {
   const s = DATA.stories;
   if (!s?.lead) return '';
-  const stories = [s.lead, ...s.more].slice(0, CAROUSEL_SIZE + (s.night ? 1 : 0) + (s.extra ? 1 : 0));
+  const stories = [s.lead, ...s.more].slice(0, s.size || CAROUSEL_SIZE + (s.night ? 1 : 0) + (s.extra ? 1 : 0));
   const date = new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' });
   const cast = (st) => st.rids.map(team).filter(Boolean).map((t) => `
     <div class="cast-team">${avatar(t)}
@@ -1011,13 +1185,13 @@ function leadStory() {
     </div>`).join('');
   const slide = (st, i) => {
     const top = `<div class="slide-top">
-        <p class="kicker">${st.type === 'shakeup' ? '<span class="brk"><i aria-hidden="true"></i>Breaking</span>' : ''}<span>${i ? (st.type === 'monday' || st.type === 'locked' || (st.type === 'sass' && s.night) ? 'Tonight' : 'Also today') : esc(date)}</span><span class="k">${esc(st.kicker)}</span></p>
+        <p class="kicker">${st.type === 'shakeup' || st.breaking ? '<span class="brk"><i aria-hidden="true"></i>Breaking</span>' : ''}<span>${i ? (st.type === 'monday' || st.type === 'locked' || (st.type === 'sass' && s.night) ? 'Tonight' : 'Also today') : esc(date)}</span><span class="k">${esc(st.kicker)}</span></p>
         ${st.clip ? '' : leadFaces(st)}
       </div>`;
     const hed = `<${i ? 'h2' : 'h1'} class="lead-hed">${esc(st.headline)}</${i ? 'h2' : 'h1'}>`;
     // a video story puts its clip beside the kicker and headline, where the photos would be
     return `
-    <article class="slide${st.type === 'shakeup' ? ' breaking' : ''}${st.clip ? ' has-clip' : ''}" id="slide-${i}" role="group" aria-roledescription="slide" aria-label="Headline ${i + 1} of ${stories.length}">
+    <article class="slide${st.type === 'shakeup' || st.breaking ? ' breaking' : ''}${st.clip ? ' has-clip' : ''}" id="slide-${i}" role="group" aria-roledescription="slide" aria-label="Headline ${i + 1} of ${stories.length}">
       ${st.clip ? `<div class="clip-head">${top}${hed}</div>${clipPrint(st)}` : `${top}${hed}`}
       <p class="lead-deck">${esc(st.deck)}</p>
       <div class="cast">${cast(st)}</div>
