@@ -559,12 +559,27 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .cast-odds b { display: block; font: 800 22px/1 var(--display); color: var(--yellow); }
 .cast-odds small { color: rgba(255, 255, 255, 0.66); font-size: 11px; }
 .car-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 22px 20px; position: relative; z-index: 1; }
-.car-arrow { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 0; cursor: pointer; color: var(--chalk); background: rgba(255, 255, 255, 0.12); }
+.car-arrow { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 0; cursor: pointer; color: var(--chalk); background: rgba(255, 255, 255, 0.12); }
 .car-arrow:hover { background: rgba(255, 255, 255, 0.2); }
 .car-dots { display: flex; gap: 12px; }
 .car-mid { display: flex; align-items: center; gap: 16px; }
+/* sections: dots clustered by group, a short label under each cluster with the section's pip; the active section's
+   label goes full white. The kicker repeats the pip, with "1 of 2" inside a two-slide section */
+.g-trades { --g: #FF8A80; }
+.g-wire { --g: var(--grass-2); }
+.g-week { --g: var(--sky-1); }
+.car-dots.grouped { gap: 18px; align-items: flex-start; padding-top: 14px; }
+.car-group { display: grid; justify-items: center; gap: 8px; }
+.cg-dots { display: flex; gap: 12px; }
+.cg-label { display: inline-flex; align-items: center; gap: 5px; font: 700 11.5px/1 var(--body); color: rgba(255, 255, 255, 0.6); white-space: nowrap; transition: color 0.2s; }
+.cg-label::before, .kicker .k[class*='g-']::before { content: ''; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--g); }
+.car-group:has(.car-dot[aria-current='true']) .cg-label { color: var(--chalk); }
+.kicker .k[class*='g-'] { display: inline-flex; align-items: center; gap: 6px; }
+.kicker .k small { font: 600 12px/1 var(--body); color: rgba(255, 255, 255, 0.62); }
+/* the smallest phones: swipe does the arrows' job, so the section index and pause get the room */
+@media (max-width: 360px) { .car-nav { justify-content: center; padding-inline: 10px; } .car-nav .car-arrow { display: none; } .car-mid { gap: 12px; } .car-dots.grouped { gap: 14px; } .cg-dots { gap: 10px; } }
 /* pause: a small round button beside the dots; it holds the active dot's fill (the timer) until pressed again */
-.car-pause { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; color: var(--chalk); background: rgba(255, 255, 255, 0.12); }
+.car-pause { flex: none; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; color: var(--chalk); background: rgba(255, 255, 255, 0.12); }
 .car-pause:hover { background: rgba(255, 255, 255, 0.2); }
 .car-pause[aria-pressed='true'] { color: var(--ink); background: var(--yellow); }
 @media (prefers-reduced-motion: reduce) { .car-pause { display: none; } } /* nothing rotates, so nothing to pause */

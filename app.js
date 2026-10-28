@@ -179,8 +179,9 @@ function headlines() {
   if (deskOn()) {
     const recap = new Set(['upset', 'blowout', 'nailbiter', 'explosion', 'climb', 'fall']);
     const keep = [stories.lead, ...stories.more].filter((st) => st && !recap.has(st.type));
-    const leak = leakStory();
-    stories = { ...stories, lead: leak || keep[0], more: leak ? keep : keep.slice(1) };
+    const leaks = [leakStory(), shipStory()].filter(Boolean);
+    const all = [...leaks, ...keep];
+    stories = { ...stories, lead: all[0], more: all.slice(1), size: Math.min(all.length, CAROUSEL_SIZE + leaks.length) };
   }
   // after Sunday night football the night desk takes over the headlines
   if (nightDesk() && DATA.live) {
@@ -544,13 +545,18 @@ function closeGames(wk) {
 // passed on, then the wire since `since`, the games with the most playoff odds on them, the Sunday traps (byes, empty
 // slots, injuries) and an upset watch. Nothing about last week. Every number comes from the morning snapshot, so the
 // slides keep up as lineups change. Runs while `week` is the week ahead and replaces the shakeup carousel (the poll
-// stays). Once the games start, the leak stays on top of the live headlines. Set DESK to null to drop it.
+// stays). Once the games start, the leaks stay on top of the live headlines. Set DESK to null to drop it.
 const DESK = {
   week: 8, since: Date.parse('2026-10-27T06:00:00-05:00'),
   // Dan's tip, Oct 28: WarreningU and Anita Max Wynn are working on Judkins to WarreningU for a high-value player, more
   // to come; separately, Kittle is on the table. It comes down on its own once Judkins changes teams.
   leak: { buyer: '1266185245770661888', seller: '1004099157217685504', player: '12512', block: '4217' },
+  // Dan's second tip, Oct 28: the Wardfather is shipping out Kyle Monangai; the partner isn't confirmed, the deal is almost
+  // done. Comes down on its own once Monangai leaves Mo's roster.
+  ship: { seller: '1004163936612089856', player: '12534' },
 };
+// the carousel's sections, in order: a short label under each cluster of dots and a colour pip, repeated on the kicker
+const GROUPS = { trades: 'Trades', wire: 'Wire', week: 'Games' };
 const deskOn = () => !!DESK && DATA.meta.lastScored === DESK.week - 1;
 const ownerTeam = (owner) => DATA.teams.find((t) => t.ownerId === owner);
 const rosterOf = (id) => DATA.teams.find((t) => t.players.includes(id));
@@ -560,12 +566,9 @@ const listOf = (xs) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).jo
 const roomRank = (t, pos) => (t.posRanks[pos] === 1 ? "the league's best" : `the ${ordinal(t.posRanks[pos])}-ranked`);
 const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 const count = (n) => WORDS[n] || String(n);
-const capital = (s) => s[0].toUpperCase() + s.slice(1);
-// a player as a sentence names him; a defense reads "the Texans defense"
-const playerSaid = (x) => (x.pos === 'DEF' ? `the ${nfl(x.team)} defense` : x.name);
 
 function deskStories() {
-  const sel = [leakStory(), wireStory(), raceStory(), trapStory(), upsetStory()].filter(Boolean);
+  const sel = [leakStory(), shipStory(), wireStory(), raceStory(), upsetStory()].filter(Boolean);
   return sel.length ? { lead: sel[0], more: sel.slice(1), size: sel.length } : null;
 }
 
@@ -580,9 +583,9 @@ function leakStory() {
   const kittleSwap = block === buyer;
   const info = DATA.helpers.player(L.player), r = RAW.ros?.values?.[L.player] || {}, age = RAW.ros?.players?.[L.player]?.a;
   return {
-    type: 'leak', breaking: true, kicker: 'Trade desk', tone: 'trade', stamp: 'On the move', rids: [buyer.rid, seller.rid],
+    type: 'leak', group: 'trades', breaking: true, kicker: 'Trade desk', tone: 'trade', stamp: 'On the move', rids: [buyer.rid, seller.rid],
     // the player is the story: his name leads the headline in yellow, and his card stands where the photos go
-    player: { id: L.player, name: P, short: shortName(info), line: `${info.pos}, ${nfl(info.team)}`, to: buyer },
+    player: { id: L.player, name: P, short: shortName(info), line: `${info.pos}, ${nfl(info.team)}`, pin: { team: buyer, label: `To ${firstName(buyer)}` } },
     mark: [P],
     headline: `${P} to ${buyer.name} is in the works, and ${kSur} is on the table`,
     deck: [
@@ -594,6 +597,20 @@ function leakStory() {
       block ? `Separately, sources say ${K} is on the table${block !== buyer ? `, and ${firstName(block)} is listening` : ''}${RAW.ros?.byes?.[DATA.helpers.player(L.block)?.team] === DESK.week ? ` (he's on a bye this week anyway)` : ''}.${kittleSwap ? ` If ${kSur} is the piece coming back, the two are ${f1(gap)} apart in consensus value (${kSur} ${f1(valueOf(L.block))}).` : ''}` : '',
       `${firstName(buyer)} is buying at ${record(buyer)} with ${pct(buyer.playoffPct)} playoff odds. Nothing is signed.`,
     ].filter(Boolean).join(' '),
+  };
+}
+
+// the second tip, quick: who's going out, that it's nearly done, that the other side isn't confirmed
+function shipStory() {
+  const S = DESK.ship, seller = S && ownerTeam(S.seller);
+  if (!seller || rosterOf(S.player) !== seller) return null;
+  const P = nameOf(S.player), info = DATA.helpers.player(S.player), r = RAW.ros?.values?.[S.player] || {};
+  return {
+    type: 'ship', group: 'trades', breaking: true, kicker: 'Trade desk', tone: 'trade', stamp: 'On the move', rids: [seller.rid],
+    player: { id: S.player, name: P, short: shortName(info), line: `${info.pos}, ${nfl(info.team)}`, pin: { team: seller, label: `From ${firstName(seller)}` } },
+    mark: [P],
+    headline: `${seller.name} is shipping out ${P}`,
+    deck: `Sources say ${firstName(seller)} is moving ${P}, and the deal is almost done. The trade partner hasn't been confirmed.${r.prk ? ` He's the ${ordinal(r.prk)}-ranked back in the consensus.` : ''} More to come.`,
   };
 }
 
@@ -635,7 +652,7 @@ function wireStory() {
     rids = [top.rid];
   }
   if (busy && !rids.includes(Number(busy[0]))) rids.push(Number(busy[0]));
-  return { type: 'wire', kicker: 'Waiver wire', tone: 'good', stamp: 'Pickup', rids: rids.slice(0, 2), headline, deck: lines.join(' ') };
+  return { type: 'wire', group: 'wire', kicker: 'Waiver wire', tone: 'good', stamp: 'Pickup', rids: rids.slice(0, 2), headline, deck: lines.join(' ') };
 }
 
 // the two games with the most playoff odds riding on them
@@ -653,43 +670,9 @@ function raceStory() {
     return `${side(A)}; ${side(B)}. ${mid === fav ? `${favSaid}, in the middle of trade talks.` : `${favSaid}.${mid ? ` ${firstName(mid)} is playing it in the middle of trade talks.` : ''}`}`;
   });
   return {
-    type: 'race', kicker: 'Playoff picture', tone: 'neutral', stamp: 'Big game', rids: [games[0].a, games[0].b],
+    type: 'race', group: 'week', kicker: 'Playoff picture', tone: 'neutral', stamp: 'Big game', rids: [games[0].a, games[0].b],
     headline: games.length === 2 ? `${vs(games[0])} and ${vs(games[1])}: the two games that swing the playoff race` : `${vs(games[0])} is the week's playoff swing game`,
     deck: deck.join(' '),
-  };
-}
-
-// Sunday's traps: starters on a bye or ruled out, empty slots, and the biggest questionable names
-function trapStory() {
-  const wk = DESK.week;
-  const off = Object.entries(RAW.ros?.byes || {}).filter(([, w]) => w === wk).map(([t]) => nfl(t));
-  const zeros = [], doubts = [];
-  for (const p of DATA.previews) {
-    const bd = breakdown(DATA, p);
-    for (const k of ['a', 'b']) {
-      if (bd.source[k] !== 'set') continue;
-      const t = team(k === 'a' ? p.a : p.b), mine = bd.rows.map((r) => r[k]);
-      const dead = mine.filter((x) => x && !x.played && (x.bye || x.out)).map(playerSaid);
-      const empty = bd.rows.filter((r) => !r[k]).map((r) => r.slot);
-      if (dead.length || empty.length) zeros.push({ t, dead, empty, n: dead.length + empty.length });
-      mine.filter((x) => x && !x.played && x.status === 'Questionable' && x.proj > 0).forEach((x) => doubts.push({ ...x, t }));
-    }
-  }
-  const n = zeros.reduce((a, z) => a + z.n, 0);
-  zeros.sort((a, b) => b.n - a.n);
-  const top = doubts.sort((a, b) => b.proj - a.proj).slice(0, 2);
-  const lines = [];
-  if (off.length) lines.push(`The ${listOf(off)} are off this week.`);
-  zeros.forEach((z) => {
-    const bits = [z.dead.length && `still starting ${listOf(z.dead)}`, z.empty.length && `nobody at ${listOf(z.empty)}`].filter(Boolean);
-    lines.push(`${firstName(z.t)} has ${bits.join(' and ')}.`.replace('has still', 'is still'));
-  });
-  if (top.length) lines.push(`On the injury report: ${listOf(top.map((x) => `${firstName(x.t)}'s ${playerSaid(x)} (${f1(x.proj)} projected)`))} ${top.length === 1 ? 'is' : 'are'} questionable.`);
-  if (!n && !top.length) return null;
-  return {
-    type: 'trap', kicker: 'Sunday traps', tone: 'bad', stamp: 'Check it', rids: zeros.slice(0, 2).map((z) => z.t.rid),
-    headline: n ? `${capital(count(n))} starting spot${n === 1 ? '' : 's'} will score zero if nobody touches a lineup` : `${top[0].name} is questionable, and ${firstName(top[0].t)} is sweating it`,
-    deck: lines.join(' '),
   };
 }
 
@@ -702,7 +685,7 @@ function upsetStory() {
   if (!d || d.t.wins < 4) return null;
   const all = DATA.previews.flatMap((p) => [p.projA, p.projB]).sort((a, b) => b - a), oppRank = all.indexOf(d.theirs) + 1;
   return {
-    type: 'upset', kicker: 'Upset watch', tone: 'neutral', stamp: 'Upset?', rids: [d.t.rid, d.opp.rid],
+    type: 'upset', group: 'week', kicker: 'Upset watch', tone: 'neutral', stamp: 'Upset?', rids: [d.t.rid, d.opp.rid],
     headline: `${firstName(d.t)}'s ${d.t.losses ? `${record(d.t)} ` : 'unbeaten '}${d.t.name.replace(/^The /, '')} is a ${pct(d.w)} underdog this week`,
     deck: `${firstName(d.t)} is ${record(d.t)}${d.t.playoffPct > 0.99 ? ' and already a lock for the playoffs' : ` with ${pct(d.t.playoffPct)} playoff odds`}, but ${firstName(d.opp)}'s ${d.opp.name} projects ${f1(d.theirs)} to ${f1(d.mine)}${oppRank === 1 ? ', the highest projected score in the league this week' : ''}. If the favourite holds, ${firstName(d.opp)} moves to ${pct(d.opp.playoffIfWin)} playoff odds.`,
   };
@@ -1180,7 +1163,7 @@ const marked = (text, marks = []) => marks.reduce((h, m) => h.split(esc(m)).join
 // the player a story is about, printed like a trading card where the headline photos go: his Sleeper headshot, name and
 // position, the stamp, and the face of the manager he's headed to pinned on the corner
 function playerPrint(st) {
-  const P = st.player, to = P.to, m = to && member(to);
+  const P = st.player, to = P.pin?.team, m = to && member(to);
   const initials = P.name.split(' ').map((w) => w[0]).slice(0, 2).join('');
   return `<figure class="player-print ${esc(st.tone || '')}" aria-hidden="true">
       <div class="pp-card">
@@ -1188,7 +1171,7 @@ function playerPrint(st) {
         <figcaption><b>${esc(P.short)}</b><small>${esc(P.line)}</small></figcaption>
       </div>
       ${st.stamp ? `<em class="stamp">${esc(st.stamp)}</em>` : ''}
-      ${m ? `<span class="lf pp-who">${headshot(to, 'lead-face')}<span class="cap">To ${esc(m.first)}</span></span>` : ''}
+      ${m ? `<span class="lf pp-who">${headshot(to, 'lead-face')}<span class="cap">${esc(P.pin.label)}</span></span>` : ''}
     </figure>`;
 }
 
@@ -1200,6 +1183,13 @@ function leadStory() {
   if (!s?.lead) return '';
   const stories = [s.lead, ...s.more].slice(0, s.size || CAROUSEL_SIZE + (s.night ? 1 : 0) + (s.extra ? 1 : 0));
   carouselStories = stories; // the league desk tags comments with these
+  // sections: runs of slides sharing a group, when every slide has one
+  const runs = stories.every((st) => GROUPS[st.group]) ? stories.reduce((a, st, i) => { const r = a[a.length - 1]; if (r?.g === st.group) r.i.push(i); else a.push({ g: st.group, i: [i] }); return a; }, []) : null;
+  const groupPos = (st, i) => { const r = runs?.find((x) => x.i.includes(i)); return r && r.i.length > 1 ? `<small>${r.i.indexOf(i) + 1} of ${r.i.length}</small>` : ''; };
+  const dot = (i) => `<button type="button" class="car-dot" data-i="${i}" aria-label="Show headline ${i + 1}${runs ? `, ${GROUPS[stories[i].group]}` : ''}" aria-controls="slide-${i}"${i ? '' : ' aria-current="true"'}><i></i></button>`;
+  const dotRail = () => (runs
+    ? `<div class="car-dots grouped">${runs.map((r) => `<div class="car-group g-${r.g}"><div class="cg-dots">${r.i.map(dot).join('')}</div><span class="cg-label">${GROUPS[r.g]}</span></div>`).join('')}</div>`
+    : `<div class="car-dots">${stories.map((_, i) => dot(i)).join('')}</div>`);
   const date = new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' });
   const cast = (st) => st.rids.map(team).filter(Boolean).map((t) => `
     <div class="cast-team">${avatar(t)}
@@ -1209,7 +1199,7 @@ function leadStory() {
     </div>`).join('');
   const slide = (st, i) => {
     const top = `<div class="slide-top">
-        <p class="kicker">${st.type === 'shakeup' || st.breaking ? '<span class="brk"><i aria-hidden="true"></i>Breaking</span>' : ''}<span>${i ? (st.type === 'monday' || st.type === 'locked' || (st.type === 'sass' && s.night) ? 'Tonight' : 'Also today') : esc(date)}</span><span class="k">${esc(st.kicker)}</span></p>
+        <p class="kicker">${st.type === 'shakeup' || st.breaking ? '<span class="brk"><i aria-hidden="true"></i>Breaking</span>' : ''}<span>${i ? (st.type === 'monday' || st.type === 'locked' || (st.type === 'sass' && s.night) ? 'Tonight' : 'Also today') : esc(date)}</span><span class="k${st.group ? ` g-${st.group}` : ''}">${esc(st.kicker)}${groupPos(st, i)}</span></p>
         ${st.clip ? '' : st.player ? playerPrint(st) : leadFaces(st)}
       </div>`;
     const hed = `<${i ? 'h2' : 'h1'} class="lead-hed${st.mark ? ' marked' : ''}">${marked(st.headline, st.mark)}</${i ? 'h2' : 'h1'}>`;
@@ -1229,7 +1219,7 @@ function leadStory() {
       ${stories.length > 1 ? `<div class="car-nav">
         ${arrow(-1, 'Previous headline', 'M7.5 1.5 2 7l5.5 5.5')}
         <div class="car-mid">
-          <div class="car-dots">${stories.map((_, i) => `<button type="button" class="car-dot" data-i="${i}" aria-label="Show headline ${i + 1}" aria-controls="slide-${i}"${i ? '' : ' aria-current="true"'}><i></i></button>`).join('')}</div>
+          ${dotRail()}
           <button type="button" class="car-pause" aria-pressed="${carouselPaused}" aria-label="${carouselPaused ? 'Play' : 'Pause'} the headlines">${pauseIcon(carouselPaused)}</button>
         </div>
         ${arrow(1, 'Next headline', 'M1.5 1.5 7 7l-5.5 5.5')}
