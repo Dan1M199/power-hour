@@ -13,6 +13,7 @@ Power rankings, a live waiver-wire feed and data-nerd stats for the **NFL Fantas
 | --- | --- | --- |
 | Rosters, scores, matchups, transactions | Sleeper API, via `/api/league` | Once each morning (6am Central), cached on the CDN for everyone |
 | ROS rankings (FantasyPros, DraftSharks, LeagueLogs) | `api/ros.js`, a Vercel serverless function | Pulled once per day (first visitor each day, Central time), then cached at Vercel's edge |
+| This week's player projections (FantasyPros API and Sleeper, averaged) | `api/ros.js`, alongside the rankings | Once per day, with the rankings; they drive the Games tab |
 
 No cron job: the page requests `/api/ros?d=YYYY-MM-DD`, so each new day is a new cache key. If one ranking source fails, the others are still used and that response is only cached for an hour so it retries soon.
 
@@ -25,6 +26,10 @@ No cron job: the page requests `/api/ros?d=YYYY-MM-DD`, so each new day is a new
 Nothing needs installing: there are no npm dependencies. The serverless function runs on Vercel's default Node runtime (18+).
 
 To preview locally: `npx vercel dev`, then open http://localhost:3000. Add `?demo=1` to the URL to see the saved Week 7 snapshot without calling any APIs.
+
+## Turn on FantasyPros weekly projections (one-time)
+
+The Games tab projects each matchup from this week's player projections: FantasyPros' and Sleeper's, averaged. Sleeper needs no setup. For FantasyPros, add an environment variable `FANTASYPROS_API_KEY` (your key from https://secure.fantasypros.com/api-keys/request/) in the Vercel project's **Settings → Environment Variables**, then redeploy. Without it the Games tab runs on Sleeper's projections alone.
 
 ## Turn on fan picks (one-time)
 
@@ -58,6 +63,7 @@ index.html, styles.css, app.js   the site
 lib/engine.js                    power score, explanations, playoff simulation, transaction grading
 lib/consensus.js                 matches ranking rows to Sleeper IDs and blends the three sources
 lib/sources.js                   parsers for each ranking site
+lib/weekly.js                    this week's projections: FantasyPros + Sleeper, averaged
 lib/charts.js                    dependency-free SVG charts
 api/ros.js                       daily rankings endpoint (Vercel function)
 demo/demo.json                   saved Week 7 snapshot for ?demo=1

@@ -96,7 +96,7 @@ function leagueInput(raw, extra = {}) {
   return {
     input: {
       league: raw.league, users: raw.users, rosters: raw.rosters, matchups: raw.matchups, transactions: raw.transactions,
-      players: ros ? ros.players : {}, ros: patched.values, byes: ros?.byes || {},
+      players: ros ? ros.players : {}, ros: patched.values, byes: ros?.byes || {}, weekly: ros?.weekly || null,
       currentWeek: raw.state.week, lastScored: raw.league.settings?.last_scored_leg,
       // the power score always uses the engine's WEIGHTS: one formula, the same on every device
       ...extra,
@@ -1431,7 +1431,7 @@ function viewMatchups() {
     <section class="view-head">
       <div>
         <h1><span class="wk">${wk ? `Week ${wk}` : 'Off week'}</span>Matchups</h1>
-        <p>Projections use each team's best healthy lineup for the week (byes and injuries count as zero), blended with how they've actually been scoring. Win odds assume a typical week-to-week swing of about ${Math.round(DATA.meta.sd)} points. Open any game for the lineups slot by slot, and get your pick in before kickoff.</p>
+        <p>${DATA.meta.hasWeekly ? "Projections add up each lineup as set in Sleeper (the best one where it isn't set yet), using this week's player projections from FantasyPros and Sleeper, averaged (byes and players ruled out count as zero)." : "Projections use each team's best healthy lineup for the week (byes and injuries count as zero), blended with how they've actually been scoring."} Win odds assume a typical week-to-week swing of about ${Math.round(DATA.meta.sd)} points. Open any game for the lineups slot by slot, and get your pick in before kickoff.</p>
       </div>
     </section>
     ${gameOfTheWeek()}
@@ -1587,7 +1587,7 @@ function matchupDetail(i) {
     : `<div class="h2h-p ${side} empty"><b>Empty</b><small>nobody set</small></div>`;
   const tip = (p) => !p ? 'Empty slot'
     : p.played ? `${p.name}: scored ${f1(p.proj)} (game over), ${f1(p.pre)} projected`
-    : `${p.name}: ${p.bye ? 'on a bye, ' : p.out ? `${p.status}, ` : ''}${f1(p.proj)} projected${p.floor != null && p.proj > 0 ? `, floor ${f1(p.floor)} to ceiling ${f1(p.ceil)}` : ''}`;
+    : `${p.name}: ${p.bye ? 'on a bye, ' : p.out ? `${p.status}, ` : ''}${f1(p.proj)} projected${p.proj > 0 && (p.fp != null || p.sl != null) ? ` (${[p.fp != null && `FantasyPros ${f1(p.fp)}`, p.sl != null && `Sleeper ${f1(p.sl)}`].filter(Boolean).join(', ')})` : ''}${p.floor != null && p.proj > 0 ? `, floor ${f1(p.floor)} to ceiling ${f1(p.ceil)}` : ''}`;
   const row = (r) => {
     const pa = r.a?.proj || 0, pb = r.b?.proj || 0;
     return `<div class="h2h-row ${r.edge > 0.5 ? 'win-a' : r.edge < -0.5 ? 'win-b' : 'even'}" data-tip="${esc(`${tip(r.a)}. ${tip(r.b)}.`)}">
@@ -1618,7 +1618,7 @@ function matchupDetail(i) {
         <ul class="watch">${bd.watch.map((w) => `<li class="${w.tone}">${esc(w.text)}</li>`).join('') || '<li class="n">Nothing unusual: both lineups are set and healthy.</li>'}</ul>
       </div>
     </div>
-    <p class="bd-note">${DATA.live ? 'Players marked final show their actual points, locked in for the week. ' : ''}Player projections are DraftSharks rest-of-season weekly averages, with players on a bye or ruled out counted as zero. Hover or tap a row for floor and ceiling.</p>`;
+    <p class="bd-note">${DATA.live ? 'Players marked final show their actual points, locked in for the week. ' : ''}${DATA.meta.hasWeekly ? `Player projections are this week's, the average of FantasyPros and Sleeper (whichever has the player), and the team totals add up the lineup shown.` : 'Player projections are DraftSharks rest-of-season weekly averages, since this week\'s projections are unavailable.'} Players on a bye or ruled out count as zero. Hover or tap a row for each source and the floor to ceiling.</p>`;
 }
 
 function toggleMatchup(card) {

@@ -77,4 +77,5 @@ db.delete(`ph:snap:ros:${morningKey()}`); // the hour is up: the outage copy exp
 r = await call(ros, R);
 check('...the hourly retry re-scrapes the rankings but reuses the players file', r.code === 200 && playersCalls === 1, `${playersCalls} players pulls`);
 for (let i = 0; i < 5; i++) await call(ros, R);
-check('...and after a deploy, zero more players pulls', playersCalls === 1 && sleeperCalls === 1, `${sleeperCalls} Sleeper calls`);
+// two Sleeper reads per morning for ros: the players file and this week's projections (lib/weekly.js), each once
+check('...and after a deploy, zero more players or projections pulls', playersCalls === 1 && sleeperCalls === 2, `${sleeperCalls} Sleeper calls`);
