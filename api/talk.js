@@ -10,6 +10,9 @@
 //                                                         devices stop working)
 //   POST /api/talk { action: 'signout' }
 //
+// Nothing here lives in the code or the CDN: comments, links and sessions are all in the store, so deploys, headline
+// changes and cache purges leave them alone. Comments keep their own copy of the headline they're about.
+//
 // Who posted is always the server's call: a comment stores the Sleeper user id from the signed-in session, and the page
 // turns it into a first name and the current team name. A personal link carries a random token after the # (so it never
 // reaches server logs or the CDN); the page trades it for a session cookie the page's scripts can't read. Only hashes of
@@ -29,6 +32,11 @@ const GAP_S = 6; // seconds between posts from one manager
 const MAX_PER_WEEK = 3000;
 
 const now = () => Number(process.env.TALK_NOW) || Date.now(); // overridable for tests
+// The NFL season a moment belongs to: September through the following summer. Threads are kept per season so next year's
+// week 8 never opens on this year's. The 2026 threads keep the key they were first stored under (ph:talk:{week}), so
+// nothing posted this season moves; every season after gets ph:talk:{season}:{week}.
+export const seasonOf = (ts) => { const d = new Date(ts); return d.getUTCMonth() < 6 ? d.getUTCFullYear() - 1 : d.getUTCFullYear(); };
+export const threadKey = (week, ts = now()) => { const s = seasonOf(ts); return s === 2026 ? `ph:talk:${week}` : `ph:talk:${s}:${week}`; };
 const sha = (s) => createHash('sha256').update(String(s)).digest('hex');
 const k = (...parts) => `ph:talk:${parts.join(':')}`;
 const cookieOf = (req) => (/(?:^|;\s*)ph_who=([A-Za-z0-9_-]{20,80})/.exec(req.headers.cookie || '') || [])[1] || null;
@@ -53,7 +61,7 @@ const cleanRef = (r) => (r && typeof r === 'object' && /^[a-z0-9:-]{1,40}$/.test
   ? { key: String(r.key), title: clean(r.title).slice(0, 160) } : null);
 
 async function thread(week) {
-  const [h] = await redis([['HGETALL', k(week)]]);
+  const [h] = await redis([['HGETALL', threadKey(week)]]);
   const out = [];
   for (let i = 0; i + 1 < (h || []).length; i += 2) out.push(JSON.parse(h[i + 1]));
   return out.sort((a, b) => a.ts - b.ts);
@@ -119,18 +127,18 @@ export default async function handler(req, res) {
       const text = clean(body.text);
       if (!text) return res.status(400).json({ error: 'Write something first' });
       if (text.length > MAX_LEN) return res.status(400).json({ error: `Keep it under ${MAX_LEN} characters` });
-      const [len] = await redis([['HLEN', k(week)]]);
+      const [len] = await redis([['HLEN', threadKey(week)]]);
       if (len >= MAX_PER_WEEK) return res.status(429).json({ error: 'This week\'s thread is full' });
       const [slot] = await redis([['SET', k('gap', me), '1', 'NX', 'EX', String(GAP_S)]]);
       if (slot !== 'OK') return res.status(429).json({ error: 'Easy, one at a time. Try again in a few seconds.' });
       const ts = now(), id = `${ts.toString(36)}${randomBytes(3).toString('hex')}`;
       const c = { id, uid: me, text, ref: cleanRef(body.ref), ts };
-      await redis([['HSET', k(week), id, JSON.stringify(c)], ['EXPIRE', k(week), String(TTL)]]);
+      await redis([['HSET', threadKey(week), id, JSON.stringify(c)], ['EXPIRE', threadKey(week), String(TTL)]]);
       return res.status(200).json(await state(week, me));
     }
 
     const id = String(body.id || '');
-    const [raw] = await redis([['HGET', k(week), id]]);
+    const [raw] = await redis([['HGET', threadKey(week), id]]);
     if (!raw) return res.status(404).json({ error: 'That comment is gone' });
     const c = JSON.parse(raw);
 
@@ -139,12 +147,12 @@ export default async function handler(req, res) {
       if (now() - c.ts > EDIT_MS) return res.status(403).json({ error: 'Comments can only be edited in the first minute' });
       const text = clean(body.text);
       if (!text || text.length > MAX_LEN) return res.status(400).json({ error: `Between 1 and ${MAX_LEN} characters` });
-      await redis([['HSET', k(week), id, JSON.stringify({ ...c, text, edited: now() })]]);
+      await redis([['HSET', threadKey(week), id, JSON.stringify({ ...c, text, edited: now() })]]);
       return res.status(200).json(await state(week, me));
     }
     if (action === 'delete') {
       if (me !== ADMIN) return res.status(403).json({ error: 'Only Dan can delete comments' });
-      await redis([['HDEL', k(week), id]]);
+      await redis([['HDEL', threadKey(week), id]]);
       return res.status(200).json(await state(week, me));
     }
     return res.status(400).json({ error: 'Unknown action' });

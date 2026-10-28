@@ -437,6 +437,10 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .talk-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
 .talk-head h2 { margin: 0; font-size: 26px; }
 .talk-n { font-size: 13px; font-weight: 700; color: var(--ink-3); }
+.talk-wk { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.talk-wk select { padding: 4px 26px 4px 10px; border: 0; border-radius: 999px; font: 700 13px var(--body); color: var(--ink); background-color: var(--tile);
+  box-shadow: inset 0 0 0 1.5px var(--line); appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--ink-2) 50%), linear-gradient(135deg, var(--ink-2) 50%, transparent 50%);
+  background-position: right 13px center, right 8px center; background-size: 5px 5px; background-repeat: no-repeat; cursor: pointer; }
 .talk-head .talk-btn { margin-left: auto; }
 .talk-me { flex-basis: 100%; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
 .tc-link { all: unset; cursor: pointer; font-size: 13px; font-weight: 700; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }

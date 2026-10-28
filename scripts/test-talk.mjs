@@ -3,7 +3,7 @@
 process.env.KV_REST_API_URL = 'https://example.upstash.io';
 process.env.KV_REST_API_TOKEN = 'test';
 process.env.TALK_ADMIN_KEY = 'dan-only-secret-key-123';
-const { default: handler, ADMIN } = await import('../api/talk.js');
+const { default: handler, ADMIN, threadKey, seasonOf } = await import('../api/talk.js');
 
 const db = new Map();
 const redisCmd = ([cmd, k, ...a]) => {
@@ -109,3 +109,17 @@ r = await akrm2('GET', { week: 8 });
 check('signing out ends the session', r.body.me === null, r.body);
 r = await stranger('GET', { week: 9 });
 check('each week is its own thread', r.body.comments.length === 0, r.body);
+
+// what keeps comments around: this season's threads stay where they were first stored, and next season gets its own
+check('2026 threads keep the key they were first stored under', threadKey(8, Date.parse('2026-10-28T12:00:00-05:00')) === 'ph:talk:8' && threadKey(17, Date.parse('2027-01-05T12:00:00-06:00')) === 'ph:talk:17', threadKey(8));
+check('...and the season runs from September into the next year', seasonOf(Date.parse('2027-02-08T12:00:00Z')) === 2026 && seasonOf(Date.parse('2027-09-10T12:00:00Z')) === 2027);
+check("next season's week 8 is a thread of its own", threadKey(8, Date.parse('2027-10-27T12:00:00-05:00')) === 'ph:talk:2027:8');
+gap();
+r = await dan('POST', { action: 'post', week: 8, text: 'still here next week?' });
+const kept = r.body.comments.length;
+tick(7 * 864e5); // the next week: the page shows week 9, but week 8 stays readable
+r = await stranger('GET', { week: 8 });
+check('a week later, the earlier thread is all still there', r.body.comments.length === kept && r.body.comments.some((c) => c.text === 'still here next week?'), r.body.comments.length);
+tick(365 * 864e5);
+r = await stranger('GET', { week: 8 });
+check("a year on, week 8 opens empty instead of on last season's thread", r.body.comments.length === 0, r.body.comments.length);

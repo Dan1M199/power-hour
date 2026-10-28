@@ -2517,16 +2517,20 @@ function startLoader() {
 // while the headlines rotate: a comment can carry the headline it's about (taken from the slide on screen when its
 // author starts typing), shown as a chip that turns the carousel back to that slide. Authors can edit for a minute;
 // only Dan deletes. It refreshes every 25 seconds while the tab is visible. The demo and the preview bundle skip it.
-const TALK = { data: null, ref: null, refTouched: false, editing: null, flash: '', error: '', join: null, invites: null, links: {} };
+const TALK = { data: null, ref: null, refTouched: false, editing: null, flash: '', error: '', join: null, invites: null, links: {}, view: null };
 let carouselNow = null, carouselStories = [];
-const talkWeek = () => DATA.meta.lastScored + 1;
+// the week being played, from the snapshot as Sleeper has it: it turns over Tuesday morning with the new headlines,
+// not Monday night when the final call counts the week early (asFinal moves DATA's last scored week)
+const talkWeek = () => (RAW.league.settings?.last_scored_leg ?? DATA.meta.lastScored) + 1;
+// the thread on screen: this week's, or an earlier one picked to read back through
+const viewWeek = () => TALK.view ?? talkWeek();
 const talkSlot = () => (RAW.isDemo || window.__DEMO__ ? '' : '<aside class="talk glass" id="talk" aria-label="League desk" hidden></aside>');
 // a headline's thread key: the week and its story type (a second story of the same type gets a number)
 const storyKeys = (stories) => { const seen = {}; return stories.map((st) => { const n = (seen[st.type] = (seen[st.type] || 0) + 1); return `w${talkWeek()}:${st.type}${n > 1 ? `-${n}` : ''}`; }); };
 const talkNow = () => Date.now() + (TALK.data?.skew || 0);
 
 async function talkCall(body) {
-  const r = await fetch(body ? '/api/talk' : `/api/talk?week=${talkWeek()}`, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : undefined);
+  const r = await fetch(body ? '/api/talk' : `/api/talk?week=${viewWeek()}`, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : undefined);
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || `Something went wrong (${r.status})`);
   return j;
@@ -2560,6 +2564,13 @@ function mountTalk() {
   el.addEventListener('click', onTalkClick);
   el.addEventListener('input', onTalkInput);
   el.addEventListener('submit', onTalkSubmit);
+  el.addEventListener('change', (e) => {
+    if (!e.target.matches('[data-week]')) return;
+    const w = Number(e.target.value);
+    TALK.view = w === talkWeek() ? null : w;
+    TALK.editing = null;
+    loadTalk();
+  });
   if (TALK.data) paintTalk(true); else loadTalk();
 }
 
@@ -2603,6 +2614,7 @@ const aboutChip = () => (TALK.ref
   : '<button type="button" class="tc-tag" data-tag>Tag the headline on screen</button>');
 function talkForm() {
   const D = TALK.data;
+  if (TALK.view) return `<p class="talk-note">Week ${TALK.view}'s thread is closed. <button type="button" class="tc-link" data-now>Back to week ${talkWeek()}</button></p>`;
   if (!D.me) return '<p class="talk-note">Reading only. Ask Dan for your personal link to join in.</p>';
   return `<form class="talk-form">
       <div class="talk-about">${aboutChip()}</div>
@@ -2632,11 +2644,14 @@ function paintTalk(full = false) {
   el.closest('.hero')?.classList.add('with-talk');
   const n = D.comments.length;
   const signed = D.me ? `<span class="talk-me">Posting as <b>${esc(MEMBERS[D.me]?.first || '')}</b><button type="button" class="tc-link" data-signout>Sign out</button></span>` : '';
-  const head = `<div class="talk-head"><h2>League desk</h2><span class="talk-n">Week ${D.week}, ${n} comment${n === 1 ? '' : 's'}</span>${D.admin ? `<button type="button" class="talk-btn" data-invites aria-expanded="${!!TALK.invites}">Invite links</button>` : ''}${signed}</div>`;
+  // earlier weeks' threads stay readable: pick one to read back through
+  const cur = talkWeek(), weeks = Array.from({ length: cur }, (_, i) => cur - i);
+  const picker = cur > 1 ? `<label class="talk-wk"><span>Week</span><select data-week aria-label="Which week's thread">${weeks.map((w) => `<option value="${w}"${w === D.week ? ' selected' : ''}>${w}${w === cur ? ', this week' : ''}</option>`).join('')}</select></label>` : `<span class="talk-n">Week ${D.week}</span>`;
+  const head = `<div class="talk-head"><h2>League desk</h2>${picker}<span class="talk-n">${n} comment${n === 1 ? '' : 's'}</span>${D.admin ? `<button type="button" class="talk-btn" data-invites aria-expanded="${!!TALK.invites}">Invite links</button>` : ''}${signed}</div>`;
   const flash = TALK.flash ? `<p class="talk-flash" role="status">${esc(TALK.flash)}</p>` : '';
   const signedIn = el.dataset.me ?? '';
-  if (full || !el.querySelector('.talk-list') || signedIn !== String(D.me || '') || el.dataset.inv !== String(!!TALK.invites)) {
-    el.dataset.me = String(D.me || ''); el.dataset.inv = String(!!TALK.invites);
+  if (full || !el.querySelector('.talk-list') || signedIn !== String(D.me || '') || el.dataset.inv !== String(!!TALK.invites) || el.dataset.wk !== String(D.week)) {
+    el.dataset.me = String(D.me || ''); el.dataset.inv = String(!!TALK.invites); el.dataset.wk = String(D.week);
     el.innerHTML = `<div class="talk-in">${head}${flash}${invitePanel()}<ol class="talk-list">${talkList()}</ol>${talkForm()}</div>`;
   } else {
     el.querySelector('.talk-head').outerHTML = head;
@@ -2668,7 +2683,7 @@ async function onTalkSubmit(e) {
   if (!text) return;
   btn.disabled = true;
   try {
-    if (f.classList.contains('tc-edit')) { keepTalk(await talkCall({ action: 'edit', week: talkWeek(), id: f.dataset.id, text })); TALK.editing = null; }
+    if (f.classList.contains('tc-edit')) { keepTalk(await talkCall({ action: 'edit', week: viewWeek(), id: f.dataset.id, text })); TALK.editing = null; }
     else {
       keepTalk(await talkCall({ action: 'post', week: talkWeek(), text, ref: TALK.ref }));
       ta.value = ''; TALK.ref = null; TALK.refTouched = false;
@@ -2692,9 +2707,10 @@ async function onTalkClick(e) {
   else if ('tag' in d) { TALK.ref = currentHeadline(); TALK.refTouched = true; b.closest('.talk-about').innerHTML = aboutChip(); }
   else if (d.edit) { TALK.editing = d.edit; paintTalk(true); $('#talk .tc-edit textarea')?.focus(); }
   else if ('cancel' in d) { TALK.editing = null; paintTalk(true); }
+  else if ('now' in d) { TALK.view = null; loadTalk(); }
   else if (d.del) {
     if (!confirm('Delete this comment for everyone?')) return;
-    try { keepTalk(await talkCall({ action: 'delete', week: talkWeek(), id: d.del })); paintTalk(); } catch (x) { TALK.flash = x.message; paintTalk(true); }
+    try { keepTalk(await talkCall({ action: 'delete', week: viewWeek(), id: d.del })); paintTalk(); } catch (x) { TALK.flash = x.message; paintTalk(true); }
   } else if ('invites' in d) { TALK.invites = !TALK.invites; paintTalk(true); }
   else if (d.invite) {
     if (!confirm(`Make a new link for ${MEMBERS[d.invite]?.first}? Their old link stops working.`)) return;
