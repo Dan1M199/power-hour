@@ -1228,13 +1228,21 @@ function leadStory() {
       <div class="car-track" tabindex="0">${stories.map(slide).join('')}</div>
       ${stories.length > 1 ? `<div class="car-nav">
         ${arrow(-1, 'Previous headline', 'M7.5 1.5 2 7l5.5 5.5')}
-        <div class="car-dots">${stories.map((_, i) => `<button type="button" class="car-dot" data-i="${i}" aria-label="Show headline ${i + 1}" aria-controls="slide-${i}"${i ? '' : ' aria-current="true"'}><i></i></button>`).join('')}</div>
+        <div class="car-mid">
+          <div class="car-dots">${stories.map((_, i) => `<button type="button" class="car-dot" data-i="${i}" aria-label="Show headline ${i + 1}" aria-controls="slide-${i}"${i ? '' : ' aria-current="true"'}><i></i></button>`).join('')}</div>
+          <button type="button" class="car-pause" aria-pressed="${carouselPaused}" aria-label="${carouselPaused ? 'Play' : 'Pause'} the headlines">${pauseIcon(carouselPaused)}</button>
+        </div>
         ${arrow(1, 'Next headline', 'M1.5 1.5 7 7l-5.5 5.5')}
       </div>` : ''}
     </section>`;
 }
 
 let carouselFit = null, carouselSeen = null, clipSync = null;
+// the pause button holds the headlines where they are for the rest of the visit (every page's carousel), until pressed again
+let carouselPaused = false;
+const pauseIcon = (paused) => `<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">${paused
+  ? '<path d="M4.5 2.5v11l9-5.5z" fill="currentColor"/>'
+  : '<path d="M4 2.5h2.6v11H4zm5.4 0H12v11H9.4z" fill="currentColor"/>'}</svg>`;
 function bindCarousel() {
   carouselFit = null;
   clipSync = null;
@@ -1288,6 +1296,15 @@ function bindCarousel() {
     d.querySelector('i').addEventListener('animationend', () => go(idx + 1));
   });
   car.querySelectorAll('.car-arrow').forEach((b) => b.addEventListener('click', () => go(idx + Number(b.dataset.dir))));
+  car.classList.toggle('paused', carouselPaused);
+  car.querySelector('.car-pause')?.addEventListener('click', (e) => {
+    const b = e.currentTarget;
+    carouselPaused = !carouselPaused;
+    car.classList.toggle('paused', carouselPaused);
+    b.setAttribute('aria-pressed', String(carouselPaused));
+    b.setAttribute('aria-label', `${carouselPaused ? 'Play' : 'Pause'} the headlines`);
+    b.innerHTML = pauseIcon(carouselPaused);
+  });
   // touch has no hover, so hold the timer while a finger is down
   track.addEventListener('pointerdown', () => car.classList.add('held'));
   ['pointerup', 'pointercancel'].forEach((e) => track.addEventListener(e, () => car.classList.remove('held')));
@@ -1377,7 +1394,7 @@ function rankRow(t) {
   ].filter(([k]) => t.parts?.[k] != null)
     .map(([k, label, cls, tip]) => `<div class="split-row" data-tip="${esc(tip)}"><span>${label}</span><span class="track"><i class="${cls}" style="width:${t.parts[k]}%"></i></span><span>${Math.round(t.parts[k])}</span></div>`).join('');
   return `
-  <li class="rank ${mine ? 'mine' : ''}" data-rid="${t.rid}">
+  <li class="rank ${mine ? 'mine' : ''}${t.powerRank === 1 && !store.get('ph-opened-rank') ? ' nudge' : ''}" data-rid="${t.rid}">
     <span class="jersey" aria-hidden="true">${t.powerRank}</span>
     <div class="rank-card glass ${t.powerRank <= 3 ? 'rim' : ''}">
       <button class="rank-btn" aria-expanded="false" aria-controls="d-${t.rid}">
@@ -1390,7 +1407,8 @@ function rankRow(t) {
           <div class="meter-top"><span class="score">${t.score.toFixed(1)}</span><small>power score</small></div>
           <div class="split">${parts}</div>
         </div>
-        <div class="odds"><b>${pct(t.playoffPct)}</b><small>playoffs</small>${XP}</div>
+        <div class="odds"><b>${pct(t.playoffPct)}</b><small>playoffs</small></div>
+        <span class="pull" aria-hidden="true"><span class="pull-t">Scouting report</span><span class="pull-n">Tap for the scouting report</span><span class="pull-x">Hide report</span>${XP}</span>
       </button>
       <div class="detail" id="d-${t.rid}"><div></div></div>
     </div>
@@ -2381,6 +2399,8 @@ function bind(key) {
         }
         li.classList.toggle('open', open);
         b.setAttribute('aria-expanded', open);
+        // the first open teaches it: the #1 row's amber pull goes quiet for good on this device
+        if (open && !store.get('ph-opened-rank')) { store.set('ph-opened-rank', '1'); document.querySelectorAll('.rank.nudge').forEach((r) => r.classList.remove('nudge')); }
       })
     );
   }
@@ -2590,7 +2610,7 @@ function talkItem(c) {
   const mine = D.me === c.uid, left = D.editMs - (talkNow() - c.ts);
   const editing = TALK.editing === c.id;
   const acts = [
-    mine && left > 0 && !editing ? `<button type="button" class="tc-act" data-edit="${esc(c.id)}">Edit<small>${Math.ceil(left / 1000)}s left</small></button>` : '',
+    mine && left > 0 && !editing ? `<button type="button" class="tc-act" data-edit="${esc(c.id)}" aria-label="Edit, ${Math.ceil(left / 1000)} seconds left">Edit<small>${Math.ceil(left / 1000)}s</small></button>` : '',
     D.admin ? `<button type="button" class="tc-act bad" data-del="${esc(c.id)}">Delete</button>` : '',
   ].join('');
   return `<li class="tc${mine ? ' mine' : ''}" data-id="${esc(c.id)}">
@@ -2611,7 +2631,7 @@ function talkList() {
 }
 const aboutChip = () => (TALK.ref
   ? `<span class="talk-about-on"><span>About: <b>${esc(short(TALK.ref.title, 64))}</b></span><button type="button" class="tc-x" data-unref aria-label="Not about this headline"><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="m2 2 8 8m0-8-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></span>`
-  : '<button type="button" class="tc-tag" data-tag>Tag the headline on screen</button>');
+  : '<button type="button" class="tc-tag" data-tag><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Tag the headline on screen</button>');
 function talkForm() {
   const D = TALK.data;
   if (TALK.view) return `<p class="talk-note">Week ${TALK.view}'s thread is closed. <button type="button" class="tc-link" data-now>Back to week ${talkWeek()}</button></p>`;
@@ -2643,11 +2663,14 @@ function paintTalk(full = false) {
   el.hidden = false;
   el.closest('.hero')?.classList.add('with-talk');
   const n = D.comments.length;
-  const signed = D.me ? `<span class="talk-me">Posting as <b>${esc(MEMBERS[D.me]?.first || '')}</b><button type="button" class="tc-link" data-signout>Sign out</button></span>` : '';
+  const signed = D.me ? `<span class="talk-me">Posting as <b>${esc(MEMBERS[D.me]?.first || '')}</b><button type="button" class="tc-pill" data-signout>Sign out</button></span>` : '';
   // earlier weeks' threads stay readable: pick one to read back through
   const cur = talkWeek(), weeks = Array.from({ length: cur }, (_, i) => cur - i);
   const picker = cur > 1 ? `<label class="talk-wk"><span>Week</span><select data-week aria-label="Which week's thread">${weeks.map((w) => `<option value="${w}"${w === D.week ? ' selected' : ''}>${w}${w === cur ? ', this week' : ''}</option>`).join('')}</select></label>` : `<span class="talk-n">Week ${D.week}</span>`;
-  const head = `<div class="talk-head"><h2>League desk</h2>${picker}<span class="talk-n">${n} comment${n === 1 ? '' : 's'}</span>${D.admin ? `<button type="button" class="talk-btn" data-invites aria-expanded="${!!TALK.invites}">Invite links</button>` : ''}${signed}</div>`;
+  const head = `<div class="talk-head">
+      <div class="talk-title"><h2>League desk</h2>${D.admin ? `<button type="button" class="talk-btn" data-invites aria-expanded="${!!TALK.invites}">Invite links</button>` : ''}</div>
+      <div class="talk-bar"><span class="talk-meta">${picker}<span class="talk-n">${n} comment${n === 1 ? '' : 's'}</span></span>${signed}</div>
+    </div>`;
   const flash = TALK.flash ? `<p class="talk-flash" role="status">${esc(TALK.flash)}</p>` : '';
   const signedIn = el.dataset.me ?? '';
   if (full || !el.querySelector('.talk-list') || signedIn !== String(D.me || '') || el.dataset.inv !== String(!!TALK.invites) || el.dataset.wk !== String(D.week)) {

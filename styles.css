@@ -119,9 +119,9 @@ button, select { font: inherit; color: inherit; }
 /* ---------- buttons: glossy cartoon pills ---------- */
 /* a hard-edged gloss over the top half of every button (under the label, over the fill), and on a mouse, a glint that
    sweeps across on hover */
-:is(.filters button, .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip.to-again, .car-arrow, .to-skip, .xp, .clip-sound, .talk-btn) {
+:is(.filters button, .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip.to-again, .car-arrow, .to-skip, .xp, .clip-sound, .talk-btn, .car-pause) {
   position: relative; isolation: isolate; overflow: hidden; }
-:is(.filters button, .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip.to-again, .car-arrow, .to-skip, .xp, .clip-sound, .talk-btn)::before {
+:is(.filters button, .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip.to-again, .car-arrow, .to-skip, .xp, .clip-sound, .talk-btn, .car-pause)::before {
   content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--gloss); pointer-events: none; }
 /* buttons on light surfaces carry the inked edge too, thinner than a card's, with their ledge as wide as the outline */
 
@@ -273,6 +273,25 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .rank-btn:hover .xp, .method-box summary:hover .xp { background: var(--tile-2); }
 .rank.open .xp, .method-box[open] .xp { transform: rotate(180deg); }
 .odds .xp { display: grid; margin: 8px 0 0 auto; }
+/* the drawer pull: a strip along the bottom of each ranking card that says the card opens. The #1 card wears it in
+   amber (.nudge) until this device has opened any team, then every pull goes quiet */
+.pull { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 4px -20px -16px -18px; padding: 7px 14px;
+  border-radius: 0 0 var(--r-lg) var(--r-lg); font: 700 13px/1.2 var(--body); color: var(--ink-2); background-color: var(--tile); box-shadow: inset 0 1.5px 0 var(--line);
+  transition: background-color 0.2s, color 0.2s; }
+.rank:nth-child(-n + 3) .pull { margin-bottom: -22px; border-radius: 0 0 var(--r-xl) var(--r-xl); }
+.pull .xp { width: 22px; height: 22px; background: var(--chalk); box-shadow: inset 0 0 0 1.5px var(--line); }
+.pull .xp svg { width: 10px; }
+.pull-n, .pull-x { display: none; }
+.rank-btn:hover .pull { color: var(--ink); background-color: var(--tile-2); }
+.rank-btn:hover .pull .xp { background: var(--chalk); }
+.rank.open .pull { border-radius: 0; }
+.rank.open .pull-t, .rank.open .pull-n { display: none; }
+.rank.open .pull-x { display: inline; }
+.rank.nudge:not(.open) .pull { color: var(--ink); background-color: var(--amber); box-shadow: inset 0 1.5px 0 var(--ledge-gold); }
+.rank.nudge:not(.open) .pull-t { display: none; }
+.rank.nudge:not(.open) .pull-n { display: inline; }
+.rank.nudge:not(.open) .pull .xp { box-shadow: inset 0 0 0 1.5px var(--ledge-gold); animation: pull-bob 1.4s ease-in-out 1.2s 3; }
+@keyframes pull-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
 
 /* expanded detail */
 .detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
@@ -434,15 +453,23 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .hero.with-talk > .view-head { align-self: end; }
 .talk { position: relative; grid-column: 2; grid-row: 2; min-height: 0; padding: 0; border-radius: var(--r-lg); background-color: var(--face); }
 .talk-in { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 10px; padding: 16px; }
-.talk-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.talk-head { display: grid; gap: 8px; }
+.talk-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .talk-head h2 { margin: 0; font-size: 26px; }
+.talk-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.talk-meta { display: flex; align-items: center; gap: 10px; }
 .talk-n { font-size: 13px; font-weight: 700; color: var(--ink-3); }
 .talk-wk { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-2); }
 .talk-wk select { padding: 4px 26px 4px 10px; border: 0; border-radius: 999px; font: 700 13px var(--body); color: var(--ink); background-color: var(--tile);
   box-shadow: inset 0 0 0 1.5px var(--line); appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--ink-2) 50%), linear-gradient(135deg, var(--ink-2) 50%, transparent 50%);
   background-position: right 13px center, right 8px center; background-size: 5px 5px; background-repeat: no-repeat; cursor: pointer; }
-.talk-head .talk-btn { margin-left: auto; }
-.talk-me { flex-basis: 100%; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+.talk-me { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+.talk-me b { color: var(--ink); }
+/* small quiet pills for the desk's minor actions (sign out, edit, delete): tray-coloured, no underline */
+.tc-pill, .tc-act { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px;
+  font: 700 12px/1.2 var(--body); color: var(--ink-2); background-color: var(--tile); box-shadow: inset 0 0 0 1.5px var(--line); }
+.tc-pill:hover, .tc-act:hover { color: var(--ink); background-color: var(--tile-2); }
+.tc-pill:focus-visible, .tc-act:focus-visible, .tc-tag:focus-visible, .tc-ref:focus-visible, .tc-x:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 .tc-link { all: unset; cursor: pointer; font-size: 13px; font-weight: 700; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
 .talk-flash { margin: 0; padding: 8px 12px; border-radius: var(--r-md); font-size: 13.5px; font-weight: 600; background-color: var(--mine-bg); box-shadow: inset 0 0 0 2px #F2C200; }
 .talk-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; list-style: none; margin: 0; padding: 10px; display: grid; align-content: start; gap: 8px;
@@ -461,24 +488,37 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   background-color: var(--tile); box-shadow: 0 0 0 1.5px var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tc-ref:hover:not(:disabled) { background-color: var(--tile-2); color: var(--ink); }
 .tc-ref:disabled { cursor: default; color: var(--ink-3); }
-.tc-acts { display: flex; gap: 12px; }
-.tc-act { all: unset; cursor: pointer; display: inline-flex; gap: 6px; align-items: baseline; font-size: 12.5px; font-weight: 700; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
-.tc-act small { font-size: 11.5px; font-weight: 600; color: var(--ink-3); text-decoration: none; }
-.tc-act.bad { color: var(--bad); }
+.tc-acts { display: flex; gap: 6px; }
+.tc-act small { font-size: 11.5px; font-weight: 600; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.tc-act.bad { color: var(--bad); background-color: #FDE7E7; box-shadow: inset 0 0 0 1.5px #F6C9C9; }
+.tc-act.bad:hover { color: var(--bad); background-color: #FBD5D5; }
+.tc.mine .tc-act:not(.bad) { background-color: var(--chalk); box-shadow: inset 0 0 0 1.5px #F2C200; }
+/* Dan's delete on every comment would be a wall of red: on a mouse it shows on the comment under the pointer */
+@media (hover: hover) {
+  .tc { position: relative; }
+  .tc .tc-act.bad { position: absolute; top: 8px; right: 8px; opacity: 0; transition: opacity 0.15s; }
+  .tc:hover .tc-act.bad, .tc .tc-act.bad:focus-visible { opacity: 1; }
+  .tc-acts:not(:has(.tc-act:not(.bad))) { display: contents; } /* nothing but the corner delete: no empty row, the delete still drawn */
+}
 .tc-empty { padding: 18px 8px; text-align: center; font-size: 14px; color: var(--ink-3); }
 .talk-form, .tc-edit { display: grid; gap: 8px; }
-.talk-form textarea, .tc-edit textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 64px; padding: 9px 12px; border: 0; border-radius: 14px;
-  font: 400 15px/1.45 var(--body); color: var(--ink); background-color: var(--chalk); box-shadow: inset 0 0 0 2px var(--outline), inset 0 3px 0 2px rgba(18, 48, 26, 0.08); }
-.talk-form textarea:focus-visible, .tc-edit textarea:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.talk-form textarea, .tc-edit textarea { width: 100%; box-sizing: border-box; resize: none; min-height: 68px; padding: 10px 12px; border: 0; border-radius: 14px;
+  font: 400 15px/1.45 var(--body); color: var(--ink); background-color: var(--chalk); box-shadow: inset 0 0 0 2px var(--line), inset 0 3px 0 0 rgba(18, 48, 26, 0.06); transition: box-shadow 0.15s; }
+.talk-form textarea::placeholder, .tc-edit textarea::placeholder { color: var(--ink-3); }
+.talk-form textarea:hover, .tc-edit textarea:hover { box-shadow: inset 0 0 0 2px var(--tile-2), inset 0 3px 0 0 rgba(18, 48, 26, 0.06); }
+.talk-form textarea:focus, .tc-edit textarea:focus { outline: none; box-shadow: inset 0 0 0 2px var(--ink-2), inset 0 3px 0 0 rgba(18, 48, 26, 0.06); }
 .talk-about { min-height: 26px; display: flex; align-items: center; }
 .talk-about-on { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 3px 4px 3px 10px; border-radius: 999px; font-size: 12.5px; color: var(--ink-2); background-color: var(--tile); box-shadow: 0 0 0 1.5px var(--line); }
 .talk-about-on > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .talk-about-on b { color: var(--ink); }
 .tc-x { all: unset; cursor: pointer; flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--ink-2); background-color: var(--chalk); }
 .tc-x:hover { color: var(--ink); background-color: var(--tile-2); }
-.tc-tag { all: unset; cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
+/* untagged: a dashed pill inviting a tag; tagged: the solid chip above */
+.tc-tag { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border: 1.5px dashed var(--ink-3); border-radius: 999px;
+  font: 700 12.5px/1.2 var(--body); color: var(--ink-2); }
+.tc-tag:hover { color: var(--ink); background-color: var(--tile); }
 .talk-row { display: flex; align-items: center; gap: 10px; }
-.talk-count { font-size: 12px; color: var(--ink-3); }
+.talk-count { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .talk-err { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: var(--bad); }
 .talk-row .talk-btn:first-child { margin-left: auto; }
 .talk-btn { cursor: pointer; flex: none; padding: 7px 15px; border: 0; border-radius: 999px; font: 700 13.5px/1.2 var(--body); color: var(--ink-2); background-color: var(--chalk);
@@ -488,7 +528,9 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .talk-btn.primary { color: var(--ink); background-color: var(--amber); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge-gold); }
 .talk-btn.primary:hover { background-color: var(--yellow); }
 .talk-btn:disabled { cursor: progress; opacity: 0.6; }
-.talk-note { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+.talk-note { margin: 0; padding: 10px 12px; border-radius: var(--r-md); font-size: 13.5px; color: var(--ink-2); background-color: var(--tile); box-shadow: inset 0 0 0 1.5px var(--line); }
+.talk-note .tc-link { margin-left: 4px; }
+.talk-invites .talk-note { padding: 0; background-color: transparent; box-shadow: none; }
 .talk-invites { display: grid; gap: 8px; max-height: 45%; overflow-y: auto; padding: 10px; border-radius: var(--r-md); background-color: var(--tile); box-shadow: var(--tray-edge); }
 .talk-invites ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .talk-invites li { display: flex; align-items: center; gap: 8px; }
@@ -520,17 +562,23 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .car-arrow { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 0; cursor: pointer; color: var(--chalk); background: rgba(255, 255, 255, 0.12); }
 .car-arrow:hover { background: rgba(255, 255, 255, 0.2); }
 .car-dots { display: flex; gap: 12px; }
+.car-mid { display: flex; align-items: center; gap: 16px; }
+/* pause: a small round button beside the dots; it holds the active dot's fill (the timer) until pressed again */
+.car-pause { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; color: var(--chalk); background: rgba(255, 255, 255, 0.12); }
+.car-pause:hover { background: rgba(255, 255, 255, 0.2); }
+.car-pause[aria-pressed='true'] { color: var(--ink); background: var(--yellow); }
+@media (prefers-reduced-motion: reduce) { .car-pause { display: none; } } /* nothing rotates, so nothing to pause */
 .car-dot { position: relative; width: 10px; height: 10px; padding: 0; border: 0; border-radius: 999px; cursor: pointer; overflow: hidden;
   background: rgba(255, 255, 255, 0.24); transition: width 0.3s; }
 .car-dot::before { content: ''; position: absolute; inset: -16px -6px; } /* bigger tap target */
 .car-dot[aria-current='true'] { width: 36px; }
 .car-dot i { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--yellow); border-radius: inherit; }
 /* --fill: a video story's dot runs as long as its clip (bindClip in app.js) */
-.car-dot[aria-current='true'] i { animation: car-fill var(--fill, 7s) linear forwards; }
+.car-dot[aria-current='true'] i { animation: car-fill var(--fill, 10s) linear forwards; }
 /* hold the timer while someone is reading: a finger down, a real mouse hovering, or keyboard focus. Phones keep tapped
    elements in :hover and :focus, so those only count for mouse pointers and keyboard focus or the carousel would freeze.
    A clip that is still loading holds it too, and so does anything covering the page (html.locked). */
-.lead-car.held .car-dot i, .lead-car.away .car-dot i, .lead-car.buffering .car-dot i, .lead-car:has(:focus-visible) .car-dot i,
+.lead-car.held .car-dot i, .lead-car.away .car-dot i, .lead-car.buffering .car-dot i, .lead-car.paused .car-dot i, .lead-car:has(:focus-visible) .car-dot i,
 .locked .lead-car .car-dot i { animation-play-state: paused; }
 @media (hover: hover) { .lead-car:hover .car-dot i { animation-play-state: paused; } }
 @keyframes car-fill { to { width: 100%; } }
@@ -1414,6 +1462,7 @@ html.locked { overflow: hidden; }
 @media (pointer: coarse) {
   .drive-pick button, .odds-more { min-height: 40px; }
   .drive-pick button { padding-inline: 14px; }
+  .car-pause { width: 40px; height: 40px; }
 }
 
 @media (max-width: 760px) {
@@ -1466,6 +1515,8 @@ html.locked { overflow: hidden; }
   .team-meta .owner { display: none; }
   .odds { grid-row: 1; grid-column: 3; }
   .odds .xp { width: 26px; height: 26px; margin-top: 6px; }
+  .pull { margin: 2px -14px -14px; padding-block: 8px; }
+  .rank:nth-child(-n + 3) .pull { margin-bottom: -16px; }
   .detail-inner { padding: 14px; }
   .mini-row { grid-template-columns: 1fr; }
   .lineup { grid-template-columns: 1fr; }
