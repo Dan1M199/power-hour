@@ -435,6 +435,9 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .wp-labels.odds small { margin-left: 4px; font: 700 12px/1 var(--body); color: var(--ink-3); }
 .mu-note { margin: 10px 0 0; font-size: 13.5px; color: var(--ink-3); }
 .key-tag { position: absolute; top: -11px; right: 16px; padding: 5px 11px; border-radius: 999px; font: 800 11.5px/1 var(--body); color: var(--ink); background: var(--amber); box-shadow: 0 2px 0 var(--ledge-gold); }
+/* the bottom two playing each other: a brown tag on the card's top-left corner and a brown ledge */
+.mu.toilet { --ledge-c: #6D4C2F; }
+.toilet-tag { position: absolute; top: -11px; left: 16px; display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 999px; font: 800 11.5px/1 var(--body); color: #fff; background: #7B5534; box-shadow: 0 2px 0 #4A321D; cursor: default; }
 .mu-quip { margin: 0 0 14px; padding-bottom: 12px; border-bottom: 2px solid var(--line); font: 700 18px/1.2 var(--display); letter-spacing: 0.01em; color: var(--ink); text-wrap: pretty; }
 
 /* ---------- scoreboards: the lead story and the game of the week ---------- */

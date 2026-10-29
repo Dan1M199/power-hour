@@ -1798,6 +1798,16 @@ function viewWire() {
 }
 
 // ---------- matchups ----------
+// the bottom two playing each other (by standings or by power rank) get a "Toilet Time" tag on their card, by Dan's
+// request: the tooltip rubs it in with the records
+const TOILET = '<svg width="13" height="14" viewBox="0 0 13 14" aria-hidden="true"><path d="M2 1h4v5H2zM1 6h11c0 3-2 5-4 5l1 2H4l1-2C3 11 1 9 1 6z" fill="currentColor"/></svg>';
+function toiletBowl(a, b) {
+  const n = DATA.teams.length, low = (t, k) => t[k] >= n - 1;
+  const by = ['seed', 'powerRank'].find((k) => low(a, k) && low(b, k));
+  if (!by) return '';
+  const [lo, hi] = [a, b].sort((x, y) => y[by] - x[by]);
+  return `${by === 'seed' ? 'Last and second-to-last in the standings' : 'The bottom two in the power rankings'}: ${firstName(hi)} (${record(hi)}) vs ${firstName(lo)} (${record(lo)}). Somebody gets flushed.`;
+}
 function viewMatchups() {
   const pv = DATA.previews;
   const wk = pv[0]?.week;
@@ -1815,8 +1825,10 @@ function viewMatchups() {
       const swing = (t) => (t.playoffIfWin != null && t.playoffIfLoss != null ? Math.round((t.playoffIfWin - t.playoffIfLoss) * 100) : null);
       const sa = swing(a), sb = swing(b);
       const stakes = sa != null && sb != null ? `Playoff odds on the line: ${sa} pts for ${esc(a.name)}, ${sb} for ${esc(b.name)}.` : '';
-      return `<article class="mu glass ${p.a === myTeam || p.b === myTeam ? 'rim' : ''} ${isKey ? 'key' : ''}" id="mu-${i}" data-i="${i}">
+      const toilet = toiletBowl(a, b);
+      return `<article class="mu glass ${p.a === myTeam || p.b === myTeam ? 'rim' : ''} ${isKey ? 'key' : ''} ${toilet ? 'toilet' : ''}" id="mu-${i}" data-i="${i}">
         ${isKey ? '<span class="key-tag">Game of the week</span>' : ''}
+        ${toilet ? `<span class="toilet-tag" data-tip="${esc(toilet)}">${TOILET}Toilet Time</span>` : ''}
         <p class="mu-quip">${esc(DATA.quips[i])}</p>
         <div class="mu-teams">
           <div class="mu-team">${avatar(a)}<span class="tn">${esc(a.name)}${champTag(a, false)}</span><small>#${a.powerRank} power, ${record(a)}</small>${liveTag(p.liveA)}<span class="pr">${f1(p.projA)}</span>${bullTag(p.a)}</div>
