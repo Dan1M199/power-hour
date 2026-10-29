@@ -178,7 +178,7 @@ function headlines() {
   // the week's desk: no recaps of last week once the new week is being played, and the leak stays on top
   if (deskOn()) {
     const recap = new Set(['upset', 'blowout', 'nailbiter', 'explosion', 'climb', 'fall']);
-    const leaks = deskNews();
+    const leaks = [...deskNews(), tonightStory()].filter(Boolean);
     // the desk's own trade slides cover this week's deals
     if (leaks.some((st) => st.group === 'trades')) recap.add('trade');
     const told = new Set(leaks.map((st) => st.player?.id).filter(Boolean)); // a pickup the desk already has a slide on
@@ -554,9 +554,9 @@ const DESK = {
   // Dan's tip, Oct 28: WarreningU and Anita Max Wynn are working on Judkins to WarreningU for a high-value player, more
   // to come; separately, Kittle is on the table. It comes down on its own once Judkins changes teams.
   leak: { buyer: '1266185245770661888', seller: '1004099157217685504', player: '12512', block: '4217' },
-  // Dan's second tip, Oct 28: the Wardfather is shipping out Kyle Monangai; the partner isn't confirmed, the deal is almost
-  // done. Comes down on its own once Monangai leaves Mo's roster.
-  ship: { seller: '1004163936612089856', player: '12534' },
+  // Dan's second tip (Oct 28, the Wardfather shipping out Kyle Monangai) and the wire slide (Tre Tucker through four rosters
+  // overnight; the Tucker slide below stays) were taken down Oct 29 at his request; set `ship` again to bring a tip like it back.
+  ship: null,
   // Thursday's desk, Oct 29, after Wednesday's two trades. Judkins went somewhere other than WarreningU (twistStory, against
   // the leak above), and Mustafa (WarreningU) still did a deal with Aadil (Chubb in my Jeanty): `deal`. Both read the
   // trades from the snapshot and stay down until they show up in it.
@@ -565,6 +565,9 @@ const DESK = {
   rumors: ['10229', '12481'],
   // Tre Tucker: three managers went for him (Dan's count), and he landed with Akrm
   contest: { player: '10213', to: '1004101289912926208', tries: 3 },
+  // tonight's game (Thursday, Oct 29: Panthers at Packers, 7:15pm Central): the rostered players Sleeper projects highest
+  // lead a "players to watch tonight" slide from the morning until the game is about over. Null drops it.
+  tonight: { teams: ['CAR', 'GB'], kickoff: Date.parse('2026-10-29T19:15:00-05:00'), game: 'Panthers at Packers' },
 };
 // the carousel's sections, in order: a short label under each cluster of dots and a colour pip, repeated on the kicker
 const GROUPS = { trades: 'Trades', rumors: 'Rumors', wire: 'Wire', week: 'Games' };
@@ -589,7 +592,7 @@ function deskNews() {
     .sort((a, b) => order.indexOf(a.group) - order.indexOf(b.group));
 }
 function deskStories() {
-  const sel = [...deskNews(), wireStory(), raceStory(), upsetStory()].filter(Boolean);
+  const sel = [...deskNews(), tonightStory(), raceStory(), upsetStory()].filter(Boolean);
   return sel.length ? { lead: sel[0], more: sel.slice(1), size: sel.length } : null;
 }
 
@@ -745,6 +748,35 @@ function shipStory() {
     mark: [P],
     headline: `${seller.name} is shipping out ${P}`,
     deck: `Sources say ${firstName(seller)} is moving ${P}, and the deal is almost done. The trade partner hasn't been confirmed.${r.prk ? ` He's the ${ordinal(r.prk)}-ranked back in the consensus.` : ''} More to come.`,
+  };
+}
+
+// players to watch tonight: the rostered players in tonight's game with the highest Sleeper projections (the blend when
+// Sleeper has none), one per position, who has them and whether they're in the lineup. Runs until about three hours after kickoff.
+function tonightStory() {
+  const T = DESK.tonight;
+  if (!T || DATA.now > T.kickoff + 3 * 36e5) return null;
+  const proj = RAW.ros?.weekly?.week === DESK.week ? RAW.ros.weekly.proj || {} : {};
+  const sl = (id) => proj[id]?.[2] ?? proj[id]?.[0] ?? null;
+  const starting = new Set(DATA.previews.flatMap((p) => [...(p.startersA || []), ...(p.startersB || [])]));
+  const picks = DATA.teams.flatMap((t) => t.players.map((id) => ({ id, t, info: DATA.helpers.player(id) })))
+    .filter((x) => T.teams.includes(x.info?.team) && sl(x.id) >= 5)
+    .sort((a, b) => sl(b.id) - sl(a.id))
+    .filter((x, i, xs) => xs.findIndex((y) => y.info.pos === x.info.pos) === i).slice(0, 3); // one per position
+  if (picks.length < 2) return null;
+  const top = picks[0], names = picks.map((x) => nameOf(x.id));
+  const line = (x) => `${nameOf(x.id)} (${x.info.pos}, ${nfl(x.info.team)}) projects ${f1(sl(x.id))} on Sleeper for ${firstName(x.t)}, ${starting.has(x.id) ? 'in the lineup' : 'on the bench for now'}.`;
+  const benched = [...new Set(picks.filter((x) => !starting.has(x.id)).map((x) => firstName(x.t)))];
+  return {
+    type: 'tonight', group: 'week', kicker: 'Players to watch tonight', tone: 'neutral', stamp: 'Tonight', rids: [...new Set(picks.map((x) => x.t.rid))].slice(0, 2),
+    player: { id: top.id, name: names[0], short: shortName(top.info), line: `${top.info.pos}, ${nfl(top.info.team)}`, pin: { team: top.t, label: `${firstName(top.t)}'s` } },
+    mark: names,
+    headline: `${listOf(names)} kick off week ${DESK.week} tonight`,
+    deck: [
+      `${T.game}, ${clockTime(T.kickoff)} Central, Thursday night.`,
+      ...picks.map(line),
+      benched.length ? `Players lock at kickoff, so ${listOf(benched)} ${benched.length > 1 ? 'have' : 'has'} until ${clockTime(T.kickoff)} to make the call.` : '',
+    ].filter(Boolean).join(' '),
   };
 }
 
@@ -1333,7 +1365,7 @@ function leadStory() {
     </div>`).join('');
   const slide = (st, i) => {
     const top = `<div class="slide-top">
-        <p class="kicker">${st.type === 'shakeup' || st.breaking ? '<span class="brk"><i aria-hidden="true"></i>Breaking</span>' : ''}<span>${i ? (st.type === 'monday' || st.type === 'locked' || (st.type === 'sass' && s.night) ? 'Tonight' : 'Also today') : esc(date)}</span><span class="k${st.group ? ` g-${st.group}` : ''}">${esc(st.kicker)}${groupPos(st, i)}</span></p>
+        <p class="kicker">${st.type === 'shakeup' || st.breaking ? '<span class="brk"><i aria-hidden="true"></i>Breaking</span>' : ''}<span>${i ? (st.type === 'monday' || st.type === 'locked' || st.type === 'tonight' || (st.type === 'sass' && s.night) ? 'Tonight' : 'Also today') : esc(date)}</span><span class="k${st.group ? ` g-${st.group}` : ''}">${esc(st.kicker)}${groupPos(st, i)}</span></p>
         ${st.clip ? '' : st.player ? playerPrint(st) : leadFaces(st)}
       </div>`;
     const hed = `<${i ? 'h2' : 'h1'} class="lead-hed${st.mark ? ' marked' : ''}">${marked(st.headline, st.mark)}</${i ? 'h2' : 'h1'}>`;
