@@ -178,8 +178,11 @@ function headlines() {
   // the week's desk: no recaps of last week once the new week is being played, and the leak stays on top
   if (deskOn()) {
     const recap = new Set(['upset', 'blowout', 'nailbiter', 'explosion', 'climb', 'fall']);
-    const keep = [stories.lead, ...stories.more].filter((st) => st && !recap.has(st.type));
-    const leaks = [leakStory(), shipStory()].filter(Boolean);
+    const leaks = deskNews();
+    // the desk's own trade slides cover this week's deals
+    if (leaks.some((st) => st.group === 'trades')) recap.add('trade');
+    const told = new Set(leaks.map((st) => st.player?.id).filter(Boolean)); // a pickup the desk already has a slide on
+    const keep = [stories.lead, ...stories.more].filter((st) => st && !recap.has(st.type) && !told.has(st.pid));
     const all = [...leaks, ...keep];
     stories = { ...stories, lead: all[0], more: all.slice(1), size: Math.min(all.length, CAROUSEL_SIZE + leaks.length) };
   }
@@ -554,9 +557,17 @@ const DESK = {
   // Dan's second tip, Oct 28: the Wardfather is shipping out Kyle Monangai; the partner isn't confirmed, the deal is almost
   // done. Comes down on its own once Monangai leaves Mo's roster.
   ship: { seller: '1004163936612089856', player: '12534' },
+  // Thursday's desk, Oct 29, after Wednesday's two trades. Judkins went somewhere other than WarreningU (twistStory, against
+  // the leak above), and Mustafa (WarreningU) still did a deal with Aadil (Chubb in my Jeanty): `deal`. Both read the
+  // trades from the snapshot and stay down until they show up in it.
+  deal: { from: '1266185245770661888', to: '857297655477444608' },
+  // the rumor mill: Rashee Rice and Cam Skattebo are the names being floated
+  rumors: ['10229', '12481'],
+  // Tre Tucker: three managers went for him (Dan's count), and he landed with Akrm
+  contest: { player: '10213', to: '1004101289912926208', tries: 3 },
 };
 // the carousel's sections, in order: a short label under each cluster of dots and a colour pip, repeated on the kicker
-const GROUPS = { trades: 'Trades', wire: 'Wire', week: 'Games' };
+const GROUPS = { trades: 'Trades', rumors: 'Rumors', wire: 'Wire', week: 'Games' };
 const deskOn = () => !!DESK && DATA.meta.lastScored === DESK.week - 1;
 const ownerTeam = (owner) => DATA.teams.find((t) => t.ownerId === owner);
 const rosterOf = (id) => DATA.teams.find((t) => t.players.includes(id));
@@ -567,9 +578,132 @@ const roomRank = (t, pos) => (t.posRanks[pos] === 1 ? "the league's best" : `the
 const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 const count = (n) => WORDS[n] || String(n);
 
+const ROOM = { QB: 'quarterbacks', RB: 'backs', WR: 'receivers', TE: 'tight ends', K: 'kicker', DEF: 'defense' };
+const Cap = (s) => s[0].toUpperCase() + s.slice(1);
+const poss = (n) => (n.endsWith('s') ? `${n}'` : `${n}'s`);
+
+// the trade news (leaks, done deals, rumors, the Tucker scramble), in section order; it also stays on top once games start
+function deskNews() {
+  const order = Object.keys(GROUPS);
+  return [leakStory(), twistStory(), businessStory(), rumorStory(), shipStory(), tuckerStory()].filter(Boolean)
+    .sort((a, b) => order.indexOf(a.group) - order.indexOf(b.group));
+}
 function deskStories() {
-  const sel = [leakStory(), shipStory(), wireStory(), raceStory(), upsetStory()].filter(Boolean);
+  const sel = [...deskNews(), wireStory(), raceStory(), upsetStory()].filter(Boolean);
   return sel.length ? { lead: sel[0], more: sel.slice(1), size: sel.length } : null;
+}
+
+// trades completed since the desk's cutoff, and one clause per side saying what they got
+const deskTrades = () => DATA.feed.filter((f) => f.type === 'trade' && f.ts >= DESK.since);
+const gets = (s) => {
+  const picks = s.picks.filter((p) => p.dir === 'in').map((p) => `a ${p.season} ${ordinal(p.round)}-round pick`);
+  return `${team(s.rid).name} gets ${listOf([...s.adds.map((a) => nameOf(a.id)), ...picks]) || 'nothing'}`;
+};
+const dealSaid = (f) => `${f.sides.map(gets).join('; ')}.`;
+// who won it on consensus value (over replacement, like the trade ledger)
+function valueSaid(f) {
+  const [w, l] = [...f.sides].sort((a, b) => b.net - a.net);
+  if (!l || w.net - l.net < 4) return 'By consensus value it is close to even.';
+  return `By consensus value, ${firstName(team(w.rid))} came out ${f1(w.net)} ahead.`;
+}
+// what the incoming players do to each side's position groups
+const roomsSaid = (f) => {
+  const said = f.sides.map((s) => {
+    const t = team(s.rid), pos = [...new Set(s.adds.map((a) => a.pos).filter((p) => ROOM[p]))];
+    return pos.length ? `${poss(firstName(t))} ${listOf(pos.map((p) => `${ROOM[p]} rank ${ordinal(t.posRanks[p])}`))}` : '';
+  }).filter(Boolean);
+  return said.length ? `Now ${said.join('; ')}.` : '';
+};
+
+// plot twist: the leak had Judkins headed to one team, and he landed with another
+function twistStory() {
+  const L = DESK.leak, expected = ownerTeam(L.buyer);
+  const deal = deskTrades().find((f) => f.sides.some((s) => s.adds.some((a) => a.id === L.player)));
+  const to = deal && team(deal.sides.find((s) => s.adds.some((a) => a.id === L.player)).rid);
+  if (!to || to === expected) return null;
+  const P = nameOf(L.player), info = DATA.helpers.player(L.player), rooms = roomsSaid(deal);
+  return {
+    type: 'twist', group: 'trades', breaking: true, kicker: 'Trade desk', tone: 'trade', stamp: 'Plot twist', rids: deal.sides.map((s) => s.rid),
+    player: { id: L.player, name: P, short: shortName(info), line: `${info.pos}, ${nfl(info.team)}`, pin: { team: to, label: `To ${firstName(to)}` } },
+    mark: [P],
+    headline: `Plot twist: ${P} lands with ${to.name}, not ${expected ? expected.name : 'the team the desk expected'}`,
+    deck: [
+      `On Wednesday the desk had ${P} headed to ${expected ? `${poss(firstName(expected))} ${expected.name}` : 'another team'}. ${firstName(to)} got him instead.`,
+      `The full deal: ${dealSaid(deal)}`,
+      valueSaid(deal),
+      rooms,
+      `${firstName(to)} is ${record(to)} with ${pct(to.playoffPct)} playoff odds.`,
+    ].filter(Boolean).join(' '),
+  };
+}
+
+// the buyer from the leak still did business: what went to Aadil, and the rest of the deal
+function businessStory() {
+  const B = DESK.deal, from = ownerTeam(B.from), to = ownerTeam(B.to);
+  const deal = from && to && deskTrades().find((f) => f.sides.some((s) => s.rid === from.rid) && f.sides.some((s) => s.rid === to.rid));
+  const sent = deal && deal.sides.find((s) => s.rid === to.rid).adds.filter((a) => deal.sides.some((s) => s.rid === from.rid && s.drops.some((d) => d.id === a.id)));
+  if (!sent?.length) return null;
+  const names = sent.map((a) => nameOf(a.id)), rooms = roomsSaid(deal), F = firstName(from), T = firstName(to);
+  return {
+    type: 'deal', group: 'trades', kicker: 'Trade desk', tone: 'trade', stamp: 'Deal', rids: [from.rid, to.rid],
+    mark: names,
+    headline: `No bad business here: ${F} follows through and sends ${listOf(names)} to ${T}`,
+    deck: [
+      `${F} was shopping for a deal on Wednesday, and the Judkins talks weren't the only ones. ${F} and ${T} got one done.`,
+      `The full deal: ${dealSaid(deal)}`,
+      valueSaid(deal),
+      rooms,
+      `${F} is ${record(from)} with ${pct(from.playoffPct)} playoff odds; ${T} is ${record(to)} with ${pct(to.playoffPct)}.`,
+    ].filter(Boolean).join(' '),
+  };
+}
+
+// the rumor mill: the names being floated, where they sit and what they're worth
+function rumorStory() {
+  const ids = DESK.rumors.filter((id) => rosterOf(id));
+  if (!ids.length) return null;
+  const names = ids.map(nameOf), done = deskTrades().length;
+  const about = (id) => {
+    const t = rosterOf(id), r = RAW.ros?.values?.[id] || {}, pos = posOf(id);
+    return `${nameOf(id)}${r.prk ? ` (the ${ordinal(r.prk)}-ranked ${SLOT_WORD[pos] || pos} in the consensus, ${f1(r.wk)} a week projected)` : ''} is on ${poss(firstName(t))} ${t.name}, ${record(t)} with ${pct(t.playoffPct)} playoff odds.`;
+  };
+  return {
+    type: 'rumor', group: 'rumors', kicker: 'Rumor mill', tone: 'trade', stamp: 'Rumor', rids: [...new Set(ids.map((id) => rosterOf(id).rid))],
+    mark: names,
+    headline: `${listOf(names)} ${ids.length > 1 ? 'are among the names' : 'is the name'} to watch as the trade market heats up`,
+    deck: [
+      `${done >= 2 ? `${Cap(count(done))} trades went through this week, and the` : 'The'} market isn't done.`,
+      ...ids.map(about),
+      'Nothing is close yet. More to come.',
+    ].join(' '),
+  };
+}
+
+// the Tre Tucker scramble: several managers went for him, one got him, and what he does for that lineup
+function tuckerStory() {
+  const C = DESK.contest, to = ownerTeam(C.to);
+  if (!to || rosterOf(C.player) !== to) return null;
+  const got = DATA.feed.find((f) => f.ts >= DESK.since && f.sides.some((s) => s.rid === to.rid && s.adds.some((a) => a.id === C.player)));
+  if (!got) return null;
+  // the claims that lost, when the snapshot carries them
+  const lost = [...new Set((DATA.raw.transactions || []).flat()
+    .filter((x) => x?.type === 'waiver' && x.status === 'failed' && (x.status_updated || x.created) >= DESK.since && x.adds?.[C.player] != null)
+    .map((x) => x.adds[C.player]))].filter((rid) => rid !== to.rid).map(team).filter(Boolean);
+  const P = nameOf(C.player), first = P.split(' ')[0], info = DATA.helpers.player(C.player), r = RAW.ros?.values?.[C.player] || {};
+  const T = firstName(to), slot = to.rosLineup.find((l) => l?.id === C.player), pos = info.pos;
+  const how = got.type === 'trade' ? 'traded for him' : got.type === 'waiver' ? 'won the claim' : 'got to him first';
+  return {
+    type: 'contest', group: got.type === 'trade' ? 'trades' : 'wire', kicker: got.type === 'trade' ? 'Trade desk' : 'Waiver wire', tone: 'good', stamp: 'Claimed', rids: [to.rid],
+    player: { id: C.player, name: P, short: shortName(info), line: `${pos}, ${nfl(info.team)}`, pin: { team: to, label: `To ${T}` } },
+    mark: [P],
+    headline: `Conflict of ${P}: ${count(C.tries)} managers tried to get ${first}, and he lands on ${poss(T)} team`,
+    deck: [
+      lost.length === C.tries - 1 ? `${listOf(lost.map(firstName))} went for ${first} too, but ${T} ${how}.` : `${Cap(count(C.tries))} managers went for ${first}, and ${T} ${how}.`,
+      r.prk ? `He's the ${ordinal(r.prk)}-ranked ${SLOT_WORD[pos] || pos} in the consensus, projected for ${f1(r.wk)} a week the rest of the way.` : '',
+      `Let's see how this helps: ${slot ? `he goes straight into ${poss(T)} best lineup at ${slot.slot === 'FLEX' ? 'flex' : SLOT_WORD[slot.slot] || slot.slot}` : `for now he's depth, outside ${poss(T)} best lineup`}, and ${poss(T)} ${ROOM[pos] || pos} rank ${ordinal(to.posRanks[pos])}.`,
+      `${T} is ${record(to)} with ${pct(to.playoffPct)} playoff odds.`,
+    ].filter(Boolean).join(' '),
+  };
 }
 
 // the tip: who's talking, why the pieces fit, and how far apart they are by consensus value
@@ -624,7 +758,7 @@ function wireStory() {
   ]));
   const teamsAdding = (id) => new Set(events.filter((e) => e.add && e.id === id).map((e) => e.rid));
   const hot = [...new Set(events.map((e) => e.id))].map((id) => ({ id, n: teamsAdding(id).size })).sort((a, b) => b.n - a.n || valueOf(b.id) - valueOf(a.id))[0];
-  const claims = events.filter((e) => e.add && e.waiver).sort((a, b) => valueOf(b.id) - valueOf(a.id)).slice(0, 2);
+  const claims = events.filter((e) => e.add && e.waiver && e.id !== DESK.contest?.player).sort((a, b) => valueOf(b.id) - valueOf(a.id)).slice(0, 2);
   const busy = Object.entries(moves.reduce((m, f) => (f.sides.forEach((s) => (m[s.rid] = (m[s.rid] || 0) + 1)), m), {})).sort((a, b) => b[1] - a[1])[0];
   const lines = [];
   let headline, rids = [];
@@ -660,7 +794,7 @@ function raceStory() {
   const swing = (t) => (t.playoffIfWin ?? t.playoffPct) - (t.playoffIfLoss ?? t.playoffPct);
   const games = [...DATA.previews].sort((a, b) => b.stakes - a.stakes).slice(0, 2).filter((p) => p.stakes >= 0.2);
   if (!games.length) return null;
-  const leak = DESK.leak ? [ownerTeam(DESK.leak.buyer), ownerTeam(DESK.leak.seller)] : [];
+  const leak = leakStory() ? [ownerTeam(DESK.leak.buyer), ownerTeam(DESK.leak.seller)] : []; // only while the talks are live
   const vs = (p) => `${firstName(team(p.a))} vs ${firstName(team(p.b))}`;
   const side = (t) => `${t.name} (${record(t)}) goes to ${pct(t.playoffIfWin)} with a win and ${pct(t.playoffIfLoss)} with a loss`;
   const deck = games.map((p) => {
