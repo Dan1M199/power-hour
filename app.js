@@ -216,6 +216,11 @@ const weightTotal = () => Object.values(DATA.meta.weights).reduce((a, b) => a + 
 // one part's share of the power score, in whole percent (PARTS in lib/engine.js)
 const pctW = (g) => Math.round(PARTS[g].reduce((a, k) => a + (DATA.meta.weights[k] || 0), 0) * 100 / weightTotal());
 const team = (rid) => DATA.byRid[rid];
+// a position group's score in words: weighted pts/wk the starters add over the league's baseline starter (lib/engine.js)
+const groupSaid = (t, p) => {
+  const b = DATA.meta.posBase?.[p], v = t.posGroups[p];
+  return b ? `${v >= 0 ? '+' : '−'}${f1(Math.abs(v))} pts/wk over the ${p}${b.n} line of ${f1(b.pts)}` : `${f1(v)} pts/wk`;
+};
 const short = (name, n = 15) => (name.length > n ? name.slice(0, n - 1) + '…' : name);
 const nameOf = (id) => DATA.helpers.nameOf(id);
 const posOf = (id) => DATA.helpers.posOf(id);
@@ -1629,7 +1634,7 @@ function rankDetail(t) {
   const why = t.why.map((w, k) => `<li class="${w.tone}" style="--k:${k}"><b>${esc(w.title)}</b><span>${esc(w.text)}</span></li>`).join('');
   const axes = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
   const rad = DATA.meta.hasRos
-    ? radar({ axes, values: axes.map((p) => 1 - (t.posRanks[p] - 1) / (n - 1)), color: DATA.color[t.rid], tips: axes.map((p) => `${p}: ${ordinal(t.posRanks[p])} of ${n} (${f1(t.posGroups[p])} proj pts/wk)`) })
+    ? radar({ axes, values: axes.map((p) => 1 - (t.posRanks[p] - 1) / (n - 1)), color: DATA.color[t.rid], tips: axes.map((p) => `${p}: ${ordinal(t.posRanks[p])} of ${n} (${groupSaid(t, p)})`) })
     : '';
   const lineup = DATA.meta.hasRos
     ? `<ul class="lineup">${t.rosLineup.filter(Boolean).map((l) => `<li><span class="slot">${l.slot === 'FLEX' ? 'FLX' : l.slot}</span><span class="pl">${posTag(l.id)}${esc(nameOf(l.id))}</span><span class="pt">${f1(l.pts)}</span></li>`).join('')}</ul>`
@@ -2157,7 +2162,7 @@ function viewTrades() {
   const btn = (k, label) => `<button type="button" data-shape="${k}" aria-pressed="${tradeState.shape === k}"${count(k) || tradeState.shape === k ? '' : ' disabled'}>${label} (${count(k)})</button>`;
   const needs = ['QB', 'RB', 'WR', 'TE'].map((p) => {
     const r = me.posRanks[p], cls = r >= n - 3 ? 'need' : r <= 3 ? 'strong' : '';
-    return `<span class="need-chip ${cls}" data-tip="${esc(`${p}: ${ordinal(r)} of ${n} in projected starter points (${f1(me.posGroups[p])} pts/wk)`)}"><b>${p}</b>${ordinal(r)}</span>`;
+    return `<span class="need-chip ${cls}" data-tip="${esc(`${p}: ${ordinal(r)} of ${n} (${groupSaid(me, p)})`)}"><b>${p}</b>${ordinal(r)}</span>`;
   }).join('');
   const maxGain = Math.max(0.5, ...all.flatMap((i) => [i.gainMe, i.gainThem]));
   const proj = (id) => DATA.helpers.effWeekly(id);
@@ -2320,7 +2325,7 @@ function viewLab() {
     mine: teams.findIndex((t) => t.rid === myTeam),
     cols: ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'],
     n,
-    cells: teams.map((t) => ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'].map((p) => ({ rank: t.posRanks[p], label: t.posRanks[p], tip: `${t.name} ${p}: ${ordinal(t.posRanks[p])} (${f1(t.posGroups[p])} proj pts/wk)` }))),
+    cells: teams.map((t) => ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'].map((p) => ({ rank: t.posRanks[p], label: t.posRanks[p], tip: `${t.name} ${p}: ${ordinal(t.posRanks[p])} (${groupSaid(t, p)})` }))),
   }) : '';
   const schedTeams = [...teams].sort((a, b) => a.schedWins - b.schedWins);
   const schedHeat = schedTeams[0]?.schedule.length ? heatTable({
