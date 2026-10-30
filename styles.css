@@ -551,6 +551,36 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .lead-hed { margin: 0; font: 900 clamp(32px, 10.5cqi, 66px)/0.93 var(--display); letter-spacing: -0.005em; text-wrap: balance; color: var(--chalk); }
 .lead-deck { margin: 14px 0 0; max-width: 64ch; color: rgba(255, 255, 255, 0.8); font-size: 16px; }
 .slide .cast { margin-top: auto; padding-top: 18px; }
+/* the clobber story's scoreboard: two scores in display numerals (the leader's in yellow), the projected finals, a
+   win-odds bar and each side's key players (green pip beat the projection by 4+, red missed it by 4+) */
+.bug { margin-top: auto; padding-top: 16px; display: grid; gap: 10px; }
+.bug-score { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--r-md); background: rgba(0, 0, 0, 0.28); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.12); }
+.bug-side { display: grid; min-width: 0; line-height: 1; }
+.bug-side.trail { text-align: right; }
+.bug-team { font: 800 15px/1.1 var(--display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255, 255, 255, 0.85); }
+.bug-pts { font: 900 clamp(40px, 9cqi, 64px)/1 var(--display); font-variant-numeric: tabular-nums; margin: 4px 0 3px; }
+.bug-side.lead .bug-pts { color: var(--yellow); text-shadow: 3px 3px 0 #8a2b1d; }
+.bug-side.trail .bug-pts { color: rgba(255, 255, 255, 0.55); }
+.bug-side small { font-size: 12px; color: rgba(255, 255, 255, 0.66); }
+.bug-vs { font: 800 14px/1 var(--display); color: rgba(255, 255, 255, 0.5); }
+.bug-odds { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; font: 800 14px/1 var(--display); color: rgba(255, 255, 255, 0.8); }
+.bug-odds i { height: 12px; border-radius: 999px; background: linear-gradient(90deg, var(--amber) var(--w), rgba(255, 255, 255, 0.16) var(--w)); box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.35); }
+.bug-key { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.bug-key ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; align-content: start; }
+.bug-key li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); font-size: 13px; }
+.bug-key .pos { margin: 0; }
+.bug-pl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bug-key li b { font: 800 16px/1 var(--display); font-variant-numeric: tabular-nums; }
+.bug-key li small { font-size: 11.5px; color: rgba(255, 255, 255, 0.6); }
+.bug-key li.boom b { color: #9CE89F; } .bug-key li.bust b { color: #FF9C8F; }
+.bug-key li.proj { background: rgba(255, 255, 255, 0.04); }
+/* phones: the Final/Proj label gives its room to the name (still-to-play rows keep the fainter tray) */
+@media (max-width: 760px) {
+  .bug-key { gap: 6px; }
+  .bug-key li { grid-template-columns: auto minmax(0, 1fr) auto; gap: 5px; padding: 5px 7px; }
+  .bug-key li small { display: none; }
+  .bug-key li.proj b { color: rgba(255, 255, 255, 0.7); }
+}
 .cast { display: grid; gap: 8px; }
 .cast-team { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 8px 12px; border-radius: var(--r-md); background: rgba(255, 255, 255, 0.08); }
 .cast-team .avatar { width: 38px; height: 38px; box-shadow: none; }
