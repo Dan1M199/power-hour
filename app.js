@@ -178,7 +178,7 @@ function headlines() {
   // the week's desk: no recaps of last week once the new week is being played, and the leak stays on top
   if (deskOn()) {
     const recap = new Set(['upset', 'blowout', 'nailbiter', 'explosion', 'climb', 'fall']);
-    const leaks = [...deskNews(), tonightStory()].filter(Boolean);
+    const leaks = [clobberStory(), ...deskNews(), tonightStory()].filter(Boolean);
     // the desk's own trade slides cover this week's deals
     if (leaks.some((st) => st.group === 'trades')) recap.add('trade');
     const told = new Set(leaks.map((st) => st.player?.id).filter(Boolean)); // a pickup the desk already has a slide on
@@ -573,6 +573,9 @@ const DESK = {
   // tonight's game (Thursday, Oct 29: Panthers at Packers, 7:15pm Central): the rostered players Sleeper projects highest
   // lead a "players to watch tonight" slide from the morning until the game is about over. Null drops it.
   tonight: { teams: ['CAR', 'GB'], kickoff: Date.parse('2026-10-29T19:15:00-05:00'), game: 'Panthers at Packers' },
+  // Dan's lead for Friday, Oct 30: his own Operation Sneak In getting clobbered by Stefano's IWillSonU, told on a
+  // scoreboard (clobberStory, scoreBug). It only runs while it really is a beating; null drops it.
+  clobber: { by: '1402120808771391488', on: '964343481231593472' },
 };
 // the carousel's sections, in order: a short label under each cluster of dots and a colour pip, repeated on the kicker
 const GROUPS = { trades: 'Trades', rumors: 'Rumors', wire: 'Wire', week: 'Games' };
@@ -783,6 +786,66 @@ function tonightStory() {
       benched.length ? `Players lock at kickoff, so ${listOf(benched)} ${benched.length > 1 ? 'have' : 'has'} until ${clockTime(T.kickoff)} to make the call.` : '',
     ].filter(Boolean).join(' '),
   };
+}
+
+// the beating of the week, on a scoreboard: points banked so far, projected finals, win odds and the players doing it.
+// Dan's own team on the wrong end (DESK.clobber). Gone if the game turns into anything but a beating.
+function clobberStory() {
+  const C = DESK.clobber, W = C && ownerTeam(C.by), L = C && ownerTeam(C.on);
+  const p = W && L && DATA.previews.find((x) => [x.a, x.b].includes(W.rid) && [x.a, x.b].includes(L.rid));
+  if (!p) return null;
+  const side = (t) => {
+    const a = p.a === t.rid;
+    return { t, key: a ? 'a' : 'b', banked: (a ? p.liveA : p.liveB) || 0, proj: a ? p.projA : p.projB, win: a ? p.winA : 1 - p.winA };
+  };
+  const w = side(W), l = side(L), lead = w.banked - l.banked;
+  if (w.win < 0.6 && lead < 10) return null;
+  const bd = breakdown(DATA, p);
+  // each side's key players: who has already played, best game first, then the biggest projections still to come
+  const key = (s) => {
+    const xs = bd.rows.map((r) => r[s.key]).filter(Boolean);
+    const done = xs.filter((x) => x.played).sort((a, b) => b.proj - a.proj);
+    const left = xs.filter((x) => !x.played && x.proj > 0).sort((a, b) => b.proj - a.proj);
+    return [...done.slice(0, 2), ...left].slice(0, 3);
+  };
+  const kw = key(w), kl = key(l), best = kw.find((x) => x.played), mine = kl.find((x) => x.played), hope = kl.find((x) => !x.played);
+  const Wf = firstName(W), Lf = firstName(L);
+  const vs = (x) => `${f1(x.proj)} (projected ${f1(x.pre)})`;
+  return {
+    type: 'clobber', group: 'week', breaking: true, kicker: 'Blowout watch', tone: 'bad', stamp: 'Clobbering', rids: [W.rid, L.rid], drain: L.rid,
+    mark: [L.name, W.name],
+    headline: lead > 0
+      ? `${L.name} is getting clobbered: ${W.name} leads ${f1(w.banked)} to ${f1(l.banked)}`
+      : `${L.name} is about to get clobbered: ${W.name} projects ${f1(w.proj)} to ${f1(l.proj)}`,
+    deck: [
+      best ? `${nameOf(best.id)} put up ${vs(best)} for ${Wf}.` : '',
+      mine ? `${Lf} got ${vs(mine)} from ${nameOf(mine.id)}.` : '',
+      `The model gives ${Lf} ${pct(l.win)}${hope ? `, and the best hope left is ${nameOf(hope.id)} at ${f1(hope.proj)} projected` : ''}.` + ' Yes, the editor signed off on this one.',
+    ].filter(Boolean).join(' '),
+    bug: { w, l, kw, kl },
+  };
+}
+// the clobber story's scoreboard: both scores, the projected finals, a win-odds bar and each side's key players
+function scoreBug({ w, l, kw, kl }) {
+  const score = (s, cls) => `<div class="bug-side ${cls}">
+      <span class="bug-team">${esc(short(s.t.name, 20))}</span>
+      <b class="bug-pts">${f1(s.banked)}</b>
+      <small>Projected ${f1(s.proj)}</small>
+    </div>`;
+  const row = (x) => {
+    const d = x.played ? x.proj - x.pre : 0, tag = !x.played ? 'proj' : d >= 4 ? 'boom' : d <= -4 ? 'bust' : 'done';
+    return `<li class="${tag}" data-tip="${esc(x.played ? `${x.name}: ${f1(x.proj)} points, projected ${f1(x.pre)}` : `${x.name}: projected ${f1(x.proj)}, still to play`)}">
+        <span class="pos ${x.pos}">${x.pos}</span><span class="bug-pl">${esc(shortName(x))}</span><b>${f1(x.proj)}</b><small>${x.played ? 'Final' : 'Proj'}</small>
+      </li>`;
+  };
+  const wp = Math.round(w.win * 100);
+  return `<div class="bug">
+      <div class="bug-score">${score(w, 'lead')}<span class="bug-vs">vs</span>${score(l, 'trail')}</div>
+      <div class="bug-odds" role="img" aria-label="${esc(`${w.t.name} ${wp}% to win, ${l.t.name} ${100 - wp}%`)}">
+        <span>${wp}%</span><i style="--w:${wp}%"></i><span>${100 - wp}%</span>
+      </div>
+      <div class="bug-key"><ul>${kw.map(row).join('')}</ul><ul>${kl.map(row).join('')}</ul></div>
+    </div>`;
 }
 
 // the wire since waivers: the player who changed hands the most, then the best claims and the busiest manager
@@ -1305,7 +1368,7 @@ function leadFaces(st) {
   if (!ts.length) return '';
   const stamp = st.stamp || (st.type === 'streak' ? (st.tone === 'good' ? 'Heater' : 'Skid') : STAMPS[st.type]);
   return `<div class="lead-faces n${ts.length} ${esc(st.tone || '')}" aria-hidden="true">
-      ${ts.map((t, k) => `<span class="lf">${headshot(t, 'lead-face')}${champBadge(t)}<span class="cap">${esc(firstName(t))}</span>${k === 0 && stamp ? `<em class="stamp">${esc(stamp)}</em>` : ''}</span>`).join('')}
+      ${ts.map((t, k) => `<span class="lf">${headshot(t, `lead-face${st.drain === t.rid ? ' drained' : ''}`)}${champBadge(t)}<span class="cap">${esc(firstName(t))}</span>${k === 0 && stamp ? `<em class="stamp">${esc(stamp)}</em>` : ''}</span>`).join('')}
     </div>`;
 }
 
@@ -1379,7 +1442,7 @@ function leadStory() {
     <article class="slide${st.type === 'shakeup' || st.breaking ? ' breaking' : ''}${st.clip ? ' has-clip' : ''}" id="slide-${i}" role="group" aria-roledescription="slide" aria-label="Headline ${i + 1} of ${stories.length}">
       ${st.clip ? `<div class="clip-head">${top}${hed}</div>${clipPrint(st)}` : `${top}${hed}`}
       <p class="lead-deck">${marked(st.deck, st.mark)}</p>
-      <div class="cast">${cast(st)}</div>
+      ${st.bug ? scoreBug(st.bug) : `<div class="cast">${cast(st)}</div>`}
     </article>`;
   };
   const arrow = (dir, label, d) => `<button type="button" class="car-arrow" data-dir="${dir}" aria-label="${label}"><svg width="9" height="14" viewBox="0 0 9 14" aria-hidden="true"><path d="${d}" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
