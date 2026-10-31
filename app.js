@@ -1245,16 +1245,18 @@ const phone = mq('(max-width: 760px)');
 function initBall() {
   const bar = $('.topbar'), ball = $('#navball'), root = document.documentElement;
   if (!bar || !ball) return;
-  const parts = [...bar.children].filter((el) => el !== ball);
   const FOLD_AFTER = 120, DOWN = 32, UP = 12; // px: below the bar's own height, then a short flick down or a nudge up
   let folded = false, lastY = 0, turnY = 0, dir = 0, queued = false;
-  const at = () => Math.min(Math.max(scrollY, 0), Math.max(0, root.scrollHeight - innerHeight));
+  // the bottom of the page, kept up to date as the page grows instead of measured on every scroll
+  let maxY = Infinity;
+  const measure = () => (maxY = Math.max(0, root.scrollHeight - innerHeight));
+  new ResizeObserver(measure).observe(document.body);
+  const at = () => Math.min(Math.max(scrollY, 0), maxY);
   const fold = (on) => {
     on &&= phone();
     if (on === folded) return;
     folded = on;
-    bar.classList.toggle('folded', on);
-    parts.forEach((el) => (el.inert = on)); // the hidden links can't take focus or taps
+    bar.classList.toggle('folded', on); // folded, the bar's parts are visibility: hidden, so they can't take focus or taps
     ball.setAttribute('aria-expanded', String(!on));
   };
   const check = () => {

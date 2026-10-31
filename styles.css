@@ -201,16 +201,16 @@ button, select { font: inherit; color: inherit; }
     background-color: var(--header); background-image: var(--sheen); background-size: 100% 150px; background-repeat: no-repeat;
     box-shadow: var(--rim), 0 0 0 var(--ring-w) var(--yellow), 0 0 0 calc(var(--ring-w) + var(--edge)) var(--outline),
       0 var(--lift) 0 calc(var(--ring-w) + var(--edge)) var(--ledge-c);
-    transition: left 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) 0.06s, top 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) 0.06s,
-      width 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) 0.06s, height 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) 0.06s, opacity 0s; }
-  .topbar > :not(.navball) { transition: opacity 0.2s ease 0.26s, visibility 0s 0.26s; }
-  .topbar > .theme-btn { transition: opacity 0.2s ease 0.26s, visibility 0s 0.26s, background-color 0.15s, transform 0.15s; }
+    transition: left 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s, top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s,
+      width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s, height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s, opacity 0s; }
+  .topbar > :not(.navball) { transition: opacity 0.28s ease 0.36s, visibility 0s 0.36s; }
+  .topbar > .theme-btn { transition: opacity 0.28s ease 0.36s, visibility 0s 0.36s, background-color 0.15s, transform 0.15s; }
 
   /* the ball: its body lines up with where the logo sits, top left */
   .navball { display: block; position: absolute; left: 2px; top: 9px; width: 62px; height: 44px; padding: 0; border: 0; border-radius: 22px;
     background: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
     opacity: 0; visibility: hidden; pointer-events: none; transform: rotate(160deg) scale(0.45);
-    transition: transform 0.26s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.14s ease 0.1s, visibility 0s 0.26s; }
+    transition: transform 0.34s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.18s ease 0.14s, visibility 0s 0.34s; }
   .navball svg { display: block; width: 62px; height: 44px; overflow: visible; transition: transform 0.15s; }
   .navball:active svg { transform: scale(0.9); }
   .nb-ledge { fill: var(--ledge); }
@@ -223,11 +223,11 @@ button, select { font: inherit; color: inherit; }
   /* folded (and the opening, before it unrolls) */
   :is(.topbar.folded, .navball-intro .topbar) { pointer-events: none; }
   :is(.topbar.folded, .navball-intro .topbar)::before { left: 5px; top: 11.5px; width: 56px; height: 35px; opacity: 0;
-    transition: left 0.3s cubic-bezier(0.5, 0, 0.2, 1) 0.04s, top 0.3s cubic-bezier(0.5, 0, 0.2, 1) 0.04s,
-      width 0.3s cubic-bezier(0.5, 0, 0.2, 1) 0.04s, height 0.3s cubic-bezier(0.5, 0, 0.2, 1) 0.04s, opacity 0.08s linear 0.36s; }
-  :is(.topbar.folded, .navball-intro .topbar) > :not(.navball) { opacity: 0; visibility: hidden; transition: opacity 0.12s, visibility 0s 0.12s; }
+    transition: left 0.42s cubic-bezier(0.5, 0, 0.2, 1) 0.06s, top 0.42s cubic-bezier(0.5, 0, 0.2, 1) 0.06s,
+      width 0.42s cubic-bezier(0.5, 0, 0.2, 1) 0.06s, height 0.42s cubic-bezier(0.5, 0, 0.2, 1) 0.06s, opacity 0.1s linear 0.5s; }
+  :is(.topbar.folded, .navball-intro .topbar) > :not(.navball) { opacity: 0; visibility: hidden; transition: opacity 0.16s, visibility 0s 0.16s; }
   :is(.topbar.folded, .navball-intro .topbar) > .navball { opacity: 1; visibility: visible; pointer-events: auto; transform: none;
-    transition: transform 0.4s cubic-bezier(0.3, 1.45, 0.5, 1) 0.2s, opacity 0.12s ease 0.22s, visibility 0s 0.2s; }
+    transition: transform 0.54s cubic-bezier(0.3, 1.45, 0.5, 1) 0.28s, opacity 0.16s ease 0.3s, visibility 0s 0.28s; }
 
   /* the opening: the ball is tossed in from above the corner, then rocks on the spot until the page is ready */
   @media (prefers-reduced-motion: no-preference) {
