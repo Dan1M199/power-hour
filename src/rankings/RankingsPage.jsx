@@ -1,11 +1,32 @@
 // The power rankings (#rankings): a row per team that opens into its scouting report, with your rank in a strip up
 // top, the fan poll, championship futures and how the score works. The hero (headline carousel, page head and league
-// desk) is still built and bound by app.js, which shares it with the Live page; it sits here as given.
-import { useRef, useState } from 'react';
+// desk) is the Hero it shares with the Live page.
+import { useEffect, useRef, useState } from 'react';
 import { ChampTag, Headshot, TeamAvatar, Xp } from '../shared.jsx';
+import { Hero } from '../hero/Hero.jsx';
 import { Futures } from './Futures.jsx';
 import { Poll } from './Poll.jsx';
 import { Report } from './Report.jsx';
+
+// the page head: the week, what the ranks weigh, the ROS sources and when they were refreshed, and the important
+// message's replay chip once its file is known to be there
+function RankHead({ wk, held, sources, updated, message }) {
+  const [again, setAgain] = useState(false);
+  useEffect(() => { message?.ready().then((ok) => setAgain(!!ok)); }, []);
+  return <>
+    <div>
+      <h2 className="page-title"><span className="wk">{held ? `On hold during week ${wk}` : `Week ${wk}`}</span>Power Rankings</h2>
+      <p>Where you sit in the standings, how much you score, who's left on your schedule and how your roster projects, in that order. Tap any team to see why it sits where it does.</p>
+    </div>
+    <div className="sources">
+      {sources
+        ? sources.map((s) => <span key={s.name} className={`chip ${s.ok ? '' : 'off'}`} title={s.title}><span className="dot" />{s.name}</span>)
+        : <span className="chip off"><span className="dot" />ROS rankings unavailable</span>}
+      {updated ? <span className="chip">{updated}</span> : null}
+      {message ? <button type="button" className="chip to-again" data-message hidden={!again} onClick={message.play}>Watch the important message again</button> : null}
+    </div>
+  </>;
+}
 
 const seen = () => { try { return !!localStorage.getItem('ph-opened-rank'); } catch { return false; } };
 const learn = () => { try { localStorage.setItem('ph-opened-rank', '1'); } catch { /* fine */ } };
@@ -62,11 +83,12 @@ const METHOD = (pctW) => <>
 </>;
 
 /**
- * held: a week is being played, so the ranks are on hold (no hero); hero: the hero's HTML from app.js (carousel, head,
- * desk), or null when held; head: the page head's inner HTML for the held page; rosError: why the ROS rankings are
- * missing; calm: reduced motion; poll: { on, question, store, onPick }.
+ * held: a week is being played, so the ranks are on hold (no hero); car: the headline carousel's props, or null; desk:
+ * show the league desk; sources: the ROS sources' chips ({ name, ok, title }), or null when they're all down; updated:
+ * when they were refreshed; message: { ready, play } for the important message's replay chip, or null; rosError: why the
+ * ROS rankings are missing; calm: reduced motion; poll: { on, question, store, onPick }.
  */
-export function RankingsPage({ D, me, h, held, hero, head, rosError, calm, poll }) {
+export function RankingsPage({ D, me, h, held, car, desk, sources, updated, message, rosError, calm, poll }) {
   const [open, setOpen] = useState(() => new Set());
   const [nudged, setNudged] = useState(() => !seen());
   const rows = useRef(new Map()), btns = useRef(new Map()), unpin = useRef(new Map());
@@ -106,7 +128,9 @@ export function RankingsPage({ D, me, h, held, hero, head, rosError, calm, poll 
   };
 
   return <>
-    {held ? <section className="view-head" dangerouslySetInnerHTML={{ __html: head }} /> : <div className="hero" dangerouslySetInnerHTML={{ __html: hero }} />}
+    {held
+      ? <section className="view-head"><RankHead wk={wk} held sources={sources} updated={updated} /></section>
+      : <Hero D={D} h={h} car={car} desk={desk} head={<RankHead wk={wk} sources={sources} updated={updated} message={message} />} />}
     {held ? <div className="notice glass hold"><span><strong>Power rankings are on hold.</strong>{` Week ${wk} is being played, so these are the ranks going into the week. They update as soon as every game is final. For how this week is going, see the `}<a href="#live">Live</a> tab.</span></div> : null}
     {rosError ? <div className="notice glass"><strong>Results-only mode.</strong>{` The rest-of-season rankings couldn't be loaded (${rosError}), so these ranks use this season's results alone until they come back.`}</div> : null}
     {mine ? <button type="button" className="you-strip glass" aria-label={`Jump to your team, ${mine.name}, ranked ${mine.powerRank}`} onClick={jump}>

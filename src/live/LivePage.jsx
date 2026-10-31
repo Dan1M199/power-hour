@@ -1,8 +1,9 @@
 // The Live tab (#live) while a week is played: the desk's note on your week, every team's week best to worst (banked
 // plus the rest projected) and the projected standings. Once every game is final it becomes Final Scores, with the
-// button to the new power rankings. The hero (headline carousel, page head, league desk) and the final-scores head come
-// from app.js as HTML, like on the power rankings.
+// button to the new power rankings. The hero (headline carousel, page head, league desk) is the one the power rankings
+// use.
 import { ChampTag, Headshot, TeamAvatar } from '../shared.jsx';
+import { Hero } from '../hero/Hero.jsx';
 
 // "Your week": a note from the desk to whoever picked a team. Winning gets congratulated, losing gets roasted, and a
 // coin flip gets a pep talk if they're ahead or a reality check if they're behind. Wording rotates daily.
@@ -55,7 +56,23 @@ function YourWeek({ rows, standings, me, h, bull }) {
   );
 }
 
-export function LivePage({ D, me, h, fin, wk, rows, standings, hero, head, bull, onReveal }) {
+// the page head: the week live (or final), how many NFL teams have played, when the scores were pulled
+function LiveHead({ fin, wk, played, fetched }) {
+  return <>
+    <div>
+      <h2 className="page-title"><span className="wk">{fin ? `Week ${wk} final` : `Week ${wk} live`}</span>{fin ? 'Final Scores' : 'Weekly Rankings'}</h2>
+      <p>{fin
+        ? "Every game is in. The week, best score to worst, and the standings it leaves behind. Sleeper makes it official Tuesday; the new power rankings are ready now."
+        : 'How this week is going, best to worst: everything scored so far plus the projection for everyone still to play. The power rankings are on hold until every game is final.'}</p>
+    </div>
+    <div className="sources">
+      {fin ? <span className="chip"><span className="dot" />All games final</span> : <span className="chip"><span className="dot live" />{`${played} NFL team${played === 1 ? '' : 's'} played so far`}</span>}
+      {fetched ? <span className="chip">{`Scores as of ${fetched}`}</span> : null}
+    </div>
+  </>;
+}
+
+export function LivePage({ D, me, h, fin, wk, rows, standings, car, desk, played, fetched, bull, onReveal }) {
   const { f1, pct, ordinal } = h, pt = D.meta.playoffTeams, n = rows.length;
   const max = Math.max(1, ...rows.map((r) => r.proj)) * 1.04;
   const status = (r) => {
@@ -65,7 +82,9 @@ export function LivePage({ D, me, h, fin, wk, rows, standings, hero, head, bull,
     return <span className={`st-chip ${r.win >= 0.5 ? 'up' : 'down'}`}>{`${pct(r.win)} to beat ${o}`}</span>;
   };
   return <>
-    {fin ? <section className="view-head" dangerouslySetInnerHTML={{ __html: head }} /> : <div className="hero" dangerouslySetInnerHTML={{ __html: hero }} />}
+    {fin
+      ? <section className="view-head"><LiveHead fin wk={wk} played={played} fetched={fetched} /></section>
+      : <Hero D={D} h={h} car={car} desk={desk} head={<LiveHead wk={wk} played={played} fetched={fetched} />} />}
     {fin
       ? <div className="unveil-cta"><button type="button" className="cta" data-reveal onClick={(e) => onReveal(e.currentTarget)}>Done with Live Ranks, Show me the Power Ranking</button></div>
       : <YourWeek rows={rows} standings={standings} me={me} h={h} bull={bull} />}

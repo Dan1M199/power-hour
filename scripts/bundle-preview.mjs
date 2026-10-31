@@ -42,7 +42,7 @@ html = html.replace(/(src|href)="(\/bundle\/[^"]+\.(png|webp|jpg|svg|ico))"/g, (
 if (!js || !css) throw new Error('preview: the built page has no script or no stylesheet to inline');
 
 // the demo snapshot, the managers' headshots and the other pictures the code asks for by name (photoUrl in
-// lib/members.js reads window.__HEADS__, asset() in app.js window.__ASSETS__)
+// lib/members.js reads window.__HEADS__, asset() in src/hero/Carousel.jsx window.__ASSETS__)
 const heads = Object.fromEntries(readdirSync(`${root}assets/heads`).filter((f) => f.endsWith('.jpg'))
   .map((f) => [f.slice(0, -4), `data:image/jpeg;base64,${readFileSync(`${root}assets/heads/${f}`).toString('base64')}`]));
 const assets = Object.fromEntries(['assets/money-week-flyer.jpg'].map((p) => [p, `data:image/jpeg;base64,${readFileSync(`${root}${p}`).toString('base64')}`]));

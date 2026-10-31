@@ -3,7 +3,7 @@ import { radar, weeklyBars, TEAM_COLORS } from './lib/charts.js';
 import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
 import { breakdown, shortName, fits, nfl } from './lib/matchup.js';
-import { MEMBERS, GUESTS, DESK_PEOPLE, photoUrl } from './lib/members.js';
+import { MEMBERS, DESK_PEOPLE, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
 import { mount } from './src/mount.jsx';
 import { Lab } from './src/lab/Lab.jsx';
@@ -13,6 +13,7 @@ import { GamesPage } from './src/games/GamesPage.jsx';
 import { loadVotes } from './src/games/votes.js';
 import { RankingsPage } from './src/rankings/RankingsPage.jsx';
 import { LivePage } from './src/live/LivePage.jsx';
+import { talk, setTalk, talkCall, loadTalk } from './src/hero/talk.js';
 import { createStore } from './src/store.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
 import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
@@ -232,7 +233,6 @@ const groupSaid = (t, p) => {
 const short = (name, n = 15) => (name.length > n ? name.slice(0, n - 1) + '…' : name);
 const nameOf = (id) => DATA.helpers.nameOf(id);
 const posOf = (id) => DATA.helpers.posOf(id);
-const posTag = (id) => { const p = posOf(id); return p ? `<span class="pos ${p}">${p}</span>` : ''; };
 const member = (t) => (t && MEMBERS[t.ownerId]) || null;
 // the person, not the Sleeper handle, wherever we can
 const faceSrc = (t) => (member(t) ? photoUrl(member(t).photo) : null);
@@ -264,8 +264,6 @@ function initAvatarFallback() {
 // ---------- the defending champion ----------
 const TROPHY = '<svg class="trophy" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M7 2.5h10v2h3.2v3.2a4.2 4.2 0 0 1-4.3 4.2 5.2 5.2 0 0 1-2.9 3.1v2.6h3.3v3.9H7.7v-3.9H11v-2.6a5.2 5.2 0 0 1-2.9-3.1 4.2 4.2 0 0 1-4.3-4.2V4.5H7zm0 4H5.8v1.2A2.2 2.2 0 0 0 7 9.6zm10 0v3.1a2.2 2.2 0 0 0 1.2-2V6.5z" fill="#FFC107" stroke="#12301A" stroke-width="1.3" stroke-linejoin="round"/></svg>';
 const isChamp = (t) => !!(t && CHAMPION && t.ownerId === CHAMPION.user);
-// a trophy (and, with a label, the season) next to the champion's team name
-const champTag = (t, label = true) => (isChamp(t) ? `<span class="champ${label ? '' : ' bare'}" title="${CHAMPION.season} league champion">${TROPHY}${label ? `${CHAMPION.season} champ` : ''}</span>` : '');
 // a trophy pinned to the corner of the champion's photo
 const champBadge = (t) => (isChamp(t) ? `<span class="champ-badge" title="${CHAMPION.season} league champion">${TROPHY}</span>` : '');
 
@@ -298,11 +296,6 @@ function bullInfo(rid) {
   const k = B.rows.findIndex((r) => r.rid === rid), r = B.rows[k];
   return { lead: k === 0, tip: `Money week: closest to ${MONEY_WEEK.target} wins ${money(MONEY_WEEK.prize)}. ${team(rid).name} is ${ordinal(k + 1)} closest.`, text: `${k === 0 ? `${money(MONEY_WEEK.prize)} pace, ` : ''}${awayText(r)}` };
 }
-// files the single-file preview inlines (window.__ASSETS__); served from the site otherwise
-const asset = (p) => window.__ASSETS__?.[p] || p;
-
-// circled down-arrow that marks anything tappable to expand; CSS flips it when open
-const XP = '<span class="xp" aria-hidden="true"><svg width="12" height="8" viewBox="0 0 12 8"><path d="M1 1.5l5 5 5-5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
 const record = (t) => `${t.wins}-${t.losses}${t.ties ? `-${t.ties}` : ''}`;
 const updatedText = () => {
   const iso = DATA.rosMeta?.updated;
@@ -312,26 +305,19 @@ const updatedText = () => {
 };
 
 // ---------- views ----------
-// The power rankings are React (src/rankings), mounted into #app by bind. The hero (headline carousel, page head and
-// league desk) is still built here as HTML and bound by bindCarousel and mountTalk, since the Live page shares it.
+// The power rankings are React (src/rankings), mounted into #app by bind, with the hero (headline carousel, page head
+// and league desk, src/hero) they share with the Live page.
 const viewRankings = () => '';
 function rankingsProps() {
-  const m = DATA.meta;
-  const chips = DATA.rosMeta
-    ? Object.entries(DATA.rosMeta.sources).map(([k, s]) => `<span class="chip ${s.ok ? '' : 'off'}" title="${s.ok ? `${s.matched} of ${s.rows} players matched` : esc(s.error)}"><span class="dot"></span>${SOURCE_NAMES[k] || k}</span>`).join('')
-    : '<span class="chip off"><span class="dot"></span>ROS rankings unavailable</span>';
   // while a week is being played the headlines move to the Live tab and these ranks hold until the week is final
   const held = !!DATA.liveMode;
-  const head = `
-        <div>
-          <h2 class="page-title"><span class="wk">${held ? `On hold during week ${m.lastScored + 1}` : `Week ${m.lastScored + 1}`}</span>Power Rankings</h2>
-          <p>Where you sit in the standings, how much you score, who's left on your schedule and how your roster projects, in that order. Tap any team to see why it sits where it does.</p>
-        </div>
-        <div class="sources">${chips}${updatedText() ? `<span class="chip">${esc(updatedText())}</span>` : ''}${!held && MESSAGE_VIDEO && !window.__DEMO__ ? '<button type="button" class="chip to-again" data-message hidden>Watch the important message again</button>' : ''}</div>
-      `;
   return {
-    held, head, hero: held ? null : `${leadStory()}<section class="view-head">${head}</section>${talkSlot()}`,
-    rosError: DATA.rosError || null, calm: calm(),
+    held, car: held ? null : carouselProps(), desk: deskShown(), rosError: DATA.rosError || null, calm: calm(),
+    sources: DATA.rosMeta ? Object.entries(DATA.rosMeta.sources).map(([k, s]) => ({ name: SOURCE_NAMES[k] || k, ok: s.ok, title: s.ok ? `${s.matched} of ${s.rows} players matched` : s.error })) : null,
+    updated: updatedText() || null,
+    message: !held && MESSAGE_VIDEO && !window.__DEMO__
+      ? { ready: () => messageReady || fetch(MESSAGE_VIDEO.src, { method: 'HEAD' }).then((r) => r.ok).catch(() => false), play: () => maybeMessage(true) }
+      : null,
     poll: { on: !!SHAKEUP?.poll && shakeupOn() && !DATA.liveMode, question: SHAKEUP?.poll?.question, store: pollStore, onPick: castPoll },
   };
 }
@@ -810,29 +796,6 @@ function clobberStory() {
     bug: { w, l, kw, kl },
   };
 }
-// the clobber story's scoreboard: both scores, the projected finals, a win-odds bar and each side's key players
-function scoreBug({ w, l, kw, kl }) {
-  const score = (s, cls) => `<div class="bug-side ${cls}">
-      <span class="bug-team">${esc(short(s.t.name, 20))}</span>
-      <b class="bug-pts">${f1(s.banked)}</b>
-      <small>Projected ${f1(s.proj)}</small>
-    </div>`;
-  const row = (x) => {
-    const d = x.played ? x.proj - x.pre : 0, tag = !x.played ? 'proj' : d >= 4 ? 'boom' : d <= -4 ? 'bust' : 'done';
-    return `<li class="${tag}" data-tip="${esc(x.played ? `${x.name}: ${f1(x.proj)} points, projected ${f1(x.pre)}` : `${x.name}: projected ${f1(x.proj)}, still to play`)}">
-        <span class="pos ${x.pos}">${x.pos}</span><span class="bug-pl">${esc(shortName(x))}</span><b>${f1(x.proj)}</b><small>${x.played ? 'Final' : 'Proj'}</small>
-      </li>`;
-  };
-  const wp = Math.round(w.win * 100);
-  return `<div class="bug">
-      <div class="bug-score">${score(w, 'lead')}<span class="bug-vs">vs</span>${score(l, 'trail')}</div>
-      <div class="bug-odds" role="img" aria-label="${esc(`${w.t.name} ${wp}% to win, ${l.t.name} ${100 - wp}%`)}">
-        <span>${wp}%</span><i style="--w:${wp}%"></i><span>${100 - wp}%</span>
-      </div>
-      <div class="bug-key"><ul>${kw.map(row).join('')}</ul><ul>${kl.map(row).join('')}</ul></div>
-    </div>`;
-}
-
 // the wire since waivers: the player who changed hands the most, then the best claims and the busiest manager
 function wireStory() {
   const moves = DATA.feed.filter((f) => f.ts >= DESK.since && (f.type === 'waiver' || f.type === 'free_agent')).sort((a, b) => a.ts - b.ts);
@@ -1018,37 +981,19 @@ function liveWeek() {
   return { rows, standings: after.map((x, i) => ({ ...x, seed: i + 1, was: seedNow.get(x.t.rid) })) };
 }
 
-// The Live tab is React (src/live/LivePage.jsx), mounted into #app by bind. Its hero (headline carousel, page head,
-// league desk) is built here as HTML and bound by bindCarousel and mountTalk, like the power rankings'.
+// The Live tab is React (src/live/LivePage.jsx), mounted into #app by bind, with the power rankings' hero (src/hero).
 const viewLive = () => '';
 function liveProps() {
   // after the reveal DATA holds the new rankings; this page keeps showing the week that just ended
   if (DATA.after) return withData(DATA.after, liveProps);
   const fin = !!DATA.finalCall;
   const wk = DATA.previews[0]?.week, { rows, standings } = liveWeek();
-  const played = DATA.live?.teams.length || 0;
   const bull = DATA.bull && DATA.bull.state !== 'final' && DATA.bull.rows.find((x) => x.rid === myTeam);
-  const head = fin
-    ? `
-        <div>
-          <h2 class="page-title"><span class="wk">Week ${wk} final</span>Final Scores</h2>
-          <p>Every game is in. The week, best score to worst, and the standings it leaves behind. Sleeper makes it official Tuesday; the new power rankings are ready now.</p>
-        </div>
-        <div class="sources"><span class="chip"><span class="dot"></span>All games final</span>${DATA.fetched ? `<span class="chip">Scores as of ${esc(DATA.fetched)}</span>` : ''}</div>
-      `
-    : null;
-  const hero = fin ? null : `
-      ${leadStory()}
-      <section class="view-head">
-        <div>
-          <h2 class="page-title"><span class="wk">Week ${wk} live</span>Weekly Rankings</h2>
-          <p>How this week is going, best to worst: everything scored so far plus the projection for everyone still to play. The power rankings are on hold until every game is final.</p>
-        </div>
-        <div class="sources"><span class="chip"><span class="dot live"></span>${played} NFL team${played === 1 ? '' : 's'} played so far</span>${DATA.fetched ? `<span class="chip">Scores as of ${esc(DATA.fetched)}</span>` : ''}</div>
-      </section>
-      ${talkSlot()}
-    `;
-  return { D: DATA, fin, wk, rows, standings, hero, head, bull: bull ? awayText(bull) : null, onReveal: passThenReveal, h: { ...reactHelpers(), today: chicagoDate() } };
+  return {
+    D: DATA, fin, wk, rows, standings, car: fin ? null : carouselProps(), desk: !fin && deskShown(),
+    played: DATA.live?.teams.length || 0, fetched: DATA.fetched || null,
+    bull: bull ? awayText(bull) : null, onReveal: passThenReveal, h: { ...reactHelpers(), today: chicagoDate() },
+  };
 }
 
 // ---------- the final call: from the final scores to the new power rankings ----------
@@ -1200,258 +1145,17 @@ function openReveal() {
 }
 
 // ---------- lead story ----------
-function rankSpark(t, w = 84, h = 30) {
-  const v = t.rankHistory, n = DATA.teams.length;
-  if (v.length < 2) return '';
-  const x = (i) => 3 + (i / (v.length - 1)) * (w - 6), y = (r) => 3 + ((r - 1) / (n - 1)) * (h - 6);
-  const d = v.map((r, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(r).toFixed(1)}`).join('');
-  return `<svg class="spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="Power rank by week" data-tip="${esc(`${t.name} power rank by week: ${v.join(', ')}`)}">
-    <path d="${d}" stroke="${DATA.color[t.rid]}" pathLength="1"/><circle cx="${x(v.length - 1)}" cy="${y(v[v.length - 1])}" r="3" fill="${DATA.color[t.rid]}"/></svg>`;
-}
-
-// the front-page photo: whoever the story is about, with a stamp on the first face saying what kind of day it was
-const STAMPS = {
-  trade: 'Deal', wire: 'Pickup', cut: 'Cut', flurry: 'Busy', dud: 'Benched?', star: 'Star turn', unbeaten: 'Perfect',
-  winless: 'Winless', upset: 'Upset', blowout: 'Boom', nailbiter: 'Phew', explosion: 'Boom', climb: 'Rising',
-  fall: 'Sliding', unlucky: 'Robbed', lucky: 'Lucky', giant: 'Giant', gotw: 'Big game',
-};
-function leadFaces(st) {
-  const ts = st.rids.map(team).filter((t) => member(t)).slice(0, 2);
-  if (!ts.length) return '';
-  const stamp = st.stamp || (st.type === 'streak' ? (st.tone === 'good' ? 'Heater' : 'Skid') : STAMPS[st.type]);
-  return `<div class="lead-faces n${ts.length} ${esc(st.tone || '')}" aria-hidden="true">
-      ${ts.map((t, k) => `<span class="lf">${headshot(t, `lead-face${st.drain === t.rid ? ' drained' : ''}`)}${champBadge(t)}<span class="cap">${esc(firstName(t))}</span>${k === 0 && stamp ? `<em class="stamp">${esc(stamp)}</em>` : ''}</span>`).join('')}
-    </div>`;
-}
-
-// a video story's clip, printed like the headline photos: the stamp on its corner and the face of whoever the joke is on.
-// It plays muted on a loop while its slide is showing (bindClip); a tap anywhere on it starts it over with sound.
-const CLIP_ICONS = {
-  play: '<path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/>',
-  muted: '<path d="M3.5 9.5v5h3.8l4.7 4v-13l-4.7 4z" fill="currentColor"/><path d="m15.5 9.5 5 5m0-5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
-  sound: '<path d="M3.5 9.5v5h3.8l4.7 4v-13l-4.7 4z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>',
-};
-const clipButton = (state) => `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">${CLIP_ICONS[state]}</svg><span>${state === 'play' ? 'Play' : 'Sound'}</span>`;
-function clipPrint(st) {
-  const C = st.clip, who = team(st.face), m = member(who);
-  return `<figure class="clip-print ${esc(st.tone || '')}">
-      <div class="clip-frame">
-        <video class="clip" muted playsinline loop preload="none" poster="${esc(asset(C.poster))}" aria-label="${esc(C.label)}"><source src="${esc(asset(C.src))}" type="video/mp4"></video>
-        <button type="button" class="clip-sound">${clipButton('play')}</button>
-      </div>
-      ${C.stamp ? `<em class="stamp" aria-hidden="true">${esc(C.stamp)}</em>` : ''}
-      ${m ? `<span class="lf clip-who" aria-hidden="true">${headshot(who, 'lead-face')}<span class="cap">${esc(m.first)}</span></span>` : ''}
-    </figure>`;
-}
-
-// a story's key name in yellow, in the headline and the deck (st.mark)
-const marked = (text, marks = []) => marks.reduce((h, m) => h.split(esc(m)).join(`<mark class="hl">${esc(m)}</mark>`), esc(text));
-// the player a story is about, printed like a trading card where the headline photos go: his Sleeper headshot, name and
-// position, the stamp, and the face of the manager he's headed to pinned on the corner
-function playerPrint(st) {
-  const P = st.player, to = P.pin?.team, m = to && member(to);
-  const initials = P.name.split(' ').map((w) => w[0]).slice(0, 2).join('');
-  return `<figure class="player-print ${esc(st.tone || '')}" aria-hidden="true">
-      <div class="pp-card">
-        <img class="pp-img" src="https://sleepercdn.com/content/nfl/players/${esc(P.id)}.jpg" alt="" decoding="async" data-initials="${esc(initials)}">
-        <figcaption><b>${esc(P.short)}</b><small>${esc(P.line)}</small></figcaption>
-      </div>
-      ${st.stamp ? `<em class="stamp">${esc(st.stamp)}</em>` : ''}
-      ${m ? `<span class="lf pp-who">${headshot(to, 'lead-face')}<span class="cap">${esc(P.pin.label)}</span></span>` : ''}
-    </figure>`;
-}
-
-// three headlines in one square card (four on night-edition nights): swipe, arrows or dots; the active dot's fill is the
-// auto-advance timer
+// The headline carousel (src/hero/Carousel.jsx): three headlines in one square card (four on night-edition nights, one
+// per story on the week's desk). The stories are data; the carousel draws them.
 const CAROUSEL_SIZE = 3;
-function leadStory() {
+function carouselProps() {
   const s = DATA.stories;
-  if (!s?.lead) return '';
-  const stories = [s.lead, ...s.more].slice(0, s.size || CAROUSEL_SIZE + (s.night ? 1 : 0) + (s.extra ? 1 : 0));
-  carouselStories = stories; // the league desk tags comments with these
-  // sections: runs of slides sharing a group, when every slide has one
-  const runs = stories.every((st) => GROUPS[st.group]) ? stories.reduce((a, st, i) => { const r = a[a.length - 1]; if (r?.g === st.group) r.i.push(i); else a.push({ g: st.group, i: [i] }); return a; }, []) : null;
-  const groupPos = (st, i) => { const r = runs?.find((x) => x.i.includes(i)); return r && r.i.length > 1 ? `<small>${r.i.indexOf(i) + 1} of ${r.i.length}</small>` : ''; };
-  const dot = (i) => `<button type="button" class="car-dot" data-i="${i}" aria-label="Show headline ${i + 1}${runs ? `, ${GROUPS[stories[i].group]}` : ''}" aria-controls="slide-${i}"${i ? '' : ' aria-current="true"'}><i></i></button>`;
-  const dotRail = () => (runs
-    ? `<div class="car-dots grouped">${runs.map((r) => `<div class="car-group g-${r.g}"><div class="cg-dots">${r.i.map(dot).join('')}</div><span class="cg-label">${GROUPS[r.g]}</span></div>`).join('')}</div>`
-    : `<div class="car-dots">${stories.map((_, i) => dot(i)).join('')}</div>`);
-  const date = new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' });
-  const cast = (st) => st.rids.map(team).filter(Boolean).map((t) => `
-    <div class="cast-team">${avatar(t)}
-      <div class="cast-name"><b>${esc(t.name)}${champTag(t, false)}</b><small>No. ${t.powerRank} power, ${record(t)}</small></div>
-      ${rankSpark(t)}
-      <span class="cast-odds"><b>${pct(t.playoffPct)}</b><small>playoffs</small></span>
-    </div>`).join('');
-  const slide = (st, i) => {
-    const top = `<div class="slide-top">
-        <p class="kicker">${st.type === 'shakeup' || st.breaking ? '<span class="brk"><i aria-hidden="true"></i>Breaking</span>' : ''}<span>${i ? (st.type === 'monday' || st.type === 'locked' || st.type === 'tonight' || (st.type === 'sass' && s.night) ? 'Tonight' : 'Also today') : esc(date)}</span><span class="k${st.group ? ` g-${st.group}` : ''}">${esc(st.kicker)}${groupPos(st, i)}</span></p>
-        ${st.clip ? '' : st.player ? playerPrint(st) : leadFaces(st)}
-      </div>`;
-    const hed = `<${i ? 'h2' : 'h1'} class="lead-hed${st.mark ? ' marked' : ''}">${marked(st.headline, st.mark)}</${i ? 'h2' : 'h1'}>`;
-    // a video story puts its clip beside the kicker and headline, where the photos would be
-    return `
-    <article class="slide${st.type === 'shakeup' || st.breaking ? ' breaking' : ''}${st.clip ? ' has-clip' : ''}" id="slide-${i}" role="group" aria-roledescription="slide" aria-label="Headline ${i + 1} of ${stories.length}">
-      ${st.clip ? `<div class="clip-head">${top}${hed}</div>${clipPrint(st)}` : `${top}${hed}`}
-      <p class="lead-deck">${marked(st.deck, st.mark)}</p>
-      ${st.bug ? scoreBug(st.bug) : `<div class="cast">${cast(st)}</div>`}
-    </article>`;
+  if (!s?.lead) return null;
+  return {
+    stories: [s.lead, ...s.more].slice(0, s.size || CAROUSEL_SIZE + (s.night ? 1 : 0) + (s.extra ? 1 : 0)),
+    date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
+    hold: onHold() ? NEWS_CLOCK.holdNote : null, night: !!s.night, groups: GROUPS,
   };
-  const arrow = (dir, label, d) => `<button type="button" class="car-arrow" data-dir="${dir}" aria-label="${label}"><svg width="9" height="14" viewBox="0 0 9 14" aria-hidden="true"><path d="${d}" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
-  return `
-    <section class="lead-car glass rim" aria-roledescription="carousel" aria-label="Today's headlines">
-      ${onHold() ? `<p class="desk-note" role="status"><span class="live-dot" aria-hidden="true"></span>${esc(NEWS_CLOCK.holdNote)}</p>` : ''}
-      <div class="car-track" tabindex="0">${stories.map(slide).join('')}</div>
-      ${stories.length > 1 ? `<div class="car-nav">
-        ${arrow(-1, 'Previous headline', 'M7.5 1.5 2 7l5.5 5.5')}
-        <div class="car-mid">
-          ${dotRail()}
-          <button type="button" class="car-pause" aria-pressed="${carouselPaused}" aria-label="${carouselPaused ? 'Play' : 'Pause'} the headlines">${pauseIcon(carouselPaused)}</button>
-        </div>
-        ${arrow(1, 'Next headline', 'M1.5 1.5 7 7l-5.5 5.5')}
-      </div>` : ''}
-    </section>`;
-}
-
-let carouselFit = null, carouselSeen = null, clipSync = null;
-// the pause button holds the headlines where they are for the rest of the visit (every page's carousel), until pressed again
-let carouselPaused = false;
-const pauseIcon = (paused) => `<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">${paused
-  ? '<path d="M4.5 2.5v11l9-5.5z" fill="currentColor"/>'
-  : '<path d="M4 2.5h2.6v11H4zm5.4 0H12v11H9.4z" fill="currentColor"/>'}</svg>`;
-function bindCarousel() {
-  carouselFit = null;
-  clipSync = null;
-  carouselNow = null;
-  carouselSeen?.disconnect();
-  const car = $('.lead-car'), track = car?.querySelector('.car-track');
-  if (!track) return;
-  const dots = [...car.querySelectorAll('.car-dot')], n = dots.length;
-  const slides = [...track.querySelectorAll('.slide')];
-  let idx = 0, steering = 0;
-  clipSync = bindClip(car, slides, dots, () => idx);
-  // Only rotate (or play a clip) while the card is mostly on screen. A rotation changes the card's height on phones,
-  // and iPhone Safari doesn't anchor scrolling, so rotating while someone reads further down would jolt the whole page.
-  carouselSeen = new IntersectionObserver(([e]) => { car.classList.toggle('away', e.intersectionRatio < 0.6); clipSync?.(); }, { threshold: [0, 0.6] });
-  carouselSeen.observe(car);
-  if (n < 2) return;
-  // on phones the card hugs the story that's showing instead of the tallest one, so short stories leave no gap
-  const phone = matchMedia('(max-width: 760px)');
-  const fit = () => { track.style.height = phone.matches ? `${slides[idx].offsetHeight}px` : ''; };
-  const show = (i, resize = true) => {
-    idx = (i + n) % n;
-    dots.forEach((d, k) => (k === idx ? d.setAttribute('aria-current', 'true') : d.removeAttribute('aria-current')));
-    if (resize) fit();
-    clipSync?.();
-  };
-  fit();
-  document.fonts?.ready.then(fit); // headline height changes once the display font arrives
-  carouselFit = fit; // re-run on real width changes (see onWidthChange)
-  carouselNow = { at: () => idx, go: (i) => go(i) }; // for the league desk's headline chips
-  const go = (i) => {
-    show(i);
-    const sl = slides[idx];
-    sl.classList.remove('enter');
-    void sl.offsetWidth; // restart the animation
-    sl.classList.add('enter');
-    clearTimeout(steering);
-    steering = setTimeout(() => (steering = 0), 700); // ignore scroll events from our own smooth scroll
-    track.scrollTo({ left: idx * track.clientWidth, behavior: calm() ? 'auto' : 'smooth' });
-  };
-  // during a finger swipe, move the dots right away but resize only once the slide has settled
-  let settle = 0;
-  track.addEventListener('scroll', () => {
-    if (steering) return;
-    const i = Math.round(track.scrollLeft / track.clientWidth);
-    if (i !== idx) show(i, false);
-    clearTimeout(settle);
-    settle = setTimeout(fit, 140);
-  }, { passive: true });
-  dots.forEach((d) => {
-    d.addEventListener('click', () => go(Number(d.dataset.i)));
-    d.querySelector('i').addEventListener('animationend', () => go(idx + 1));
-  });
-  car.querySelectorAll('.car-arrow').forEach((b) => b.addEventListener('click', () => go(idx + Number(b.dataset.dir))));
-  car.classList.toggle('paused', carouselPaused);
-  car.querySelector('.car-pause')?.addEventListener('click', (e) => {
-    const b = e.currentTarget;
-    carouselPaused = !carouselPaused;
-    car.classList.toggle('paused', carouselPaused);
-    b.setAttribute('aria-pressed', String(carouselPaused));
-    b.setAttribute('aria-label', `${carouselPaused ? 'Play' : 'Pause'} the headlines`);
-    b.innerHTML = pauseIcon(carouselPaused);
-  });
-  // touch has no hover, so hold the timer while a finger is down
-  track.addEventListener('pointerdown', () => car.classList.add('held'));
-  ['pointerup', 'pointercancel'].forEach((e) => track.addEventListener(e, () => car.classList.remove('held')));
-}
-
-// A video story's clip plays muted on a loop, and only while its slide is showing, the card is mostly on screen, the tab
-// is visible and nothing covers the page (the important message and the reveal lock it with html.locked). Its dot runs
-// as long as the clip and holds while the video loads, so the two finish together. A tap starts the clip over with
-// sound, and the dot with it; leaving the slide mutes it again. Under reduced motion or Save-Data, or when the browser
-// refuses to autoplay (iPhone Low Power Mode), it shows the still until tapped. Returns the check to re-run on changes.
-function bindClip(car, slides, dots, current) {
-  const v = car.querySelector('video.clip');
-  if (!v) return null;
-  const slide = v.closest('.slide'), btn = slide.querySelector('.clip-sound'), dot = dots[slides.indexOf(slide)];
-  const auto = !calm() && !navigator.connection?.saveData;
-  let blocked = false, sound = false, here = false, hold = 0;
-  const paint = () => {
-    const state = v.paused ? 'play' : v.muted ? 'muted' : 'sound';
-    if (btn.dataset.state === state) return;
-    btn.dataset.state = state;
-    btn.innerHTML = clipButton(state);
-    if (state === 'play') btn.removeAttribute('aria-pressed'); else btn.setAttribute('aria-pressed', String(state === 'sound'));
-  };
-  const hush = () => { sound = false; v.muted = true; v.loop = true; };
-  // the dot waits for the frames to move ('playing'), though never more than 3 s on a slow connection
-  const wait = (on) => { clearTimeout(hold); car.classList.toggle('buffering', on); if (on) hold = setTimeout(() => wait(false), 3000); };
-  const play = () => {
-    if (v.paused) wait(true); // a clip already running (a tap for sound) just starts over; 'waiting' covers a stall
-    if (!v.readyState && v.networkState !== v.NETWORK_LOADING) v.load(); // Safari won't fetch a preload="none" clip on play() alone
-    // a refusal blocks autoplay from here on; a start cut short by pause() (a swipe, the takeover) doesn't
-    v.play()?.catch((e) => { if (e?.name !== 'AbortError' && !sound) blocked = true; wait(false); paint(); });
-  };
-  const showing = () => slides[current()] === slide && !car.classList.contains('away') && !document.hidden && !document.documentElement.classList.contains('locked');
-  const sync = () => {
-    if (!v.isConnected) { v.pause(); if (clipSync === sync) clipSync = null; return; } // another page replaced it
-    const was = here;
-    here = slides[current()] === slide;
-    if (!showing()) {
-      if (!v.paused) v.pause();
-      wait(false);
-      if (!here) hush(); // it comes back silent, from the top
-      return paint();
-    }
-    if (!was) v.currentTime = 0;
-    if (v.paused && (sound || (auto && !blocked))) play();
-    paint();
-  };
-  const tap = () => {
-    if (!v.paused && !v.muted) { // sound off: back to the silent loop, or a stop where nothing autoplays
-      hush();
-      if (!auto || blocked) v.pause();
-      return paint();
-    }
-    sound = true; blocked = false;
-    v.muted = false; v.loop = false; v.currentTime = 0;
-    // start the dot over with the clip (it only runs on the slide that's showing)
-    const fill = dot?.querySelector('i');
-    if (fill) { fill.style.animation = 'none'; void fill.offsetWidth; fill.style.animation = ''; }
-    play();
-    paint();
-  };
-  v.addEventListener('playing', () => { wait(false); paint(); });
-  v.addEventListener('waiting', () => { if (showing()) wait(true); });
-  v.addEventListener('pause', paint);
-  v.addEventListener('loadedmetadata', () => dot?.style.setProperty('--fill', `${v.duration}s`));
-  // only a clip with sound ends (the silent one loops): back to the silent loop, from the top
-  v.addEventListener('ended', () => { hush(); v.currentTime = 0; if (auto && !blocked && showing()) play(); paint(); });
-  btn.addEventListener('click', tap);
-  v.addEventListener('click', tap);
-  sync();
-  return sync;
 }
 
 // ---------- wire ----------
@@ -1647,20 +1351,9 @@ function route({ fresh = false } = {}) {
 }
 
 function bind(key) {
-  if (key === 'rankings') mountView(RankingsPage, rankingsProps());
+  if (key === 'rankings' || key === 'live') talk.week = talkWeek();
+  if (key === 'rankings') { mountView(RankingsPage, rankingsProps()); maybeMessage(); }
   if (key === 'live') mountView(LivePage, liveProps());
-  if (key === 'live') bindCarousel();
-  if (key === 'live' || key === 'rankings') mountTalk();
-  if (key === 'rankings') {
-    if (!DATA.liveMode) bindCarousel();
-    maybeMessage();
-    const again = $('[data-message]');
-    if (again) {
-      messageReady?.then((ok) => (again.hidden = !ok));
-      if (!messageReady) fetch(MESSAGE_VIDEO.src, { method: 'HEAD' }).then((r) => (again.hidden = !r.ok)).catch(() => {});
-      again.addEventListener('click', () => maybeMessage(true));
-    }
-  }
   if (key === 'matchups') mountView(GamesPage, { calm: calm(), lite: lite() });
   if (key === 'trades') mountView(TradesPage, { state: tradeState, onState: (x) => Object.assign(tradeState, x), onTeam: setMyTeam });
   if (key === 'wire') mountView(WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x) });
@@ -1760,224 +1453,29 @@ function startLoader() {
 }
 
 // ---------- the league desk: one discussion thread a week, beside the headlines ----------
-// Anyone can read; managers post once they've opened their personal link from Dan (api/talk.js). The panel stays put
-// while the headlines rotate: a comment can carry the headline it's about (taken from the slide on screen when its
-// author starts typing), shown as a chip that turns the carousel back to that slide. Authors can edit for a minute;
-// only Dan deletes. It refreshes every 25 seconds while the tab is visible. The demo and the preview bundle skip it.
-const TALK = { data: null, ref: null, refTouched: false, editing: null, flash: '', error: '', join: null, invites: null, links: {}, view: null };
-let carouselNow = null, carouselStories = [];
+// The desk itself is React (src/hero/Talk.jsx, its state in src/hero/talk.js). The demo and the preview bundle skip it.
+const deskShown = () => !(RAW.isDemo || window.__DEMO__);
 // the week being played, from the snapshot as Sleeper has it: it turns over Tuesday morning with the new headlines,
 // not Monday night when the final call counts the week early (asFinal moves DATA's last scored week)
 const talkWeek = () => (RAW.league.settings?.last_scored_leg ?? DATA.meta.lastScored) + 1;
-// the thread on screen: this week's, or an earlier one picked to read back through
-const viewWeek = () => TALK.view ?? talkWeek();
-const talkSlot = () => (RAW.isDemo || window.__DEMO__ ? '' : '<aside class="talk glass" id="talk" aria-label="League desk" hidden></aside>');
-// a headline's thread key: the week and its story type (a second story of the same type gets a number)
-const storyKeys = (stories) => { const seen = {}; return stories.map((st) => { const n = (seen[st.type] = (seen[st.type] || 0) + 1); return `w${talkWeek()}:${st.type}${n > 1 ? `-${n}` : ''}`; }); };
-const talkNow = () => Date.now() + (TALK.data?.skew || 0);
-
-async function talkCall(body) {
-  const r = await fetch(body ? '/api/talk' : `/api/talk?week=${viewWeek()}`, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : undefined);
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error || `Something went wrong (${r.status})`);
-  return j;
-}
-const keepTalk = (d) => { if (d && 'comments' in d) TALK.data = { ...d, skew: d.now ? d.now - Date.now() : 0 }; };
-
-async function loadTalk() {
-  if (RAW.isDemo || window.__DEMO__) return;
-  try { keepTalk(await talkCall()); } catch { /* keep what's on screen */ }
-  paintTalk();
-}
 
 // a personal link (#join=<token>) opened on this device: trade it for a session, and make their team "yours"
-async function claimTalk() {
-  const token = TALK.join;
-  TALK.join = null;
+async function claimTalk(token) {
   try {
     const r = await talkCall({ action: 'claim', token });
     const t = DATA.teams.find((x) => x.ownerId === r.me);
-    TALK.flash = `You're in, ${DESK_PEOPLE[r.me]?.first || 'friend'}. Your comments post as ${t ? t.name : 'you'}.`;
+    setTalk({ flash: `You're in, ${DESK_PEOPLE[r.me]?.first || 'friend'}. Your comments post as ${t ? t.name : 'you'}.` });
     if (t && !myTeam) { myTeam = t.rid; store.set('ph-my-team', String(t.rid)); $('#my-team').value = String(t.rid); paintMe(); }
   } catch (e) {
-    TALK.flash = e.message;
+    setTalk({ flash: e.message });
   }
   await loadTalk();
-}
-
-function mountTalk() {
-  const el = $('#talk');
-  if (!el) return;
-  el.addEventListener('click', onTalkClick);
-  el.addEventListener('input', onTalkInput);
-  el.addEventListener('submit', onTalkSubmit);
-  el.addEventListener('change', (e) => {
-    if (!e.target.matches('[data-week]')) return;
-    const w = Number(e.target.value);
-    TALK.view = w === talkWeek() ? null : w;
-    TALK.editing = null;
-    loadTalk();
-  });
-  if (TALK.data) paintTalk(true); else loadTalk();
-}
-
-const ago = (ts) => {
-  const s = (talkNow() - ts) / 1000;
-  if (s < 60) return 'just now';
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-  return new Date(ts).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'short' });
-};
-const refChip = (ref) => {
-  const i = storyKeys(carouselStories).indexOf(ref.key);
-  return `<button type="button" class="tc-ref" data-goto="${i}"${i < 0 ? ' disabled' : ''} data-tip="${esc(i < 0 ? `${ref.title} (no longer in the headlines)` : `Show this headline: ${ref.title}`)}">On: ${esc(short(ref.title, 56))}</button>`;
-};
-function talkItem(c) {
-  const D = TALK.data, t = DATA.teams.find((x) => x.ownerId === c.uid), m = DESK_PEOPLE[c.uid];
-  const mine = D.me === c.uid, left = D.editMs - (talkNow() - c.ts);
-  const editing = TALK.editing === c.id;
-  const acts = [
-    mine && left > 0 && !editing ? `<button type="button" class="tc-act" data-edit="${esc(c.id)}" aria-label="Edit, ${Math.ceil(left / 1000)} seconds left">Edit<small>${Math.ceil(left / 1000)}s</small></button>` : '',
-    D.admin ? `<button type="button" class="tc-act bad" data-del="${esc(c.id)}">Delete</button>` : '',
-  ].join('');
-  return `<li class="tc${mine ? ' mine' : ''}" data-id="${esc(c.id)}">
-      ${t ? headshot(t, 'tc-face') : m?.icon ? `<img class="tc-face icon" src="${m.icon}" alt="" decoding="async">` : `<span class="tc-face ph">${esc((m?.first || '?')[0])}</span>`}
-      <div class="tc-body">
-        <p class="tc-who"><b>${esc(m?.first || 'Manager')}</b>${t ? `<span>${esc(t.name)}</span>` : GUESTS[c.uid] ? '<span>Guest</span>' : ''}<time>${ago(c.ts)}${c.edited ? ', edited' : ''}</time></p>
-        ${c.ref ? refChip(c.ref) : ''}
-        ${editing
-          ? `<form class="tc-edit" data-id="${esc(c.id)}"><textarea rows="3" maxlength="${D.maxLen}" aria-label="Edit your comment">${esc(c.text)}</textarea><div class="talk-row"><button type="button" class="talk-btn" data-cancel>Cancel</button><button type="submit" class="talk-btn primary">Save</button></div></form>`
-          : `<p class="tc-text">${esc(c.text)}</p>`}
-        ${acts ? `<div class="tc-acts">${acts}</div>` : ''}
-      </div>
-    </li>`;
-}
-function talkList() {
-  const cs = TALK.data?.comments || [];
-  return cs.length ? cs.map(talkItem).join('') : '<li class="tc-empty">Nothing yet. Start the argument.</li>';
-}
-const aboutChip = () => (TALK.ref
-  ? `<span class="talk-about-on"><span>About: <b>${esc(short(TALK.ref.title, 64))}</b></span><button type="button" class="tc-x" data-unref aria-label="Not about this headline"><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="m2 2 8 8m0-8-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></span>`
-  : '<button type="button" class="tc-tag" data-tag><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Tag the headline on screen</button>');
-function talkForm() {
-  const D = TALK.data;
-  if (TALK.view) return `<p class="talk-note">Week ${TALK.view}'s thread is closed. <button type="button" class="tc-link" data-now>Back to week ${talkWeek()}</button></p>`;
-  if (!D.me) return '<p class="talk-note">Reading only. Ask Dan for your personal link to join in.</p>';
-  return `<form class="talk-form">
-      <div class="talk-about">${aboutChip()}</div>
-      <textarea rows="3" maxlength="${D.maxLen}" placeholder="Say something to the league" aria-label="Your comment"></textarea>
-      <div class="talk-row"><small class="talk-count">0/${D.maxLen}</small><span class="talk-err" role="status"></span><button type="submit" class="talk-btn primary">Post</button></div>
-    </form>`;
-}
-function invitePanel() {
-  if (!TALK.invites) return '';
-  const people = [...Object.entries(MEMBERS).sort((a, b) => a[1].first.localeCompare(b[1].first)), ...Object.entries(GUESTS)];
-  return `<div class="talk-invites">
-      <p class="talk-note">Each link signs one manager in, on as many of their devices as they like. A new link replaces the old one and signs those devices out.</p>
-      <ul>${people.map(([uid, m]) => {
-        const t = DATA.teams.find((x) => x.ownerId === uid), url = TALK.links[uid];
-        return `<li><span><b>${esc(m.first)}</b>${t ? `<small>${esc(t.name)}</small>` : GUESTS[uid] ? '<small>Guest</small>' : ''}</span>
-          ${url ? `<input readonly value="${esc(url)}" aria-label="${esc(m.first)}'s link"><button type="button" class="talk-btn" data-copy="${esc(uid)}">Copy</button>` : `<button type="button" class="talk-btn" data-invite="${esc(uid)}">New link</button>`}</li>`;
-      }).join('')}</ul>
-    </div>`;
-}
-
-// full paint the first time (or after sign-in changes); after that only the list, so a draft is never wiped
-function paintTalk(full = false) {
-  const el = $('#talk'), D = TALK.data;
-  if (!el) return;
-  if (!D?.enabled) { el.hidden = true; el.closest('.hero')?.classList.remove('with-talk'); return; }
-  el.hidden = false;
-  el.closest('.hero')?.classList.add('with-talk');
-  const n = D.comments.length;
-  const signed = D.me ? `<span class="talk-me">Posting as <b>${esc(DESK_PEOPLE[D.me]?.first || '')}</b><button type="button" class="tc-pill" data-signout>Sign out</button></span>` : '';
-  // earlier weeks' threads stay readable: pick one to read back through
-  const cur = talkWeek(), weeks = Array.from({ length: cur }, (_, i) => cur - i);
-  const picker = cur > 1 ? `<label class="talk-wk"><span>Week</span><select data-week aria-label="Which week's thread">${weeks.map((w) => `<option value="${w}"${w === D.week ? ' selected' : ''}>${w}${w === cur ? ', this week' : ''}</option>`).join('')}</select></label>` : `<span class="talk-n">Week ${D.week}</span>`;
-  const head = `<div class="talk-head">
-      <div class="talk-title"><h2>League desk</h2>${D.admin ? `<button type="button" class="talk-btn" data-invites aria-expanded="${!!TALK.invites}">Invite links</button>` : ''}</div>
-      <div class="talk-bar"><span class="talk-meta">${picker}<span class="talk-n">${n} comment${n === 1 ? '' : 's'}</span></span>${signed}</div>
-    </div>`;
-  const flash = TALK.flash ? `<p class="talk-flash" role="status">${esc(TALK.flash)}</p>` : '';
-  const signedIn = el.dataset.me ?? '';
-  if (full || !el.querySelector('.talk-list') || signedIn !== String(D.me || '') || el.dataset.inv !== String(!!TALK.invites) || el.dataset.wk !== String(D.week)) {
-    el.dataset.me = String(D.me || ''); el.dataset.inv = String(!!TALK.invites); el.dataset.wk = String(D.week);
-    el.innerHTML = `<div class="talk-in">${head}${flash}${invitePanel()}<ol class="talk-list">${talkList()}</ol>${talkForm()}</div>`;
-  } else {
-    el.querySelector('.talk-head').outerHTML = head;
-    if (TALK.editing == null) el.querySelector('.talk-list').innerHTML = talkList();
-  }
-  const list = el.querySelector('.talk-list');
-  if (list && !TALK.editing && list.dataset.n !== String(n)) { list.scrollTop = list.scrollHeight; list.dataset.n = String(n); }
-  // the edit buttons come off when their minute is up
-  clearTimeout(TALK.tick);
-  const next = D.comments.filter((c) => c.uid === D.me).map((c) => D.editMs - (talkNow() - c.ts)).filter((x) => x > 0);
-  if (next.length) TALK.tick = setTimeout(() => paintTalk(), Math.min(...next, 10000) + 50);
-}
-
-const currentHeadline = () => {
-  const i = carouselNow?.at() ?? 0, st = carouselStories[i];
-  return st ? { key: storyKeys(carouselStories)[i], title: st.headline } : null;
-};
-function onTalkInput(e) {
-  const f = e.target.closest('.talk-form');
-  if (!f || e.target.tagName !== 'TEXTAREA') return;
-  f.querySelector('.talk-count').textContent = `${e.target.value.length}/${TALK.data.maxLen}`;
-  // the first keystroke tags the headline on screen, unless the author already chose
-  if (!TALK.refTouched && e.target.value.trim()) { TALK.refTouched = true; TALK.ref = currentHeadline(); f.querySelector('.talk-about').innerHTML = aboutChip(); }
-}
-async function onTalkSubmit(e) {
-  e.preventDefault();
-  const f = e.target, ta = f.querySelector('textarea'), btn = f.querySelector('[type=submit]'), err = f.querySelector('.talk-err');
-  const text = ta.value.trim();
-  if (!text) return;
-  btn.disabled = true;
-  try {
-    if (f.classList.contains('tc-edit')) { keepTalk(await talkCall({ action: 'edit', week: viewWeek(), id: f.dataset.id, text })); TALK.editing = null; }
-    else {
-      keepTalk(await talkCall({ action: 'post', week: talkWeek(), text, ref: TALK.ref }));
-      ta.value = ''; TALK.ref = null; TALK.refTouched = false;
-      f.querySelector('.talk-about').innerHTML = aboutChip();
-      f.querySelector('.talk-count').textContent = `0/${TALK.data.maxLen}`;
-    }
-    TALK.flash = '';
-    paintTalk();
-  } catch (x) {
-    if (err) err.textContent = x.message; else TALK.flash = x.message;
-  } finally {
-    btn.disabled = false;
-  }
-}
-async function onTalkClick(e) {
-  const b = e.target.closest('button');
-  if (!b) return;
-  const d = b.dataset;
-  if (d.goto != null && !b.disabled) { carouselNow?.go(Number(d.goto)); $('.lead-car')?.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'nearest' }); }
-  else if ('unref' in d) { TALK.ref = null; TALK.refTouched = true; b.closest('.talk-about').innerHTML = aboutChip(); }
-  else if ('tag' in d) { TALK.ref = currentHeadline(); TALK.refTouched = true; b.closest('.talk-about').innerHTML = aboutChip(); }
-  else if (d.edit) { TALK.editing = d.edit; paintTalk(true); $('#talk .tc-edit textarea')?.focus(); }
-  else if ('cancel' in d) { TALK.editing = null; paintTalk(true); }
-  else if ('now' in d) { TALK.view = null; loadTalk(); }
-  else if (d.del) {
-    if (!confirm('Delete this comment for everyone?')) return;
-    try { keepTalk(await talkCall({ action: 'delete', week: viewWeek(), id: d.del })); paintTalk(); } catch (x) { TALK.flash = x.message; paintTalk(true); }
-  } else if ('invites' in d) { TALK.invites = !TALK.invites; paintTalk(true); }
-  else if (d.invite) {
-    if (!confirm(`Make a new link for ${DESK_PEOPLE[d.invite]?.first}? Their old link stops working.`)) return;
-    try { const r = await talkCall({ action: 'invite', uid: d.invite }); TALK.links[d.invite] = `${location.origin}${location.pathname}#join=${r.token}`; paintTalk(true); }
-    catch (x) { TALK.flash = x.message; paintTalk(true); }
-  } else if (d.copy) {
-    try { await navigator.clipboard.writeText(TALK.links[d.copy]); b.textContent = 'Copied'; } catch { b.closest('li').querySelector('input')?.select(); }
-  } else if ('signout' in d) {
-    try { await talkCall({ action: 'signout' }); } catch { /* the cookie goes either way */ }
-    TALK.flash = ''; await loadTalk();
-  }
 }
 
 async function main() {
   // a personal link for the league desk: take the token off the address bar before anything routes or gets shared
   const join = /^#join=([A-Za-z0-9_-]{16,128})$/.exec(location.hash);
-  if (join) { TALK.join = join[1]; history.replaceState(null, '', location.pathname + location.search); }
+  if (join) history.replaceState(null, '', location.pathname + location.search);
   initAvatarFallback();
   initTooltips();
   const loader = startLoader();
@@ -2006,20 +1504,15 @@ async function main() {
     el.hidden = false;
   }
   window.addEventListener('hashchange', () => route({ fresh: true }));
-  // a headline clip stops while the tab is hidden or an overlay locks the page (html.locked), and picks up after
-  document.addEventListener('visibilitychange', () => clipSync?.());
-  new MutationObserver(() => clipSync?.()).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
   loadVotes({ week: DATA.previews[0]?.week, demo: RAW.isDemo });
   loadPoll();
-  if (TALK.join) claimTalk();
-  setInterval(() => { if (document.visibilityState === 'visible' && $('#talk') && TALK.editing == null) loadTalk(); }, 25000);
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && $('#talk') && TALK.editing == null) loadTalk(); });
+  talk.week = talkWeek();
+  if (join && deskShown()) claimTalk(join[1]);
   let lastWidth = innerWidth;
   window.addEventListener('resize', () => {
     if (innerWidth === lastWidth) return; // height-only resizes are the browser toolbar, ignore them
     lastWidth = innerWidth;
     placeInk({ settle: true });
-    carouselFit?.();
   }, { passive: true });
   route();
   // the first route can measure the tabs before the stylesheet or the fonts have applied (fast or cached data)
