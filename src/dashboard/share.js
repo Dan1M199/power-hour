@@ -37,9 +37,23 @@ export async function captureSheet(paper, head) {
   // each shape's computed paint is written onto the copy as plain attributes
   for (const el of stage.querySelectorAll('svg *')) {
     const cs = getComputedStyle(el);
+    if (cs.display === 'none') { el.remove(); continue; } // hidden by CSS, which wouldn't come along (the odds glow)
     for (const k of ['fill', 'stroke', 'stroke-width', 'stroke-opacity', 'fill-opacity', 'opacity', 'stroke-linecap']) {
       const v = cs.getPropertyValue(k);
       if (v) el.setAttribute(k, v);
+    }
+  }
+  // Safari draws box-shadow wrongly inside the picture (offset black wedges by every tile, the dots turned into
+  // arrows), and every inked edge here is a box-shadow ring. On the copy each ring becomes an outline of the same
+  // width and colour, which takes no room, so nothing moves; the hard ledges under them are dropped (flat).
+  for (const el of stage.querySelectorAll('*')) {
+    const shadow = getComputedStyle(el).boxShadow;
+    if (!shadow || shadow === 'none') continue;
+    const ring = ringOf(shadow);
+    el.style.boxShadow = 'none';
+    if (ring) {
+      el.style.outline = `${ring.width}px solid ${ring.color}`;
+      el.style.outlineOffset = `${ring.offset}px`;
     }
   }
   try {
@@ -52,6 +66,24 @@ export async function captureSheet(paper, head) {
   } finally {
     stage.remove();
   }
+}
+
+// The ring in a computed box-shadow: its zero-offset, unblurred shadows with a spread, outermost first; the outline
+// is the outermost one less any ring inside it (a gap ring like the schedule slate's), or sits inside for an inset one.
+export function ringOf(shadow) {
+  const parts = shadow.split(/,(?![^(]*\))/).map((p) => {
+    const color = (p.match(/rgba?\([^)]*\)|#[0-9a-f]{3,8}\b/i) || [])[0];
+    const n = (p.replace(/rgba?\([^)]*\)/gi, '').match(/-?[\d.]+px/g) || []).map(parseFloat);
+    return { color, inset: /\binset\b/.test(p), x: n[0] || 0, y: n[1] || 0, blur: n[2] || 0, spread: n[3] || 0 };
+  }).filter((r) => r.color && !r.x && !r.y && !r.blur && r.spread > 0);
+  if (!parts.length) return null;
+  const inset = parts.filter((r) => r.inset), out = parts.filter((r) => !r.inset).sort((a, b) => a.spread - b.spread);
+  if (out.length) {
+    const outer = out[out.length - 1], inner = out.length > 1 ? out[out.length - 2].spread : 0;
+    return { width: outer.spread - inner, color: outer.color, offset: inner };
+  }
+  const r = inset.sort((a, b) => b.spread - a.spread)[0];
+  return { width: r.spread, color: r.color, offset: -r.spread };
 }
 
 const toBlob = (canvas, type, q) => new Promise((ok, no) => canvas.toBlob((b) => (b ? ok(b) : no(new Error('The picture could not be made'))), type, q));

@@ -2240,10 +2240,13 @@ html.locked { overflow: hidden; }
 .share-stage { position: fixed; left: -20000px; top: 0; z-index: -1; display: grid; gap: 18px; padding: 26px 20px 30px; pointer-events: none;
   background-color: var(--grass); color: var(--ink); }
 .share-stage *, .share-stage *::before, .share-stage *::after { animation: none !important; transition: none !important; }
+/* the rings drawn on pseudo-elements, which share.js can't restyle: outlines on the stage, like everything else there */
+.share-stage .pp-id p:first-child::before { box-shadow: none; outline: 1.5px solid var(--outline); }
+.share-stage .pf-rope::after { box-shadow: none; outline: 1.5px solid var(--p-ink); outline-offset: -1.5px; }
 .share-range { position: relative; z-index: 1; display: block; height: 26px; }
-.share-range::before { content: ''; position: absolute; left: 0; right: 0; top: 9px; height: 8px; border-radius: 99px; box-shadow: var(--p-well);
+.share-range::before { content: ''; position: absolute; left: 0; right: 0; top: 9px; height: 8px; border-radius: 99px;
   background: linear-gradient(90deg, var(--p-ink) 0 calc(var(--v) * 100%), var(--p-wash) 0); }
-.share-range::after { content: ''; position: absolute; top: 1px; left: calc(var(--v) * (100% - 24px)); width: 24px; height: 24px; border-radius: 50%; background: var(--p-white); box-shadow: var(--p-chip); }
+.share-range::after { content: ''; position: absolute; top: 1px; left: calc(var(--v) * (100% - 24px)); width: 24px; height: 24px; border-radius: 50%; background: var(--p-white); outline: 1.5px solid var(--outline); }
 .share-band { display: flex; align-items: center; gap: 14px; padding: 0 8px; }
 .share-band img { width: auto; height: 60px; }
 .share-band span { display: grid; gap: 4px; }
