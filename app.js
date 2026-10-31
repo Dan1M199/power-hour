@@ -11,6 +11,8 @@ import { WirePage } from './src/wire/WirePage.jsx';
 import { TradesPage } from './src/trades/TradesPage.jsx';
 import { GamesPage } from './src/games/GamesPage.jsx';
 import { loadVotes } from './src/games/votes.js';
+import { RankingsPage } from './src/rankings/RankingsPage.jsx';
+import { createStore } from './src/store.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
 import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
 
@@ -309,51 +311,28 @@ const updatedText = () => {
 };
 
 // ---------- views ----------
-function viewRankings() {
+// The power rankings are React (src/rankings), mounted into #app by bind. The hero (headline carousel, page head and
+// league desk) is still built here as HTML and bound by bindCarousel and mountTalk, since the Live page shares it.
+const viewRankings = () => '';
+function rankingsProps() {
   const m = DATA.meta;
   const chips = DATA.rosMeta
     ? Object.entries(DATA.rosMeta.sources).map(([k, s]) => `<span class="chip ${s.ok ? '' : 'off'}" title="${s.ok ? `${s.matched} of ${s.rows} players matched` : esc(s.error)}"><span class="dot"></span>${SOURCE_NAMES[k] || k}</span>`).join('')
     : '<span class="chip off"><span class="dot"></span>ROS rankings unavailable</span>';
-  const notice = DATA.rosError
-    ? `<div class="notice glass"><strong>Results-only mode.</strong> The rest-of-season rankings couldn't be loaded (${esc(DATA.rosError)}), so these ranks use this season's results alone until they come back.</div>`
-    : '';
-  const items = DATA.teams.map(rankRow).join('');
-  // your rank, right under the page head, so a phone doesn't scroll three screens to find you
-  const me = !DATA.liveMode && myTeam != null ? DATA.teams.find((t) => t.rid === myTeam) : null;
-  const strip = me ? `<button type="button" class="you-strip glass" data-jump aria-label="Jump to your team, ${esc(me.name)}, ranked ${me.powerRank}">
-      ${headshot(me, 'strip-face')}
-      <span class="ys-rank"><small>You're</small><b>No. ${me.powerRank}</b></span>
-      <span class="ys-body"><b>${esc(me.name)}</b><span class="ys-tags"><span class="tier ${me.tier.key}">${me.tier.label}</span>${moveTag(me)}</span></span>
-      <span class="ys-odds"><b>${pct(me.playoffPct)}</b><small>playoffs</small></span>${XP}
-    </button>` : '';
   // while a week is being played the headlines move to the Live tab and these ranks hold until the week is final
   const held = !!DATA.liveMode;
   const head = `
-      <section class="view-head">
         <div>
           <h2 class="page-title"><span class="wk">${held ? `On hold during week ${m.lastScored + 1}` : `Week ${m.lastScored + 1}`}</span>Power Rankings</h2>
           <p>Where you sit in the standings, how much you score, who's left on your schedule and how your roster projects, in that order. Tap any team to see why it sits where it does.</p>
         </div>
         <div class="sources">${chips}${updatedText() ? `<span class="chip">${esc(updatedText())}</span>` : ''}${!held && MESSAGE_VIDEO && !window.__DEMO__ ? '<button type="button" class="chip to-again" data-message hidden>Watch the important message again</button>' : ''}</div>
-      </section>`;
-  const hold = held ? `<div class="notice glass hold"><span><strong>Power rankings are on hold.</strong> Week ${m.lastScored + 1} is being played, so these are the ranks going into the week. They update as soon as every game is final. For how this week is going, see the <a href="#live">Live</a> tab.</span></div>` : '';
-  return `
-    ${held ? head : `<div class="hero">${leadStory()}${head}${talkSlot()}</div>`}
-    ${hold}${notice}${strip}
-    <div id="poll-slot">${pollCard()}</div>
-    <ol class="ranks">${items}</ol>
-    ${futuresBoard()}
-    <details class="panel glass method-box">
-      <summary><h2>How the score works</h2>${XP}</summary>
-      <div class="method">
-        <p><b>Standing (${pctW('standing')}%).</b> Your place in the real standings, wins first and points for as the tiebreaker, like Sleeper's table, plus the record itself so a two-game lead counts for more than a tiebreak.</p>
-        <p><b>Scoring (${pctW('scoring')}%).</b> Points per game carries most of it. All-play win rate (your record if you played every team every week) and the last three weeks add a little.</p>
-        <p><b>Schedule left (${pctW('schedule')}%).</b> Priced in wins: each team's expected wins against its actual remaining opponents, minus what it would expect against an average opponent. An easier road scores higher. Opponent strength uses the same projection as the playoff odds (about two-thirds projected lineup, one-third points per game so far).</p>
-        <p><b>Rest-of-season roster (${pctW('roster')}%).</b> Every player gets a consensus value from FantasyPros, DraftSharks and LeagueLogs half-PPR ROS rankings (LeagueLogs counts half, since it tracks the FantasyPros consensus closely). We build each team's best possible starting lineup from DraftSharks' weekly projections, discounted for games a player is expected to miss, then add a little for the bench.</p>
-        <p><b>Scale.</b> Each input is compared to the rest of the league, so 50 is a dead-average team. The bars under each score show the four parts separately.</p>
-        <p><b>Playoff odds.</b> 10,000 simulations of the remaining regular-season schedule, using each team's projected lineup blended with its actual scoring. Ties in the standings go to points for, like Sleeper.</p>
-      </div>
-    </details>`;
+      `;
+  return {
+    held, head, hero: held ? null : `${leadStory()}<section class="view-head">${head}</section>${talkSlot()}`,
+    rosError: DATA.rosError || null, calm: calm(),
+    poll: { on: !!SHAKEUP?.poll && shakeupOn() && !DATA.liveMode, question: SHAKEUP?.poll?.question, store: pollStore, onPick: castPoll },
+  };
 }
 
 // ---------- the important message: Dan's video, taking over the power rankings page ----------
@@ -996,46 +975,26 @@ function clipStory() {
 }
 
 // the fan poll on top of the power rankings: the bottom six of the new ranks, one vote per network, no changes
-let POLL = null; // { enabled, options, counts, total, mine } once /api/poll answers
+const pollStore = createStore(null); // { enabled, options, counts, total, mine, err } once /api/poll answers
 // this device's poll id, kept here and (by the server) in a cookie, so clearing one doesn't make a new voter
 const pollDevice = () => store.get('ph-device') || '';
 const keepDevice = (b) => { if (b?.device) store.set('ph-device', b.device); };
-const pollChoices = () => POLL?.options || DATA.teams.slice(-6).map((t) => t.rid);
-function pollCard() {
-  if (!SHAKEUP?.poll || !shakeupOn() || DATA.liveMode || !POLL?.enabled) return '';
-  const opts = pollChoices().map(team).filter(Boolean), voted = POLL.mine != null, n = POLL.total || 0;
-  const choice = (t) => {
-    const c = POLL.counts?.[t.rid] || 0, share = n ? c / n : 0, mine = POLL.mine === t.rid;
-    return voted
-      ? `<li class="poll-res ${mine ? 'mine' : ''}" data-tip="${esc(`${t.name}: ${c} vote${c === 1 ? '' : 's'}`)}">${avatar(t)}<span class="pn"><b>${esc(t.name)}${mine ? ' <small>Your pick</small>' : ''}</b><span class="poll-bar"><i style="width:${share * 100}%"></i></span></span><b class="pp">${pct(share)}</b></li>`
-      : `<li><button type="button" class="poll-pick" data-poll="${t.rid}">${avatar(t)}<span class="pn"><b>${esc(t.name)}</b><small>No. ${t.powerRank} power, ${record(t)}, ${pct(t.playoffPct)} playoffs</small></span></button></li>`;
-  };
-  return `<section class="panel glass poll" id="poll" aria-label="Fan poll">
-      <h2>${esc(SHAKEUP.poll.question)}</h2>
-      <p class="sub">${voted ? `${n} vote${n === 1 ? '' : 's'} so far. Your vote is locked in.` : 'One vote per device, and no changing it once it\'s in. Choose wisely.'}</p>
-      <ol class="poll-list ${voted ? 'done' : ''}">${opts.map(choice).join('')}</ol>
-      ${POLL.err ? `<p class="poll-err" role="alert">${esc(POLL.err)}</p>` : ''}
-    </section>`;
-}
+const pollChoices = () => pollStore.get()?.options || DATA.teams.slice(-6).map((t) => t.rid);
 async function loadPoll() {
   if (!SHAKEUP?.poll || !shakeupOn()) return;
-  try { POLL = await getJSON(`/api/poll?id=${SHAKEUP.poll.id}&device=${encodeURIComponent(pollDevice())}`); keepDevice(POLL); } catch { POLL = null; }
-  paintPoll();
-}
-function paintPoll() {
-  const el = $('#poll-slot');
-  if (!el) return;
-  el.innerHTML = pollCard();
+  let P = null;
+  try { P = await getJSON(`/api/poll?id=${SHAKEUP.poll.id}&device=${encodeURIComponent(pollDevice())}`); keepDevice(P); } catch { P = null; }
+  pollStore.set(P);
 }
 async function castPoll(rid) {
   if (!confirm(`Lock in ${team(rid).name}? You can't change it.`)) return;
+  const P = pollStore.get();
   try {
     const r = await fetch('/api/poll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: SHAKEUP.poll.id, pick: rid, options: pollChoices(), device: pollDevice() }) });
     const body = await r.json().catch(() => ({}));
     keepDevice(body);
-    POLL = body.enabled ? { ...body, err: r.ok ? '' : body.error } : { ...POLL, err: body.error || `Poll answered ${r.status}` };
-  } catch (e) { POLL = { ...POLL, err: String(e.message || e) }; }
-  paintPoll();
+    pollStore.set(body.enabled ? { ...body, err: r.ok ? '' : body.error } : { ...P, err: body.error || `Poll answered ${r.status}` });
+  } catch (e) { pollStore.set({ ...P, err: String(e.message || e) }); }
 }
 
 // ---------- live week: weekly rankings and projected standings ----------
@@ -1338,20 +1297,6 @@ function openReveal() {
   });
 }
 
-// ---------- championship futures ----------
-function futuresBoard() {
-  if (!DATA.meta.futures) return '';
-  const board = [...DATA.teams].sort((a, b) => b.champPct - a.champPct || b.finalPct - a.finalPct);
-  const tile = (t, i) => `<li class="fut ${t.rid === myTeam ? 'mine' : ''} ${i === 0 ? 'fav' : ''}" data-tip="${esc(`${t.name}: wins the title in ${(t.champPct * 100).toFixed(1)}% of simulations, reaches the final in ${(t.finalPct * 100).toFixed(1)}%, makes the playoffs in ${pct(t.playoffPct)}`)}">
-      ${avatar(t)}<span class="fn"><b>${esc(t.name)}${champTag(t, false)}</b><small>${(t.champPct * 100).toFixed(1)}% title, ${pct(t.finalPct)} final</small></span><span class="odds-tag">${american(t.champPct)}</span>
-    </li>`;
-  return `<section class="panel glass futures">
-      <h2>Championship futures</h2>
-      <p class="sub">Fair odds to win the title, from 10,000 simulations of the rest of the season and the ${DATA.meta.playoffTeams}-team playoff bracket, bye weeks included. No house cut, so they're better than any book would give you.</p>
-      <ol class="fut-list">${board.map(tile).join('')}</ol>
-    </section>`;
-}
-
 // ---------- lead story ----------
 function rankSpark(t, w = 84, h = 30) {
   const v = t.rankHistory, n = DATA.teams.length;
@@ -1607,132 +1552,6 @@ function bindClip(car, slides, dots, current) {
   return sync;
 }
 
-const moveTag = (t) => t.movement > 0 ? `<span class="move up" title="Up ${t.movement} since last week">▲${t.movement}</span>`
-  : t.movement < 0 ? `<span class="move down" title="Down ${-t.movement} since last week">▼${-t.movement}</span>`
-  : '<span class="move flat" title="No change since last week">–</span>';
-function rankRow(t) {
-  const mv = moveTag(t);
-  const mine = t.rid === myTeam;
-  // the four parts of the score, in order of weight: standing, scoring, schedule, roster
-  const sw = `${t.schedWins >= 0 ? '+' : ''}${t.schedWins.toFixed(2)}`;
-  const parts = [
-    ['standing', 'Standing', 'res', `${t.name}: ${ordinal(t.seed)} in the standings at ${record(t)}`],
-    ['scoring', 'Scoring', 'pts', `${t.name}: ${f1(t.pfPerGame)} points per game, ${f1(t.form)} over the last three weeks`],
-    ['schedule', 'Schedule', 'sos', `${t.name}: ${sw} wins from the remaining schedule vs an average one`],
-    ['roster', 'Roster', 'ros', `${t.name}: best rest-of-season lineup projects ${f1(t.rosProj)} a week`],
-  ].filter(([k]) => t.parts?.[k] != null)
-    .map(([k, label, cls, tip]) => `<div class="split-row" data-tip="${esc(tip)}"><span>${label}</span><span class="track"><i class="${cls}" style="width:${t.parts[k]}%"></i></span><span>${Math.round(t.parts[k])}</span></div>`).join('');
-  return `
-  <li class="rank ${mine ? 'mine' : ''}${t.powerRank === 1 && !store.get('ph-opened-rank') ? ' nudge' : ''}" data-rid="${t.rid}">
-    <span class="jersey" aria-hidden="true">${t.powerRank}</span>
-    <div class="rank-card glass ${t.powerRank <= 3 ? 'rim' : ''}">
-      <button class="rank-btn" aria-expanded="false" aria-controls="d-${t.rid}">
-        ${avatar(t)}
-        <div class="team-line">
-          <div class="team-name"><span class="sr-only">Rank ${t.powerRank}:</span><span class="name">${esc(t.name)}</span>${champTag(t)}${mv}${mine ? '<span class="you">You</span>' : ''}</div>
-          <div class="team-meta"><span><b>${record(t)}</b></span><span class="owner" title="${esc(t.owner)} on Sleeper">${esc(firstName(t))}</span><span>${f1(t.pfPerGame)} pts/gm</span><span class="tier ${t.tier.key}">${t.tier.label}</span></div>
-        </div>
-        <div class="meter">
-          <div class="meter-top"><span class="score">${t.score.toFixed(1)}</span><small>power score</small></div>
-          <div class="split">${parts}</div>
-        </div>
-        <div class="odds"><b>${pct(t.playoffPct)}</b><small>playoffs</small></div>
-        <span class="pull" aria-hidden="true"><span class="pull-t">Scouting report</span><span class="pull-n">Tap for the scouting report</span><span class="pull-x">Hide report</span>${XP}</span>
-      </button>
-      <div class="detail" id="d-${t.rid}"><div></div></div>
-    </div>
-  </li>`;
-}
-
-// the manager's trading card at the top of an opened team: photo, a stat line, and any league-wide superlatives they own
-function superlatives(t) {
-  const ts = DATA.teams, mv = (x) => DATA.managerMoves[x.rid] || { moves: 0, tradeNet: 0 };
-  const top = (f, dir = 1) => { const ok = ts.filter((x) => f(x) != null); return ok.length ? ok.reduce((a, b) => (dir * (f(b) - f(a)) > 0 ? b : a)) : null; };
-  const best = (x) => Math.max(0, ...x.weeks.map((w) => w.pts || 0));
-  const out = [];
-  const add = (cond, label, tip, tone = 'good') => { if (cond && out.length < 3) out.push({ label, tip, tone }); };
-  add(isChamp(t), `Defending champion`, `Won the ${CHAMPION?.season} title. Everyone else is chasing that trophy.`, 'champ');
-  add(top(best) === t, 'Season high', `Highest single-week score in the league: ${f1(best(t))}`);
-  add(top((x) => x.pfPerGame) === t, 'Points machine', `Most points per game in the league (${f1(t.pfPerGame)})`);
-  add(top((x) => x.efficiency) === t, 'Lineup sniper', `Best lineup efficiency in the league (${pct(t.efficiency)} of optimal)`);
-  add(top((x) => x.efficiency, -1) === t, 'Bench is loaded', `Worst lineup efficiency in the league (${pct(t.efficiency)} of optimal)`, 'bad');
-  add(top((x) => x.luck) === t && t.luck > 0.5, 'Horseshoe', `Luckiest record in the league: ${signed(t.luck)} wins over all-play expectation`, 'bad');
-  add(top((x) => x.luck, -1) === t && t.luck < -0.5, 'Snakebitten', `Unluckiest record in the league: ${signed(t.luck)} wins against all-play expectation`);
-  add(top((x) => mv(x).moves) === t && mv(t).moves > 0, 'Lives on the wire', `Most completed moves in the league (${mv(t).moves})`, 'neutral');
-  add(DATA.meta.hasRos && top((x) => mv(x).tradeNet) === t && mv(t).tradeNet > 1, 'Trade shark', `Best trade ledger in the league (${signed(mv(t).tradeNet)} ROS value)`);
-  add(DATA.meta.hasRos && top((x) => mv(x).tradeNet, -1) === t && mv(t).tradeNet < -1, 'Got fleeced', `Worst trade ledger in the league (${signed(mv(t).tradeNet)} ROS value)`, 'bad');
-  return out;
-}
-// a team's best single week
-const bestWeek = (t) => t.weeks.reduce((a, w) => (!a || (w.pts || 0) > a.pts ? w : a), null);
-// where a team's number sits in the league: top third reads good, bottom third bad, the middle stays plain
-function leagueTone(t, val) {
-  const all = DATA.teams.map(val).filter((v) => v != null), mine = val(t);
-  if (mine == null || all.length < 3) return { tone: '', place: '' };
-  const k = all.filter((v) => v > mine).length, third = all.length / 3;
-  return { tone: k < third ? 'good' : k >= all.length - third ? 'bad' : '', place: `${ordinal(k + 1)} of ${all.length} in the league` };
-}
-
-function managerCard(t) {
-  const m = member(t);
-  const bestWk = bestWeek(t);
-  const moves = DATA.managerMoves[t.rid]?.moves || 0;
-  const stat = (v, l, tip, val) => {
-    const { tone, place } = val ? leagueTone(t, val) : { tone: '', place: '' };
-    const full = [tip, place].filter(Boolean).join('. ');
-    return `<div${tone ? ` class="${tone}"` : ''}${full ? ` data-tip="${esc(full)}"` : ''}><b>${v}</b><small>${l}</small></div>`;
-  };
-  const sup = superlatives(t);
-  return `<div class="mgr">
-      <span class="mgr-ph">${headshot(t, `mgr-face${t.tier.key === 'stinks' ? ' drained' : ''}`)}${champBadge(t)}</span>
-      <div class="mgr-id"><small>Manager</small><b>${esc(m ? m.first : t.owner)}</b><span>@${esc(t.owner)}</span></div>
-      <div class="mgr-stats">
-        ${stat(record(t), 'record', '', (x) => (x.wins + 0.5 * (x.ties || 0)) / Math.max(1, x.wins + x.losses + (x.ties || 0)))}
-        ${bestWk ? stat(f1(bestWk.pts), `best, week ${bestWk.week}`, '', (x) => bestWeek(x)?.pts) : ''}
-        ${t.efficiency != null ? stat(pct(t.efficiency), 'lineup IQ', `Started ${(t.efficiency * 100).toFixed(1)}% of their best possible lineup`, (x) => x.efficiency) : ''}
-        ${stat(signed(t.luck), 'luck (wins)', `${record(t)} actual vs ${f1(t.expectedWins)} expected wins from all-play`, (x) => x.luck)}
-        ${stat(moves, moves === 1 ? 'move' : 'moves')}
-      </div>
-      ${sup.length ? `<div class="mgr-sup">${sup.map((s) => `<span class="sup ${s.tone}" data-tip="${esc(s.tip)}">${esc(s.label)}</span>`).join('')}</div>` : ''}
-    </div>`;
-}
-
-function rankDetail(t) {
-  const n = DATA.teams.length;
-  const why = t.why.map((w, k) => `<li class="${w.tone}" style="--k:${k}"><b>${esc(w.title)}</b><span>${esc(w.text)}</span></li>`).join('');
-  const axes = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
-  const rad = DATA.meta.hasRos
-    ? radar({ axes, values: axes.map((p) => 1 - (t.posRanks[p] - 1) / (n - 1)), color: DATA.color[t.rid], tips: axes.map((p) => `${p}: ${ordinal(t.posRanks[p])} of ${n} (${groupSaid(t, p)})`) })
-    : '';
-  const lineup = DATA.meta.hasRos
-    ? `<ul class="lineup">${t.rosLineup.filter(Boolean).map((l) => `<li><span class="slot">${l.slot === 'FLEX' ? 'FLX' : l.slot}</span><span class="pl">${posTag(l.id)}${esc(nameOf(l.id))}</span><span class="pt">${f1(l.pts)}</span></li>`).join('')}</ul>`
-    : '';
-  const avg = t.weeks.map((w) => {
-    const all = DATA.weekly.find((x) => x.week === w.week);
-    const vals = all ? Object.values(all.scores) : [];
-    return vals.reduce((a, b) => a + b, 0) / (vals.length || 1);
-  });
-  const seeds = t.seedDist || [];
-  const pt = DATA.meta.playoffTeams;
-  const maxSeed = Math.max(...seeds, 0.01);
-  return `
-    <div class="detail-inner">
-      ${managerCard(t)}
-      <ul class="why">${why}</ul>
-      <div class="detail-side">
-        ${rad ? `<div class="mini"><h4>Position groups vs the league</h4><div class="mini-row">${rad}<div>${lineup}</div></div></div>` : ''}
-        ${t.schedule.length ? `<div class="mini"><h4>Remaining schedule (opponent power rank, colored by win chance)</h4>
-          <div class="sched">${t.schedule.map((g) => { const o = team(g.rid); return `<span class="g" style="--p:${Math.max(0, Math.min(1, (g.pWin - 0.3) / 0.4)).toFixed(3)}" data-tip="${esc(`Week ${g.week} vs ${o.name}: No. ${o.powerRank} power, ${f1(g.proj)} proj pts/wk, ${pct(g.pWin)} win chance`)}"><small>W${g.week}</small><b>${o.powerRank}</b></span>`; }).join('')}</div>
-          <p class="sched-sum">${t.schedWins >= 0 ? '+' : ''}${t.schedWins.toFixed(2)} wins vs an average slate, ${t.ranks.schedWins === DATA.teams.length ? 'the toughest' : `${ordinal(DATA.teams.length + 1 - t.ranks.schedWins)}-toughest`} in the league.</p></div>` : ''}
-        <div class="mini"><h4>Weekly points (green = win, dashed = league average)</h4>${weeklyBars({ weeks: t.weeks, avg, width: 560, height: 150 })}</div>
-        <div class="mini"><h4>Where they finish in 10,000 simulations (seed 1 → ${seeds.length})</h4>
-          <div class="seeds" style="--n:${seeds.length}">${seeds.map((p, i) => `<i class="${i < pt ? 'in' : ''}" style="height:${(p / maxSeed) * 100}%" data-tip="Seed ${i + 1}: ${(p * 100).toFixed(1)}%"></i>`).join('')}</div>
-          <div class="seed-axis" style="--n:${seeds.length}">${seeds.map((_, i) => `<span>${i + 1}</span>`).join('')}</div>
-        </div>
-      </div>
-    </div>`;
-}
-
 // ---------- wire ----------
 // The Wire is React (src/wire/WirePage.jsx), mounted into #app by bind; its filters live in wireState.
 const viewWire = () => '';
@@ -1759,7 +1578,7 @@ const dashTeam = () => (team(labState.team) ? labState.team : myTeam && team(myT
 // formatting and names for the React pages, so they read exactly like the rest of the site
 const reactHelpers = () => ({
   f1, pct, ordinal, short, record, nfl, groupSaid, pctW, nameOf, posOf, faceSrc, first: firstName, teams: DATA.teams,
-  american, half, isChamp, champSeason: CHAMPION?.season, bull: bullInfo, moneyWeek: MONEY_WEEK && { target: MONEY_WEEK.target, prize: money(MONEY_WEEK.prize) },
+  american, half, signed, isChamp, champSeason: CHAMPION?.season, bull: bullInfo, moneyWeek: MONEY_WEEK && { target: MONEY_WEEK.target, prize: money(MONEY_WEEK.prize) },
   shortName: (id) => shortName(DATA.helpers.player(id) || { name: nameOf(id) }),
 });
 const viewLab = () => '';
@@ -1926,6 +1745,7 @@ function route({ fresh = false } = {}) {
 }
 
 function bind(key) {
+  if (key === 'rankings') mountView(RankingsPage, rankingsProps());
   if (key === 'live') bindCarousel();
   if (key === 'live' || key === 'rankings') mountTalk();
   document.querySelectorAll('[data-reveal]').forEach((b) => b.addEventListener('click', () => passThenReveal(b)));
@@ -1938,43 +1758,6 @@ function bind(key) {
       if (!messageReady) fetch(MESSAGE_VIDEO.src, { method: 'HEAD' }).then((r) => (again.hidden = !r.ok)).catch(() => {});
       again.addEventListener('click', () => maybeMessage(true));
     }
-    $('#poll-slot')?.addEventListener('click', (e) => { const b = e.target.closest('[data-poll]'); if (b) castPoll(Number(b.dataset.poll)); });
-    $('[data-jump]')?.addEventListener('click', () => {
-      const li = $('.rank.mine');
-      if (!li) return;
-      li.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'start' });
-      if (!li.classList.contains('open')) li.querySelector('.rank-btn').click();
-    });
-    $('.ranks')?.addEventListener('click', (e) => {
-      const c = e.target.closest('.detail-close');
-      if (!c) return;
-      const li = c.closest('.rank'), b = li.querySelector('.rank-btn');
-      b.click();
-      if (li.getBoundingClientRect().top < 0) li.scrollIntoView({ block: 'start' });
-      b.focus({ preventScroll: true });
-    });
-    document.querySelectorAll('.rank-btn').forEach((b) =>
-      b.addEventListener('click', () => {
-        const li = b.closest('.rank');
-        const open = !li.classList.contains('open');
-        const holder = li.querySelector('.detail > div');
-        if (open && !holder.innerHTML) holder.innerHTML = `${rankDetail(team(Number(li.dataset.rid)))}<button type="button" class="odds-more detail-close"><span>Close</span>${XP}</button>`;
-        // The jersey number is centred on the row. Pin it at its current pixel spot while the row is open so it
-        // neither jumps nor drifts as the row grows; release the pin once the row has finished closing.
-        const jersey = li.querySelector('.jersey');
-        clearTimeout(li._unpin);
-        if (open) {
-          jersey.style.top = `${jersey.getBoundingClientRect().top - li.getBoundingClientRect().top}px`;
-          jersey.style.transform = 'none';
-        } else {
-          li._unpin = setTimeout(() => { if (!li.classList.contains('open')) jersey.style.top = jersey.style.transform = ''; }, 450);
-        }
-        li.classList.toggle('open', open);
-        b.setAttribute('aria-expanded', open);
-        // the first open teaches it: the #1 row's amber pull goes quiet for good on this device
-        if (open && !store.get('ph-opened-rank')) { store.set('ph-opened-rank', '1'); document.querySelectorAll('.rank.nudge').forEach((r) => r.classList.remove('nudge')); }
-      })
-    );
   }
   if (key === 'matchups') mountView(GamesPage, { calm: calm(), lite: lite() });
   if (key === 'trades') mountView(TradesPage, { state: tradeState, onState: (x) => Object.assign(tradeState, x), onTeam: setMyTeam });
