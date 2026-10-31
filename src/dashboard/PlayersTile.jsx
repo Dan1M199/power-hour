@@ -11,12 +11,27 @@ const POS_WORD = { QB: 'Quarterback', RB: 'Running back', WR: 'Receiver', TE: 'T
 const SWAP_MS = 600, EVERY_MS = 6000;
 const initials = (name) => name.replace(/[^A-Za-z ]/g, '').split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('');
 
-// a cover: ultramarine with a peach sun, or paper with a black disc, by the player's place in the list
+// a cover: a sleeve with the record half out of it (clay, the record to the right) or the record on lilac with a
+// violet square, by the player's place in the list. The record's label is his Sleeper headshot (sleepercdn allows
+// cross-origin use, so it comes out in a shared picture too); it spins while the player plays (.playing on the tile)
 function Cover({ p, i, coverRef }) {
   const mark = `${p.pos}—${String(p.prk ?? '–').padStart(2, '0')}`;
   return i % 2 === 0
-    ? <div className="art a" ref={coverRef}><span className="disc" /><span className="rule" /><span className="mark">{mark}</span><span className="init">{initials(p.name)}</span></div>
-    : <div className="art b" ref={coverRef}><span className="disc" /><span className="sq" /><span className="mark">{mark}</span><span className="init">{initials(p.name)}</span></div>;
+    ? <div className="art a" ref={coverRef}><Record p={p} /><span className="rule" /><span className="mark">{mark}</span></div>
+    : <div className="art b" ref={coverRef}><Record p={p} /><span className="sq" /><span className="mark">{mark}</span></div>;
+}
+
+// the record: grooves and the headshot as its label (his initials if the picture won't load); no spindle hole, it
+// would land on his face
+function Record({ p }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <span className="record">
+      <span className="label">{failed
+        ? <b>{initials(p.name)}</b>
+        : <img src={`https://sleepercdn.com/content/nfl/players/thumb/${p.id}.jpg`} alt="" crossOrigin="anonymous" decoding="async" onError={() => setFailed(true)} />}</span>
+    </span>
+  );
 }
 
 // this week, for the bar: his final score if he's played, else his projection, against his ceiling
@@ -102,7 +117,7 @@ function Players({ stars, h, calm }) {
   const p = stars[shown], w = p.week, value = w.played ? w.now : w.pre;
   const click = (d) => { step(d); setNudge((n) => n + 1); };
   return (
-    <Tile index={1} className="pp-player" wide tileRef={tile}>
+    <Tile index={1} className={`pp-player${playing ? ' playing' : ''}`} wide tileRef={tile}>
       <div className="pp-cover" aria-hidden="true">
         <div className="pp-cover-in">
           {layers.map((l) => <Cover key={l.id} p={stars[l.i]} i={l.i} coverRef={(el) => { if (el) covers.current.set(l.id, el); else covers.current.delete(l.id); }} />)}

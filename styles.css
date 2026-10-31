@@ -1754,6 +1754,10 @@ html.locked { overflow: hidden; }
   --p-bg: #E4DAE6; --p-tile: #FBF6EF; --p-ink: #2A2230; --p-muted: #6B5B66; --p-white: #FFFCF7;
   --p-accent: #B5573D; --p-accent-ink: #A04A32; --p-hot: #6A4F9C; --p-hot-ink: #6A4F9C; --p-hot-ledge: #45336A;
   --p-sun: #E9A66A; --p-lilac: #D8CCE3;
+  /* how hard a game is: teal easy, warm grey a toss-up, clay hard; a solid, a tint and the words on the tint */
+  --p-easy: #4F8C80; --p-easy-bg: #D5E8E2; --p-easy-ink: #2B5A50;
+  --p-toss: #A4978A; --p-toss-bg: #ECE4D9; --p-toss-ink: #5E5148;
+  --p-hard: #B5573D; --p-hard-bg: #F4D9CF; --p-hard-ink: #8A3A24;
   --p-line: #E6DBD0; --p-wash: #F2EAE0; --p-track: #E8DDD1;
   --p-hair: #E8DDD1; --p-marker: #E3D7CA; --p-dotted: rgba(42, 34, 48, 0.3);
   --p-sans: 'Geist', system-ui, sans-serif; --p-mono: 'Geist Mono', ui-monospace, monospace;
@@ -1774,7 +1778,7 @@ html.locked { overflow: hidden; }
 }
 .paper :is(button, select) { font: inherit; }
 .pp-head, .pp-grid { width: min(100%, 928px); margin-inline: auto; --outline: var(--p-ink); --ledge: var(--p-ledge); }
-.pp-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px 18px; margin-bottom: 26px; }
+.pp-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 12px 14px; margin-bottom: 26px; }
 .pp-face-img { display: block; width: 60px; height: 60px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2.5px var(--outline), 0 4px 0 2.5px var(--ledge); }
 .pp-face .ph { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%; background: var(--p-tile); box-shadow: 0 0 0 2.5px var(--outline), 0 4px 0 2.5px var(--ledge); font: 400 20px var(--p-sans); }
 .pp-id p { margin: 0; font: var(--p-label); color: var(--p-muted); display: flex; align-items: center; gap: 8px; }
@@ -1818,15 +1822,25 @@ html.locked { overflow: hidden; }
 .pp-cover .art.spare { opacity: 0; }
 /* cover a: clay with an apricot sun and a white rule; cover b: lilac with an aubergine disc and a violet square */
 .pp-cover .art.a { background-color: var(--p-accent); }
-.pp-cover .a .disc { position: absolute; right: -56px; top: -40px; width: 190px; height: 190px; border-radius: 50%; background: var(--p-sun); box-shadow: 0 0 0 2px var(--outline); }
 .pp-cover .a .rule { position: absolute; left: 22px; bottom: 30px; width: 120px; height: 2px; background: var(--p-white); opacity: 0.85; }
 .pp-cover .mark { position: absolute; left: 22px; bottom: 42px; font: 400 10px var(--p-mono); letter-spacing: 1px; color: var(--p-white); }
-.pp-cover .a .init { position: absolute; left: 20px; top: 18px; font: 300 64px/1 var(--p-sans); letter-spacing: -0.04em; color: var(--p-white); }
 .pp-cover .art.b { background-color: var(--p-lilac); }
-.pp-cover .b .disc { position: absolute; left: 24px; top: 30px; width: 150px; height: 150px; border-radius: 50%; background: var(--p-ink); }
-.pp-cover .b .sq { position: absolute; right: 30px; bottom: 30px; width: 38px; height: 38px; border-radius: 6px; background: var(--p-hot); box-shadow: 0 0 0 2px var(--outline); }
+.pp-cover .b .sq { position: absolute; right: 26px; bottom: 26px; width: 38px; height: 38px; border-radius: 6px; background: var(--p-hot); box-shadow: 0 0 0 2px var(--outline); }
 .pp-cover .b .mark { color: var(--p-ink); bottom: 20px; }
-.pp-cover .b .init { position: absolute; left: 24px; top: 30px; width: 150px; height: 150px; display: grid; place-items: center; font: 300 56px/1 var(--p-sans); letter-spacing: -0.04em; color: var(--p-white); }
+/* the record: flat grooves and the headshot for a label; half out of the sleeve on cover a */
+.pp-cover .record { position: absolute; width: 196px; height: 196px; border-radius: 50%; box-shadow: 0 0 0 2px var(--outline);
+  background: repeating-radial-gradient(circle, #241C2A 0 2px, #2F2636 2px 4px); }
+.pp-cover .a .record { right: -42px; top: 12px; }
+.pp-cover .b .record { left: 16px; top: 14px; }
+.pp-cover .record .label { position: absolute; inset: 40px; display: grid; place-items: center; overflow: hidden; border-radius: 50%; background: #FFFFFF; }
+.pp-cover .a .record .label { box-shadow: 0 0 0 4px var(--p-sun); }
+.pp-cover .b .record .label { box-shadow: 0 0 0 4px var(--p-hot); }
+.pp-cover .record .label img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; transform: scale(1.3); transform-origin: 50% 30%; }
+.pp-cover .record .label b { font: 300 40px/1 var(--p-sans); letter-spacing: -0.04em; color: #2A2230; }
+/* it turns while the player plays, and stops on pause (reduced motion and the shared picture stop it too) */
+.pp-player .record { animation: pp-spin 7s linear infinite; animation-play-state: paused; }
+.pp-player.playing .record { animation-play-state: running; }
+@keyframes pp-spin { to { transform: rotate(1turn); } }
 .pp-eq { position: absolute; left: 426px; top: 24px; width: 30px; height: 14px; }
 .pp-eq i { position: absolute; left: calc(var(--i) * 6px); bottom: 0; width: 3px; height: 2px; border-radius: 2px; background: var(--p-accent-ink); }
 .pp-count { position: absolute; right: 26px; top: 24px; font: 400 11.5px var(--p-mono); color: var(--p-muted); }
@@ -1894,13 +1908,23 @@ html.locked { overflow: hidden; }
 .pp-ev:last-child { margin-bottom: 40px; }
 @media (hover: hover) { .pp-ev:hover { background-color: var(--p-wash); } }
 .pp-ev .time { flex: none; width: 46px; font: 500 12px var(--p-mono); color: var(--p-muted); }
-.pp-ev .marker { flex: none; width: 3px; height: 30px; border-radius: 2px; background: var(--p-marker); }
-.pp-ev[aria-selected='true'] .marker { background: var(--p-hot); box-shadow: 0 0 0 1.5px var(--outline); }
+.pp-ev .marker { flex: none; width: 4px; height: 30px; border-radius: 2px; background: var(--lv, var(--p-marker)); }
+.pp-ev[aria-selected='true'] { background-color: var(--p-wash); }
+.pp-ev[aria-selected='true'] .marker { width: 6px; box-shadow: 0 0 0 1.5px var(--outline); }
 .pp-ev .ev-text { flex: 1; min-width: 0; }
 .pp-ev .ev-title { display: block; font-size: 15.5px; letter-spacing: -0.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pp-ev .ev-detail { display: block; margin-top: 2px; font-size: 12px; color: var(--p-muted); }
-.pp-ev .chip { display: none; flex: none; padding: 5px 9px; border-radius: 99px; background: var(--p-hot); color: var(--p-white); box-shadow: var(--p-chip); font: 500 11.5px var(--p-mono); opacity: var(--chip, 1); }
-.pp-ev[aria-selected='true'] .chip { display: block; }
+.pp-ev .chip { flex: none; padding: 5px 9px; border-radius: 99px; background: var(--lv-bg); color: var(--lv-ink); font: 500 11.5px var(--p-mono); opacity: var(--chip, 1); }
+.pp-ev[aria-selected='true'] .chip { background: var(--lv-ink); color: var(--lv-bg); box-shadow: var(--p-chip); }
+/* how hard each game is, from its win odds: teal is easy, a warm grey a toss-up, clay hard (hue and lightness both
+   change, and each carries its word) */
+:is(.pp-ev, .pp-slate i, .pp-lvl).easy { --lv: var(--p-easy); --lv-bg: var(--p-easy-bg); --lv-ink: var(--p-easy-ink); }
+:is(.pp-ev, .pp-slate i, .pp-lvl).toss { --lv: var(--p-toss); --lv-bg: var(--p-toss-bg); --lv-ink: var(--p-toss-ink); }
+:is(.pp-ev, .pp-slate i, .pp-lvl).hard { --lv: var(--p-hard); --lv-bg: var(--p-hard-bg); --lv-ink: var(--p-hard-ink); }
+.pp-slate { position: absolute; left: 116px; top: 24px; display: flex; gap: 4px; }
+.pp-slate i { width: 11px; height: 16px; border-radius: 4px; background: var(--lv); }
+.pp-slate i.on { box-shadow: 0 0 0 1.5px var(--p-tile), 0 0 0 3px var(--p-ink); }
+.pp-lvl { display: inline-block; margin-right: 6px; padding: 2px 8px; border-radius: 99px; vertical-align: 2px; font: 500 11.5px var(--p-mono); background: var(--lv-bg); color: var(--lv-ink); }
 
 /* 7. luck: the real record; the switch turns the tile dark and shows the all-play record (words flip halfway) */
 .pp-luck .face { position: absolute; inset: 0; color: var(--p-ink); }
@@ -1920,6 +1944,12 @@ html.locked { overflow: hidden; }
 .pp-luck.on :is(.pp-label, .caption, .toggle-word) { color: var(--p-dark-muted); }
 .pp-luck.on .moon { background: rgba(251, 246, 239, 0.1); box-shadow: inset 0 0 0 1.5px rgba(251, 246, 239, 0.2); }
 .pp-luck.on .toggle { background-color: var(--p-sun); }
+
+/* Share: a pill at the end of the sheet's header (the preview and the stage are at the end of this section) */
+.pp-share { display: inline-flex; align-items: center; gap: 8px; align-self: end; padding: 10px 18px; border: 0; border-radius: 99px; cursor: pointer;
+  background-color: var(--p-ink); color: var(--p-white); box-shadow: 0 3px 0 var(--p-ledge); font: 400 15px var(--p-sans); transition: transform 0.15s, box-shadow 0.15s; }
+.pp-share:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--p-ledge); }
+:root[data-theme='dark'] .pp-share { color: var(--p-bg); }
 
 /* 8. face off: a full-width tile, laid out in flow (not pixel-placed) since it spans 928, 612 or the phone's width.
    Front: the big odds and the ghost record on the left, the tug of war and the slider on the right. Back: the heist.
@@ -2029,7 +2059,8 @@ html.locked { overflow: hidden; }
 }
 /* one column: tiles take the full width; key players and the schedule stack their halves */
 @container (max-width: 611.98px) {
-  .pp-head { grid-template-columns: auto minmax(0, 1fr); }
+  .pp-head { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .pp-share { grid-column: 3; grid-row: 1; align-self: start; padding: 9px 14px; }
   .pp-id h2 { font-size: 30px; }
   .pp-pick { grid-column: 1 / -1; }
   .pp-pick select { width: 100%; }
@@ -2190,6 +2221,9 @@ html.locked { overflow: hidden; }
   --p-bg: #1E1724; --p-tile: #2B2232; --p-ink: #F3ECF2; --p-muted: #BCAEBB; --p-white: #FFFCF7;
   --p-accent: #D27354; --p-accent-ink: #E58E70; --p-hot: #8E73CC; --p-hot-ink: #B39DEB; --p-hot-ledge: #3F2E66;
   --p-sun: #E9A66A; --p-lilac: #4B3F5C;
+  --p-easy: #5E9E91; --p-easy-bg: #1F3A35; --p-easy-ink: #9ED6C8;
+  --p-toss: #8A7E92; --p-toss-bg: #3A3042; --p-toss-ink: #D2C6D6;
+  --p-hard: #C4664A; --p-hard-bg: #4A2A26; --p-hard-ink: #F2A68E;
   --p-line: #3D3245; --p-wash: #241C2A; --p-track: #3A2F43; --p-hair: #3A2F43; --p-marker: #463A50; --p-dotted: rgba(243, 236, 242, 0.3);
   --p-edge-c: #0B070E; --p-ledge: rgba(0, 0, 0, 0.55);
   --p-shadow: 0 0 0 var(--p-edge) var(--p-edge-c), 0 5px 0 var(--p-edge) var(--p-ledge);
@@ -2198,5 +2232,36 @@ html.locked { overflow: hidden; }
   --p-dark: #120D16;
 }
 :root[data-theme='dark'] :is(.pp-head, .pp-grid) { --outline: var(--p-edge-c); }
-:root[data-theme='dark'] .pp-cover .b .disc { background: #120D16; }
 :root[data-theme='dark'] :is(.pf-knot b, .pf-flip) { color: var(--p-bg); }
+
+/* ---------- sharing the team dashboard (src/dashboard/share.js) ----------
+   The stage: the sheet copied off-screen at three columns under a band with the logo, the way the picture comes out.
+   The preview: a glass card over a dimmed page with the picture and two buttons. */
+.share-stage { position: fixed; left: -20000px; top: 0; z-index: -1; display: grid; gap: 18px; padding: 26px 20px 30px; pointer-events: none;
+  background-color: var(--grass); color: var(--ink); }
+.share-stage *, .share-stage *::before, .share-stage *::after { animation: none !important; transition: none !important; }
+.share-range { position: relative; z-index: 1; display: block; height: 26px; }
+.share-range::before { content: ''; position: absolute; left: 0; right: 0; top: 9px; height: 8px; border-radius: 99px; box-shadow: var(--p-well);
+  background: linear-gradient(90deg, var(--p-ink) 0 calc(var(--v) * 100%), var(--p-wash) 0); }
+.share-range::after { content: ''; position: absolute; top: 1px; left: calc(var(--v) * (100% - 24px)); width: 24px; height: 24px; border-radius: 50%; background: var(--p-white); box-shadow: var(--p-chip); }
+.share-band { display: flex; align-items: center; gap: 14px; padding: 0 8px; }
+.share-band img { width: auto; height: 60px; }
+.share-band span { display: grid; gap: 4px; }
+.share-band b { font: 900 34px/0.95 var(--display); letter-spacing: 0.005em; }
+.share-band small { font: 700 15px/1.2 var(--body); }
+.share-sheet { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 16px; overflow-y: auto; background: rgba(12, 30, 18, 0.78);
+  animation: unveil-in 0.2s ease-out; }
+.share-card { display: grid; gap: 14px; width: min(520px, 100%); padding: 18px; border-radius: var(--r-xl); }
+.share-card header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.share-card header b { font: 800 26px/1 var(--display); letter-spacing: 0.01em; }
+.share-x { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; color: var(--ink); background-color: var(--paper); box-shadow: 0 0 0 2px var(--line); }
+.share-shot { display: grid; place-items: center; min-height: 200px; max-height: min(58vh, 640px); overflow-y: auto; border-radius: var(--r-md); background: var(--tile); box-shadow: var(--tray-edge);
+  overscroll-behavior: contain; -webkit-touch-callout: default; }
+.share-shot img { display: block; width: 100%; height: auto; }
+.share-shot p { margin: 0; padding: 24px; font-weight: 700; color: var(--ink-2); text-align: center; }
+.share-go { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+.share-go .cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 14px; font-size: 20px; }
+.share-pdf { padding: 12px 14px; border: 0; border-radius: 999px; cursor: pointer; font: 800 15px/1 var(--body); color: var(--ink); background-color: var(--paper);
+  box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge); }
+.share-go button:disabled { opacity: 0.5; cursor: default; }
+.share-note { margin: 0; font-size: 13px; color: var(--ink-3); text-align: center; text-wrap: pretty; }

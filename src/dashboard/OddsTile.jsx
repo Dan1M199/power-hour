@@ -36,9 +36,9 @@ export function OddsTile({ m, h }) {
         {rings.length ? (pct(o.ifWin) === pct(o.ifLoss) ? `${pct(o.ifWin)} win or lose this week` : `${pct(o.ifWin)} with a win, ${pct(o.ifLoss)} with a loss`) : m.t.tier?.label || ''}
       </div>
       <svg className="pp-arc" width="248" height="86" viewBox="0 0 248 86" aria-hidden="true">
-        <path className="dotted" ref={path} d={ARC} strokeWidth="1.2" strokeDasharray="2 4" />
+        <path className="dotted" ref={path} d={ARC} fill="none" strokeWidth="1.2" strokeDasharray="2 4" />
         <line className="horizon" x1="0" x2="248" y1="76" y2="76" />
-        <path className="lit" ref={lit} d={ARC} strokeWidth="2" pathLength="1" strokeDasharray="1" strokeDashoffset="1" />
+        <path className="lit" ref={lit} d={ARC} fill="none" strokeWidth="2" pathLength="1" strokeDasharray="1" strokeDashoffset="1" />
         {rings.length ? <>
           <circle className="mk" r="4.5" ref={(c) => { marks.current[0] = c; }} data-tip={`Lose to ${g.opp.name} in week ${g.week}: ${pct(o.ifLoss)}`} />
           <circle className="mk" r="4.5" ref={(c) => { marks.current[1] = c; }} data-tip={`Beat ${g.opp.name} in week ${g.week}: ${pct(o.ifWin)}`} />
