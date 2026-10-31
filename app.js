@@ -7,6 +7,7 @@ import { breakdown, shortName, fits, nfl } from './lib/matchup.js';
 import { MEMBERS, GUESTS, DESK_PEOPLE, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
 import { whatItTakes, trueTalent } from './lib/labmodels.js';
+import { dashData, paperDash, playPaper } from './lib/dashboard.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
 import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
 
@@ -65,6 +66,8 @@ let RAW = null;
 let myTeam = Number(store.get('ph-my-team')) || null;
 const wireState = { type: 'all', mine: false, limit: 50, trades: 3 };
 const tradeState = { shape: 'all', cache: {} };
+// the Nerd lab's sub-page (#lab/team is the team dashboard) and the team it shows (yours until you pick another)
+const labState = { sub: null, team: null };
 let VOTES = null; // { week, open, counts: { "3-8": { "3": n } }, mine: { "3-8": "3" } } once /api/votes answers
 
 // ---------- data ----------
@@ -2352,7 +2355,44 @@ function talentPanel() {
     </section>`;
 }
 
+// the Nerd lab's two pages, as pills under its heading
+const labNav = () => `<nav class="filters lab-nav" aria-label="Nerd lab pages">
+    <a href="#lab"${labState.sub ? '' : ' aria-current="page"'}>The lab</a><a href="#lab/team"${labState.sub === 'team' ? ' aria-current="page"' : ''}>Team dashboard</a></nav>`;
+
+// ---------- the team dashboard ----------
+// One team's season on seven paper widgets (lib/dashboard.js): your team, or whichever you pick there.
+const dashTeam = () => (team(labState.team) ? labState.team : myTeam && team(myTeam) ? myTeam : DATA.teams[0].rid);
+const paperHelpers = () => ({
+  esc, f1, pct, ordinal, record, shortName: (id) => shortName(DATA.helpers.player(id) || { name: nameOf(id) }), nfl, groupSaid,
+  first: firstName, face: (t) => headshot(t, 'pp-face-img'), teams: DATA.teams,
+});
+function viewDash() {
+  const m = dashData(DATA, dashTeam(), { raw: DATA.raw, ros: RAW.ros?.values || {} });
+  return `
+    <section class="view-head"><div>
+      <h1><span class="wk">For the spreadsheet people</span>Nerd Lab</h1>
+      <p>One team at a time: playoff odds, the players carrying it, how well it's managed, how it scores, where it's strong and what's left on the schedule. Tap the buttons, the games and the switch.</p>
+      ${labNav()}
+    </div></section>
+    <div class="paper-slot">${paperDash(m, paperHelpers())}</div>`;
+}
+let stopPaper = null;
+function mountPaper() {
+  stopPaper?.();
+  const root = $('[data-paper]');
+  if (!root) return;
+  const m = dashData(DATA, dashTeam(), { raw: DATA.raw, ros: RAW.ros?.values || {} });
+  stopPaper = playPaper(root, m, { calm: calm(), h: paperHelpers() });
+  root.querySelector('#dash-team')?.addEventListener('change', (e) => {
+    labState.team = Number(e.target.value);
+    $('.paper-slot').innerHTML = paperDash(dashData(DATA, labState.team, { raw: DATA.raw, ros: RAW.ros?.values || {} }), paperHelpers());
+    mountPaper();
+    $('#dash-team')?.focus({ preventScroll: true });
+  });
+}
+
 function viewLab() {
+  if (labState.sub === 'team') return viewDash();
   const teams = DATA.teams;
   const n = teams.length;
   const weeks = DATA.history.map((h) => h.week);
@@ -2411,6 +2451,7 @@ function viewLab() {
     <section class="view-head"><div>
       <h1><span class="wk">For the spreadsheet people</span>Nerd Lab</h1>
       <p>Everything under the hood of the rankings, plus a few things that are just fun to argue about. Hover or tap any mark for the numbers${myTeam ? '; your team is highlighted' : ''}.</p>
+      ${labNav()}
     </div></section>
     <div class="lab-grid">
       <section class="panel glass span-12"><h2>Rank flow</h2><p class="sub">Power rank after each week. The roster half uses today's ROS values throughout, so the movement comes from results.</p>${bump}</section>
@@ -2570,8 +2611,9 @@ const VIEWS = { live: viewLive, rankings: viewRankings, wire: viewWire, matchups
 function route({ fresh = false } = {}) {
   // while a week is being played the Live tab is the front page; it only exists then
   const home = DATA.liveMode ? 'live' : 'rankings';
-  const v = (location.hash || `#${home}`).slice(1);
+  const [v, sub] = (location.hash || `#${home}`).slice(1).split('/');
   const key = VIEWS[v] && (v !== 'live' || DATA.liveMode || DATA.after) ? v : home;
+  labState.sub = key === 'lab' && sub === 'team' ? 'team' : null;
   const dir = !currentView || key === currentView ? 'same' : ORDER.indexOf(key) > ORDER.indexOf(currentView) ? 'fwd' : 'back';
   const render = () => {
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.view === key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
@@ -2670,6 +2712,7 @@ function bind(key) {
     $('[data-more]')?.addEventListener('click', () => { wireState.limit += 50; route(); });
     $('[data-more-trades]')?.addEventListener('click', () => { wireState.trades = Infinity; route(); });
   }
+  if (key === 'lab' && labState.sub === 'team') mountPaper();
   if (key === 'lab') {
     // "What it takes" is wider than a phone: open it scrolled to your expected win total (or the bubble's), not to 0
     const wrap = $('.wit-panel .heat-wrap');

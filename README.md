@@ -5,7 +5,7 @@ Power rankings, a live waiver-wire feed and data-nerd stats for the **NFL Fantas
 - **Rankings**: a 0–100 power score per team, half rest-of-season roster strength and half results. Tap a team for the reasons behind its rank, a position-group radar, its best ROS lineup, weekly scoring and simulated playoff seeds.
 - **Wire**: every add, drop and trade, newest first. Each move is graded by the consensus ROS value gained or lost. Also shows the best available free agents and a trade ledger.
 - **Games**: projected scores and win odds for every matchup.
-- **Nerd lab**: rank flow, luck index, points for vs against, weekly finishes heatmap, position-group ranks, playoff odds, lineup efficiency, biggest games, players the experts disagree on, and waiver/trade ROI.
+- **Nerd lab**: rank flow, luck index, points for vs against, weekly finishes heatmap, position-group ranks, playoff odds, lineup efficiency, biggest games, players the experts disagree on, and waiver/trade ROI. Its **Team dashboard** page (`#lab/team`) puts one team's season on seven animated paper widgets: playoff odds, key players, lineup efficiency, weekly scores, position groups, the schedule left and an all-play luck switch.
 
 ## How it stays up to date
 

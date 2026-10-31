@@ -18,6 +18,19 @@
   src: url('assets/fonts/big-shoulders-display-latin-ext.woff2') format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
 
+/* the team dashboard's paper style (Nerd lab, #lab/team): Geist, Geist Mono and Inter, only downloaded once it's open */
+@font-face { font-family: 'Geist'; font-style: normal; font-weight: 300 400; font-display: swap;
+  src: url('assets/fonts/geist-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Geist'; font-style: normal; font-weight: 300 400; font-display: swap;
+  src: url('assets/fonts/geist-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Geist Mono'; font-style: normal; font-weight: 400 500; font-display: swap;
+  src: url('assets/fonts/geist-mono-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('assets/fonts/inter-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 :root {
   /* the palette */
   --grass: #4CAF50;
@@ -119,9 +132,9 @@ button, select { font: inherit; color: inherit; }
 /* ---------- buttons: glossy cartoon pills ---------- */
 /* a hard-edged gloss over the top half of every button (under the label, over the fill), and on a mouse, a glint that
    sweeps across on hover */
-:is(.filters button, .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip.to-again, .car-arrow, .to-skip, .xp, .clip-sound, .talk-btn, .car-pause) {
+:is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip.to-again, .car-arrow, .to-skip, .xp, .clip-sound, .talk-btn, .car-pause) {
   position: relative; isolation: isolate; overflow: hidden; }
-:is(.filters button, .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip.to-again, .car-arrow, .to-skip, .xp, .clip-sound, .talk-btn, .car-pause)::before {
+:is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip.to-again, .car-arrow, .to-skip, .xp, .clip-sound, .talk-btn, .car-pause)::before {
   content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--gloss); pointer-events: none; }
 /* buttons on light surfaces carry the inked edge too, thinner than a card's, with their ledge as wide as the outline */
 
@@ -338,12 +351,14 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 /* ---------- wire ---------- */
 /* buttons are game buttons: a solid pill on a ledge that presses down */
 .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
-.filters button { cursor: pointer; padding: 8px 15px; border-radius: 999px; border: 0; background: var(--chalk); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge);
+.filters :is(button, a) { cursor: pointer; padding: 8px 15px; border-radius: 999px; border: 0; background: var(--chalk); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge);
   font-size: 13.5px; font-weight: 700; color: var(--ink-2); }
-.filters button[aria-pressed='true'] { background: var(--amber); color: var(--ink); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge-gold); }
-.filters button:active { transform: translateY(2px); box-shadow: 0 0 0 2px var(--outline), 0 1px 0 2px var(--ledge); }
-.filters button:disabled { cursor: default; color: var(--ink-3); background: var(--tile); box-shadow: 0 0 0 2px var(--line); transform: none; }
-.filters button:disabled::before { display: none; }
+.filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'] { background: var(--amber); color: var(--ink); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge-gold); }
+.filters :is(button, a):active { transform: translateY(2px); box-shadow: 0 0 0 2px var(--outline), 0 1px 0 2px var(--ledge); }
+.filters :is(button, a):disabled { cursor: default; color: var(--ink-3); background: var(--tile); box-shadow: 0 0 0 2px var(--line); transform: none; }
+.filters :is(button, a):disabled::before { display: none; }
+.filters a { display: inline-block; text-decoration: none; }
+.lab-nav { margin: 22px 0 0; }
 .day { margin: 0 0 20px; }
 .day > h3 { display: inline-block; font: 700 13px/1 var(--body); color: var(--chalk); background: var(--ink); padding: 6px 12px; border-radius: 999px; margin: 0 0 10px; }
 .moves { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
@@ -1342,20 +1357,20 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 
 /* hover: cards rise off the turf and their ledge deepens; buttons lift a touch */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .mu, .idea, .wire-team, .trade, .rank-card, .car-arrow, .xp, .filters button, .pick, .gotw-more { transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s, background 0.2s, color 0.2s; }
+  .mu, .idea, .wire-team, .trade, .rank-card, .car-arrow, .xp, .filters :is(button, a), .pick, .gotw-more { transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s, background 0.2s, color 0.2s; }
   .mu:hover, .idea:hover, .wire-team:hover, .trade:hover { transform: translateY(-3px); --lift: 8px; }
   .rank-card:hover { transform: translateY(-2px); --lift: 7px; }
   .car-arrow:hover { transform: scale(1.08); }
-  .filters button:hover, .pick:hover, .gotw-more:hover { transform: translateY(-1px); }
-  .filters button:active, .pick:active, .gotw-more:active { transform: translateY(2px); }
+  .filters :is(button, a):hover, .pick:hover, .gotw-more:hover { transform: translateY(-1px); }
+  .filters :is(button, a):active, .pick:active, .gotw-more:active { transform: translateY(2px); }
   /* white pills pick up a sky tint under the mouse, so their gloss and the glint below show on them too */
-  .filters button:not([aria-pressed='true']):hover, .pick:not(.on):hover { background: #C9ECFB; }
+  .filters :is(button:not([aria-pressed='true']), a:not([aria-current='page'])):hover, .pick:not(.on):hover { background: #C9ECFB; }
   /* the shine: a glint sweeps across a button as the mouse arrives (transform only; it waits off the left edge) */
-  :is(.filters button, .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .chip.to-again)::after {
+  :is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .chip.to-again)::after {
     content: ''; position: absolute; z-index: -1; inset: 0; pointer-events: none;
     background: linear-gradient(105deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.75) 50%, rgba(255, 255, 255, 0) 62%);
     transform: translateX(-101%); }
-  :is(.filters button, .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .chip.to-again):hover::after {
+  :is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .chip.to-again):hover::after {
     transform: translateX(101%); transition: transform 0.75s cubic-bezier(0.45, 0, 0.25, 1); }
 }
 
@@ -1692,4 +1707,207 @@ html.locked { overflow: hidden; }
   .heat.wit tbody th { min-width: 112px; max-width: 128px; }
   .heat.wit .wit-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .lab-lede { font-size: 17px; }
+}
+
+/* ---------- the team dashboard: seven paper widgets (Nerd lab, #lab/team; lib/dashboard.js) ----------
+   Its own small design system, by request: warm paper tiles on a paper sheet, black ink, thin Geist numerals, mono
+   captions and one ultramarine accent. Sizes are the tiles' pixels (296 square, wide 612, 20 apart). The sheet is a
+   size container: three columns from 928px inside it, two from 612px, one below, where the two wide tiles reflow. */
+.paper {
+  --p-bg: #e7e5e0; --p-tile: #f8f7f4; --p-ink: #141416; --p-muted: #66635b; --p-accent: #2b36ff; --p-white: #fff;
+  --p-line: rgba(20, 20, 22, 0.08); --p-wash: rgba(20, 20, 22, 0.05); --p-track: rgba(20, 20, 22, 0.07);
+  --p-hair: rgba(20, 20, 22, 0.12); --p-marker: rgba(20, 20, 22, 0.14); --p-dotted: rgba(20, 20, 22, 0.16);
+  --p-glow: rgba(43, 54, 255, 0.14);
+  --p-sans: 'Geist', system-ui, sans-serif; --p-mono: 'Geist Mono', ui-monospace, monospace;
+  --p-label: 400 14px 'Inter', system-ui, sans-serif;
+  --p-shadow: 0 0 0 1px rgba(20, 20, 22, 0.05), inset 0 1px 0 #fff, 0 28px 46px -30px rgba(40, 34, 20, 0.35), 0 2px 4px rgba(40, 34, 20, 0.04);
+  --p-dark: radial-gradient(260px 220px at 75% 15%, rgba(43, 54, 255, 0.55), transparent 70%), #121215;
+  --p-dark-text: #f4f3f0; --p-dark-muted: rgba(244, 243, 240, 0.62);
+  container-type: inline-size;
+  padding: 30px 20px 44px; border-radius: 40px; background-color: var(--p-bg);
+  box-shadow: 0 0 0 2.5px var(--outline), 0 6px 0 2.5px var(--ledge);
+  color: var(--p-ink); font-family: var(--p-sans); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
+}
+.paper :is(button, select) { font: inherit; }
+.pp-head, .pp-grid { width: min(100%, 928px); margin-inline: auto; }
+.pp-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px 18px; margin-bottom: 26px; }
+.pp-face-img { display: block; width: 60px; height: 60px; border-radius: 50%; object-fit: cover; box-shadow: var(--p-shadow); }
+.pp-face .ph { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%; background: var(--p-tile); font: 400 20px var(--p-sans); }
+.pp-id p { margin: 0; font: var(--p-label); color: var(--p-muted); display: flex; align-items: center; gap: 8px; }
+.pp-id p:first-child::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--p-accent); }
+.pp-id h2 { margin: 4px 0 6px; font: 300 40px/1.04 var(--p-sans); letter-spacing: -0.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-id .pp-sub { font: 400 13px var(--p-sans); }
+.pp-pick { display: grid; gap: 6px; font: var(--p-label); color: var(--p-muted); }
+.pp-pick select { appearance: none; -webkit-appearance: none; min-width: 220px; padding: 10px 38px 10px 16px; border: 0; border-radius: 99px;
+  background: var(--p-tile) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23141416' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center;
+  box-shadow: var(--p-shadow); font: 400 15px var(--p-sans); color: var(--p-ink); cursor: pointer; }
+.paper :focus-visible { outline: 2px solid var(--p-accent); outline-offset: 2px; }
+
+.pp-grid { display: grid; grid-template-columns: repeat(3, 296px); grid-auto-flow: dense; gap: 20px; justify-content: center; }
+.pp-tile { position: relative; width: 296px; height: 296px; border-radius: 38px; background-color: var(--p-tile); overflow: hidden; box-shadow: var(--p-shadow); }
+.pp-tile.wide { width: 612px; grid-column: span 2; }
+.pp-label { position: absolute; left: var(--label-left, 26px); top: 22px; display: flex; align-items: center; gap: 8px; font: var(--p-label); letter-spacing: -0.1px; color: var(--p-muted); }
+.pp-label i { width: 6px; height: 6px; border-radius: 50%; background: var(--p-accent); }
+.pp-range { position: absolute; right: 26px; top: 22px; font-size: 13px; color: var(--p-muted); }
+.pp-empty { position: absolute; left: 26px; right: 26px; top: 64px; margin: 0; font-size: 13px; color: var(--p-muted); }
+
+/* 1. playoff odds: the sun climbs the arc to today's odds; the rings are a win and a loss this week */
+.pp-big { position: absolute; left: 22px; top: 58px; font: 300 92px/1 var(--p-sans); letter-spacing: -0.04em; }
+.pp-sky { position: absolute; left: 27px; top: 160px; font-size: 15px; }
+.pp-arc { position: absolute; left: 24px; top: 182px; overflow: visible; }
+.pp-arc .dotted { fill: none; stroke: var(--p-dotted); }
+.pp-arc .horizon { stroke: var(--p-hair); }
+.pp-arc .lit { fill: none; stroke: var(--p-accent); stroke-linecap: round; }
+.pp-arc .glow { fill: var(--p-glow); transform-box: fill-box; transform-origin: center; animation: pp-breathe 2.1s ease-in-out infinite; }
+.pp-arc .sun { fill: var(--p-accent); }
+.pp-arc .mk { fill: var(--p-tile); stroke: var(--p-accent); stroke-width: 1.5; }
+.pp-time { position: absolute; top: 268px; font: 400 11.5px var(--p-mono); color: var(--p-muted); }
+.pp-time.left { left: 26px; } .pp-time.right { right: 26px; }
+
+/* 2. key players, like a music player: a cover per player, the progress bar is this week's projection against his
+   ceiling (or his final score), the bars by the label are his last five weeks */
+.pp-player { --label-left: 300px; --px: 300px; --pw: 288px; }
+.pp-cover { position: absolute; left: 24px; top: 24px; width: 248px; height: 248px; border-radius: 24px; overflow: hidden; }
+.pp-cover-in { position: absolute; left: 0; top: 0; width: 248px; height: 248px; transform-origin: 0 0; transform: scale(var(--cs, 1)); }
+.pp-cover .art { position: absolute; inset: 0; overflow: hidden; }
+.pp-cover .art.spare { opacity: 0; }
+.pp-cover .art.a { background-color: var(--p-accent); }
+.pp-cover .a .disc { position: absolute; right: -56px; top: -40px; width: 190px; height: 190px; border-radius: 50%; background: #ffb48a; }
+.pp-cover .a .rule { position: absolute; left: 22px; bottom: 30px; width: 120px; height: 2px; background: var(--p-white); opacity: 0.85; }
+.pp-cover .mark { position: absolute; left: 22px; bottom: 42px; font: 400 10px var(--p-mono); letter-spacing: 1px; color: var(--p-white); }
+.pp-cover .a .init { position: absolute; left: 20px; top: 18px; font: 300 64px/1 var(--p-sans); letter-spacing: -0.04em; color: var(--p-white); }
+.pp-cover .art.b { background-color: #e6e0d2; }
+.pp-cover .b .disc { position: absolute; left: 24px; top: 30px; width: 150px; height: 150px; border-radius: 50%; background: var(--p-ink); }
+.pp-cover .b .sq { position: absolute; right: 30px; bottom: 30px; width: 38px; height: 38px; border-radius: 6px; background: var(--p-accent); }
+.pp-cover .b .mark { color: var(--p-ink); bottom: 20px; }
+.pp-cover .b .init { position: absolute; left: 24px; top: 30px; width: 150px; height: 150px; display: grid; place-items: center; font: 300 56px/1 var(--p-sans); letter-spacing: -0.04em; color: var(--p-white); }
+.pp-eq { position: absolute; left: 426px; top: 24px; width: 30px; height: 14px; }
+.pp-eq i { position: absolute; left: calc(var(--i) * 6px); bottom: 0; width: 3px; height: 2px; border-radius: 2px; background: var(--p-accent); }
+.pp-count { position: absolute; right: 26px; top: 24px; font: 400 11.5px var(--p-mono); color: var(--p-muted); }
+.pp-title { position: absolute; left: 300px; top: 64px; max-width: 288px; font-size: 28px; letter-spacing: -0.6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-artist { position: absolute; left: 301px; top: 102px; font-size: 15px; color: var(--p-muted); }
+.pp-stats { position: absolute; left: 300px; top: 132px; width: 288px; display: grid; grid-template-columns: repeat(3, 1fr); }
+.pp-stats b { display: block; font: 300 22px/1 var(--p-sans); letter-spacing: -0.5px; }
+.pp-stats small { display: block; margin-top: 5px; font: 400 11.5px var(--p-mono); color: var(--p-muted); }
+.pp-progress { position: absolute; left: var(--px); top: 186px; width: var(--pw); height: 5px; border-radius: 99px; background: var(--p-track); overflow: hidden; }
+.pp-progress i { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--f, 0) * 100%); border-radius: 99px; background: var(--p-ink); }
+.pp-knob { position: absolute; top: 181px; left: calc(var(--px) + var(--pw) * var(--f, 0)); width: 15px; height: 15px; margin-left: -7px; border-radius: 50%; background: var(--p-white); box-shadow: 0 0 0 1px var(--p-hair), 0 2px 6px rgba(0, 0, 0, 0.15); }
+.pp-ptime { position: absolute; top: 202px; font: 400 11.5px var(--p-mono); color: var(--p-muted); }
+.pp-ptime.elapsed { left: var(--px); } .pp-ptime.length { right: 24px; }
+.pp-btn, .pp-play { position: absolute; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; cursor: pointer; transition: transform 0.15s, background-color 0.15s; }
+.pp-btn { top: 232px; width: 40px; height: 40px; background-color: transparent; color: var(--p-ink); }
+.pp-btn.prev { left: 348px; } .pp-btn.next { left: 504px; }
+.pp-play { left: 420px; top: 226px; width: 52px; height: 52px; background-color: var(--p-ink); color: var(--p-white); }
+.pp-btn:active, .pp-play:active { transform: scale(0.88); }
+.pp-btn:active { background-color: rgba(20, 20, 22, 0.07); }
+@media (hover: hover) { .pp-btn:hover { background-color: var(--p-wash); } }
+
+/* 3. lineup efficiency: one tick a minute on a 60-tick dial, lit for the share of the best lineup started */
+.pp-dial { position: absolute; left: 48px; top: 56px; }
+.pp-dial .tick { stroke: var(--p-dotted); stroke-linecap: round; }
+.pp-dial .tick.lit { stroke: var(--p-accent); }
+.pp-digits { position: absolute; left: 48px; top: 128px; width: 200px; text-align: center; font: 300 42px var(--p-sans); letter-spacing: -1.5px; }
+.pp-eff .pp-caption { position: absolute; left: 48px; top: 178px; width: 200px; text-align: center; font-size: 13px; color: var(--p-muted); }
+
+/* 4. scoring: points a game, then the last seven weeks like a week of steps (losses faded, the latest in the accent) */
+.pp-count-big { position: absolute; left: 24px; top: 58px; font: 300 54px/1 var(--p-sans); letter-spacing: -0.04em; }
+.pp-goal { position: absolute; left: 27px; top: 118px; font-size: 13px; color: var(--p-muted); }
+.pp-day { position: absolute; left: calc(26px + var(--i) * 35px); top: 166px; width: 22px; height: 112px; }
+.pp-day .empty, .pp-day .bar { position: absolute; left: 0; top: 0; width: 22px; height: 90px; border-radius: 7px; }
+.pp-day .empty { background: var(--p-wash); }
+.pp-day .bar { background: var(--p-ink); opacity: 0.85; transform-origin: bottom; transform: scaleY(0); }
+.pp-day .bar.loss { opacity: 0.32; }
+.pp-day .bar.today { background: var(--p-accent); opacity: 1; }
+.pp-day .letter { position: absolute; left: 0; top: 98px; width: 22px; text-align: center; font: 400 11.5px var(--p-mono); color: var(--p-muted); }
+.pp-day .letter.today { color: var(--p-ink); }
+
+/* 5. position groups, charged like batteries: the bar is the league rank, the best group charging in the accent */
+.pp-row { position: absolute; left: 0; right: 0; top: calc(58px + var(--i) * 54px); height: 36px; }
+.pp-row .well { position: absolute; left: 24px; top: 0; width: 36px; height: 36px; border-radius: 11px; background: var(--p-wash); display: grid; place-items: center; font: 500 11.5px var(--p-mono); }
+.pp-row .name { position: absolute; left: 72px; top: 1px; max-width: 140px; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-row .level { position: absolute; right: 26px; top: 2px; font: 400 12.5px var(--p-mono); }
+.pp-row .track { position: absolute; left: 72px; top: 26px; width: 198px; height: 8px; border-radius: 99px; background: var(--p-track); overflow: hidden; }
+.pp-row .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 99px; background: var(--p-ink); overflow: hidden; }
+.pp-row .fill.charging { background: var(--p-accent); }
+.pp-row .shimmer { position: absolute; top: 0; bottom: 0; left: -30%; width: 40px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent); animation: pp-sweep 1.8s linear infinite; }
+.pp-row .bolt { position: absolute; right: 62px; top: 3px; color: var(--p-accent); animation: pp-pulse 1.6s ease-in-out infinite; }
+
+/* 6. the schedule: the week in big numerals, the games left as a list to pick from (the win odds on a chip) */
+.pp-date { position: absolute; left: 20px; top: 64px; font: 300 150px/1 var(--p-sans); letter-spacing: -8px; }
+.pp-month { position: absolute; left: 28px; top: 222px; max-width: 226px; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-summary { position: absolute; left: 28px; top: 246px; max-width: 226px; font-size: 13px; color: var(--p-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-cal :is(.pp-date, .pp-month, .pp-summary) { transition: opacity 0.14s; }
+.pp-cal.dip :is(.pp-date, .pp-month, .pp-summary) { opacity: 0; }
+.pp-divider { position: absolute; left: 262px; top: 28px; bottom: 28px; width: 1px; background: var(--p-line); }
+.pp-list { position: absolute; left: 290px; top: 34px; width: 296px; height: 232px; overflow-y: auto; scrollbar-width: none; overscroll-behavior: contain;
+  mask-image: linear-gradient(#000 82%, transparent); -webkit-mask-image: linear-gradient(#000 82%, transparent); }
+.pp-list::-webkit-scrollbar { display: none; }
+.pp-ev { color: inherit; display: flex; align-items: center; gap: 14px; width: 100%; height: 56px; margin: 0 0 20px; padding: 0 6px 0 0; border: 0; border-radius: 12px; background: none; text-align: left; cursor: pointer; }
+.pp-ev:last-child { margin-bottom: 40px; }
+@media (hover: hover) { .pp-ev:hover { background-color: var(--p-wash); } }
+.pp-ev .time { flex: none; width: 46px; font: 500 12px var(--p-mono); color: var(--p-muted); }
+.pp-ev .marker { flex: none; width: 3px; height: 30px; border-radius: 2px; background: var(--p-marker); }
+.pp-ev[aria-selected='true'] .marker { background: var(--p-accent); }
+.pp-ev .ev-text { flex: 1; min-width: 0; }
+.pp-ev .ev-title { display: block; font-size: 15.5px; letter-spacing: -0.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-ev .ev-detail { display: block; margin-top: 2px; font-size: 12px; color: var(--p-muted); }
+.pp-ev .chip { display: none; flex: none; padding: 5px 9px; border-radius: 99px; background: var(--p-accent); color: var(--p-white); font: 500 11.5px var(--p-mono); opacity: var(--chip, 1); }
+.pp-ev[aria-selected='true'] .chip { display: block; }
+
+/* 7. luck: the real record; the switch turns the tile dark and shows the all-play record (words flip halfway) */
+.pp-luck .face { position: absolute; inset: 0; color: var(--p-ink); }
+.pp-luck .dark { position: absolute; inset: 0; background: var(--p-dark); opacity: 0; transition: opacity 0.45s cubic-bezier(0.65, 0, 0.35, 1); }
+.pp-luck.flipping .dark { opacity: 1; }
+.pp-luck .moon { position: absolute; left: 24px; top: 70px; width: 64px; height: 64px; border-radius: 50%; background: var(--p-wash); display: grid; place-items: center; }
+.pp-luck .moon svg { transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1); }
+.pp-luck.flipping .moon svg { transform: rotate(-40deg) scale(1.04); }
+.pp-luck .state { position: absolute; left: 26px; top: 160px; font: 300 30px var(--p-sans); letter-spacing: -0.8px; }
+.pp-luck .caption { position: absolute; left: 27px; right: 20px; top: 200px; font-size: 13px; color: var(--p-muted); }
+.pp-luck .toggle { position: absolute; left: 26px; top: 238px; width: 60px; height: 34px; padding: 0; border: 0; border-radius: 99px; background-color: var(--p-hair); cursor: pointer; transition: transform 0.15s; }
+.pp-luck .toggle:active { transform: scale(0.94); }
+.pp-luck .knob { position: absolute; left: 3px; top: 3px; width: 28px; height: 28px; border-radius: 50%; background: var(--p-white); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1); }
+.pp-luck.flipping .knob { transform: translateX(26px); }
+.pp-luck .toggle-word { position: absolute; left: 98px; top: 246px; font-size: 13px; color: var(--p-muted); }
+.pp-luck.on .face { color: var(--p-dark-text); }
+.pp-luck.on :is(.pp-label, .caption, .toggle-word) { color: var(--p-dark-muted); }
+.pp-luck.on .moon { background: rgba(255, 255, 255, 0.1); }
+.pp-luck.on .toggle { background-color: var(--p-accent); }
+
+@keyframes pp-breathe { 50% { transform: scale(1.25); } }
+@keyframes pp-sweep { from { left: -30%; } to { left: 100%; } }
+@keyframes pp-pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+
+@container (max-width: 927.98px) { .pp-grid { grid-template-columns: repeat(2, 296px); } }
+/* one column: tiles take the full width; key players and the schedule stack their halves */
+@container (max-width: 611.98px) {
+  .pp-head { grid-template-columns: auto minmax(0, 1fr); }
+  .pp-id h2 { font-size: 30px; }
+  .pp-pick { grid-column: 1 / -1; }
+  .pp-pick select { width: 100%; }
+  .pp-grid { grid-template-columns: minmax(0, 1fr); }
+  .pp-tile, .pp-tile.wide { width: 100%; grid-column: auto; }
+  .pp-player { height: 368px; --label-left: 26px; --px: 24px; --pw: calc(100% - 48px); }
+  .pp-player .pp-cover { top: 56px; width: 120px; height: 120px; border-radius: 18px; }
+  .pp-player .pp-cover-in { --cs: 0.4839; }
+  .pp-player .pp-eq { left: auto; right: 26px; }
+  .pp-player .pp-count { right: auto; left: 160px; top: 128px; }
+  .pp-player .pp-title { left: 160px; top: 62px; max-width: calc(100% - 184px); font-size: 22px; }
+  .pp-player .pp-artist { left: 160px; top: 94px; font-size: 14px; }
+  .pp-player .pp-stats { left: 24px; top: 198px; width: calc(100% - 48px); }
+  .pp-player .pp-progress { top: 256px; }
+  .pp-player .pp-knob { top: 251px; }
+  .pp-player .pp-ptime { top: 272px; }
+  .pp-player .pp-btn { top: 306px; }
+  .pp-player .pp-btn.prev { left: calc(50% - 98px); }
+  .pp-player .pp-btn.next { left: calc(50% + 58px); }
+  .pp-player .pp-play { left: calc(50% - 26px); top: 300px; }
+  .pp-eff :is(.pp-dial, .pp-digits, .pp-caption) { left: calc(50% - 100px); }
+  .pp-row .track { width: calc(100% - 98px); }
+  .pp-row .name { max-width: calc(100% - 170px); }
+  .pp-cal { height: 470px; }
+  .pp-date { top: 56px; font-size: 112px; letter-spacing: -6px; }
+  .pp-month { left: 150px; top: 80px; max-width: calc(100% - 174px); }
+  .pp-summary { left: 150px; top: 106px; max-width: calc(100% - 174px); white-space: normal; }
+  .pp-divider { left: 28px; right: 28px; top: 196px; bottom: auto; width: auto; height: 1px; }
+  .pp-list { left: 24px; top: 214px; width: calc(100% - 48px); }
 }
