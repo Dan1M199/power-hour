@@ -1,7 +1,8 @@
 // The Nerd lab's first page (#lab): everything under the hood of the rankings, a panel each. The charts come from
 // lib/charts.js as strings (Chart); the tables and the two model panels are React.
 import { bumpChart, scatter, heatTable, divergingBars } from '../../lib/charts.js';
-import { Chart, LabHead, PosTag, TeamAvatar } from './parts.jsx';
+import { Chart, PosTag, TeamAvatar } from '../shared.jsx';
+import { LabHead } from './parts.jsx';
 import { WhatItTakes } from './WhatItTakes.jsx';
 import { FlukeOrReal } from './FlukeOrReal.jsx';
 

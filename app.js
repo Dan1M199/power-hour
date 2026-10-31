@@ -2,11 +2,13 @@ import { computeLeague, PARTS } from './lib/engine.js';
 import { radar, weeklyBars, TEAM_COLORS } from './lib/charts.js';
 import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
-import { tradeIdeas } from './lib/trades.js';
 import { breakdown, shortName, fits, nfl } from './lib/matchup.js';
 import { MEMBERS, GUESTS, DESK_PEOPLE, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
-import { mountLab } from './src/lab/mount.jsx';
+import { mount } from './src/mount.jsx';
+import { Lab } from './src/lab/Lab.jsx';
+import { WirePage } from './src/wire/WirePage.jsx';
+import { TradesPage } from './src/trades/TradesPage.jsx';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
 import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
 
@@ -64,7 +66,7 @@ let DATA = null; // computed league
 let RAW = null;
 let myTeam = Number(store.get('ph-my-team')) || null;
 const wireState = { type: 'all', mine: false, limit: 50, trades: 3 };
-const tradeState = { shape: 'all', cache: {} };
+const tradeState = { shape: 'all' };
 // the Nerd lab's sub-page (#lab/team is the team dashboard) and the team it shows (yours until you pick another)
 const labState = { sub: null, team: null };
 let VOTES = null; // { week, open, counts: { "3-8": { "3": n } }, mine: { "3-8": "3" } } once /api/votes answers
@@ -1731,141 +1733,9 @@ function rankDetail(t) {
 }
 
 // ---------- wire ----------
-function dayLabel(ts) {
-  const fmt = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d);
-  const today = fmt(new Date()), yest = fmt(new Date(Date.now() - 864e5)), d = fmt(new Date(ts));
-  if (d === today) return 'Today';
-  if (d === yest) return 'Yesterday';
-  return new Date(ts).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'short', day: 'numeric' });
-}
-const timeLabel = (ts) => new Date(ts).toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' });
-
+// The Wire is React (src/wire/WirePage.jsx), mounted into #app by bind; its filters live in wireState.
+const viewWire = () => '';
 const signed = (x) => `${x > 0 ? '+' : ''}${f1(x)}`;
-const tone = (x, d = 0.4) => (x > d ? 'plus' : x < -d ? 'minus' : 'flat');
-
-// in uneven trades the side receiving fewer players gets a credit for the roster spot it frees up
-function spotNote(sides) {
-  const r = DATA.meta.replacement, freed = sides.filter((s) => s.spots < 0);
-  if (!r || !freed.length) return '';
-  return ` Includes ${freed.map((s) => `${f1(r * -s.spots)} for the ${-s.spots === 1 ? 'roster spot' : `${-s.spots} roster spots`} ${esc(team(s.rid).name)} frees up`).join(' and ')}, valued at the best few free agents (${f1(r)} each).`;
-}
-
-// the people who shook on it, in the corner of each trade card
-function dealFaces(sides) {
-  const ts = sides.map((s) => team(s.rid)).filter((t) => member(t));
-  if (ts.length < 2) return '';
-  const names = ts.map(firstName);
-  return `<span class="deal"><span class="deal-faces">${ts.map((t) => headshot(t, 'deal-face')).join('')}</span><span>${esc(names.slice(0, -1).join(', '))} and ${esc(names[names.length - 1])} shook on it</span></span>`;
-}
-
-function tradeCard(item) {
-  const sides = item.sides;
-  const best = Math.max(...sides.map((s) => s.net));
-  const winner = sides.length === 2 && Math.abs(sides[0].net - sides[1].net) >= 3 ? sides.find((s) => s.net === best) : null;
-  const pick = (p) => `${p.season} round ${p.round} pick`;
-  return `<li class="trade glass rim">
-    <div class="trade-head">${dealFaces(sides)}<span class="when">${esc(dayLabel(item.ts))}, ${timeLabel(item.ts)}, week ${item.week}</span></div>
-    <div class="trade-sides">${sides.map((s) => `
-      <div class="trade-side ${winner && winner.rid === s.rid ? 'won' : ''} ${s.rid === myTeam ? 'mine' : ''}">
-        <h3>${avatar(team(s.rid))}<span class="tn">${esc(team(s.rid).name)}</span>${DATA.meta.hasRos ? `<span class="${winner ? tone(s.net, 0) : 'flat'}">${signed(s.net)}</span>` : ''}</h3>
-        <p class="gets">Receives</p>
-        <ul>${s.adds.map((p) => `<li>${posTag(p.id)}${esc(nameOf(p.id))}${DATA.meta.hasRos ? `<span class="pv">${f1(p.v)}</span>` : ''}</li>`).join('')}${s.picks.filter((p) => p.dir === 'in').map((p) => `<li>${pick(p)}</li>`).join('')}${s.faabIn ? `<li>$${s.faabIn} FAAB</li>` : ''}</ul>
-      </div>`).join('')}</div>
-    ${DATA.meta.hasRos ? `<p class="verdict">${winner ? `By consensus ROS value, <b>${esc(team(winner.rid).name)}</b> came out ahead by ${f1(Math.abs(sides[0].net - sides[1].net))}.` : 'By consensus ROS value this one is close to even.'}${spotNote(sides)}</p>` : ''}
-  </li>`;
-}
-
-// one row per transaction: adds and drops on their own lines, net value on the right
-function wireRow(item) {
-  const s = item.sides[0];
-  const line = (p, add) => `<div class="${add ? 'add' : 'drop'}"><span class="sign" aria-label="${add ? 'Added' : 'Dropped'}">${add ? '+' : '−'}</span>${posTag(p.id)}<span class="pl">${esc(nameOf(p.id))}</span></div>`;
-  const how = item.type === 'waiver' ? `Waiver${item.bid ? ` $${item.bid}` : ''}` : item.type === 'commissioner' ? 'Commish' : '';
-  return `<li>
-    <span class="t">${timeLabel(item.ts)}${how ? `<small>${how}</small>` : ''}</span>
-    <div class="lines">${s.adds.map((p) => line(p, true)).join('')}${s.drops.map((p) => line(p, false)).join('')}</div>
-    ${DATA.meta.hasRos ? `<span class="net ${tone(s.net)}" data-tip="Change in consensus ROS value from this move">${signed(s.net)}</span>` : ''}
-  </li>`;
-}
-
-function viewWire() {
-  const mine = (f) => !(wireState.mine && myTeam) || f.sides.some((s) => s.rid === myTeam);
-  const trades = DATA.feed.filter((f) => f.type === 'trade' && mine(f));
-  const moves = DATA.feed.filter((f) => f.type !== 'trade' && mine(f));
-  const showTrades = wireState.type !== 'waiver', showMoves = wireState.type !== 'trade';
-
-  // adds and drops: day, then team (most recent first), then transactions
-  const shown = moves.slice(0, wireState.limit);
-  const days = [];
-  for (const it of shown) {
-    const lbl = dayLabel(it.ts);
-    if (!days.length || days[days.length - 1].lbl !== lbl) days.push({ lbl, teams: new Map() });
-    const rid = it.sides[0].rid;
-    const tm = days[days.length - 1].teams;
-    if (!tm.has(rid)) tm.set(rid, []);
-    tm.get(rid).push(it);
-  }
-  const teamCard = (rid, items) => {
-    const t = team(rid), net = items.reduce((a, it) => a + it.sides[0].net, 0);
-    return `<li class="wire-team glass ${rid === myTeam ? 'mine' : ''}">
-      <div class="wt-head">${avatar(t)}<div><b>${esc(t.name)}</b><small>${items.length} move${items.length === 1 ? '' : 's'}</small></div>
-        ${DATA.meta.hasRos ? `<span class="net ${tone(net)}" data-tip="Net consensus ROS value from these moves">${signed(net)}<small>net value</small></span>` : ''}</div>
-      <ul class="wt-rows">${items.map(wireRow).join('')}</ul>
-    </li>`;
-  };
-
-  const btn = (k, label) => `<button type="button" data-type="${k}" aria-pressed="${wireState.type === k}">${label}</button>`;
-  const fa = DATA.freeAgents.slice(0, 10);
-  const mm = Object.values(DATA.managerMoves).sort((a, b) => b.moves - a.moves);
-  const traders = Object.values(DATA.managerMoves).filter((m) => m.tradeNet !== 0).sort((a, b) => b.tradeNet - a.tradeNet);
-  const isToday = (f) => dayLabel(f.ts) === 'Today';
-  const today = DATA.feed.filter(isToday).length;
-  const wk = DATA.meta.lastScored + 1;
-  const thisWeek = DATA.feed.filter((f) => f.week === wk);
-  const active = {};
-  thisWeek.forEach((f) => f.sides.forEach((s) => (active[s.rid] = (active[s.rid] || 0) + 1)));
-  const busiest = Object.entries(active).sort((a, b) => b[1] - a[1])[0];
-  const stat = (v, l, face = '') => `<div${face ? ' class="has-face"' : ''}>${face}<span><b>${v}</b><small>${l}</small></span></div>`;
-  return `
-    <section class="view-head">
-      <div>
-        <h1><span class="wk">${today ? `${today} move${today === 1 ? '' : 's'} today` : 'Quiet day so far'}</span>The Wire</h1>
-        <p>Trades up top, adds and drops below, grouped by day and team. Numbers are the consensus rest-of-season value a move gained or gave up.</p>
-      </div>
-    </section>
-    <div class="wire-stats glass">
-      ${stat(today, 'moves today')}
-      ${stat(thisWeek.filter((f) => f.type !== 'trade').length, `adds and drops in week ${wk}`)}
-      ${stat(thisWeek.filter((f) => f.type === 'trade').length, `trades in week ${wk}`)}
-      ${busiest ? (() => { const bt = team(busiest[0]), m = member(bt); return stat(esc(m ? m.first : short(bt.name, 18)), `busiest this week, ${busiest[1]} moves${m ? ` for ${esc(short(bt.name, 18))}` : ''}`, m ? headshot(bt, 'stat-face') : ''); })() : ''}
-    </div>
-    <div class="two-col">
-      <div>
-        <div class="filters" role="group" aria-label="Filter moves">
-          ${btn('all', 'Everything')}${btn('trade', `Trades (${trades.length})`)}${btn('waiver', `Adds and drops (${moves.length})`)}
-          ${myTeam ? `<button type="button" data-mine aria-pressed="${wireState.mine}">Only my team</button>` : ''}
-        </div>
-        ${showTrades ? `<section class="wire-sec">
-          <h2 class="sec-title"><span>Trades</span><small>${trades.length} this season</small></h2>
-          ${trades.length ? `<ul class="moves">${trades.slice(0, wireState.trades).map(tradeCard).join('')}</ul>` : '<p class="empty glass panel">No trades yet.</p>'}
-          ${trades.length > wireState.trades ? `<div class="filters"><button type="button" data-more-trades>Show all ${trades.length} trades</button></div>` : ''}
-        </section>` : ''}
-        ${showMoves ? `<section class="wire-sec">
-          <h2 class="sec-title"><span>Adds and drops</span><small>${moves.length} this season</small></h2>
-          ${days.length ? days.map((d) => `<section class="day"><h3>${esc(d.lbl)}</h3><ul class="moves">${[...d.teams].map(([rid, items]) => teamCard(rid, items)).join('')}</ul></section>`).join('') : '<p class="empty glass panel">No moves match these filters yet.</p>'}
-          ${moves.length > shown.length ? `<div class="filters"><button type="button" data-more>Show older moves (${moves.length - shown.length} more)</button></div>` : ''}
-        </section>` : ''}
-      </div>
-      <aside>
-        ${DATA.meta.hasRos ? `<section class="panel glass"><h2>Best available</h2><p class="sub">Highest consensus ROS value not on a roster right now.</p>
-          <ol class="fa-list">${fa.map((p, i) => `<li><span class="n">${i + 1}</span><span>${posTag(p.id)}${esc(nameOf(p.id))} <span class="when">${p.pos}${p.prk}</span></span><span class="v" data-tip="Consensus value ${f1(p.v)}, ${f1(p.wk)} proj pts/wk">${f1(p.v)}</span></li>`).join('') || '<li>Nothing notable on waivers.</li>'}</ol></section>` : ''}
-        <section class="panel glass"><h2>Busiest managers</h2><p class="sub">Completed moves this season, with net ROS value added.</p>
-          ${mm.map((m) => `<div class="leader"><span>${avatar(team(m.rid), "avatar xs")}${esc(team(m.rid).name)}</span><span>${m.moves}${DATA.meta.hasRos ? ` <span class="${m.net >= 0 ? 'plus' : 'minus'}">${signed(m.net)}</span>` : ''}</span></div>`).join('')}
-        </section>
-        ${traders.length && DATA.meta.hasRos ? `<section class="panel glass"><h2>Trade ledger</h2><p class="sub">Net ROS value from trades at today's consensus. In uneven trades, each roster spot freed up counts as one top free agent (${f1(DATA.meta.replacement)}).</p>
-          ${traders.map((m) => `<div class="leader"><span>${avatar(team(m.rid), "avatar xs")}${esc(team(m.rid).name)}</span><span class="${m.tradeNet >= 0 ? 'plus' : 'minus'}">${signed(m.tradeNet)}</span></div>`).join('')}</section>` : ''}
-      </aside>
-    </div>`;
-}
 
 // ---------- matchups ----------
 // the bottom two playing each other (by standings or by power rank) get a "Toilet Time" tag on their card, by Dan's
@@ -2200,73 +2070,17 @@ function paintDrive(el, s) {
 }
 
 // ---------- trade lab ----------
+// The Trade lab is React (src/trades/TradesPage.jsx), mounted into #app by bind; its shape filter lives in tradeState.
 function setMyTeam(rid) {
   myTeam = rid || null;
   store.set('ph-my-team', myTeam ? String(myTeam) : null);
   $('#my-team').value = myTeam ? String(myTeam) : '';
   route();
 }
-
-function viewTrades() {
-  const teamSelect = `<label class="trade-pick"><span>Trade ideas for</span><select id="trade-team"><option value="">Choose your team</option>${[...DATA.teams].sort((a, b) => a.name.localeCompare(b.name)).map((t) => `<option value="${t.rid}" ${t.rid === myTeam ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label>`;
-  const head = `
-    <section class="view-head">
-      <div>
-        <h1><span class="wk">${myTeam ? esc(team(myTeam).name) : 'Pick your team'}</span>Trade Lab</h1>
-        <p>Every 1-for-1, 2-for-1 and 1-for-2 swap with the rest of the league, kept only when both starting lineups get better and the consensus values line up. Ranked by how much the deal helps you, with a bonus for deals the other side should like too.</p>
-      </div>
-      <div>${teamSelect}</div>
-    </section>`;
-  if (!DATA.meta.hasRos) return head + '<p class="empty glass panel">Trade ideas need the rest-of-season rankings, which are unavailable right now.</p>';
-  if (!myTeam) return head + '<p class="empty glass panel">Choose your team above to see trade ideas built around its needs.</p>';
-
-  const me = team(myTeam), n = DATA.teams.length;
-  const all = (tradeState.cache[myTeam] ||= tradeIdeas(DATA, myTeam));
-  const ideas = tradeState.shape === 'all' ? all : all.filter((i) => i.shape === tradeState.shape);
-  const count = (k) => (k === 'all' ? all.length : all.filter((i) => i.shape === k).length);
-  const btn = (k, label) => `<button type="button" data-shape="${k}" aria-pressed="${tradeState.shape === k}"${count(k) || tradeState.shape === k ? '' : ' disabled'}>${label} (${count(k)})</button>`;
-  const needs = ['QB', 'RB', 'WR', 'TE'].map((p) => {
-    const r = me.posRanks[p], cls = r >= n - 3 ? 'need' : r <= 3 ? 'strong' : '';
-    return `<span class="need-chip ${cls}" data-tip="${esc(`${p}: ${ordinal(r)} of ${n} (${groupSaid(me, p)})`)}"><b>${p}</b>${ordinal(r)}</span>`;
-  }).join('');
-  const maxGain = Math.max(0.5, ...all.flatMap((i) => [i.gainMe, i.gainThem]));
-  const proj = (id) => DATA.helpers.effWeekly(id);
-  const list = (ids) => `<ul>${ids.map((id) => `<li>${posTag(id)}<span class="pl">${esc(nameOf(id))}</span><span class="pv" data-tip="Consensus value ${f1(DATA.helpers.valueOf(id))}, ${f1(proj(id))} proj pts/wk">${f1(DATA.helpers.valueOf(id))}</span></li>`).join('')}</ul>`;
-  const bar = (label, v) => `<div class="gain"><span>${label}</span><span class="track"><i style="width:${Math.max(3, (v / maxGain) * 100)}%"></i></span><b>+${f1(v)}</b></div>`;
-  const card = (i, k) => {
-    const them = team(i.partner);
-    const band = Math.max(6, 0.15 * (i.get.concat(i.give).reduce((a, id) => a + DATA.helpers.valueOf(id), 0)) / 2);
-    const pos = 50 + Math.max(-1, Math.min(1, i.value / band)) * 50;
-    return `<article class="idea glass ${k === 0 ? 'rim' : ''}">
-      <header class="idea-head">${avatar(them)}<div><small>Idea ${k + 1}, ${i.shape}</small><b>With ${esc(them.name)}</b></div>
-        <span class="idea-shape">No. ${them.powerRank} power</span></header>
-      <div class="idea-swap">
-        <div class="give"><h4>You give</h4>${list(i.give)}</div>
-        <span class="swap-arrow" aria-hidden="true"><svg width="22" height="16" viewBox="0 0 22 16"><path d="M1 5h17l-4-4M21 11H4l4 4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <div class="get"><h4>You get</h4>${list(i.get)}</div>
-      </div>
-      <div class="idea-impact">
-        ${bar('Your lineup', i.gainMe)}
-        ${bar(`${esc(short(them.name, 16))}`, i.gainThem)}
-        <div class="balance" data-tip="${esc(i.fair)}"><span>Value balance</span><span class="scale"><i class="mid"></i><i class="mark" style="left:${pos}%"></i></span><b>${i.value > 0 ? '+' : ''}${f1(i.value)}</b></div>
-      </div>
-      <ul class="idea-why">${i.why.map((w) => `<li>${esc(w)}</li>`).join('')}<li class="fair">${esc(i.fair)}</li></ul>
-      ${k === 0 && member(them) ? `<p class="pitch">${headshot(them, 'pitch-face')}<span>Best pitch on the board. Time to text <b>${esc(firstName(them))}</b>.</span></p>` : ''}
-    </article>`;
-  };
-  return head + `
-    <div class="trade-bar">
-      <div class="needs"><span class="lbl">Your position ranks</span>${needs}</div>
-      <div class="filters" role="group" aria-label="Trade shape">${btn('all', 'All')}${btn('1 for 1', '1 for 1')}${btn('2 for 1', '2 for 1')}${btn('1 for 2', '1 for 2')}</div>
-    </div>
-    <p class="sub trade-legend">Green bars are projected starting-lineup points per week gained by each side. The dot on the value balance is your side of the consensus value: right of center you come out ahead, left of center they do. Uneven trades count the cut player or the free-agent pickup they force.</p>
-    ${ideas.length ? `<div class="ideas">${ideas.map(card).join('')}</div>`
-      : `<p class="empty glass panel">${all.length ? 'No ideas of this shape. Try another filter.' : 'No trade both sides should take right now. Your roster is balanced enough that every fair deal makes one lineup worse. Check back after the next round of waivers or injuries.'}</p>`}`;
-}
+const viewTrades = () => '';
 
 // ---------- nerd lab ----------
-// The Nerd lab is React (src/lab): the lab itself (#lab) and the team dashboard (#lab/team). viewLab leaves #app empty
-// and bind mounts the React tree there (mountLabPage); route takes it down before it puts up the next page.
+// The Nerd lab is React (src/lab): the lab itself (#lab) and the team dashboard (#lab/team), mounted into #app by bind.
 // The team dashboard opens on your team, or whichever was picked there last (labState.team).
 const dashTeam = () => (team(labState.team) ? labState.team : myTeam && team(myTeam) ? myTeam : DATA.teams[0].rid);
 // formatting and names for the React pages, so they read exactly like the rest of the site
@@ -2275,13 +2089,13 @@ const reactHelpers = () => ({
   shortName: (id) => shortName(DATA.helpers.player(id) || { name: nameOf(id) }),
 });
 const viewLab = () => '';
+
+// The React pages: their view function above leaves #app empty, bind mounts the page there, and route takes it down
+// (unmountReact) before it puts up the next page.
 let unmountReact = null;
-function mountLabPage() {
+function mountView(Page, props) {
   unmountReact?.();
-  unmountReact = mountLab($('#app'), {
-    sub: labState.sub, D: DATA, raw: DATA.raw, ros: RAW.ros?.values || {}, me: myTeam, calm: calm(), h: reactHelpers(),
-    team: dashTeam(), onTeam: (rid) => (labState.team = rid),
-  });
+  unmountReact = mount($('#app'), Page, { D: DATA, me: myTeam, h: reactHelpers(), ...props });
 }
 
 // ---------- shell ----------
@@ -2508,17 +2322,14 @@ function bind(key) {
       card.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'start' });
     });
   }
-  if (key === 'trades') {
-    $('#trade-team')?.addEventListener('change', (e) => setMyTeam(Number(e.target.value)));
-    document.querySelectorAll('[data-shape]').forEach((b) => b.addEventListener('click', () => { tradeState.shape = b.dataset.shape; route(); }));
+  if (key === 'trades') mountView(TradesPage, { state: tradeState, onState: (x) => Object.assign(tradeState, x), onTeam: setMyTeam });
+  if (key === 'wire') mountView(WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x) });
+  if (key === 'lab') {
+    mountView(Lab, {
+      sub: labState.sub, raw: DATA.raw, ros: RAW.ros?.values || {}, calm: calm(),
+      team: dashTeam(), onTeam: (rid) => (labState.team = rid),
+    });
   }
-  if (key === 'wire') {
-    document.querySelectorAll('[data-type]').forEach((b) => b.addEventListener('click', () => { wireState.type = b.dataset.type; wireState.limit = 50; route(); }));
-    $('[data-mine]')?.addEventListener('click', () => { wireState.mine = !wireState.mine; route(); });
-    $('[data-more]')?.addEventListener('click', () => { wireState.limit += 50; route(); });
-    $('[data-more-trades]')?.addEventListener('click', () => { wireState.trades = Infinity; route(); });
-  }
-  if (key === 'lab') mountLabPage();
 }
 
 // the Live tab exists while a week is on, and reads "Final" once the week is (before and after the reveal)
