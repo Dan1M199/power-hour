@@ -1,4 +1,4 @@
-// The team dashboard (Nerd lab, #lab/team): one team's season on seven paper widgets in the Paper Widgets style. The
+// The team dashboard (Nerd lab, #lab/team): one team's season on eight paper widgets in the Paper Widgets style. The
 // numbers come from dashData (lib/dashboard.js, pure and tested); the look is .paper in styles.css. Picking another
 // team remounts the sheet, so its intro plays again.
 import { useLayoutEffect, useMemo, useState } from 'react';
@@ -12,6 +12,7 @@ import { ScoringTile } from './ScoringTile.jsx';
 import { GroupsTile } from './GroupsTile.jsx';
 import { ScheduleTile } from './ScheduleTile.jsx';
 import { LuckTile } from './LuckTile.jsx';
+import { FaceOffTile } from './FaceOffTile.jsx';
 
 /**
  * D: the computed league; raw: the Sleeper snapshot (matchups for player points); ros: consensus values by player id;
@@ -44,7 +45,7 @@ export function TeamDashboard({ D, raw, ros, rid: start, h, calm, onTeam }) {
   );
 }
 
-// the seven tiles and the clock that plays their intro (about 3 s, then it stops; reduced motion draws the end at once)
+// the eight tiles and the clock that plays their intro (about 3 s, then it stops; reduced motion draws the end at once)
 function Sheet({ m, h, calm }) {
   const clock = useMemo(createClock, []);
   useLayoutEffect(() => {
@@ -70,6 +71,7 @@ function Sheet({ m, h, calm }) {
         <GroupsTile m={m} h={h} />
         <ScheduleTile m={m} h={h} calm={calm} />
         <LuckTile m={m} h={h} calm={calm} />
+        <FaceOffTile m={m} h={h} calm={calm} />
       </div>
     </ClockContext.Provider>
   );

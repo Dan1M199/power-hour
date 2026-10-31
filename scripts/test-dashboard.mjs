@@ -2,7 +2,7 @@
 // the tiles rely on (shares in 0..1, the right number of weeks and games, player points that add up to Sleeper's).
 import { buildFixture } from './fixture.mjs';
 import { computeLeague } from '../lib/engine.js';
-import { dashData, weekPts } from '../lib/dashboard.js';
+import { dashData, faceOff, weekPts, winAt } from '../lib/dashboard.js';
 
 const fx = buildFixture();
 const D = computeLeague({
@@ -34,9 +34,26 @@ for (const t of D.teams) {
     if (Math.abs(sum - s.season) > 1e-9) fail(`${t.name}: ${s.name} season ${s.season} vs ${sum}`);
     if (s.last5.length > 5) fail(`${t.name}: ${s.name} has ${s.last5.length} recent weeks`);
   }
+  // face off: every other team once, this week's opponent first, odds and break-even as shares, the ghost record over
+  // the weeks both played, and a heist that can only help the side pulling it
+  const F = m.faceoff, thisOpp = m.game?.opp?.rid;
+  if (!F || F.rivals.length !== m.n - 1 || new Set(F.rivals.map((x) => x.rid)).size !== m.n - 1 || F.rivals.some((x) => x.rid === t.rid)) fail(`${t.name}: face off rivals`);
+  if (thisOpp != null && F.rivals[0].rid !== thisOpp) fail(`${t.name}: this week's opponent isn't the first rival`);
+  for (const x of F.rivals) {
+    share(x.odds, `${t.name} vs ${x.opp.name} odds`); share(x.breakEven, `${t.name} vs ${x.opp.name} break-even`);
+    if (Math.abs(winAt(x, x.breakEven) - 0.5) > 1e-3) fail(`${t.name} vs ${x.opp.name}: the break-even week wins ${winAt(x, x.breakEven)}`);
+    if (!(winAt(x, 0.2) < winAt(x, 0.5) && winAt(x, 0.5) < winAt(x, 0.8))) fail(`${t.name} vs ${x.opp.name}: a better week should win more often`);
+    const g = x.ghost;
+    if (g.w + g.l + g.t !== g.weeks.length || g.weeks.length > t.games || g.weeks.filter((w) => w.real).length > 1) fail(`${t.name} vs ${x.opp.name}: ghost record ${JSON.stringify(g)}`);
+    const real = t.weeks.find((w) => w.opp === x.rid);
+    if (real && !g.weeks.find((w) => w.week === real.week && w.real && w.a === real.pts && w.b === real.oppPts)) fail(`${t.name} vs ${x.opp.name}: the real meeting isn't marked`);
+    const hz = x.heist;
+    if (hz && (hz.take.gain < 0 || hz.take.loss > 1e-9 || hz.steal < x.odds - 1e-9 || !x.opp.players.includes(hz.take.id))) fail(`${t.name} vs ${x.opp.name}: heist ${JSON.stringify(hz.take)} ${hz.steal} vs ${x.odds}`);
+    if (hz?.give && !t.players.includes(hz.give.id)) fail(`${t.name} vs ${x.opp.name}: they'd steal someone who isn't here`);
+  }
   const { record: r, allPlay: a } = m.luck;
   if (r.w + r.l + r.tie !== t.games) fail(`${t.name}: record ${r.w}-${r.l}-${r.tie} over ${t.games} games`);
   if (Math.abs(a.w + a.l - (m.n - 1) * t.games) > 1) fail(`${t.name}: all-play ${a.w}-${a.l} over ${t.games} games`);
 }
-if (dashData(D, -1) !== null) fail('an unknown team should give null');
+if (dashData(D, -1) !== null || faceOff(D, -1) !== null) fail('an unknown team should give null');
 console.log(process.exitCode ? 'dashboard checks failed' : 'ok   dashboard numbers check out for every team');

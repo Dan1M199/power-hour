@@ -18,5 +18,6 @@ export const TL = {
   steps: [1.3, 2.7], bars: [1.4, 2.0], barStagger: 0.08, // scoring
   fill: [1.5, 2.5], fillStagger: 0.12, // position groups
   rows: [1.5, 2.1], rowStagger: 0.1, rowRise: 12, chip: [2.2, 2.5], // schedule
+  duel: [1.6, 2.9], // face off: the odds count up and the knot slides out from the middle
   end: 3.1,
 };

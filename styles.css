@@ -1888,10 +1888,112 @@ html.locked { overflow: hidden; }
 .pp-luck.on .moon { background: rgba(251, 246, 239, 0.1); box-shadow: inset 0 0 0 1.5px rgba(251, 246, 239, 0.2); }
 .pp-luck.on .toggle { background-color: var(--p-sun); }
 
+/* 8. face off: a full-width tile, laid out in flow (not pixel-placed) since it spans 928, 612 or the phone's width.
+   Front: the big odds and the ghost record on the left, the tug of war and the slider on the right. Back: the heist.
+   It flips edge-on (rotate, under the grid's perspective) and changes sides at 90 degrees. */
+.pp-grid { perspective: 1800px; }
+.pp-tile.pp-fo { width: auto; height: auto; min-height: 296px; grid-column: 1 / -1; }
+.pp-fo .fo-side { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 0 40px; padding: 64px 26px 24px; }
+.pp-fo .fo-side[hidden] { display: none; }
+.pp-fo :is(.fo-side, .fo-rival) { transition: opacity 0.14s; }
+.pp-fo.dip :is(.fo-side, .fo-rival) { opacity: 0; }
+
+/* the rival picker, top right */
+.fo-step { position: absolute; right: 18px; top: 12px; display: flex; align-items: center; gap: 6px; }
+.fo-arrow { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background-color: transparent; color: var(--p-ink); cursor: pointer; transition: background-color 0.15s, transform 0.15s; }
+.fo-arrow:active { transform: scale(0.88); background-color: var(--p-track); }
+@media (hover: hover) { .fo-arrow:hover { background-color: var(--p-wash); } }
+.fo-rival { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.fo-rface { flex: none; width: 32px; height: 32px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 1.5px var(--p-ink); }
+.ph.fo-rface, .ph.fo-end { display: grid; place-items: center; background: var(--p-lilac); font: 400 14px var(--p-sans); color: var(--p-ink); }
+.fo-rname { display: grid; min-width: 0; max-width: 230px; line-height: 1.15; }
+.fo-rname b { font: 400 15.5px var(--p-sans); letter-spacing: -0.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fo-rname small { font: 400 11.5px var(--p-mono); color: var(--p-muted); }
+
+/* the left: the odds and the ghost record */
+.fo-left { display: flex; flex-direction: column; min-width: 0; }
+.fo-big { font: 300 88px/0.95 var(--p-sans); letter-spacing: -0.04em; }
+.pp-fo.pulled .fo-big { color: var(--p-hot); }
+.fo-cap { margin: 8px 0 0; font-size: 13.5px; line-height: 1.4; color: var(--p-muted); text-wrap: pretty; }
+.fo-ghost { margin-top: auto; padding-top: 18px; }
+.fo-ghost-head { display: flex; align-items: baseline; gap: 10px; }
+.fo-ghost-head b { flex: none; font: 300 30px/1 var(--p-sans); letter-spacing: -0.8px; }
+.fo-ghost-head span { font-size: 12.5px; line-height: 1.3; color: var(--p-muted); }
+.fo-dots { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.fo-dots i { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--p-ink); }
+.fo-dots i.won { background: var(--p-accent); }
+.fo-dots i.lost { background: var(--p-tile); }
+.fo-dots i.tied { background: var(--p-lilac); }
+.fo-dots i.real { outline: 2px solid var(--p-hot); outline-offset: 2px; }
+
+/* the right: the tug of war, the slider under it, the reading */
+.fo-right { display: flex; flex-direction: column; min-width: 0; padding-top: 22px; }
+.fo-tug { display: flex; align-items: center; gap: 12px; }
+.fo-end { flex: none; width: 44px; height: 44px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--p-ink), 0 3px 0 2px var(--p-ledge); }
+.fo-rope { --k: calc(0.5 + (var(--at) - 0.5) * var(--intro, 1)); position: relative; flex: 1; height: 16px; border-radius: 99px; background: var(--p-lilac); }
+.fo-rope::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1.5px var(--p-ink); pointer-events: none; }
+.fo-mine { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--k) * 100%); border-radius: 99px 0 0 99px; background: var(--p-accent); transition: width 0.45s cubic-bezier(0.33, 1, 0.68, 1); }
+.fo-knot { position: absolute; z-index: 1; top: 50%; left: calc(var(--k) * 100%); width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: var(--p-white); box-shadow: var(--p-chip); transition: left 0.45s cubic-bezier(0.33, 1, 0.68, 1); }
+.fo-knot b { position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); padding: 3px 8px; border-radius: 99px; background: var(--p-ink); color: var(--p-white); font: 500 12px var(--p-mono); white-space: nowrap; }
+.fo-slide { display: grid; gap: 8px; margin: 26px 56px 0; }
+.fo-slide-ends { display: flex; justify-content: space-between; gap: 12px; font: 400 11.5px var(--p-mono); color: var(--p-muted); }
+.fo-slide-ends .fo-whose { color: var(--p-ink); }
+.fo-track { position: relative; display: block; height: 26px; }
+.fo-track input { position: relative; z-index: 1; display: block; width: 100%; height: 26px; margin: 0; background: transparent; appearance: none; -webkit-appearance: none; cursor: pointer; }
+.fo-track input::-webkit-slider-runnable-track { height: 8px; border-radius: 99px; background: linear-gradient(90deg, var(--p-ink) 0 calc((var(--q) - 0.05) / 0.9 * 100%), var(--p-wash) 0); box-shadow: var(--p-well); }
+.fo-track input::-moz-range-track { height: 8px; border-radius: 99px; background: var(--p-wash); box-shadow: var(--p-well); }
+.fo-track input::-moz-range-progress { height: 8px; border-radius: 99px; background: var(--p-ink); }
+.fo-track input::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; margin-top: -8px; border: 0; border-radius: 50%; background: var(--p-white); box-shadow: var(--p-chip); }
+.fo-track input::-moz-range-thumb { width: 24px; height: 24px; border: 0; border-radius: 50%; background: var(--p-white); box-shadow: var(--p-chip); }
+.fo-track input:focus-visible { outline: none; }
+.fo-track input:focus-visible::-webkit-slider-thumb { box-shadow: var(--p-chip), 0 0 0 5px var(--p-lilac); }
+.fo-track input:focus-visible::-moz-range-thumb { box-shadow: var(--p-chip), 0 0 0 5px var(--p-lilac); }
+/* the break-even week: a violet post on the track (the thumb's centre runs 12px in from each end) */
+.fo-be { position: absolute; z-index: 2; top: 2px; left: calc(12px + (var(--be) - 0.05) / 0.9 * (100% - 24px)); width: 4px; height: 22px; margin-left: -2px; border-radius: 2px; background: var(--p-hot); transition: left 0.45s cubic-bezier(0.33, 1, 0.68, 1); }
+.fo-read { margin: 14px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--p-muted); }
+.fo-read b { display: block; font-weight: 400; color: var(--p-ink); }
+.fo-read span { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.fo-be-key { flex: none; width: 4px; height: 14px; border-radius: 2px; background: var(--p-hot); }
+
+/* the flip button: a flat pill on the ledge */
+.fo-flip { display: inline-flex; align-items: center; gap: 8px; align-self: flex-end; margin-top: auto; padding: 9px 16px; border: 0; border-radius: 99px; background-color: var(--p-ink); color: var(--p-white);
+  box-shadow: 0 3px 0 var(--p-ledge); font: 400 13.5px var(--p-sans); cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+.fo-flip:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--p-ledge); }
+
+/* the back: two loot cards and the switch */
+.fo-loot { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-content: start; }
+.pp-fo .back { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+.fo-card { display: grid; gap: 4px; align-content: start; padding: 18px 18px 20px; border-radius: 22px; background: var(--p-wash); box-shadow: var(--p-well); }
+.fo-card:first-child { background: var(--p-accent); color: var(--p-white); box-shadow: inset 0 0 0 1.5px var(--p-ink); }
+.fo-card small { font: 400 11.5px var(--p-mono); opacity: 0.85; }
+.fo-card:not(:first-child) small, .fo-card:not(:first-child) span, .fo-card:not(:first-child) em { color: var(--p-muted); }
+.fo-card b { margin-top: 6px; font: 300 26px/1.1 var(--p-sans); letter-spacing: -0.6px; }
+.fo-card span { font-size: 13.5px; }
+.fo-card em { margin-top: 10px; font: 400 12.5px/1.4 var(--p-sans); font-style: normal; }
+.fo-pull { display: flex; flex-direction: column; min-width: 0; }
+.fo-odds { display: flex; align-items: center; gap: 10px; font: 300 52px/1 var(--p-sans); letter-spacing: -0.04em; }
+.fo-odds span { color: var(--p-muted); }
+.fo-odds svg { width: 26px; height: 26px; color: var(--p-muted); }
+.fo-odds b { font-weight: 300; color: var(--p-hot); }
+.fo-switch { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 13.5px; }
+.fo-switch .toggle { position: relative; flex: none; width: 60px; height: 34px; padding: 0; border: 0; border-radius: 99px; background-color: var(--p-track); box-shadow: inset 0 0 0 1.5px var(--p-ink); cursor: pointer; transition: transform 0.15s, background-color 0.3s; }
+.fo-switch .toggle:active { transform: scale(0.94); }
+.fo-switch .knob { position: absolute; left: 3px; top: 3px; width: 28px; height: 28px; border-radius: 50%; background: var(--p-white); box-shadow: 0 0 0 1.5px var(--p-ink); transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1); }
+.fo-switch .toggle[aria-checked='true'] { background-color: var(--p-hot); }
+.fo-switch .toggle[aria-checked='true'] .knob { transform: translateX(26px); }
+.pp-fo .back .fo-flip { margin-top: auto; padding-top: 9px; }
+.pp-fo .back .fo-pull .fo-flip { margin-top: 18px; }
+
 @keyframes pp-sweep { from { left: -30%; } to { left: 100%; } }
 @keyframes pp-pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 
-@container (max-width: 927.98px) { .pp-grid { grid-template-columns: repeat(2, 296px); } }
+@container (max-width: 927.98px) {
+  .pp-grid { grid-template-columns: repeat(2, 296px); }
+  .pp-fo .fo-side { grid-template-columns: minmax(0, 210px) minmax(0, 1fr); gap: 0 26px; }
+  .pp-fo .back { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .fo-big { font-size: 72px; }
+  .fo-slide { margin: 26px 0 0; }
+}
 /* one column: tiles take the full width; key players and the schedule stack their halves */
 @container (max-width: 611.98px) {
   .pp-head { grid-template-columns: auto minmax(0, 1fr); }
@@ -1924,4 +2026,15 @@ html.locked { overflow: hidden; }
   .pp-summary { left: 150px; top: 106px; max-width: calc(100% - 174px); white-space: normal; }
   .pp-divider { left: 28px; right: 28px; top: 196px; bottom: auto; width: auto; height: 1px; }
   .pp-list { left: 24px; top: 214px; width: calc(100% - 48px); }
+  .pp-tile.pp-fo { min-height: 0; }
+  .fo-step { position: static; margin: 52px 14px 0; justify-content: space-between; }
+  .fo-rname { max-width: none; }
+  .pp-fo .fo-side, .pp-fo .back { grid-template-columns: minmax(0, 1fr); gap: 22px; padding: 16px 22px 22px; }
+  .fo-big { font-size: 72px; }
+  .fo-ghost { margin-top: 0; }
+  .fo-right { padding-top: 18px; }
+  .fo-slide { margin: 26px 0 0; }
+  .fo-flip { margin-top: 18px; }
+  .fo-loot { grid-template-columns: minmax(0, 1fr); }
+  .fo-odds { font-size: 44px; }
 }
