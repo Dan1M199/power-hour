@@ -251,6 +251,25 @@ const headshot = (t, cls) => {
 };
 // a picture that fails to load (a Sleeper avatar gone missing) turns into its initials. Load errors don't bubble, so one
 // capturing listener on the document covers every picture any render ever adds.
+// ---------- the theme ----------
+// index.html sets html[data-theme] before the first paint; this keeps it in step: the header button flips it and keeps
+// the choice on this device (ph-theme), and without a choice it follows the device's setting as that changes.
+function initTheme() {
+  const html = document.documentElement, btn = $('#theme-btn'), dark = matchMedia('(prefers-color-scheme: dark)');
+  const paint = (t) => {
+    html.dataset.theme = t;
+    $('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#0A1630' : '#81D4FA');
+    btn?.setAttribute('aria-label', t === 'dark' ? 'Switch to the day game (light mode)' : 'Switch to the night game (dark mode)');
+  };
+  paint(html.dataset.theme === 'dark' ? 'dark' : 'light');
+  btn?.addEventListener('click', () => {
+    const t = html.dataset.theme === 'dark' ? 'light' : 'dark';
+    paint(t);
+    store.set('ph-theme', t);
+  });
+  dark.addEventListener?.('change', (e) => { if (!store.get('ph-theme')) paint(e.matches ? 'dark' : 'light'); });
+}
+
 function initAvatarFallback() {
   document.addEventListener('error', (e) => {
     const img = e.target;
@@ -1455,6 +1474,7 @@ async function main() {
   const join = /^#join=([A-Za-z0-9_-]{16,128})$/.exec(location.hash);
   if (join) history.replaceState(null, '', location.pathname + location.search);
   initAvatarFallback();
+  initTheme();
   initTooltips();
   const loader = startLoader();
   try {

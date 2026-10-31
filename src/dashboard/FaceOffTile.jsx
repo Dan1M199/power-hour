@@ -91,22 +91,22 @@ function FaceOff({ F, me, h, calm }) {
   return (
     <Tile index={7} className={`pp-fo${dip ? ' dip' : ''}${on ? ' pulled' : ''}`} tileRef={tile} style={{ '--i': 7, '--at': at.toFixed(4), '--q': q, '--be': Math.min(0.95, Math.max(0.05, be)).toFixed(4) }}>
       <Label>{side === 'front' ? 'Face off' : 'The heist'}</Label>
-      <div className="fo-step">
-        <button type="button" className="fo-arrow" aria-label="Previous rival" onClick={() => step(-1)}><Chevron d="M15 5l-7 7 7 7" /></button>
-        <span className="fo-rival" aria-live="polite">
-          <Face t={r.opp} h={h} cls="fo-rface" />
-          <span className="fo-rname"><b>{`vs ${r.opp.name}`}</b><small>{r.rid === F.thisWeek ? `This week, ${i + 1} of ${F.rivals.length}` : `${i + 1} of ${F.rivals.length}`}</small></span>
+      <div className="pf-step">
+        <button type="button" className="pf-arrow" aria-label="Previous rival" onClick={() => step(-1)}><Chevron d="M15 5l-7 7 7 7" /></button>
+        <span className="pf-rival" aria-live="polite">
+          <Face t={r.opp} h={h} cls="pf-rface" />
+          <span className="pf-rname"><b>{`vs ${r.opp.name}`}</b><small>{r.rid === F.thisWeek ? `This week, ${i + 1} of ${F.rivals.length}` : `${i + 1} of ${F.rivals.length}`}</small></span>
         </span>
-        <button type="button" className="fo-arrow" aria-label="Next rival" onClick={() => step(1)}><Chevron d="M9 5l7 7-7 7" /></button>
+        <button type="button" className="pf-arrow" aria-label="Next rival" onClick={() => step(1)}><Chevron d="M9 5l7 7-7 7" /></button>
       </div>
 
-      <div className="fo-side front" hidden={side !== 'front'}>
-        <div className="fo-left">
-          <div className="fo-big" ref={big} />
-          <p className="fo-cap">{on ? `${A} beats ${B} on an average week, with ${H.take.name} stolen` : `${A} beats ${B} on an average week`}</p>
-          <div className="fo-ghost">
-            <div className="fo-ghost-head"><b>{rec}</b><span>{`Ghost record: ${A}'s score against ${B}'s, every week so far`}</span></div>
-            <div className="fo-dots">
+      <div className="pf-side front" hidden={side !== 'front'}>
+        <div className="pf-left">
+          <div className="pf-big" ref={big} />
+          <p className="pf-cap">{on ? `${A} beats ${B} on an average week, with ${H.take.name} stolen` : `${A} beats ${B} on an average week`}</p>
+          <div className="pf-ghost">
+            <div className="pf-ghost-head"><b>{rec}</b><span>{`Ghost record: ${A}'s score against ${B}'s, every week so far`}</span></div>
+            <div className="pf-dots">
               {g.weeks.map((w) => (
                 <i key={w.week} className={`${w.a > w.b ? 'won' : w.a < w.b ? 'lost' : 'tied'}${w.real ? ' real' : ''}`}
                   data-tip={`Week ${w.week}: ${f1(w.a)} to ${f1(w.b)}${w.real ? ', the week they really met' : ''}`} />
@@ -114,41 +114,41 @@ function FaceOff({ F, me, h, calm }) {
             </div>
           </div>
         </div>
-        <div className="fo-right">
-          <div className="fo-tug">
-            <Face t={me} h={h} cls="fo-end" />
-            <div className="fo-rope" data-tip={`${A} wins ${pct(at)} of the time when scoring ${f1(score)}`}>
-              <i className="fo-mine" /><span className="fo-knot"><b>{pct(at)}</b></span>
+        <div className="pf-right">
+          <div className="pf-tug">
+            <Face t={me} h={h} cls="pf-end" />
+            <div className="pf-rope" data-tip={`${A} wins ${pct(at)} of the time when scoring ${f1(score)}`}>
+              <i className="pf-mine" /><span className="pf-knot"><b>{pct(at)}</b></span>
             </div>
-            <Face t={r.opp} h={h} cls="fo-end" />
+            <Face t={r.opp} h={h} cls="pf-end" />
           </div>
-          <label className="fo-slide">
-            <span className="fo-slide-ends"><span>Dud</span><span className="fo-whose">{`${A}'s week`}</span><span>Monster</span></span>
-            <span className="fo-track">
-              <i className="fo-be" data-tip={beWord} />
+          <label className="pf-slide">
+            <span className="pf-slide-ends"><span>Dud</span><span className="pf-whose">{`${A}'s week`}</span><span>Monster</span></span>
+            <span className="pf-track">
+              <i className="pf-be" data-tip={beWord} />
               <input type="range" min="5" max="95" step="1" value={Q} onChange={(e) => setQ(Number(e.target.value) / 100)}
                 aria-valuetext={`${ordinal(Q)} percentile, ${f1(score)} points, wins ${pct(at)}`} />
             </span>
           </label>
-          <p className="fo-read"><b>{`${A}'s ${ordinal(Q)}-percentile week, ${f1(score)}: wins ${pct(at)}.`}</b><span><i className="fo-be-key" />{`${beWord}.`}</span></p>
-          {H ? <button type="button" className="fo-flip" ref={(b) => { flipBtn.current.front = b; }} onClick={flip}><FlipIcon />The heist</button> : null}
+          <p className="pf-read"><b>{`${A}'s ${ordinal(Q)}-percentile week, ${f1(score)}: wins ${pct(at)}.`}</b><span><i className="pf-be-key" />{`${beWord}.`}</span></p>
+          {H ? <button type="button" className="pf-flip" ref={(b) => { flipBtn.current.front = b; }} onClick={flip}><FlipIcon />The heist</button> : null}
         </div>
       </div>
 
       {H ? (
-        <div className="fo-side back" hidden={side !== 'back'}>
-          <div className="fo-loot">
+        <div className="pf-side back" hidden={side !== 'back'}>
+          <div className="pf-loot">
             <Loot kicker={`${A} steals from ${B}`} p={H.take} h={h} line={`+${f1(H.take.gain)} a week for ${A}'s lineup, ${f1(H.take.loss)} for ${B}'s`} />
             {H.give ? <Loot kicker={`${B} would steal`} p={H.give} h={h} line={`+${f1(H.give.gain)} a week for ${B}'s lineup, ${f1(H.give.loss)} for ${A}'s`} /> : null}
           </div>
-          <div className="fo-pull">
-            <div className="fo-odds"><span>{pct(r.odds)}</span><Chevron d="M5 12h14M13 6l6 6-6 6" /><b>{pct(H.steal)}</b></div>
-            <p className="fo-cap">{`One player moves ${A}'s odds against ${B} by ${Math.round(Math.abs(H.steal - r.odds) * 100)} points.${H.swap != null ? ` A straight swap, ${H.give.name} for ${H.take.name}, lands at ${pct(H.swap)}.` : ''}`}</p>
-            <div className="fo-switch">
+          <div className="pf-pull">
+            <div className="pf-odds"><span>{pct(r.odds)}</span><Chevron d="M5 12h14M13 6l6 6-6 6" /><b>{pct(H.steal)}</b></div>
+            <p className="pf-cap">{`One player moves ${A}'s odds against ${B} by ${Math.round(Math.abs(H.steal - r.odds) * 100)} points.${H.swap != null ? ` A straight swap, ${H.give.name} for ${H.take.name}, lands at ${pct(H.swap)}.` : ''}`}</p>
+            <div className="pf-switch">
               <button type="button" className="toggle" role="switch" aria-checked={on} onClick={() => setHeist((x) => !x)}><span className="knob" /></button>
               <span>{on ? 'Heist pulled: the face off counts him' : 'Pull the heist'}</span>
             </div>
-            <button type="button" className="fo-flip" ref={(b) => { flipBtn.current.back = b; }} onClick={flip}><FlipIcon />Back to the face off</button>
+            <button type="button" className="pf-flip" ref={(b) => { flipBtn.current.back = b; }} onClick={flip}><FlipIcon />Back to the face off</button>
           </div>
         </div>
       ) : null}
@@ -158,7 +158,7 @@ function FaceOff({ F, me, h, calm }) {
 
 function Loot({ kicker, p, h, line }) {
   return (
-    <div className="fo-card">
+    <div className="pf-card">
       <small>{kicker}</small>
       <b>{p.name}</b>
       <span>{`${POS_WORD[p.pos] || p.pos}${p.nfl ? `, ${h.nfl(p.nfl)}` : ''}`}</span>

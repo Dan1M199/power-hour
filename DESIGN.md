@@ -136,7 +136,7 @@ The page is a stadium in layers. The sky (flat bands of blue and three cartoon c
 The energy comes from a single bold move, the power rank painted on the grass like a yard number, half under its card. Everything else stays quiet: one yellow for "you", one amber for actions, ink for all text.
 
 **Key Characteristics:**
-- Light only: a daytime world, no dark theme.
+- Two kickoffs: the day game (light, the default) and the night game (dark), the same stadium after sunset. The device's setting picks one; the sun and moon button in the header overrides it on that device.
 - Hard edges everywhere: inked outlines, solid ledges, no blur, no `backdrop-filter`, no ambient shadows.
 - Glossy and pressable: cards and buttons look like glass toys and press down when touched.
 - Condensed display numerals for everything that's a score, rank or name; a warm geometric sans for reading.
@@ -176,6 +176,18 @@ A sunny sports palette: field greens and sky blues for the setting, one yellow a
 **The Two-Ended Heat Rule.** Heat tables run sky blue (the good end) to amber (the bad end) and fade to white in the middle, never green to red, so every kind of colour vision reads them. Chart labels never fade: other teams' lines and dots dim to 22%, their names stay at Ink 3.
 
 **The Background-Color Rule.** Set a card's colour with `background-color`, never the `background` shorthand, or the glass sheen disappears.
+
+### The night game (dark theme)
+
+The same stadium after sunset, under the lights. Every colour is a token on `:root` redefined under `:root[data-theme='dark']` at the end of `styles.css`; `html[data-theme]` is set before the first paint by the inline script at the top of `index.html` (a choice kept in `ph-theme`, else `prefers-color-scheme`) and flipped by the header's sun and moon button (`initTheme` in `app.js`, which also follows the device's setting while no choice is kept).
+
+- **Night sky** (sky-1/2/3 `#0A1630`, `#0F2142`, `#162C52`): navy bands, a few stars, dim clouds.
+- **Floodlit field** (grass `#2C7A31`, stripe `#33873A`): a deeper green, chalk lines dimmed to 22%.
+- **Smoked glass cards** (face `rgba(20, 35, 26, 0.97)`, a faint sheen and rim): a near-black inked edge (`--outline` `#020804`) on a black ledge.
+- **Trays and chips** (tile `#0C170F`, tile-2 `#23382A`, paper `#1E3226`): the tray is darker than the card, a raised chip lighter.
+- **Chalk ink** (ink `#EAF4E6`, ink-2 `#BCD0BC`, ink-3 `#9AB29C`): every word, all well over 4.5:1 on the cards and trays. Good, bad and links lift to `#7FD483`, `#FF8A80` and `#7AD0FF`.
+- **Yellow and amber don't change**: they glow on dark. Anything on a bright fill keeps the day's dark ink through one selector list that re-scopes `--ink` on those elements.
+- **The team dashboard** keeps its opposite-of-the-wheel palette, deepened: an aubergine sheet `#1E1724`, plum tiles `#2B2232`, clay `#D27354`, violet `#8E73CC`.
 
 ## Typography
 
@@ -301,4 +313,5 @@ Dark Scoreboard cards with white type and yellow accents: smoked-glass sheen, a 
 - **Don't** mark a list item or callout with a coloured `border-left`; use a reason pip.
 - **Don't** let a paragraph sit straight on the grass; it goes on a card or a white chip.
 - **Don't** add a second bold signature next to the yard numbers.
-- **Don't** introduce a dark theme; this is a day game.
+- **Don't** hard-code a light-only colour (a white fill, a pale tint, a light chip) on a surface; use a token (`--paper`, `--good-bg`, `--bad-bg`, `--info-bg`, `--hover`, `--notice-bg`, `--header`) so the night game can redefine it.
+- **Don't** put words on a bright fill (amber, yellow, lime, the matchup sides, the pastel chips) without adding that element to the night game's dark-ink list.
