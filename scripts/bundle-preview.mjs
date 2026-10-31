@@ -19,7 +19,7 @@ const css = r('styles.css').replace(/url\('assets\/fonts\/([a-z0-9-]+\.woff2)'\)
 let html = r('index.html')
   // everything is inline, so nothing to preload, and the demo data means no early data requests
   .replace(/\s*<link rel="(?:preload|modulepreload)"[^>]*>/g, '')
-  .replace(/\s*<!-- the league data:[\s\S]*?-->\s*<script type="module" async data-early>[\s\S]*?<\/script>/, '')
+  .replace(/\s*<!-- the league data:[\s\S]*?-->\s*<script data-early>[\s\S]*?<\/script>/, '')
   // function replacements: a string replacement would turn every $ in the code into $
   .replace('<link rel="stylesheet" href="styles.css">', () => `<style>${css}</style>`)
   .replace('<script type="module" src="app.js"></script>', () => `<script>window.__DEMO__ = ${demo}; window.__HEADS__ = ${JSON.stringify(heads)}; window.__ASSETS__ = ${JSON.stringify(assets)};</script>\n<script type="module">${js}</script>`)

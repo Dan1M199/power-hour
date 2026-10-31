@@ -20,12 +20,10 @@ No cron job: the page requests `/api/ros?d=YYYY-MM-DD`, so each new day is a new
 ## Deploy to Vercel
 
 1. Create a new GitHub repo and push this folder to it.
-2. In Vercel, choose **Add New → Project**, import the repo, and keep every setting at its default (Framework preset: **Other**, no build command, no output directory).
+2. In Vercel, choose **Add New → Project** and import the repo. `vercel.json` sets the build (`npm ci`, `npm run build`, output `dist`), so the other settings can stay at their defaults. The build needs Node 20.19+ or 22.12+ (Project Settings → Build and Deployment → Node.js Version).
 3. Deploy. The site is at `https://<project>.vercel.app`; share that link with the league.
 
-Nothing needs installing: there are no npm dependencies. The serverless function runs on Vercel's default Node runtime (18+).
-
-To preview locally: `npx vercel dev`, then open http://localhost:3000. Add `?demo=1` to the URL to see the saved Week 7 snapshot without calling any APIs.
+The site is built with Vite (the only npm dependency). To work on it locally: `npm install` once, then `npx vercel dev` and open http://localhost:3000 (or `npm run dev` for the page alone, without the API). Add `?demo=1` to the URL to see the saved Week 7 snapshot without calling any APIs.
 
 ## Turn on FantasyPros weekly projections (one-time)
 
