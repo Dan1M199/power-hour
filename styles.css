@@ -1710,33 +1710,37 @@ html.locked { overflow: hidden; }
 }
 
 /* ---------- the team dashboard: seven paper widgets (Nerd lab, #lab/team; lib/dashboard.js) ----------
-   Its own small design system, by request: flat tiles, thin Geist numerals, mono captions, Inter labels. Its colours
-   are the day game's: the sheet is a tray, each tile a flat white chip with the inked edge and a hard ledge (no sheen,
-   no blur), grass for the data, amber for the leader and the controls, a yellow sun, and the luck tile's dark side is
-   a scoreboard. Sizes are the tiles' pixels (296 square, wide 612, 20 apart). The sheet is a size container: three
-   columns from 928px inside it, two from 612px, one below, where the two wide tiles reflow. */
+   Its own small design system, by request: flat matte tiles, thin Geist numerals, mono captions, Inter labels. The
+   colours sit opposite the site's on the wheel, muted to a matte finish: clay for the data (against the grass),
+   violet for the leader and the controls (against the amber and yellow), apricot for the sun and highlights (against
+   the sky), a lilac sheet (against the green tray), bone tiles and an aubergine ink. Flat fills only: no gradients,
+   gloss, glow or rim light; the ink edge and hard ledge stay, in the aubergine. Sizes are the tiles' pixels (296
+   square, wide 612, 20 apart). The sheet is a size container: three columns from 928px inside it, two from 612px,
+   one below, where the two wide tiles reflow. */
 .paper {
-  --p-bg: var(--tile); --p-tile: var(--chalk); --p-ink: var(--ink); --p-muted: var(--ink-3); --p-white: #fff;
-  --p-accent: var(--grass); --p-accent-ink: var(--good); --p-hot: var(--amber); --p-hot-ink: var(--b-ink);
-  --p-line: var(--line); --p-wash: var(--tile); --p-track: var(--tile-2);
-  --p-hair: var(--tile-2); --p-marker: var(--tile-2); --p-dotted: rgba(18, 48, 26, 0.3);
-  --p-glow: rgba(255, 193, 7, 0.4);
+  --p-bg: #E4DAE6; --p-tile: #FBF6EF; --p-ink: #2A2230; --p-muted: #6B5B66; --p-white: #FFFCF7;
+  --p-accent: #B5573D; --p-accent-ink: #A04A32; --p-hot: #6A4F9C; --p-hot-ink: #6A4F9C; --p-hot-ledge: #45336A;
+  --p-sun: #E9A66A; --p-lilac: #D8CCE3;
+  --p-line: #E6DBD0; --p-wash: #F2EAE0; --p-track: #E8DDD1;
+  --p-hair: #E8DDD1; --p-marker: #E3D7CA; --p-dotted: rgba(42, 34, 48, 0.3);
   --p-sans: 'Geist', system-ui, sans-serif; --p-mono: 'Geist Mono', ui-monospace, monospace;
   --p-label: 400 14px 'Inter', system-ui, sans-serif;
-  /* a tile: the white rim along its top, the inked edge, the ledge as wide as the edge */
-  --p-edge: 2px;
-  --p-shadow: inset 0 -3px 0 rgba(18, 48, 26, 0.05), 0 0 0 var(--p-edge) var(--outline), 0 5px 0 var(--p-edge) var(--ledge);
-  /* the small raised pieces inside a tile (wells, the knob, the switch): a thinner edge and ledge */
-  --p-chip: 0 0 0 1.5px var(--outline), 0 2px 0 1.5px var(--ledge);
-  --p-dark: radial-gradient(260px 220px at 75% 15%, rgba(76, 175, 80, 0.45), transparent 70%), var(--board);
-  --p-dark-text: var(--chalk); --p-dark-muted: rgba(255, 255, 255, 0.72);
+  /* a tile: the inked edge and the ledge as wide as it, nothing else (matte: no rim light) */
+  --p-edge: 2px; --p-ledge: rgba(42, 34, 48, 0.24);
+  --p-shadow: 0 0 0 var(--p-edge) var(--p-ink), 0 5px 0 var(--p-edge) var(--p-ledge);
+  /* the small raised pieces inside a tile (the knob, the chip): a thinner edge and ledge */
+  --p-chip: 0 0 0 1.5px var(--p-ink), 0 2px 0 1.5px var(--p-ledge);
+  /* a well pressed into a tile: a flat inner rim, no shading */
+  --p-well: inset 0 0 0 1.5px rgba(42, 34, 48, 0.12);
+  --p-dark: #2E2235;
+  --p-dark-text: #FBF6EF; --p-dark-muted: rgba(251, 246, 239, 0.74);
   container-type: inline-size;
   padding: 30px 20px 44px; border-radius: 40px; background-color: var(--p-bg);
   box-shadow: 0 0 0 2.5px var(--outline), 0 6px 0 2.5px var(--ledge);
   color: var(--p-ink); font-family: var(--p-sans); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
 }
 .paper :is(button, select) { font: inherit; }
-.pp-head, .pp-grid { width: min(100%, 928px); margin-inline: auto; }
+.pp-head, .pp-grid { width: min(100%, 928px); margin-inline: auto; --outline: var(--p-ink); --ledge: var(--p-ledge); }
 .pp-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px 18px; margin-bottom: 26px; }
 .pp-face-img { display: block; width: 60px; height: 60px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2.5px var(--outline), 0 4px 0 2.5px var(--ledge); }
 .pp-face .ph { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%; background: var(--p-tile); box-shadow: 0 0 0 2.5px var(--outline), 0 4px 0 2.5px var(--ledge); font: 400 20px var(--p-sans); }
@@ -1748,8 +1752,8 @@ html.locked { overflow: hidden; }
 .pp-pick select { appearance: none; -webkit-appearance: none; min-width: 220px; padding: 10px 38px 10px 16px; border: 0; border-radius: 99px;
   background: var(--p-tile) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23141416' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center;
   box-shadow: 0 0 0 2px var(--outline), 0 4px 0 2px var(--ledge); font: 400 15px var(--p-sans); color: var(--p-ink); cursor: pointer; transition: background-color 0.15s; }
-@media (hover: hover) { .pp-pick select:hover { background-color: #E1F5FE; } }
-.paper :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+@media (hover: hover) { .pp-pick select:hover { background-color: var(--p-wash); } }
+.paper :focus-visible { outline: 3px solid var(--p-ink); outline-offset: 3px; }
 
 .pp-grid { display: grid; grid-template-columns: repeat(3, 296px); grid-auto-flow: dense; gap: 20px; justify-content: center; }
 .pp-tile { position: relative; width: 296px; height: 296px; border-radius: 38px; background-color: var(--p-tile); overflow: hidden; box-shadow: var(--p-shadow); }
@@ -1766,8 +1770,8 @@ html.locked { overflow: hidden; }
 .pp-arc .dotted { fill: none; stroke: var(--p-dotted); }
 .pp-arc .horizon { stroke: var(--p-hair); }
 .pp-arc .lit { fill: none; stroke: var(--p-accent); stroke-width: 3px; stroke-linecap: round; }
-.pp-arc .glow { fill: var(--p-glow); transform-box: fill-box; transform-origin: center; animation: pp-breathe 2.1s ease-in-out infinite; }
-.pp-arc .sun { fill: var(--yellow); stroke: var(--outline); stroke-width: 2; }
+.pp-arc .glow { display: none; }
+.pp-arc .sun { fill: var(--p-sun); stroke: var(--outline); stroke-width: 2; }
 .pp-arc .mk { fill: var(--p-tile); stroke: var(--outline); stroke-width: 1.5; }
 .pp-time { position: absolute; top: 268px; font: 400 11.5px var(--p-mono); color: var(--p-muted); }
 .pp-time.left { left: 26px; } .pp-time.right { right: 26px; }
@@ -1779,14 +1783,14 @@ html.locked { overflow: hidden; }
 .pp-cover-in { position: absolute; left: 0; top: 0; width: 248px; height: 248px; transform-origin: 0 0; transform: scale(var(--cs, 1)); }
 .pp-cover .art { position: absolute; inset: 0; overflow: hidden; }
 .pp-cover .art.spare { opacity: 0; }
-/* cover a is the field (mowing stripes, a chalk line, the sun); cover b the sky with the ball and an amber flag */
-.pp-cover .art.a { background: repeating-linear-gradient(90deg, var(--turf) 0 31px, #236B28 31px 62px); }
-.pp-cover .a .disc { position: absolute; right: -56px; top: -40px; width: 190px; height: 190px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 0 2px var(--outline); }
+/* cover a: clay with an apricot sun and a white rule; cover b: lilac with an aubergine disc and a violet square */
+.pp-cover .art.a { background-color: var(--p-accent); }
+.pp-cover .a .disc { position: absolute; right: -56px; top: -40px; width: 190px; height: 190px; border-radius: 50%; background: var(--p-sun); box-shadow: 0 0 0 2px var(--outline); }
 .pp-cover .a .rule { position: absolute; left: 22px; bottom: 30px; width: 120px; height: 2px; background: var(--p-white); opacity: 0.85; }
 .pp-cover .mark { position: absolute; left: 22px; bottom: 42px; font: 400 10px var(--p-mono); letter-spacing: 1px; color: var(--p-white); }
 .pp-cover .a .init { position: absolute; left: 20px; top: 18px; font: 300 64px/1 var(--p-sans); letter-spacing: -0.04em; color: var(--p-white); }
-.pp-cover .art.b { background-color: var(--sky-3); }
-.pp-cover .b .disc { position: absolute; left: 24px; top: 30px; width: 150px; height: 150px; border-radius: 50%; background: var(--board); }
+.pp-cover .art.b { background-color: var(--p-lilac); }
+.pp-cover .b .disc { position: absolute; left: 24px; top: 30px; width: 150px; height: 150px; border-radius: 50%; background: var(--p-ink); }
 .pp-cover .b .sq { position: absolute; right: 30px; bottom: 30px; width: 38px; height: 38px; border-radius: 6px; background: var(--p-hot); box-shadow: 0 0 0 2px var(--outline); }
 .pp-cover .b .mark { color: var(--p-ink); bottom: 20px; }
 .pp-cover .b .init { position: absolute; left: 24px; top: 30px; width: 150px; height: 150px; display: grid; place-items: center; font: 300 56px/1 var(--p-sans); letter-spacing: -0.04em; color: var(--p-white); }
@@ -1806,15 +1810,15 @@ html.locked { overflow: hidden; }
 .pp-btn, .pp-play { position: absolute; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; cursor: pointer; transition: transform 0.15s, background-color 0.15s; }
 .pp-btn { top: 232px; width: 40px; height: 40px; background-color: transparent; color: var(--p-ink); }
 .pp-btn.prev { left: 348px; } .pp-btn.next { left: 504px; }
-.pp-play { left: 420px; top: 226px; width: 52px; height: 52px; background-color: var(--p-hot); color: var(--p-ink); box-shadow: 0 0 0 2px var(--outline), 0 4px 0 2px var(--ledge-gold); }
-.pp-play:active { box-shadow: 0 0 0 2px var(--outline), 0 1px 0 2px var(--ledge-gold); }
+.pp-play { left: 420px; top: 226px; width: 52px; height: 52px; background-color: var(--p-hot); color: var(--p-white); box-shadow: 0 0 0 2px var(--outline), 0 4px 0 2px var(--p-hot-ledge); }
+.pp-play:active { box-shadow: 0 0 0 2px var(--outline), 0 1px 0 2px var(--p-hot-ledge); }
 .pp-btn:active, .pp-play:active { transform: scale(0.88); }
 .pp-btn:active { background-color: var(--p-track); }
 @media (hover: hover) { .pp-btn:hover { background-color: var(--p-wash); } }
 
 /* 3. lineup efficiency: one tick a minute on a 60-tick dial, lit for the share of the best lineup started */
 .pp-dial { position: absolute; left: 48px; top: 56px; }
-.pp-dial .tick { stroke: rgba(18, 48, 26, 0.16); stroke-linecap: round; }
+.pp-dial .tick { stroke: rgba(42, 34, 48, 0.16); stroke-linecap: round; }
 .pp-dial .tick.lit { stroke: var(--p-accent); }
 .pp-digits { position: absolute; left: 48px; top: 128px; width: 200px; text-align: center; font: 300 42px var(--p-sans); letter-spacing: -1.5px; }
 .pp-eff .pp-caption { position: absolute; left: 48px; top: 178px; width: 200px; text-align: center; font-size: 13px; color: var(--p-muted); }
@@ -1824,22 +1828,23 @@ html.locked { overflow: hidden; }
 .pp-goal { position: absolute; left: 27px; top: 118px; font-size: 13px; color: var(--p-muted); }
 .pp-day { position: absolute; left: calc(26px + var(--i) * 35px); top: 166px; width: 22px; height: 112px; }
 .pp-day .empty, .pp-day .bar { position: absolute; left: 0; top: 0; width: 22px; height: 90px; border-radius: 7px; }
-.pp-day .empty { background: var(--p-wash); box-shadow: var(--tray-edge); }
+.pp-day .empty { background: var(--p-wash); box-shadow: var(--p-well); }
 .pp-day .bar { background: var(--p-accent); box-shadow: inset 0 0 0 1.5px var(--outline); transform-origin: bottom; transform: scaleY(0); }
-.pp-day .bar.loss { background: var(--p-track); box-shadow: inset 0 0 0 1.5px rgba(18, 48, 26, 0.35); }
+.pp-day .bar.loss { background: var(--p-track); box-shadow: inset 0 0 0 1.5px rgba(42, 34, 48, 0.35); }
 .pp-day .bar.today { background: var(--p-hot); box-shadow: inset 0 0 0 1.5px var(--outline); }
 .pp-day .letter { position: absolute; left: 0; top: 98px; width: 22px; text-align: center; font: 400 11.5px var(--p-mono); color: var(--p-muted); }
 .pp-day .letter.today { color: var(--p-ink); font-weight: 500; }
 
 /* 5. position groups, charged like batteries: the bar is the league rank, the best group charging in the accent */
 .pp-row { position: absolute; left: 0; right: 0; top: calc(58px + var(--i) * 54px); height: 36px; }
-.pp-row .well { position: absolute; left: 24px; top: 0; width: 36px; height: 36px; border-radius: 11px; background: var(--p-wash); box-shadow: var(--tray-edge); display: grid; place-items: center; font: 500 11.5px var(--p-mono); }
+.pp-row .well { position: absolute; left: 24px; top: 0; width: 36px; height: 36px; border-radius: 11px; background: var(--p-wash); box-shadow: var(--p-well); display: grid; place-items: center; font: 500 11.5px var(--p-mono); }
 .pp-row .name { position: absolute; left: 72px; top: 1px; max-width: 140px; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pp-row .level { position: absolute; right: 26px; top: 2px; font: 400 12.5px var(--p-mono); }
-.pp-row .track { position: absolute; left: 72px; top: 25px; width: 198px; height: 10px; border-radius: 99px; background: var(--p-wash); box-shadow: inset 0 0 0 1.5px rgba(18, 48, 26, 0.18); overflow: hidden; }
+.pp-row .track { position: absolute; left: 72px; top: 25px; width: 198px; height: 10px; border-radius: 99px; background: var(--p-wash); box-shadow: inset 0 0 0 1.5px rgba(42, 34, 48, 0.18); overflow: hidden; }
 .pp-row .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 99px; background: var(--p-accent); box-shadow: inset 0 0 0 1.5px var(--outline); overflow: hidden; }
 .pp-row .fill.charging { background: var(--p-hot); }
-.pp-row .shimmer { position: absolute; top: 0; bottom: 0; left: -30%; width: 40px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent); animation: pp-sweep 1.8s linear infinite; }
+/* matte: a flat lighter band sweeps the charging bar, no gloss */
+.pp-row .shimmer { position: absolute; top: 0; bottom: 0; left: -30%; width: 18px; background: rgba(255, 252, 247, 0.22); animation: pp-sweep 1.8s linear infinite; }
 .pp-row .bolt { position: absolute; right: 62px; top: 3px; color: var(--p-hot-ink); animation: pp-pulse 1.6s ease-in-out infinite; }
 
 /* 6. the schedule: the week in big numerals, the games left as a list to pick from (the win odds on a chip) */
@@ -1861,14 +1866,14 @@ html.locked { overflow: hidden; }
 .pp-ev .ev-text { flex: 1; min-width: 0; }
 .pp-ev .ev-title { display: block; font-size: 15.5px; letter-spacing: -0.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pp-ev .ev-detail { display: block; margin-top: 2px; font-size: 12px; color: var(--p-muted); }
-.pp-ev .chip { display: none; flex: none; padding: 5px 9px; border-radius: 99px; background: var(--p-hot); color: var(--p-ink); box-shadow: var(--p-chip); font: 500 11.5px var(--p-mono); opacity: var(--chip, 1); }
+.pp-ev .chip { display: none; flex: none; padding: 5px 9px; border-radius: 99px; background: var(--p-hot); color: var(--p-white); box-shadow: var(--p-chip); font: 500 11.5px var(--p-mono); opacity: var(--chip, 1); }
 .pp-ev[aria-selected='true'] .chip { display: block; }
 
 /* 7. luck: the real record; the switch turns the tile dark and shows the all-play record (words flip halfway) */
 .pp-luck .face { position: absolute; inset: 0; color: var(--p-ink); }
 .pp-luck .dark { position: absolute; inset: 0; background: var(--p-dark); opacity: 0; transition: opacity 0.45s cubic-bezier(0.65, 0, 0.35, 1); }
 .pp-luck.flipping .dark { opacity: 1; }
-.pp-luck .moon { position: absolute; left: 24px; top: 70px; width: 64px; height: 64px; border-radius: 50%; background: var(--p-wash); box-shadow: var(--tray-edge); display: grid; place-items: center; }
+.pp-luck .moon { position: absolute; left: 24px; top: 70px; width: 64px; height: 64px; border-radius: 50%; background: var(--p-wash); box-shadow: var(--p-well); display: grid; place-items: center; }
 .pp-luck .moon svg { transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1); }
 .pp-luck.flipping .moon svg { transform: rotate(-40deg) scale(1.04); }
 .pp-luck .state { position: absolute; left: 26px; top: 160px; font: 300 30px var(--p-sans); letter-spacing: -0.8px; }
@@ -1880,10 +1885,9 @@ html.locked { overflow: hidden; }
 .pp-luck .toggle-word { position: absolute; left: 98px; top: 246px; font-size: 13px; color: var(--p-muted); }
 .pp-luck.on .face { color: var(--p-dark-text); }
 .pp-luck.on :is(.pp-label, .caption, .toggle-word) { color: var(--p-dark-muted); }
-.pp-luck.on .moon { background: rgba(255, 255, 255, 0.1); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.2); }
-.pp-luck.on .toggle { background-color: var(--p-hot); }
+.pp-luck.on .moon { background: rgba(251, 246, 239, 0.1); box-shadow: inset 0 0 0 1.5px rgba(251, 246, 239, 0.2); }
+.pp-luck.on .toggle { background-color: var(--p-sun); }
 
-@keyframes pp-breathe { 50% { transform: scale(1.25); } }
 @keyframes pp-sweep { from { left: -30%; } to { left: 100%; } }
 @keyframes pp-pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 
