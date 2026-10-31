@@ -7,7 +7,7 @@ import { breakdown, shortName, fits, nfl } from './lib/matchup.js';
 import { MEMBERS, GUESTS, DESK_PEOPLE, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
 import { whatItTakes, trueTalent } from './lib/labmodels.js';
-import { dashData, paperDash, playPaper } from './lib/dashboard.js';
+import { mountTeamDashboard } from './src/dashboard/mount.jsx';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
 import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
 
@@ -2360,34 +2360,30 @@ const labNav = () => `<nav class="filters lab-nav" aria-label="Nerd lab pages">
     <a href="#lab"${labState.sub ? '' : ' aria-current="page"'}>The lab</a><a href="#lab/team"${labState.sub === 'team' ? ' aria-current="page"' : ''}>Team dashboard</a></nav>`;
 
 // ---------- the team dashboard ----------
-// One team's season on seven paper widgets (lib/dashboard.js): your team, or whichever you pick there.
+// One team's season on seven paper widgets: the first page in React (src/dashboard, mounted here by mountPaper).
+// Your team, or whichever you pick there (labState.team).
 const dashTeam = () => (team(labState.team) ? labState.team : myTeam && team(myTeam) ? myTeam : DATA.teams[0].rid);
 const paperHelpers = () => ({
-  esc, f1, pct, ordinal, record, shortName: (id) => shortName(DATA.helpers.player(id) || { name: nameOf(id) }), nfl, groupSaid,
-  first: firstName, face: (t) => headshot(t, 'pp-face-img'), teams: DATA.teams,
+  f1, pct, ordinal, record, nfl, groupSaid, first: firstName, faceSrc, teams: DATA.teams,
+  shortName: (id) => shortName(DATA.helpers.player(id) || { name: nameOf(id) }),
 });
 function viewDash() {
-  const m = dashData(DATA, dashTeam(), { raw: DATA.raw, ros: RAW.ros?.values || {} });
   return `
     <section class="view-head"><div>
       <h1><span class="wk">For the spreadsheet people</span>Nerd Lab</h1>
       <p>One team at a time: playoff odds, the players carrying it, how well it's managed, how it scores, where it's strong and what's left on the schedule. Tap the buttons, the games and the switch.</p>
       ${labNav()}
     </div></section>
-    <div class="paper-slot">${paperDash(m, paperHelpers())}</div>`;
+    <div class="paper-slot" id="paper-root"></div>`;
 }
-let stopPaper = null;
+// the React root on the page, taken down before the page is replaced (route)
+let unmountPaper = null;
 function mountPaper() {
-  stopPaper?.();
-  const root = $('[data-paper]');
-  if (!root) return;
-  const m = dashData(DATA, dashTeam(), { raw: DATA.raw, ros: RAW.ros?.values || {} });
-  stopPaper = playPaper(root, m, { calm: calm(), h: paperHelpers() });
-  root.querySelector('#dash-team')?.addEventListener('change', (e) => {
-    labState.team = Number(e.target.value);
-    $('.paper-slot').innerHTML = paperDash(dashData(DATA, labState.team, { raw: DATA.raw, ros: RAW.ros?.values || {} }), paperHelpers());
-    mountPaper();
-    $('#dash-team')?.focus({ preventScroll: true });
+  unmountPaper?.();
+  const el = $('#paper-root');
+  unmountPaper = el && mountTeamDashboard(el, {
+    D: DATA, raw: DATA.raw, ros: RAW.ros?.values || {}, rid: dashTeam(), h: paperHelpers(), calm: calm(),
+    onTeam: (rid) => (labState.team = rid),
   });
 }
 
@@ -2616,6 +2612,8 @@ function route({ fresh = false } = {}) {
   labState.sub = key === 'lab' && sub === 'team' ? 'team' : null;
   const dir = !currentView || key === currentView ? 'same' : ORDER.indexOf(key) > ORDER.indexOf(currentView) ? 'fwd' : 'back';
   const render = () => {
+    unmountPaper?.(); // a React page is taken down before its HTML goes
+    unmountPaper = null;
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.view === key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
     placeInk();
     paintMe();
