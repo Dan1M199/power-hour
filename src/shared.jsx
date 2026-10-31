@@ -28,3 +28,17 @@ export function Headshot({ t, cls, h }) {
 
 /** A player's position as a coloured tag. */
 export const PosTag = ({ pos }) => (pos ? <span className={`pos ${pos}`}>{pos}</span> : null);
+
+/** The circled down-arrow that marks anything tappable to expand; CSS flips it when its parent is open. */
+export const Xp = () => (
+  <span className="xp" aria-hidden="true"><svg width="12" height="8" viewBox="0 0 12 8"><path d="M1 1.5l5 5 5-5" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
+);
+
+// the defending champion: a trophy by the team name (with the season when labelled), and pinned to the photo
+const Trophy = () => (
+  <svg className="trophy" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d={TROPHY_D} fill="#FFC107" stroke="#12301A" strokeWidth="1.3" strokeLinejoin="round" /></svg>
+);
+const TROPHY_D = 'M7 2.5h10v2h3.2v3.2a4.2 4.2 0 0 1-4.3 4.2 5.2 5.2 0 0 1-2.9 3.1v2.6h3.3v3.9H7.7v-3.9H11v-2.6a5.2 5.2 0 0 1-2.9-3.1 4.2 4.2 0 0 1-4.3-4.2V4.5H7zm0 4H5.8v1.2A2.2 2.2 0 0 0 7 9.6zm10 0v3.1a2.2 2.2 0 0 0 1.2-2V6.5z';
+export const ChampTag = ({ t, h, label = true }) => (h.isChamp(t)
+  ? <span className={`champ${label ? '' : ' bare'}`} title={`${h.champSeason} league champion`}><Trophy />{label ? `${h.champSeason} champ` : null}</span> : null);
+export const ChampBadge = ({ t, h }) => (h.isChamp(t) ? <span className="champ-badge" title={`${h.champSeason} league champion`}><Trophy /></span> : null);

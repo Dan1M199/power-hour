@@ -9,6 +9,8 @@ import { mount } from './src/mount.jsx';
 import { Lab } from './src/lab/Lab.jsx';
 import { WirePage } from './src/wire/WirePage.jsx';
 import { TradesPage } from './src/trades/TradesPage.jsx';
+import { GamesPage } from './src/games/GamesPage.jsx';
+import { loadVotes } from './src/games/votes.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
 import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
 
@@ -69,7 +71,6 @@ const wireState = { type: 'all', mine: false, limit: 50, trades: 3 };
 const tradeState = { shape: 'all' };
 // the Nerd lab's sub-page (#lab/team is the team dashboard) and the team it shows (yours until you pick another)
 const labState = { sub: null, team: null };
-let VOTES = null; // { week, open, counts: { "3-8": { "3": n } }, mine: { "3-8": "3" } } once /api/votes answers
 
 // ---------- data ----------
 const getJSON = async (url, res = fetch(url)) => {
@@ -287,12 +288,12 @@ function moneyStory() {
       ? `${A.name} is on pace for ${f1(a.score)}${a.banked ? ` with ${f1(a.banked)} already banked` : ''}, ${awayText(a)}. ${Bt.name} is next at ${f1(b.score)}. ${rules}`
       : `${rules} Right now ${A.name} projects closest at ${f1(a.score)}, with ${Bt.name} right behind at ${f1(b.score)}.` };
 }
-// on each matchup card: how far that team projects from the target
-function bullTag(rid) {
+// on each matchup card (src/games): how far that team projects from the target
+function bullInfo(rid) {
   const B = DATA.bull;
-  if (!B || !B.rows.length || B.state === 'final') return '';
+  if (!B || !B.rows.length || B.state === 'final') return null;
   const k = B.rows.findIndex((r) => r.rid === rid), r = B.rows[k];
-  return `<small class="bull-tag${k === 0 ? ' lead' : ''}" data-tip="${esc(`Money week: closest to ${MONEY_WEEK.target} wins ${money(MONEY_WEEK.prize)}. ${team(rid).name} is ${ordinal(k + 1)} closest.`)}">${k === 0 ? `${money(MONEY_WEEK.prize)} pace, ` : ''}${awayText(r)}</small>`;
+  return { lead: k === 0, tip: `Money week: closest to ${MONEY_WEEK.target} wins ${money(MONEY_WEEK.prize)}. ${team(rid).name} is ${ordinal(k + 1)} closest.`, text: `${k === 0 ? `${money(MONEY_WEEK.prize)} pace, ` : ''}${awayText(r)}` };
 }
 // files the single-file preview inlines (window.__ASSETS__); served from the site otherwise
 const asset = (p) => window.__ASSETS__?.[p] || p;
@@ -1738,336 +1739,8 @@ const viewWire = () => '';
 const signed = (x) => `${x > 0 ? '+' : ''}${f1(x)}`;
 
 // ---------- matchups ----------
-// the bottom two playing each other (by standings or by power rank) get a "Toilet Time" tag on their card, by Dan's
-// request: the tooltip rubs it in with the records
-const TOILET = '<svg width="13" height="14" viewBox="0 0 13 14" aria-hidden="true"><path d="M2 1h4v5H2zM1 6h11c0 3-2 5-4 5l1 2H4l1-2C3 11 1 9 1 6z" fill="currentColor"/></svg>';
-function toiletBowl(a, b) {
-  const n = DATA.teams.length, low = (t, k) => t[k] >= n - 1;
-  const by = ['seed', 'powerRank'].find((k) => low(a, k) && low(b, k));
-  if (!by) return '';
-  const [lo, hi] = [a, b].sort((x, y) => y[by] - x[by]);
-  return `${by === 'seed' ? 'Last and second-to-last in the standings' : 'The bottom two in the power rankings'}: ${firstName(hi)} (${record(hi)}) vs ${firstName(lo)} (${record(lo)}). Somebody gets flushed.`;
-}
-function viewMatchups() {
-  const pv = DATA.previews;
-  const wk = pv[0]?.week;
-  return `
-    <section class="view-head">
-      <div>
-        <h1><span class="wk">${wk ? `Week ${wk}` : 'Off week'}</span>Games</h1>
-        <p>Every game this week, projected from the lineups as they stand. Open one for the slot-by-slot breakdown, and make your pick before kickoff.</p>
-      </div>
-    </section>
-    ${gameOfTheWeek()}
-    ${pv.length ? `<div class="matchups">${pv.map((p, i) => {
-      const a = team(p.a), b = team(p.b);
-      const isKey = DATA.key && DATA.key.i === i;
-      const swing = (t) => (t.playoffIfWin != null && t.playoffIfLoss != null ? Math.round((t.playoffIfWin - t.playoffIfLoss) * 100) : null);
-      const sa = swing(a), sb = swing(b);
-      const stakes = sa != null && sb != null ? `Playoff odds on the line: ${sa} pts for ${esc(a.name)}, ${sb} for ${esc(b.name)}.` : '';
-      const toilet = toiletBowl(a, b);
-      return `<article class="mu glass ${p.a === myTeam || p.b === myTeam ? 'rim' : ''} ${isKey ? 'key' : ''} ${toilet ? 'toilet' : ''}" id="mu-${i}" data-i="${i}">
-        ${isKey ? '<span class="key-tag">Game of the week</span>' : ''}
-        ${toilet ? `<span class="toilet-tag" data-tip="${esc(toilet)}">${TOILET}Toilet Time</span>` : ''}
-        <p class="mu-quip">${esc(DATA.quips[i])}</p>
-        <div class="mu-teams">
-          <div class="mu-team">${avatar(a)}<span class="tn">${esc(a.name)}${champTag(a, false)}</span><small>#${a.powerRank} power, ${record(a)}</small>${liveTag(p.liveA)}<span class="pr">${f1(p.projA)}</span>${bullTag(p.a)}</div>
-          <span class="vs" aria-hidden="true">vs</span>
-          <div class="mu-team right">${avatar(b)}<span class="tn">${esc(b.name)}${champTag(b, false)}</span><small>#${b.powerRank} power, ${record(b)}</small>${liveTag(p.liveB)}<span class="pr">${f1(p.projB)}</span>${bullTag(p.b)}</div>
-        </div>
-        <div class="wp"><div class="wp-bar" role="img" aria-label="${esc(a.name)} ${pct(p.winA)}, ${esc(b.name)} ${pct(1 - p.winA)}"><i style="width:${p.winA * 100}%"></i><i style="width:${(1 - p.winA) * 100}%"></i></div>
-          <div class="wp-labels odds"><span class="a">${pct(p.winA)}<small>to win</small></span><span class="b">${pct(1 - p.winA)}<small>to win</small></span></div></div>
-        ${betLine(p, a, b, i, stakes)}
-        <div class="fan-slot" data-i="${i}">${fanBlock(p)}</div>
-        <button type="button" class="mu-more" aria-expanded="false" aria-controls="mud-${i}"><span>Lineup breakdown</span>${XP}</button>
-        <div class="detail mu-detail" id="mud-${i}"><div></div></div>
-      </article>`;
-    }).join('')}</div>` : '<p class="empty glass panel">No regular-season matchups left to preview.</p>'}`;
-}
-
-// points already on the board this week (games played so far); the big number is that plus the rest projected
-const liveTag = (pts) => (pts == null ? '' : `<small class="live" data-tip="Points scored in games already played. The big number adds the projection for everyone still to play.">${f1(pts)} scored so far</small>`);
-
-// ---------- fan picks ----------
-// a random id kept on this device; re-voting from the same device replaces its pick
-let VOTER = null;
-const voterId = () => {
-  if (VOTER) return VOTER;
-  VOTER = store.get('ph-voter');
-  if (!VOTER) {
-    VOTER = crypto.randomUUID?.() || `v-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
-    store.set('ph-voter', VOTER);
-  }
-  return VOTER;
-};
-const pairKey = (p) => [p.a, p.b].sort((x, y) => x - y).join('-');
-
-function fanBlock(p) {
-  if (!VOTES || VOTES.week !== p.week) return '';
-  const pair = pairKey(p), c = VOTES.counts[pair] || {}, mine = VOTES.mine?.[pair];
-  const na = c[p.a] || 0, nb = c[p.b] || 0, n = na + nb, fa = n ? na / n : 0.5;
-  const pick = (t) => `<button type="button" class="pick ${String(t.rid) === mine ? 'on' : ''}" data-pair="${pair}" data-pick="${t.rid}" aria-pressed="${String(t.rid) === mine}">${esc(short(t.name, 18))}</button>`;
-  // the split stays hidden until you've picked, so nobody just follows the crowd
-  const reveal = n > 0 && (mine || !VOTES.open);
-  const head = !VOTES.open ? 'Fan picks (voting closed)' : mine ? 'Your pick is in. Tap the other side to switch.' : 'Who wins? Cast your pick';
-  return `<div class="fan">
-      <div class="fan-head"><span>${head}</span><small>${n} fan vote${n === 1 ? '' : 's'}</small></div>
-      ${VOTES.open ? `<div class="picks">${pick(team(p.a))}${pick(team(p.b))}</div>` : ''}
-      ${reveal ? `<div class="wp-bar fan-bar" role="img" aria-label="Fans: ${pct(fa)} ${esc(team(p.a).name)}, ${pct(1 - fa)} ${esc(team(p.b).name)}"><i style="width:${fa * 100}%"></i><i style="width:${(1 - fa) * 100}%"></i></div>
-        <div class="wp-labels"><span>Fans ${pct(fa)}</span><span>${pct(1 - fa)}</span></div>` : ''}
-    </div>`;
-}
-function paintVotes(err) {
-  document.querySelectorAll('.fan-slot').forEach((el) => {
-    const i = Number(el.dataset.i);
-    el.innerHTML = fanBlock(DATA.previews[i]) + (err && err.i === i ? `<p class="fan-err">${esc(err.msg)}</p>` : '');
-  });
-}
-async function loadVotes() {
-  const wk = DATA.previews[0]?.week;
-  if (!wk || RAW.isDemo) return; // the demo snapshot and the single-file preview never call the vote store
-  try {
-    const r = await fetch(`/api/votes?week=${wk}&voter=${encodeURIComponent(voterId())}`);
-    if (!r.ok) return; // unavailable: voting stays hidden
-    const body = await r.json();
-    if (!body.enabled) return; // store not connected yet
-    VOTES = body;
-    paintVotes();
-  } catch { /* offline or no API: voting stays hidden */ }
-}
-async function castVote(btn) {
-  const pair = btn.dataset.pair, pick = btn.dataset.pick, i = Number(btn.closest('.fan-slot').dataset.i);
-  const prev = VOTES.mine[pair];
-  if (prev === pick) return;
-  const before = JSON.stringify(VOTES);
-  // show it right away, then confirm with the server
-  const c = (VOTES.counts[pair] ||= {});
-  if (prev) c[prev] = Math.max(0, (c[prev] || 1) - 1);
-  c[pick] = (c[pick] || 0) + 1;
-  VOTES.mine[pair] = pick;
-  paintVotes();
-  try {
-    const r = await fetch('/api/votes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ week: VOTES.week, pair, pick, voter: voterId() }) });
-    const body = await r.json().catch(() => ({}));
-    // the server's own reasons (closed, already voted from this network) are final; outages are worth a retry
-    if (!r.ok) throw new Error(r.status >= 500 || !body.error ? 'Vote not saved. Try again in a moment.' : `${body.error}.`);
-    VOTES = body;
-    paintVotes();
-  } catch (e) {
-    VOTES = JSON.parse(before);
-    paintVotes({ i, msg: e instanceof TypeError ? 'Vote not saved: no connection. Try again in a moment.' : e.message });
-  }
-}
-
-// normal CDF (Abramowitz-Stegun), for the prop odds below
-function phi(z) {
-  const t = 1 / (1 + 0.2316419 * Math.abs(z)), d = 0.3989423 * Math.exp((-z * z) / 2);
-  const q = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
-  return z > 0 ? 1 - q : q;
-}
-// sportsbook-style line from the projections: the moneyline stays on the card, everything else sits behind "More odds"
-function betLine(p, a, b, i, stakes) {
-  const fav = p.projA >= p.projB ? a : b, margin = Math.abs(p.projA - p.projB);
-  const even = margin < 0.25;
-  // the margin is normal with the two teams' week spreads combined, the same model as the win odds
-  const sdOf = (t) => t.sdWeek?.[p.week] ?? DATA.meta.sd, sd = Math.hypot(sdOf(a), sdOf(b));
-  const within = (x) => phi((x - (p.projA - p.projB)) / sd) - phi((-x - (p.projA - p.projB)) / sd);
-  const close = within(5), blowout = 1 - within(20);
-  const B = DATA.bull && DATA.bull.state !== 'final' && DATA.bull.rows.length ? DATA.bull : null;
-  const bull = (rid) => B.rows.find((r) => r.rid === rid)?.pWin ?? 0;
-  const tile = (label, val, sub = '', tip = '') => `<span${tip ? ` data-tip="${esc(tip)}"` : ''}><small>${label}</small><b>${val}</b>${sub ? `<small class="who">${sub}</small>` : ''}</span>`;
-  const pair = (label, va, vb, tip) => `<span class="pair" data-tip="${esc(tip)}"><small>${label}</small><b class="a">${va}</b><b class="b">${vb}</b></span>`;
-  return `
-    <div class="ml" data-tip="Fair moneyline from the win odds: minus is the favourite (bet that much to win 100), plus is the underdog (what 100 wins).">
-      <b class="a">${american(p.winA)}</b><small>Moneyline</small><b class="b">${american(1 - p.winA)}</b>
-    </div>
-    <button type="button" class="odds-more" aria-expanded="false" aria-controls="odds-${i}"><span>More odds</span>${XP}</button>
-    <div class="detail odds-detail" id="odds-${i}"><div>
-      <div class="line">
-        ${tile('Spread', even ? 'Pick' : `-${half(margin)}`, even ? '' : esc(fav.name), 'From the projected margin')}
-        ${tile('Total', half(p.projA + p.projB), 'combined points', 'Projected combined score')}
-        ${pair('Team totals', f1(p.projA), f1(p.projB), `${a.name} ${f1(p.projA)}, ${b.name} ${f1(p.projB)} projected`)}
-        ${tile('Nail-biter', american(close), 'margin under 5', `${pct(close)} chance the final margin is under 5 points`)}
-        ${tile('Blowout', american(blowout), 'margin 20+', `${pct(blowout)} chance the final margin is 20 points or more`)}
-        ${B ? pair(`Closest to ${B.target}`, american(bull(p.a)), american(bull(p.b)), `Money week: odds each team lands closest to ${B.target} of all twelve and takes ${money(MONEY_WEEK.prize)}`) : ''}
-      </div>
-      ${stakes ? `<p class="mu-note">${stakes}</p>` : ''}
-    </div></div>`;
-}
-
-// ---------- matchup breakdown ----------
-const bdCache = {};
-function matchupDetail(i) {
-  const pv = DATA.previews[i], bd = (bdCache[i] ||= breakdown(DATA, pv));
-  const A = team(pv.a), B = team(pv.b);
-  const max = Math.max(1, ...bd.rows.flatMap((r) => [r.a?.proj || 0, r.b?.proj || 0]));
-  const flag = (p) => {
-    if (p.played) return '<em class="st fin" title="Game over: these points are final">FINAL</em>';
-    if (p.bye) return '<em class="st out" title="On a bye this week">BYE</em>';
-    if (!p.status) return '';
-    const label = p.out ? (p.status === 'IR' ? 'IR' : 'OUT') : p.status[0];
-    return `<em class="st ${p.out ? 'out' : p.status === 'Questionable' ? 'q' : 'd'}" title="${esc(p.status)}">${esc(label)}</em>`;
-  };
-  const who = (p, side) => p
-    ? `<div class="h2h-p ${side}"><b><span class="full">${esc(p.name)}</span><span class="short">${esc(shortName(p))}</span></b><small>${esc([p.team, p.pos].filter(Boolean).join(' '))}${flag(p)}</small></div>`
-    : `<div class="h2h-p ${side} empty"><b>Empty</b><small>nobody set</small></div>`;
-  const tip = (p) => !p ? 'Empty slot'
-    : p.played ? `${p.name}: scored ${f1(p.proj)} (game over), ${f1(p.pre)} projected`
-    : `${p.name}: ${p.bye ? 'on a bye, ' : p.out ? `${p.status}, ` : ''}${f1(p.proj)} projected${p.proj > 0 && (p.fp != null || p.sl != null) ? ` (${[p.fp != null && `FantasyPros ${f1(p.fp)}`, p.sl != null && `Sleeper ${f1(p.sl)}`].filter(Boolean).join(', ')})` : ''}${p.floor != null && p.proj > 0 ? `, floor ${f1(p.floor)} to ceiling ${f1(p.ceil)}` : ''}`;
-  const row = (r) => {
-    const pa = r.a?.proj || 0, pb = r.b?.proj || 0;
-    return `<div class="h2h-row ${r.edge > 0.5 ? 'win-a' : r.edge < -0.5 ? 'win-b' : 'even'}" data-tip="${esc(`${tip(r.a)}. ${tip(r.b)}.`)}">
-      ${who(r.a, 'a')}<b class="pts a">${f1(pa)}</b><span class="slot">${r.slot === 'FLEX' ? 'FLX' : esc(r.slot)}</span><b class="pts b">${f1(pb)}</b>${who(r.b, 'b')}
-      <div class="h2h-bar"><span class="a"><i style="width:${(pa / max) * 100}%"></i></span><span class="b"><i style="width:${(pb / max) * 100}%"></i></span></div>
-    </div>`;
-  };
-  // where each lineup comes from: the one set in Sleeper, or the best projected one standing in until it's set
-  const src = (k) => bd.source[k] === 'set'
-    ? '<small class="chip lu-src" data-tip="The starters set in Sleeper for this week"><span class="dot"></span>Set in Sleeper</small>'
-    : `<small class="chip lu-src off" data-tip="${esc(`${(k === 'a' ? A : B).name} hasn't set a lineup, so this is their best projected one`)}"><span class="dot"></span>Not set, best lineup</small>`;
-  const gmax = Math.max(1, ...bd.groups.map((g) => Math.abs(g.edge)));
-  const grp = (g) => {
-    const side = g.edge > 0.25 ? 'a' : g.edge < -0.25 ? 'b' : 'n';
-    const sum = (k) => g.rows.reduce((a, r) => a + (r[k]?.proj || 0), 0);
-    return `<div class="grp ${side}" data-tip="${esc(`${g.key}: ${A.name} ${f1(sum('a'))}, ${B.name} ${f1(sum('b'))}`)}"><span class="g">${g.key}</span><span class="gtrack"><i style="width:${(Math.abs(g.edge) / gmax) * 50}%"></i></span><b>${side === 'n' ? 'Even' : `+${f1(Math.abs(g.edge))}`}</b></div>`;
-  };
-  return `
-    <div class="bd">
-      <div class="bd-main">
-        <div class="bd-head"><div class="a">${avatar(A)}<b>${f1(bd.totals.a)}</b><span>${esc(A.name)}</span>${src('a')}</div><div class="b">${avatar(B)}<b>${f1(bd.totals.b)}</b><span>${esc(B.name)}</span>${src('b')}</div></div>
-        <div class="h2h">${bd.rows.map(row).join('')}</div>
-      </div>
-      <div class="bd-side">
-        <h4>Where it's won</h4>
-        <div class="grp-legend"><span class="a">${esc(short(A.name, 16))}</span><span class="b">${esc(short(B.name, 16))}</span></div>
-        ${bd.groups.map(grp).join('')}
-        <h4>Things to watch</h4>
-        <ul class="watch">${bd.watch.map(watchItem).join('') || '<li class="n">Nothing unusual: both lineups are set and healthy.</li>'}</ul>
-      </div>
-    </div>
-    <p class="bd-note">${DATA.live ? 'Players marked final show their actual points, locked in for the week. ' : ''}${DATA.meta.hasWeekly ? `Player projections are this week's, the average of FantasyPros and Sleeper (whichever has the player), and the team totals add up the lineup shown.` : "Player projections are DraftSharks rest-of-season weekly averages, since this week's projections are unavailable; the card's total also blends in how each team has been scoring."} Players on a bye or ruled out count as zero. Win odds allow for a typical swing of about ${Math.round(DATA.meta.sd)} points a week. Hover or tap a row for each source and the floor to ceiling.</p>`;
-}
-
-// one "things to watch" line: an urgent one (a sure zero, an empty slot, points left on the bench) leads with its first
-// sentence in bold on a flag pip; player names are bold so the list scans
-function watchItem(w) {
-  const names = [...new Set(w.names || [])].sort((x, y) => y.length - x.length).map(esc);
-  const bold = (html) => names.reduce((h, n) => h.split(n).join(`<b>${n}</b>`), html);
-  if (!w.urgent) return `<li class="${w.tone}">${bold(esc(w.text))}</li>`;
-  const cut = w.text.search(/\.(\s|$)/) + 1 || w.text.length;
-  return `<li class="${w.tone} urgent"><strong>${esc(w.text.slice(0, cut))}</strong>${bold(esc(w.text.slice(cut)))}</li>`;
-}
-
-function toggleMatchup(card) {
-  const open = !card.classList.contains('open');
-  const holder = card.querySelector('.mu-detail > div');
-  if (open && !holder.innerHTML) holder.innerHTML = matchupDetail(Number(card.dataset.i));
-  // Desktop: the open card takes the whole row. Glide every card from its old spot to its new one (FLIP, transform
-  // only) instead of letting the grid jump. Phones are one column already, so nothing moves sideways there.
-  const grid = card.parentElement, cards = [...grid.children];
-  const glide = !lite() && !calm() && getComputedStyle(grid).gridTemplateColumns.split(' ').length > 1;
-  const first = glide ? new Map(cards.map((c) => [c, c.getBoundingClientRect()])) : null;
-  card.classList.toggle('open', open);
-  card.querySelector('.mu-more').setAttribute('aria-expanded', open);
-  if (!glide) return;
-  for (const c of cards) {
-    const a = first.get(c), b = c.getBoundingClientRect(), dx = a.left - b.left, dy = a.top - b.top;
-    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) c.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
-  }
-  const top = card.getBoundingClientRect().top;
-  if (open && (top < 90 || top > innerHeight * 0.6)) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function gameOfTheWeek() {
-  const k = DATA.key;
-  if (!k) return '';
-  const { p } = k;
-  const a = team(p.a), b = team(p.b);
-  return `
-    <section class="gotw glass rim" aria-labelledby="gotw-hed">
-      ${faceoff(p, a, b)}
-      <div class="gotw-copy">
-        <p class="kicker"><span>Game of the week</span><span class="k">${esc(a.name)} vs ${esc(b.name)}</span></p>
-        <h2 id="gotw-hed">${esc(k.headline)}</h2>
-        <p class="lead-deck">${esc(k.deck)}</p>
-        <div class="gotw-score">
-          <div><span class="tn">${esc(a.name)}</span><b>${f1(p.projA)}</b></div>
-          <div class="wp-bar" role="img" aria-label="${esc(a.name)} ${pct(p.winA)}, ${esc(b.name)} ${pct(1 - p.winA)}"><i style="width:${p.winA * 100}%"></i><i style="width:${(1 - p.winA) * 100}%"></i></div>
-          <div class="right"><span class="tn">${esc(b.name)}</span><b>${f1(p.projB)}</b></div>
-        </div>
-        <button type="button" class="gotw-more" data-open="${k.i}">Lineup breakdown${XP}</button>
-      </div>
-      <div class="gotw-chart">
-        ${playoffDrive(a, b)}
-        <p class="sub">Picked from this week's slate by stakes (${Math.round(p.stakes * 100)} combined points of playoff odds on the line, ${Math.round(k.stakesNorm * 100)}% of the week's biggest) and closeness (${Math.round(k.closeness * 100)} out of 100, where 100 is a dead-even projection).</p>
-      </div>
-    </section>`;
-}
-
-// the fight-poster header: both managers nose to nose, blue corner against amber corner
-function faceoff(p, a, b) {
-  const favA = p.winA >= 0.5;
-  const side = (t, k, win, fav) => `
-    <div class="fo-side ${k}">
-      <span class="fo-ph">${headshot(t, 'fo-face')}${champBadge(t)}</span>
-      <div class="fo-tag">
-        ${fav ? '<span class="fo-fav">Favourite</span>' : '<span class="fo-fav dog">Underdog</span>'}
-        <b>${esc(firstName(t))}</b>
-        <small>${esc(t.name)}, ${record(t)}</small>
-        <span class="fo-odds">${pct(win)}<small> to win</small></span>
-      </div>
-    </div>`;
-  return `<div class="faceoff" aria-hidden="true">${side(a, 'a', p.winA, favA)}<span class="fo-vs"><i>vs</i></span>${side(b, 'b', 1 - p.winA, !favA)}</div>`;
-}
-
-// The playoff drive: each team is a football on a field that runs from 0% playoff odds (its own goal line) to 100%
-// (the end zone). Pick a result and both balls move to where the simulations say that result leaves them.
-function playoffDrive(a, b) {
-  const odds = (t, won) => (won ? t.playoffIfWin : t.playoffIfLoss) ?? t.playoffPct;
-  const states = {
-    now: [a.playoffPct, b.playoffPct],
-    a: [odds(a, true), odds(b, false)],
-    b: [odds(a, false), odds(b, true)],
-  };
-  const lane = (t, side, k) => `
-    <div class="lane ${side}" style="${Object.entries(states).map(([s, v]) => `--at-${s}:${v[k].toFixed(3)}`).join(';')}">
-      <span class="ghost" aria-hidden="true"></span>
-      <span class="runner" aria-hidden="true"><span class="ball"><b class="ball-pct"></b><small class="ball-gain"></small></span></span>
-    </div>`;
-  const btn = (s, label) => `<button type="button" data-s="${s}" aria-pressed="${s === 'now'}">${label}</button>`;
-  return `
-    <div class="drive" data-s="now" data-a="${esc(a.name)}" data-b="${esc(b.name)}" data-states='${JSON.stringify(states)}'>
-      <div class="drive-head">
-        <h3>The playoff drive</h3>
-        <p class="drive-key"><span class="a">${headshot(a, 'avatar')}${esc(a.name)}</span><span class="b">${headshot(b, 'avatar')}${esc(b.name)}</span></p>
-        <div class="drive-pick" role="group" aria-label="Show playoff odds after a result">${btn('now', 'Today')}${btn('a', `${esc(firstName(a))} wins`)}${btn('b', `${esc(firstName(b))} wins`)}</div>
-      </div>
-      <div class="drive-field">
-        <span class="endzone" aria-hidden="true">Playoffs</span>
-        ${[0.25, 0.5, 0.75].map((x) => `<span class="yard" style="--y:${x}" aria-hidden="true">${x * 100}</span>`).join('')}
-        ${lane(a, 'a', 0)}${lane(b, 'b', 1)}
-      </div>
-      <p class="drive-note" aria-live="polite"></p>
-    </div>`;
-}
-
-// fill in the drive's numbers and sentence for the picked result
-function paintDrive(el, s) {
-  const st = JSON.parse(el.dataset.states), names = [el.dataset.a, el.dataset.b];
-  el.dataset.s = s;
-  el.querySelectorAll('.drive-pick button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.s === s));
-  el.querySelectorAll('.lane').forEach((ln, k) => {
-    const v = st[s][k], d = v - st.now[k], pts = Math.round(d * 100);
-    ln.querySelector('.ball-pct').textContent = pct(v);
-    const g = ln.querySelector('.ball-gain');
-    g.textContent = s === 'now' || !pts ? '' : `${pts > 0 ? '+' : ''}${pts}`;
-    g.className = `ball-gain ${pts > 0 ? 'up' : 'down'}`;
-  });
-  const move = (k) => { const pts = Math.round((st[s][k] - st.now[k]) * 100); return `${names[k]} ${pts >= 0 ? 'climbs' : 'drops'} to ${pct(st[s][k])} (${pts >= 0 ? '+' : ''}${pts})`; };
-  el.querySelector('.drive-note').textContent = s === 'now'
-    ? `Today ${names[0]} sits at ${pct(st.now[0])} playoff odds and ${names[1]} at ${pct(st.now[1])}. Pick a result to see where it sends them.`
-    : `If ${names[s === 'a' ? 0 : 1]} wins: ${move(s === 'a' ? 0 : 1)}, ${move(s === 'a' ? 1 : 0)}.`;
-}
+// The Games page is React (src/games), mounted into #app by bind; fan picks load at startup (src/games/votes.js).
+const viewMatchups = () => '';
 
 // ---------- trade lab ----------
 // The Trade lab is React (src/trades/TradesPage.jsx), mounted into #app by bind; its shape filter lives in tradeState.
@@ -2086,6 +1759,7 @@ const dashTeam = () => (team(labState.team) ? labState.team : myTeam && team(myT
 // formatting and names for the React pages, so they read exactly like the rest of the site
 const reactHelpers = () => ({
   f1, pct, ordinal, short, record, nfl, groupSaid, pctW, nameOf, posOf, faceSrc, first: firstName, teams: DATA.teams,
+  american, half, isChamp, champSeason: CHAMPION?.season, bull: bullInfo, moneyWeek: MONEY_WEEK && { target: MONEY_WEEK.target, prize: money(MONEY_WEEK.prize) },
   shortName: (id) => shortName(DATA.helpers.player(id) || { name: nameOf(id) }),
 });
 const viewLab = () => '';
@@ -2302,26 +1976,7 @@ function bind(key) {
       })
     );
   }
-  if (key === 'matchups') {
-    $('.matchups')?.addEventListener('click', (e) => { const b = e.target.closest('.pick'); if (b && VOTES?.open) castVote(b); });
-    document.querySelectorAll('.mu-more').forEach((b) => b.addEventListener('click', () => toggleMatchup(b.closest('.mu'))));
-    document.querySelectorAll('.odds-more').forEach((b) => b.addEventListener('click', () => {
-      const card = b.closest('.mu'), open = !card.classList.contains('odds-open');
-      card.classList.toggle('odds-open', open);
-      b.setAttribute('aria-expanded', open);
-    }));
-    const drive = $('.drive');
-    if (drive) {
-      paintDrive(drive, 'now');
-      drive.querySelector('.drive-pick').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) paintDrive(drive, b.dataset.s); });
-    }
-    $('.gotw-more')?.addEventListener('click', (e) => {
-      const card = $(`#mu-${e.currentTarget.dataset.open}`);
-      if (!card) return;
-      if (!card.classList.contains('open')) toggleMatchup(card);
-      card.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'start' });
-    });
-  }
+  if (key === 'matchups') mountView(GamesPage, { calm: calm(), lite: lite() });
   if (key === 'trades') mountView(TradesPage, { state: tradeState, onState: (x) => Object.assign(tradeState, x), onTeam: setMyTeam });
   if (key === 'wire') mountView(WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x) });
   if (key === 'lab') {
@@ -2669,7 +2324,7 @@ async function main() {
   // a headline clip stops while the tab is hidden or an overlay locks the page (html.locked), and picks up after
   document.addEventListener('visibilitychange', () => clipSync?.());
   new MutationObserver(() => clipSync?.()).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-  loadVotes();
+  loadVotes({ week: DATA.previews[0]?.week, demo: RAW.isDemo });
   loadPoll();
   if (TALK.join) claimTalk();
   setInterval(() => { if (document.visibilityState === 'visible' && $('#talk') && TALK.editing == null) loadTalk(); }, 25000);
