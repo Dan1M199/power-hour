@@ -186,6 +186,57 @@ button, select { font: inherit; color: inherit; }
 .theme-btn .to-light, :root[data-theme='dark'] .theme-btn .to-dark { display: none; }
 :root[data-theme='dark'] .theme-btn .to-light { display: block; }
 
+/* ---------- the football (phones) ----------
+   Scrolling down folds the header into a football in its top-left corner; scrolling up or tapping the ball unrolls it
+   (initBall in app.js toggles .folded), and on first load the page opens folded and unrolls (html.navball-intro, set by the
+   inline script in index.html, taken off by unrollBall). The header keeps its size the whole time, so nothing below it
+   moves: its glass is drawn by ::before (the skin) instead of the header itself, and only the skin's box shrinks. The
+   skin has no content, so animating its size costs no more than a transform would; everything else is opacity and
+   transform. Folding: the contents fade, the skin shrinks onto the ball, the ball spins in over it. Unrolling runs it
+   backwards: the ball spins away, the skin grows back, the contents fade in. Desktop keeps the plain bar. */
+.navball { display: none; }
+@media (max-width: 760px) {
+  .topbar { background: none; box-shadow: none; }
+  .topbar::before { content: ''; position: absolute; z-index: -1; left: 0; top: 0; width: 100%; height: 100%; border-radius: inherit;
+    background-color: var(--header); background-image: var(--sheen); background-size: 100% 150px; background-repeat: no-repeat;
+    box-shadow: var(--rim), 0 0 0 var(--ring-w) var(--yellow), 0 0 0 calc(var(--ring-w) + var(--edge)) var(--outline),
+      0 var(--lift) 0 calc(var(--ring-w) + var(--edge)) var(--ledge-c);
+    transition: left 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) 0.06s, top 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) 0.06s,
+      width 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) 0.06s, height 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) 0.06s, opacity 0s; }
+  .topbar > :not(.navball) { transition: opacity 0.2s ease 0.26s, visibility 0s 0.26s; }
+  .topbar > .theme-btn { transition: opacity 0.2s ease 0.26s, visibility 0s 0.26s, background-color 0.15s, transform 0.15s; }
+
+  /* the ball: its body lines up with where the logo sits, top left */
+  .navball { display: block; position: absolute; left: 2px; top: 9px; width: 62px; height: 44px; padding: 0; border: 0; border-radius: 22px;
+    background: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    opacity: 0; visibility: hidden; pointer-events: none; transform: rotate(160deg) scale(0.45);
+    transition: transform 0.26s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.14s ease 0.1s, visibility 0s 0.26s; }
+  .navball svg { display: block; width: 62px; height: 44px; overflow: visible; transition: transform 0.15s; }
+  .navball:active svg { transform: scale(0.9); }
+  .nb-ledge { fill: var(--ledge); }
+  .nb-hide { fill: #9A4E24; }
+  .nb-edge { fill: none; stroke: var(--outline); stroke-width: 2.5; stroke-linejoin: round; }
+  .nb-band, .nb-lace { fill: none; stroke: #FFFFFF; stroke-linecap: round; }
+  .nb-band { stroke-width: 2.6; }
+  .nb-lace { stroke-width: 3; }
+
+  /* folded (and the opening, before it unrolls) */
+  :is(.topbar.folded, .navball-intro .topbar) { pointer-events: none; }
+  :is(.topbar.folded, .navball-intro .topbar)::before { left: 5px; top: 11.5px; width: 56px; height: 35px; opacity: 0;
+    transition: left 0.3s cubic-bezier(0.5, 0, 0.2, 1) 0.04s, top 0.3s cubic-bezier(0.5, 0, 0.2, 1) 0.04s,
+      width 0.3s cubic-bezier(0.5, 0, 0.2, 1) 0.04s, height 0.3s cubic-bezier(0.5, 0, 0.2, 1) 0.04s, opacity 0.08s linear 0.36s; }
+  :is(.topbar.folded, .navball-intro .topbar) > :not(.navball) { opacity: 0; visibility: hidden; transition: opacity 0.12s, visibility 0s 0.12s; }
+  :is(.topbar.folded, .navball-intro .topbar) > .navball { opacity: 1; visibility: visible; pointer-events: auto; transform: none;
+    transition: transform 0.4s cubic-bezier(0.3, 1.45, 0.5, 1) 0.2s, opacity 0.12s ease 0.22s, visibility 0s 0.2s; }
+
+  /* the opening: the ball is tossed in from above the corner, then rocks on the spot until the page is ready */
+  @media (prefers-reduced-motion: no-preference) {
+    .navball-intro .navball { animation: nb-toss 0.7s cubic-bezier(0.25, 1.25, 0.5, 1) both, nb-rock 1.4s ease-in-out 0.7s infinite; }
+    @keyframes nb-toss { from { opacity: 0; transform: translate(-30px, -70px) rotate(-320deg) scale(0.5); } 30% { opacity: 1; } }
+    @keyframes nb-rock { 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+  }
+}
+
 /* ---------- the field ---------- */
 /* main is a one-column grid so its first row is always the page heading. The field is an absolutely placed layer from
    grid line 2 (right under the heading) to the bottom of the page, bleeding to both window edges: mowing stripes, a

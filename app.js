@@ -1237,6 +1237,54 @@ function placeInk({ settle = false } = {}) {
   requestAnimationFrame(() => ink.classList.toggle('live', !morphs()));
 }
 
+// The football (phones): the header folds into a ball in its top-left corner once you scroll down past it, and unrolls
+// when you scroll back up or tap the ball. Only the .folded class changes here; the morph is CSS ("the football" in
+// styles.css). Scroll distance decides, never resize (iPhone resizes as its toolbar hides), and overscroll past either
+// end is ignored, so the rubber band at the bottom of a page can't read as scrolling back up.
+const phone = mq('(max-width: 760px)');
+function initBall() {
+  const bar = $('.topbar'), ball = $('#navball'), root = document.documentElement;
+  if (!bar || !ball) return;
+  const parts = [...bar.children].filter((el) => el !== ball);
+  const FOLD_AFTER = 120, DOWN = 32, UP = 12; // px: below the bar's own height, then a short flick down or a nudge up
+  let folded = false, lastY = 0, turnY = 0, dir = 0, queued = false;
+  const at = () => Math.min(Math.max(scrollY, 0), Math.max(0, root.scrollHeight - innerHeight));
+  const fold = (on) => {
+    on &&= phone();
+    if (on === folded) return;
+    folded = on;
+    bar.classList.toggle('folded', on);
+    parts.forEach((el) => (el.inert = on)); // the hidden links can't take focus or taps
+    ball.setAttribute('aria-expanded', String(!on));
+  };
+  const check = () => {
+    queued = false;
+    const y = at(), dy = y - lastY;
+    lastY = y;
+    if (y < FOLD_AFTER) { fold(false); dir = 0; return; }
+    if (!dy || root.classList.contains('locked')) return;
+    if (Math.sign(dy) !== dir) { dir = Math.sign(dy); turnY = y - dy; } // where this stretch of scrolling started
+    if (dir > 0 && y - turnY > DOWN) fold(true);
+    else if (dir < 0 && turnY - y > UP) fold(false);
+  };
+  lastY = at();
+  addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(check); } }, { passive: true });
+  ball.addEventListener('click', () => {
+    root.classList.remove('navball-intro');
+    fold(false);
+    dir = 0; // the next scroll down measures from here
+  });
+  matchMedia('(max-width: 760px)').addEventListener?.('change', () => phone() || fold(false));
+}
+
+// The opening on phones: the page starts folded into the ball (index.html adds html.navball-intro before the first paint)
+// and unrolls once the first page is up, after the ball has landed (its toss is 0.7 s).
+function unrollBall() {
+  const root = document.documentElement;
+  if (!root.classList.contains('navball-intro')) return;
+  setTimeout(() => root.classList.remove('navball-intro'), Math.max(0, (window.__ballAt || 0) + 900 - Date.now()));
+}
+
 // count big numbers up from zero, keeping their format (decimals, sign, %)
 const COUNT = '.score, .wr-num b, .odds b, .wire-stats b, .mu-team .pr, .gotw-score b, .cast-odds b';
 // Reads first (final widths and display, one layout for the whole batch), writes later in startCounts, so a batch never
@@ -1483,6 +1531,7 @@ async function main() {
   if (join) history.replaceState(null, '', location.pathname + location.search);
   initAvatarFallback();
   initTheme();
+  initBall();
   initTooltips();
   const loader = startLoader();
   try {
@@ -1491,6 +1540,7 @@ async function main() {
   } catch (e) {
     await loader.done();
     (showPage ||= pageRoot($('#app')))(LoadError, { message: String(e.message || e) });
+    unrollBall();
     return;
   }
   $('#league-name').textContent = `${RAW.league.name} ${RAW.league.season}`;
@@ -1521,6 +1571,7 @@ async function main() {
     placeInk({ settle: true });
   }, { passive: true });
   route();
+  unrollBall();
   // the first route can measure the tabs before the stylesheet or the fonts have applied (fast or cached data)
   const settle = () => placeInk({ settle: true });
   if (document.readyState !== 'complete') window.addEventListener('load', settle, { once: true });

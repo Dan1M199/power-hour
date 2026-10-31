@@ -15,6 +15,14 @@
       if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       document.documentElement.dataset.theme = t;
       if (t === 'dark') document.querySelector('meta[name="theme-color"]').content = '#0A1630';
+      // phones open with the header folded into the football (the .navball in the header), which unrolls into the bar
+      // once the page is ready (unrollBall in app.js); the timer is a backstop in case app.js never gets there
+      if (matchMedia('(max-width: 760px)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        var h = document.documentElement;
+        h.classList.add('navball-intro');
+        window.__ballAt = Date.now();
+        setTimeout(function () { h.classList.remove('navball-intro'); }, 15000);
+      }
     })();
   </script>
   <link rel="icon" type="image/png" href="assets/favicon.png">
@@ -64,6 +72,23 @@
       <img class="me-face" id="my-face" alt="" hidden>
       <select id="my-team"><option value="">Your team</option></select>
     </label>
+    <!-- phones: the header folds into this football as you scroll down and unrolls from it (initBall in app.js) -->
+    <button class="navball" id="navball" type="button" aria-label="Open the menu" aria-expanded="true">
+      <svg viewBox="0 0 62 44" width="62" height="44" aria-hidden="true">
+        <defs>
+          <clipPath id="nb-clip"><path d="M3 20C12 2.5 50 2.5 59 20 50 37.5 12 37.5 3 20Z"/></clipPath>
+          <linearGradient id="nb-gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity=".16"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+        </defs>
+        <path class="nb-ledge" d="M3 24C12 6.5 50 6.5 59 24 50 41.5 12 41.5 3 24Z"/>
+        <path class="nb-hide" d="M3 20C12 2.5 50 2.5 59 20 50 37.5 12 37.5 3 20Z"/>
+        <g clip-path="url(#nb-clip)">
+          <rect y="6" width="62" height="28" fill="url(#nb-gloss)"/>
+          <path class="nb-band" d="M14.5 9Q11.5 20 14.5 31M47.5 9Q50.5 20 47.5 31"/>
+        </g>
+        <path class="nb-edge" d="M3 20C12 2.5 50 2.5 59 20 50 37.5 12 37.5 3 20Z"/>
+        <path class="nb-lace" d="M23.5 13.5H38.5M23.5 20H38.5M23.5 26.5H38.5"/>
+      </svg>
+    </button>
   </header>
 
   <main id="app" tabindex="-1">
