@@ -1,7 +1,6 @@
-// The Nerd lab's first page (#lab): everything under the hood of the rankings, a panel each.
+// The Lab's League section (#lab/league, once the Nerd lab): everything under the hood of the rankings, a panel each.
 import { BumpChart, Scatter, HeatTable, DivergingBars } from '../charts.jsx';
 import { PosTag, TeamAvatar } from '../shared.jsx';
-import { LabHead } from './parts.jsx';
 import { WhatItTakes } from './WhatItTakes.jsx';
 import { FlukeOrReal } from './FlukeOrReal.jsx';
 
@@ -66,7 +65,6 @@ export function LabPage({ D, me, h }) {
   const roiRows = Object.values(D.managerMoves).sort((a, b) => b.net - a.net).map((m) => ({ label: short(team(m.rid).name, 20), mine: m.rid === me, value: m.net, tip: `${team(m.rid).name}: ${f1(m.waiverNet)} from adds and drops, ${f1(m.tradeNet)} from trades over ${m.moves} moves` }));
 
   return <>
-    <LabHead>{`Everything under the hood of the rankings, plus a few things that are just fun to argue about. Hover or tap any mark for the numbers${me ? '; your team is highlighted' : ''}.`}</LabHead>
     <div className="lab-grid">
       <section className="panel glass span-12"><h2>Rank flow</h2><p className="sub">Power rank after each week. The roster half uses today's ROS values throughout, so the movement comes from results.</p><BumpChart {...bump} /></section>
       <WhatItTakes D={D} me={me} h={h} />

@@ -18,7 +18,7 @@
   src: url('assets/fonts/big-shoulders-display-latin-ext.woff2') format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
 
-/* the team dashboard's paper style (Nerd lab, #lab/team): Geist, Geist Mono and Inter, only downloaded once it's open */
+/* the team dashboard's paper style (the Lab, #lab/team): Geist, Geist Mono and Inter, only downloaded once it's open */
 @font-face { font-family: 'Geist'; font-style: normal; font-weight: 300 400; font-display: swap;
   src: url('assets/fonts/geist-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
@@ -375,7 +375,19 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .filters :is(button, a):disabled { cursor: default; color: var(--ink-3); background: var(--tile); box-shadow: 0 0 0 2px var(--line); transform: none; }
 .filters :is(button, a):disabled::before { display: none; }
 .filters a { display: inline-block; text-decoration: none; }
-.lab-nav { margin: 22px 0 0; }
+/* the Lab's section switcher: a tray like the header's tabs, a segment per section with a line saying what's in it,
+   the active one on the amber pill */
+.lab-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; max-width: 660px; margin: 24px 0 0; padding: 5px;
+  border-radius: 22px; background: var(--tile); box-shadow: var(--tray-edge); }
+.lab-tabs a { display: grid; gap: 3px; min-width: 0; padding: 10px 16px 11px; border-radius: 17px; text-decoration: none; transition: background-color 0.15s; }
+.lab-tabs b { font: 800 20px/1 var(--display); letter-spacing: 0.01em; color: var(--ink-2); }
+.lab-tabs small { font-size: 12px; font-weight: 600; line-height: 1.25; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (hover: hover) { .lab-tabs a:not([aria-current]):hover { background-color: var(--tile-2); } }
+.lab-tabs a[aria-current='page'] { background: var(--gloss), var(--amber); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge-gold); }
+.lab-tabs a[aria-current='page'] b { color: var(--ink); }
+.lab-tabs a[aria-current='page'] small { color: var(--ink-2); }
+.lab-tabs a:focus-visible { outline-offset: 2px; }
+.lab-head > div > p { margin-top: 16px; }
 .day { margin: 0 0 20px; }
 .day > h3 { display: inline-block; font: 700 13px/1 var(--body); color: var(--chalk); background: var(--ink); padding: 6px 12px; border-radius: 999px; margin: 0 0 10px; }
 .moves { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
@@ -965,7 +977,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   background-color: var(--paper); background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.36) 0 40%, rgba(255, 255, 255, 0) 44%), linear-gradient(hsla(var(--h), 72%, 50%, var(--a)), hsla(var(--h), 72%, 50%, var(--a)));
   box-shadow: inset 0 0 0 1.5px rgba(18, 48, 26, 0.16), inset 0 -3px 0 rgba(18, 48, 26, 0.12); }
 .heat tr.mine td { box-shadow: inset 0 0 0 2px var(--mine-edge), inset 0 -3px 0 rgba(18, 48, 26, 0.12); }
-/* ---------- Nerd lab: "What it takes" ---------- */
+/* ---------- the Lab, League: "What it takes" ---------- */
 .lab-grid .panel > .sub { max-width: 75ch; }
 /* the desk's one-line read of a chart, for the people who won't read the chart */
 .lab-lede { margin: 2px 0 14px; padding: 10px 14px; border-radius: var(--r-md); font: 800 clamp(17px, 1.9vw, 21px)/1.2 var(--display); letter-spacing: 0.01em; color: var(--ink);
@@ -985,7 +997,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .magic-chip.in { background: var(--grass-2); }
 .magic-chip.no { color: var(--chalk); background: var(--bad); }
 
-/* ---------- Nerd lab: "Fluke or for real?" ---------- */
+/* ---------- the Lab, League: "Fluke or for real?" ---------- */
 .talent { display: grid; gap: 6px; }
 .tl-row { display: grid; grid-template-columns: 180px minmax(0, 1fr) 112px; gap: 14px; align-items: center; }
 .tl-name { min-width: 0; line-height: 1.15; }
@@ -1585,6 +1597,10 @@ html.locked { overflow: hidden; }
   /* phones: the logo carries the name on its own, leaving room for the team picker */
   .brand-text { display: none; }
   .view-head { grid-template-columns: 1fr; }
+  .lab-tabs { margin-top: 18px; border-radius: 20px; }
+  .lab-tabs a { padding: 11px 6px; text-align: center; }
+  .lab-tabs b { font-size: 18px; }
+  .lab-tabs small { display: none; }
   .sources { justify-content: flex-start; }
   .rank, .rank:nth-child(-n + 3) { padding-left: 46px; }
   .rank .jersey { font-size: 76px; text-shadow: 3px 4px 0 var(--ledge); }
@@ -1726,7 +1742,7 @@ html.locked { overflow: hidden; }
   .lab-lede { font-size: 17px; }
 }
 
-/* ---------- the team dashboard: seven paper widgets (Nerd lab, #lab/team; lib/dashboard.js) ----------
+/* ---------- the team dashboard: eight paper widgets (the Lab, #lab/team; lib/dashboard.js) ----------
    Its own small design system, by request: flat matte tiles, thin Geist numerals, mono captions, Inter labels. The
    colours sit opposite the site's on the wheel, muted to a matte finish: clay for the data (against the grass),
    violet for the leader and the controls (against the amber and yellow), apricot for the sun and highlights (against
@@ -2103,7 +2119,7 @@ html.locked { overflow: hidden; }
 /* anything on a bright fill (amber, yellow, lime, the matchup sides, the pastel position and tier chips) keeps the
    day's dark ink, so its words stay readable */
 :root[data-theme='dark'] :is(.view-head .wk, .avatar.ph, .tier:not(.low, .stinks), .you, .rank.nudge:not(.open) .pull,
-  .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .tabs a[aria-current='page'], .key-tag,
+  .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .tabs a[aria-current='page'], .lab-tabs a[aria-current='page'], .key-tag,
   .kicker > span:first-child, .tc-face.ph, .talk-btn.primary, .car-pause[aria-pressed='true'], .drive-pick button[aria-pressed='true'],
   .drive-field .endzone, .gotw-more, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
   :is(.lead-face, .mgr-face, .fo-face, .stat-face, .deal-face, .pitch-face).ph, .lf .cap, .mu .vs, .day > h3, .clip-frame .clip-sound, .fo-side, .fo-vs i,

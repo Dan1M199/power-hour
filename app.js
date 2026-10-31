@@ -9,7 +9,7 @@ import { pageRoot } from './src/mount.jsx';
 import { LoadError } from './src/shared.jsx';
 import { Lab } from './src/lab/Lab.jsx';
 import { WirePage } from './src/wire/WirePage.jsx';
-import { TradesPage } from './src/trades/TradesPage.jsx';
+import { SECTIONS } from './src/lab/parts.jsx';
 import { GamesPage } from './src/games/GamesPage.jsx';
 import { loadVotes } from './src/games/votes.js';
 import { RankingsPage } from './src/rankings/RankingsPage.jsx';
@@ -74,8 +74,9 @@ let RAW = null;
 let myTeam = Number(store.get('ph-my-team')) || null;
 const wireState = { type: 'all', mine: false, limit: 50, trades: 3 };
 const tradeState = { shape: 'all' };
-// the Nerd lab's sub-page (#lab/team is the team dashboard) and the team it shows (yours until you pick another)
-const labState = { sub: null, team: null };
+// the Lab's section (#lab/team, #lab/trades, #lab/league; plain #lab opens the last one this visit) and the team the
+// dashboard shows (yours until you pick another there)
+const labState = { sub: 'team', team: null };
 
 // ---------- data ----------
 const getJSON = async (url, res = fetch(url)) => {
@@ -1180,7 +1181,7 @@ function carouselProps() {
 const signed = (x) => `${x > 0 ? '+' : ''}${f1(x)}`;
 
 // ---------- trade lab ----------
-// the Trade lab's team picker sets your team for the whole site
+// the Lab's Trades picker sets your team for the whole site
 function setMyTeam(rid) {
   myTeam = rid || null;
   store.set('ph-my-team', myTeam ? String(myTeam) : null);
@@ -1205,8 +1206,10 @@ const PAGES = {
   rankings: () => [RankingsPage, rankingsProps()],
   wire: () => [WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x) }],
   matchups: () => [GamesPage, { calm: calm(), lite: lite() }],
-  trades: () => [TradesPage, { state: tradeState, onState: (x) => Object.assign(tradeState, x), onTeam: setMyTeam }],
-  lab: () => [Lab, { sub: labState.sub, raw: DATA.raw, ros: RAW.ros?.values || {}, calm: calm(), team: dashTeam(), onTeam: (rid) => (labState.team = rid) }],
+  lab: () => [Lab, {
+    sub: labState.sub, raw: DATA.raw, ros: RAW.ros?.values || {}, calm: calm(), team: dashTeam(), onTeam: (rid) => (labState.team = rid),
+    trade: { state: tradeState, onState: (x) => Object.assign(tradeState, x), onTeam: setMyTeam },
+  }],
 };
 let showPage = null; // the React root on #app (src/mount.jsx), made on the first route
 
@@ -1219,7 +1222,7 @@ const calm = mq('(prefers-reduced-motion: reduce)');
 // phones and touch screens get the light set: no page morphs or scroll reveals, which cost the most on mobile GPUs
 const lite = mq('(max-width: 760px), (pointer: coarse)');
 const morphs = () => !!document.startViewTransition && !calm() && !lite();
-const ORDER = ['live', 'rankings', 'wire', 'matchups', 'trades', 'lab'];
+const ORDER = ['live', 'rankings', 'wire', 'matchups', 'lab'];
 let currentView = null;
 
 // gold pill behind the active tab; with view transitions the browser morphs it, otherwise CSS slides it
@@ -1340,9 +1343,14 @@ function reveal(root) {
 function route({ fresh = false } = {}) {
   // while a week is being played the Live tab is the front page; it only exists then
   const home = DATA.liveMode ? 'live' : 'rankings';
-  const [v, sub] = (location.hash || `#${home}`).slice(1).split('/');
+  let [v, sub] = (location.hash || `#${home}`).slice(1).split('/');
+  if (v === 'trades') [v, sub] = ['lab', 'trades']; // the Trade lab's old address
   const key = PAGES[v] && (v !== 'live' || DATA.liveMode || DATA.after) ? v : home;
-  labState.sub = key === 'lab' && sub === 'team' ? 'team' : null;
+  if (key === 'lab') {
+    if (SECTIONS.includes(sub)) labState.sub = sub;
+    // the address always names the section, without a history entry (no hashchange either)
+    if (location.hash !== `#lab/${labState.sub}`) history.replaceState(null, '', `#lab/${labState.sub}`);
+  }
   const dir = !currentView || key === currentView ? 'same' : ORDER.indexOf(key) > ORDER.indexOf(currentView) ? 'fwd' : 'back';
   const render = () => {
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.view === key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));

@@ -1,4 +1,4 @@
-// The team dashboard (Nerd lab, #lab/team): one team's season on eight paper widgets in the Paper Widgets style. The
+// The team dashboard (the Lab's Your team section, #lab/team): one team's season on eight paper widgets in the Paper Widgets style. The
 // numbers come from dashData (lib/dashboard.js, pure and tested); the look is .paper in styles.css. Picking another
 // team remounts the sheet, so its intro plays again.
 import { useLayoutEffect, useMemo, useState } from 'react';
