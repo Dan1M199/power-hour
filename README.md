@@ -5,7 +5,7 @@ Power rankings, a live waiver-wire feed and data-nerd stats for the **NFL Fantas
 - **Rankings**: a 0–100 power score per team, half rest-of-season roster strength and half results. Tap a team for the reasons behind its rank, a position-group radar, its best ROS lineup, weekly scoring and simulated playoff seeds.
 - **Wire**: every add, drop and trade, newest first. Each move is graded by the consensus ROS value gained or lost. Also shows the best available free agents and a trade ledger.
 - **Games**: projected scores and win odds for every matchup.
-- **Nerd lab**: rank flow, luck index, points for vs against, weekly finishes heatmap, position-group ranks, playoff odds, lineup efficiency, biggest games, players the experts disagree on, and waiver/trade ROI.
+- **Nerd lab**: rank flow, luck index, points for vs against, weekly finishes heatmap, position-group ranks, playoff odds, lineup efficiency, biggest games, players the experts disagree on, and waiver/trade ROI. Its **Team dashboard** page (`#lab/team`) puts one team's season on seven animated paper widgets: playoff odds, key players, lineup efficiency, weekly scores, position groups, the schedule left and an all-play luck switch.
 
 ## How it stays up to date
 
@@ -20,12 +20,10 @@ No cron job: the page requests `/api/ros?d=YYYY-MM-DD`, so each new day is a new
 ## Deploy to Vercel
 
 1. Create a new GitHub repo and push this folder to it.
-2. In Vercel, choose **Add New → Project**, import the repo, and keep every setting at its default (Framework preset: **Other**, no build command, no output directory).
+2. In Vercel, choose **Add New → Project** and import the repo. `vercel.json` sets the build (`npm ci`, `npm run build`, output `dist`), so the other settings can stay at their defaults. The build needs Node 20.19+ or 22.12+ (Project Settings → Build and Deployment → Node.js Version).
 3. Deploy. The site is at `https://<project>.vercel.app`; share that link with the league.
 
-Nothing needs installing: there are no npm dependencies. The serverless function runs on Vercel's default Node runtime (18+).
-
-To preview locally: `npx vercel dev`, then open http://localhost:3000. Add `?demo=1` to the URL to see the saved Week 7 snapshot without calling any APIs.
+The site is built with Vite and is moving to React a page at a time (the Team dashboard is the first). To work on it locally: `npm install` once, then `npx vercel dev` and open http://localhost:3000 (or `npm run dev` for the page alone, without the API). Add `?demo=1` to the URL to see the saved Week 7 snapshot without calling any APIs.
 
 ## Turn on FantasyPros weekly projections (one-time)
 
@@ -69,13 +67,13 @@ Check `/api/ros` in the browser to see how many players each source matched (`so
 ## Files
 
 ```
-index.html, styles.css, app.js   the site
+index.html, styles.css, app.js   the site: the frame, the data and the headlines
+src/                             the pages, in React (one folder each), the charts and the shared bits
 lib/engine.js                    power score, explanations, playoff simulation, transaction grading
 lib/consensus.js                 matches ranking rows to Sleeper IDs and blends the three sources
 lib/sources.js                   parsers for each ranking site
 lib/weekly.js                    this week's projections: FantasyPros + Sleeper, averaged
 api/talk.js                      the league desk: one discussion thread a week, personal sign-in links
-lib/charts.js                    dependency-free SVG charts
 api/ros.js                       daily rankings endpoint (Vercel function)
 demo/demo.json                   saved Week 7 snapshot for ?demo=1
 fixtures/, scripts/              saved source data and tests (node scripts/test-engine.mjs)

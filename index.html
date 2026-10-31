@@ -9,32 +9,23 @@
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <!-- everything the first screen needs starts downloading here, in parallel: the stylesheet, both typefaces (served
-       from this site), every script module (without these, the browser only finds lib/ after app.js arrives), and the
-       connection to Sleeper's picture CDN for the team avatars -->
+       from this site) and the connection to Sleeper's picture CDN for the team avatars. The build (vite.config.js)
+       bundles app.js and lib/ and adds a modulepreload for each piece of the bundle itself. -->
   <link rel="preload" href="assets/fonts/big-shoulders-display-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/albert-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
-  <link rel="modulepreload" href="app.js">
-  <link rel="modulepreload" href="lib/newsclock.js">
-  <link rel="modulepreload" href="lib/engine.js">
-  <link rel="modulepreload" href="lib/matchup.js">
-  <link rel="modulepreload" href="lib/stories.js">
-  <link rel="modulepreload" href="lib/charts.js">
-  <link rel="modulepreload" href="lib/overrides.js">
-  <link rel="modulepreload" href="lib/trades.js">
-  <link rel="modulepreload" href="lib/members.js">
-  <link rel="modulepreload" href="lib/bullseye.js">
-  <link rel="modulepreload" href="lib/nightdesk.js">
-  <link rel="modulepreload" href="lib/labmodels.js">
   <link rel="preconnect" href="https://sleepercdn.com">
   <!-- the league data: asked for as soon as the clock module is in, while the rest of the code is still on its way.
-       app.js picks these requests up (window.__early) instead of starting its own; the demo never makes them. -->
-  <script type="module" async data-early>
-    import { morningKey, leagueKey } from './lib/newsclock.js';
-    if (!window.__early && !window.__DEMO__ && !new URLSearchParams(location.search).has('demo')) {
-      const get = (url) => { const res = fetch(url); res.catch(() => {}); return { url, res }; };
-      window.__early = { league: get(`/api/league?d=${leagueKey()}`), ros: get(`/api/ros?d=${morningKey()}`) };
-    }
+       app.js picks these requests up (window.__early) instead of starting its own; the demo never makes them. A plain
+       script with a dynamic import: the build points it at a small chunk of its own (vite.config.js), so it loads
+       without waiting for the main bundle. -->
+  <script data-early>
+    import('/lib/newsclock.js').then(({ morningKey, leagueKey }) => {
+      if (!window.__early && !window.__DEMO__ && !new URLSearchParams(location.search).has('demo')) {
+        const get = (url) => { const res = fetch(url); res.catch(() => {}); return { url, res }; };
+        window.__early = { league: get(`/api/league?d=${leagueKey()}`), ros: get(`/api/ros?d=${morningKey()}`) };
+      }
+    }).catch(() => {});
   </script>
 </head>
 <body>

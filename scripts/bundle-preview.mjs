@@ -1,40 +1,64 @@
-// Builds a single self-contained HTML preview (demo data inlined) for sharing without deploying.
-import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
-const r = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
-const strip = (src) => src.replace(/^import .*$/gm, '').replace(/^export (const|function|async function|default )/gm, '$1');
-// Wrap each library in its own scope so shared helper names don't collide.
-const wrap = (src) => {
-  const names = [...src.matchAll(/^export (?:const|function|async function) ([A-Za-z0-9_]+)/gm)].map((m) => m[1]);
-  return `const { ${names.join(', ')} } = (() => {\n${strip(src)}\nreturn { ${names.join(', ')} };\n})();`;
+// Builds a single self-contained HTML preview (demo data inlined) for sharing without deploying: the site's own Vite
+// build (vite.config.js, React and all), with every script, stylesheet, typeface and picture inlined into one file.
+// Writes dist/preview.html, and dist/artifact.html (the same page without the html/head/body skeleton).
+import { build } from 'vite';
+import { readFileSync, writeFileSync, readdirSync, rmSync } from 'node:fs';
+
+const root = new URL('..', import.meta.url).pathname;
+const r = (f) => readFileSync(`${root}${f}`, 'utf8');
+const tmp = 'dist/preview-build';
+
+// the preview never shows the loader or asks for live data: drop the kicker clip and the early data script first, and
+// the font preloads, so the typefaces are only named by the stylesheet and get inlined into it
+const previewHtml = {
+  name: 'preview-html',
+  transformIndexHtml: {
+    order: 'pre',
+    handler: (html) => html
+      .replace(/\s*<!-- the league data:[\s\S]*?-->\s*<script data-early>[\s\S]*?<\/script>/, '')
+      .replace(/\s*<video class="kick"[\s\S]*?<\/video>\s*<img class="kick kick-still"[^>]*>/, '')
+      .replace(/\s*<link rel="preload"[^>]*>/g, ''),
+  },
 };
-const js = [wrap(r('lib/newsclock.js')), wrap(r('lib/charts.js')), wrap(r('lib/engine.js')), wrap(r('lib/matchup.js')), wrap(r('lib/stories.js')), wrap(r('lib/overrides.js')), wrap(r('lib/trades.js')), wrap(r('lib/members.js')), wrap(r('lib/bullseye.js')), wrap(r('lib/nightdesk.js')), wrap(r('lib/labmodels.js')), strip(r('app.js'))].join('\n');
-// manager headshots as data URIs (photoUrl in lib/members.js reads window.__HEADS__)
-const heads = Object.fromEntries(readdirSync(new URL('../assets/heads', import.meta.url)).filter((f) => f.endsWith('.jpg'))
-  .map((f) => [f.slice(0, -4), `data:image/jpeg;base64,${readFileSync(new URL(`../assets/heads/${f}`, import.meta.url)).toString('base64')}`]));
-// other images app.js puts on the page (the money week flyer), read through asset() in app.js
-const assets = Object.fromEntries(['assets/money-week-flyer.jpg'].map((p) => [p, `data:image/jpeg;base64,${readFileSync(new URL(`../${p}`, import.meta.url)).toString('base64')}`]));
+await build({
+  root,
+  logLevel: 'warn',
+  plugins: [previewHtml],
+  build: { outDir: tmp, emptyOutDir: true, assetsInlineLimit: Number.MAX_SAFE_INTEGER, modulePreload: false },
+});
+
+// pull the built script and stylesheet into the page
+const out = `${root}${tmp}`;
+let html = readFileSync(`${out}/index.html`, 'utf8');
+const file = (href) => readFileSync(`${out}${href}`, 'utf8');
+let js = '', css = '';
+html = html
+  .replace(/\s*<script type="module" crossorigin src="([^"]+)"><\/script>/, (_, src) => { js = file(src); return ''; })
+  .replace(/\s*<link rel="stylesheet" crossorigin href="([^"]+)">/, (_, href) => { css = file(href); return ''; });
+if (/url\(\/bundle\//.test(css)) throw new Error('preview: the stylesheet still points at a file');
+// anything else the page still names by file (the tab and home-screen icons) goes in as a data URI
+const MIME = { png: 'image/png', webp: 'image/webp', jpg: 'image/jpeg', svg: 'image/svg+xml', ico: 'image/x-icon' };
+html = html.replace(/(src|href)="(\/bundle\/[^"]+\.(png|webp|jpg|svg|ico))"/g, (_, attr, f, ext) => `${attr}="data:${MIME[ext]};base64,${readFileSync(`${out}${f}`).toString('base64')}"`);
+if (!js || !css) throw new Error('preview: the built page has no script or no stylesheet to inline');
+
+// the demo snapshot, the managers' headshots and the other pictures the code asks for by name (photoUrl in
+// lib/members.js reads window.__HEADS__, asset() in src/hero/Carousel.jsx window.__ASSETS__)
+const heads = Object.fromEntries(readdirSync(`${root}assets/heads`).filter((f) => f.endsWith('.jpg'))
+  .map((f) => [f.slice(0, -4), `data:image/jpeg;base64,${readFileSync(`${root}assets/heads/${f}`).toString('base64')}`]));
+const assets = Object.fromEntries(['assets/money-week-flyer.jpg'].map((p) => [p, `data:image/jpeg;base64,${readFileSync(`${root}${p}`).toString('base64')}`]));
 const demo = r('demo/demo.json').replace(/<\//g, '<\\/');
-// the typefaces (assets/fonts), inlined into the stylesheet
-const css = r('styles.css').replace(/url\('assets\/fonts\/([a-z0-9-]+\.woff2)'\)/g, (_, f) => `url(data:font/woff2;base64,${readFileSync(new URL(`../assets/fonts/${f}`, import.meta.url)).toString('base64')})`);
-let html = r('index.html')
-  // everything is inline, so nothing to preload, and the demo data means no early data requests
-  .replace(/\s*<link rel="(?:preload|modulepreload)"[^>]*>/g, '')
-  .replace(/\s*<!-- the league data:[\s\S]*?-->\s*<script type="module" async data-early>[\s\S]*?<\/script>/, '')
-  // function replacements: a string replacement would turn every $ in the code into $
-  .replace('<link rel="stylesheet" href="styles.css">', () => `<style>${css}</style>`)
-  .replace('<script type="module" src="app.js"></script>', () => `<script>window.__DEMO__ = ${demo}; window.__HEADS__ = ${JSON.stringify(heads)}; window.__ASSETS__ = ${JSON.stringify(assets)};</script>\n<script type="module">${js}</script>`)
-  .replace('<title>The Power Hour</title>', '<title>The Power Hour</title>')
-  // the demo data is inline, so the kicker loader never shows: drop its video and still instead of shipping them
-  .replace(/\s*<video class="kick"[\s\S]*?<\/video>\s*<img class="kick kick-still"[^>]*>/, '')
-  // the league logo: header, footer, tab and home-screen icons
-  .replace(/(src|href)="assets\/(logo-header\.webp|logo-footer\.webp|favicon\.png|apple-touch-icon\.png)"/g, (_, attr, f) => `${attr}="data:image/${f.endsWith('.png') ? 'png' : 'webp'};base64,${readFileSync(new URL(`../assets/${f}`, import.meta.url)).toString('base64')}"`)
-  .replace('src="assets/ttp-logo.webp"', `src="data:image/webp;base64,${readFileSync(new URL('../assets/ttp-logo.webp', import.meta.url)).toString('base64')}"`);
-mkdirSync(new URL('../dist', import.meta.url), { recursive: true });
-writeFileSync(new URL('../dist/preview.html', import.meta.url), html);
+const inline = (s) => s.replace(/<\/(script|style)/gi, '<\\/$1');
+html = html.replace('</head>', () => `<style>${inline(css)}</style>
+<script>window.__DEMO__ = ${demo}; window.__HEADS__ = ${JSON.stringify(heads)}; window.__ASSETS__ = ${JSON.stringify(assets)};</script>
+<script type="module">${inline(js)}</script>
+</head>`);
+rmSync(out, { recursive: true, force: true });
+
+writeFileSync(`${root}dist/preview.html`, html);
 console.log('dist/preview.html', html.length, 'bytes');
 
 // Artifact variant: page content only (the host adds the html/head/body skeleton).
 const head = html.match(/<head>([\s\S]*)<\/head>/)[1].replace(/<meta charset[^>]*>\s*/, '').replace(/<meta name="viewport"[^>]*>\s*/, '');
 const body = html.match(/<body>([\s\S]*)<\/body>/)[1];
-writeFileSync(new URL('../dist/artifact.html', import.meta.url), `${head}\n${body}`);
+writeFileSync(`${root}dist/artifact.html`, `${head}\n${body}`);
 console.log('dist/artifact.html written');
