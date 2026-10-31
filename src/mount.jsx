@@ -1,12 +1,13 @@
-// How app.js puts a React page on the site: straight into the page's main element (#app), synchronously, so the page's
-// own entrance animations and view transitions see it. Returns the function that takes it down again, which app.js
-// calls before it puts any other page there. The rest of the site is still plain JS, moving to React page by page.
+// How app.js puts a page on the site: one React root on the page's main element (#app), rendered synchronously on each
+// route, so the page's own entrance animations and view transitions see the new page at once. Each route gets a fresh
+// key, so a page always mounts anew (its lasting state lives in app.js's state objects and the stores).
 import { StrictMode, createElement } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
-export function mount(el, Page, props) {
+export function pageRoot(el) {
+  el.replaceChildren(); // the loader (index.html) goes; React owns the element from here
   const root = createRoot(el);
-  flushSync(() => root.render(<StrictMode>{createElement(Page, props)}</StrictMode>));
-  return () => root.unmount();
+  let n = 0;
+  return (Page, props) => flushSync(() => root.render(<StrictMode>{createElement(Page, { ...props, key: ++n })}</StrictMode>));
 }

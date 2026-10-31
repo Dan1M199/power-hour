@@ -1,11 +1,12 @@
 import { computeLeague, PARTS } from './lib/engine.js';
-import { radar, weeklyBars, TEAM_COLORS } from './lib/charts.js';
+import { TEAM_COLORS } from './src/charts.jsx';
 import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
 import { breakdown, shortName, fits, nfl } from './lib/matchup.js';
 import { MEMBERS, DESK_PEOPLE, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
-import { mount } from './src/mount.jsx';
+import { pageRoot } from './src/mount.jsx';
+import { LoadError } from './src/shared.jsx';
 import { Lab } from './src/lab/Lab.jsx';
 import { WirePage } from './src/wire/WirePage.jsx';
 import { TradesPage } from './src/trades/TradesPage.jsx';
@@ -305,9 +306,8 @@ const updatedText = () => {
 };
 
 // ---------- views ----------
-// The power rankings are React (src/rankings), mounted into #app by bind, with the hero (headline carousel, page head
-// and league desk, src/hero) they share with the Live page.
-const viewRankings = () => '';
+// Every page is React (src/), put up by route() below with the props worked out here; the hero (headline carousel,
+// page head and league desk, src/hero) is shared by the power rankings and the Live page.
 function rankingsProps() {
   // while a week is being played the headlines move to the Live tab and these ranks hold until the week is final
   const held = !!DATA.liveMode;
@@ -981,8 +981,7 @@ function liveWeek() {
   return { rows, standings: after.map((x, i) => ({ ...x, seed: i + 1, was: seedNow.get(x.t.rid) })) };
 }
 
-// The Live tab is React (src/live/LivePage.jsx), mounted into #app by bind, with the power rankings' hero (src/hero).
-const viewLive = () => '';
+// the Live tab (src/live/LivePage.jsx)
 function liveProps() {
   // after the reveal DATA holds the new rankings; this page keeps showing the week that just ended
   if (DATA.after) return withData(DATA.after, liveProps);
@@ -1159,26 +1158,17 @@ function carouselProps() {
 }
 
 // ---------- wire ----------
-// The Wire is React (src/wire/WirePage.jsx), mounted into #app by bind; its filters live in wireState.
-const viewWire = () => '';
 const signed = (x) => `${x > 0 ? '+' : ''}${f1(x)}`;
 
-// ---------- matchups ----------
-// The Games page is React (src/games), mounted into #app by bind; fan picks load at startup (src/games/votes.js).
-const viewMatchups = () => '';
-
 // ---------- trade lab ----------
-// The Trade lab is React (src/trades/TradesPage.jsx), mounted into #app by bind; its shape filter lives in tradeState.
+// the Trade lab's team picker sets your team for the whole site
 function setMyTeam(rid) {
   myTeam = rid || null;
   store.set('ph-my-team', myTeam ? String(myTeam) : null);
   $('#my-team').value = myTeam ? String(myTeam) : '';
   route();
 }
-const viewTrades = () => '';
-
 // ---------- nerd lab ----------
-// The Nerd lab is React (src/lab): the lab itself (#lab) and the team dashboard (#lab/team), mounted into #app by bind.
 // The team dashboard opens on your team, or whichever was picked there last (labState.team).
 const dashTeam = () => (team(labState.team) ? labState.team : myTeam && team(myTeam) ? myTeam : DATA.teams[0].rid);
 // formatting and names for the React pages, so they read exactly like the rest of the site
@@ -1187,15 +1177,19 @@ const reactHelpers = () => ({
   american, half, signed, isChamp, champSeason: CHAMPION?.season, bull: bullInfo, moneyWeek: MONEY_WEEK && { target: MONEY_WEEK.target, prize: money(MONEY_WEEK.prize) },
   shortName: (id) => shortName(DATA.helpers.player(id) || { name: nameOf(id) }),
 });
-const viewLab = () => '';
 
-// The React pages: their view function above leaves #app empty, bind mounts the page there, and route takes it down
-// (unmountReact) before it puts up the next page.
-let unmountReact = null;
-function mountView(Page, props) {
-  unmountReact?.();
-  unmountReact = mount($('#app'), Page, { D: DATA, me: myTeam, h: reactHelpers(), ...props });
-}
+// ---------- the pages ----------
+// what each tab mounts: the page component and its props (D, me and h are added to every page by route). Filters and
+// picks a page keeps when you leave it live in the state objects above (wireState, tradeState, labState).
+const PAGES = {
+  live: () => [LivePage, liveProps()],
+  rankings: () => [RankingsPage, rankingsProps()],
+  wire: () => [WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x) }],
+  matchups: () => [GamesPage, { calm: calm(), lite: lite() }],
+  trades: () => [TradesPage, { state: tradeState, onState: (x) => Object.assign(tradeState, x), onTeam: setMyTeam }],
+  lab: () => [Lab, { sub: labState.sub, raw: DATA.raw, ros: RAW.ros?.values || {}, calm: calm(), team: dashTeam(), onTeam: (rid) => (labState.team = rid) }],
+};
+let showPage = null; // the React root on #app (src/mount.jsx), made on the first route
 
 // ---------- shell ----------
 // ---------- motion ----------
@@ -1324,45 +1318,29 @@ function reveal(root) {
   below.forEach((el) => { el.classList.add('reveal'); io.observe(el); });
 }
 
-const VIEWS = { live: viewLive, rankings: viewRankings, wire: viewWire, matchups: viewMatchups, trades: viewTrades, lab: viewLab };
 function route({ fresh = false } = {}) {
   // while a week is being played the Live tab is the front page; it only exists then
   const home = DATA.liveMode ? 'live' : 'rankings';
   const [v, sub] = (location.hash || `#${home}`).slice(1).split('/');
-  const key = VIEWS[v] && (v !== 'live' || DATA.liveMode || DATA.after) ? v : home;
+  const key = PAGES[v] && (v !== 'live' || DATA.liveMode || DATA.after) ? v : home;
   labState.sub = key === 'lab' && sub === 'team' ? 'team' : null;
   const dir = !currentView || key === currentView ? 'same' : ORDER.indexOf(key) > ORDER.indexOf(currentView) ? 'fwd' : 'back';
   const render = () => {
-    unmountReact?.(); // a React page is taken down before its HTML goes
-    unmountReact = null;
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.view === key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
     placeInk();
     paintMe();
-    const app = $('#app');
-    app.innerHTML = VIEWS[key]();
-    bind(key);
+    talk.week = talkWeek();
+    const app = $('#app'), [Page, props] = PAGES[key]();
+    showPage ||= pageRoot(app);
+    showPage(Page, { D: DATA, me: myTeam, h: reactHelpers(), ...props });
     if (fresh) { app.focus({ preventScroll: true }); window.scrollTo({ top: 0 }); }
     reveal(app);
     currentView = key;
+    if (key === 'rankings') maybeMessage();
   };
   document.documentElement.dataset.dir = dir;
   if (currentView && morphs()) document.startViewTransition(render);
   else render();
-}
-
-function bind(key) {
-  if (key === 'rankings' || key === 'live') talk.week = talkWeek();
-  if (key === 'rankings') { mountView(RankingsPage, rankingsProps()); maybeMessage(); }
-  if (key === 'live') mountView(LivePage, liveProps());
-  if (key === 'matchups') mountView(GamesPage, { calm: calm(), lite: lite() });
-  if (key === 'trades') mountView(TradesPage, { state: tradeState, onState: (x) => Object.assign(tradeState, x), onTeam: setMyTeam });
-  if (key === 'wire') mountView(WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x) });
-  if (key === 'lab') {
-    mountView(Lab, {
-      sub: labState.sub, raw: DATA.raw, ros: RAW.ros?.values || {}, calm: calm(),
-      team: dashTeam(), onTeam: (rid) => (labState.team = rid),
-    });
-  }
 }
 
 // the Live tab exists while a week is on, and reads "Final" once the week is (before and after the reveal)
@@ -1484,7 +1462,7 @@ async function main() {
     await loader.done();
   } catch (e) {
     await loader.done();
-    $('#app').innerHTML = `<section class="loading"><div class="notice glass"><strong>Couldn't reach Sleeper.</strong> ${esc(e.message || e)}. Check your connection and reload the page.</div></section>`;
+    (showPage ||= pageRoot($('#app')))(LoadError, { message: String(e.message || e) });
     return;
   }
   $('#league-name').textContent = `${RAW.league.name} ${RAW.league.season}`;

@@ -1,7 +1,7 @@
 // A team's scouting report, opened from its ranking row: the manager's card, the reasons it sits where it does, its
 // position groups against the league, the schedule left, its weekly points and where it finishes in the simulations.
-import { radar, weeklyBars } from '../../lib/charts.js';
-import { Chart, ChampBadge, Headshot, PosTag } from '../shared.jsx';
+import { Radar, WeeklyBars } from '../charts.jsx';
+import { ChampBadge, Headshot, PosTag } from '../shared.jsx';
 
 // the league-wide superlatives a manager owns, at most three
 function superlatives(D, t, h) {
@@ -60,8 +60,8 @@ export function Report({ D, t, h }) {
   const { f1, pct, ordinal } = h, n = D.teams.length;
   const axes = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
   const rad = D.meta.hasRos
-    ? radar({ axes, values: axes.map((p) => 1 - (t.posRanks[p] - 1) / (n - 1)), color: D.color[t.rid], tips: axes.map((p) => `${p}: ${ordinal(t.posRanks[p])} of ${n} (${h.groupSaid(t, p)})`) })
-    : '';
+    ? { axes, values: axes.map((p) => 1 - (t.posRanks[p] - 1) / (n - 1)), color: D.color[t.rid], tips: axes.map((p) => `${p}: ${ordinal(t.posRanks[p])} of ${n} (${h.groupSaid(t, p)})`) }
+    : null;
   const avg = t.weeks.map((w) => {
     const all = D.weekly.find((x) => x.week === w.week), vals = all ? Object.values(all.scores) : [];
     return vals.reduce((a, b) => a + b, 0) / (vals.length || 1);
@@ -72,7 +72,7 @@ export function Report({ D, t, h }) {
       <ManagerCard D={D} t={t} h={h} />
       <ul className="why">{t.why.map((w, k) => <li key={k} className={w.tone} style={{ '--k': k }}><b>{w.title}</b><span>{w.text}</span></li>)}</ul>
       <div className="detail-side">
-        {rad ? <div className="mini"><h4>Position groups vs the league</h4><div className="mini-row"><Chart html={rad} /><div>
+        {rad ? <div className="mini"><h4>Position groups vs the league</h4><div className="mini-row"><Radar {...rad} /><div>
           <ul className="lineup">{t.rosLineup.filter(Boolean).map((l, i) => <li key={i}><span className="slot">{l.slot === 'FLEX' ? 'FLX' : l.slot}</span><span className="pl"><PosTag pos={h.posOf(l.id)} />{h.nameOf(l.id)}</span><span className="pt">{f1(l.pts)}</span></li>)}</ul>
         </div></div></div> : null}
         {t.schedule.length ? <div className="mini"><h4>Remaining schedule (opponent power rank, colored by win chance)</h4>
@@ -81,7 +81,7 @@ export function Report({ D, t, h }) {
             return <span key={g.week} className="g" style={{ '--p': Math.max(0, Math.min(1, (g.pWin - 0.3) / 0.4)).toFixed(3) }} data-tip={`Week ${g.week} vs ${o.name}: No. ${o.powerRank} power, ${f1(g.proj)} proj pts/wk, ${pct(g.pWin)} win chance`}><small>{`W${g.week}`}</small><b>{o.powerRank}</b></span>;
           })}</div>
           <p className="sched-sum">{`${t.schedWins >= 0 ? '+' : ''}${t.schedWins.toFixed(2)} wins vs an average slate, ${t.ranks.schedWins === n ? 'the toughest' : `${ordinal(n + 1 - t.ranks.schedWins)}-toughest`} in the league.`}</p></div> : null}
-        <div className="mini"><h4>Weekly points (green = win, dashed = league average)</h4><Chart html={weeklyBars({ weeks: t.weeks, avg, width: 560, height: 150 })} /></div>
+        <div className="mini"><h4>Weekly points (green = win, dashed = league average)</h4><WeeklyBars weeks={t.weeks} avg={avg} width={560} height={150} /></div>
         <div className="mini"><h4>{`Where they finish in 10,000 simulations (seed 1 → ${seeds.length})`}</h4>
           <div className="seeds" style={{ '--n': seeds.length }}>{seeds.map((p, i) => <i key={i} className={i < pt ? 'in' : ''} style={{ height: `${(p / maxSeed) * 100}%` }} data-tip={`Seed ${i + 1}: ${(p * 100).toFixed(1)}%`} />)}</div>
           <div className="seed-axis" style={{ '--n': seeds.length }}>{seeds.map((_, i) => <span key={i}>{i + 1}</span>)}</div>

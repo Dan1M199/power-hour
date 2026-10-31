@@ -1,10 +1,6 @@
 // Pieces every React page shares.
 import { useState } from 'react';
 
-// A chart from lib/charts.js, which still builds SVG and HTML as strings (the pages not yet in React use the same
-// builders). The wrapper is display: contents, so the chart lays out exactly as if it sat in the panel itself.
-export const Chart = ({ html }) => <div style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: html }} />;
-
 // React pictures handle their own load errors: the page's fallback (initAvatarFallback in app.js) swaps the node out,
 // which React can't follow, so never give them data-initials.
 
@@ -42,3 +38,8 @@ const TROPHY_D = 'M7 2.5h10v2h3.2v3.2a4.2 4.2 0 0 1-4.3 4.2 5.2 5.2 0 0 1-2.9 3.
 export const ChampTag = ({ t, h, label = true }) => (h.isChamp(t)
   ? <span className={`champ${label ? '' : ' bare'}`} title={`${h.champSeason} league champion`}><Trophy />{label ? `${h.champSeason} champ` : null}</span> : null);
 export const ChampBadge = ({ t, h }) => (h.isChamp(t) ? <span className="champ-badge" title={`${h.champSeason} league champion`}><Trophy /></span> : null);
+
+/** The page when the league couldn't be loaded. */
+export const LoadError = ({ message }) => (
+  <section className="loading"><div className="notice glass"><strong>Couldn't reach Sleeper.</strong>{` ${message}. Check your connection and reload the page.`}</div></section>
+);
