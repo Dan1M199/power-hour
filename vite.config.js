@@ -1,6 +1,5 @@
-// The build: Vite bundles index.html, app.js, lib/, src/ (the React parts) and styles.css into dist/, which Vercel
-// serves (vercel.json). The site is moving to React a page at a time: src/ holds the pages already moved (JSX, through
-// @vitejs/plugin-react), app.js mounts them; everything else is still the plain ES modules it was.
+// The build: Vite bundles index.html, app.js, lib/ and src/ (the React pages, JSX through @vitejs/plugin-react) and
+// styles.css into dist/, which Vercel serves (vercel.json).
 // - Bundled files go to dist/bundle/ with a hash in their names, so they can be cached for a year (vercel.json).
 // - Nothing is translated for older browsers (target esnext): the site ships the same JS and CSS features as before.
 // - Files the page asks for by name at runtime aren't seen by the bundler, so they're copied as they are: assets/

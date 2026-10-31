@@ -67,13 +67,13 @@ Check `/api/ros` in the browser to see how many players each source matched (`so
 ## Files
 
 ```
-index.html, styles.css, app.js   the site
+index.html, styles.css, app.js   the site: the frame, the data and the headlines
+src/                             the pages, in React (one folder each), the charts and the shared bits
 lib/engine.js                    power score, explanations, playoff simulation, transaction grading
 lib/consensus.js                 matches ranking rows to Sleeper IDs and blends the three sources
 lib/sources.js                   parsers for each ranking site
 lib/weekly.js                    this week's projections: FantasyPros + Sleeper, averaged
 api/talk.js                      the league desk: one discussion thread a week, personal sign-in links
-lib/charts.js                    dependency-free SVG charts
 api/ros.js                       daily rankings endpoint (Vercel function)
 demo/demo.json                   saved Week 7 snapshot for ?demo=1
 fixtures/, scripts/              saved source data and tests (node scripts/test-engine.mjs)
