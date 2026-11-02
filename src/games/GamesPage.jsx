@@ -2,7 +2,6 @@
 // on desktop, and the other cards glide to their new places (FLIP, transform only) instead of jumping.
 import { useLayoutEffect, useRef, useState } from 'react';
 import { GameOfTheWeek } from './GameOfTheWeek.jsx';
-import { Deck } from '../deck.jsx';
 import { MatchupCard } from './MatchupCard.jsx';
 import { useVotes } from './votes.js';
 
@@ -52,9 +51,9 @@ export function GamesPage({ D, me, h, calm, lite }) {
       </div>
     </section>
     <GameOfTheWeek D={D} h={h} onBreakdown={toBreakdown} />
-    {pv.length ? <Deck className="matchups" deckRef={grid} count={pv.length} noun="Game">{pv.map((p, i) => (
+    {pv.length ? <div className="matchups" ref={grid}>{pv.map((p, i) => (
       <MatchupCard key={`${p.a}-${p.b}`} D={D} p={p} i={i} me={me} h={h} votes={votes} error={error}
         open={open.has(i)} opened={opened.has(i)} onOpen={() => toggle(i)} cardRef={(el) => { cards.current[i] = el; }} />
-    ))}</Deck> : <p className="empty glass panel">No regular-season matchups left to preview.</p>}
+    ))}</div> : <p className="empty glass panel">No regular-season matchups left to preview.</p>}
   </>;
 }

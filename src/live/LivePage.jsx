@@ -2,7 +2,6 @@
 // plus the rest projected) and the projected standings. Once every game is final it becomes Final Scores, with the
 // button to the new power rankings. The hero (headline carousel, page head, league desk) is the one the power rankings
 // use.
-import { Deck } from '../deck.jsx';
 import { ChampTag, Headshot, TeamAvatar } from '../shared.jsx';
 import { Hero } from '../hero/Hero.jsx';
 
@@ -89,7 +88,7 @@ export function LivePage({ D, me, h, fin, wk, rows, standings, car, desk, played
     {fin
       ? <div className="unveil-cta"><button type="button" className="cta" data-reveal onClick={(e) => onReveal(e.currentTarget)}>Done with Live Ranks, Show me the Power Ranking</button></div>
       : <YourWeek rows={rows} standings={standings} me={me} h={h} bull={bull} />}
-    <Deck className="live-grid" labels={[fin ? 'Final scores' : 'This week', 'Standings']}>
+    <div className="live-grid">
       <section className="panel glass live-panel wk-rank">
         <h2>{`Week ${wk}, top to bottom`}</h2>
         <p className="sub">{fin ? 'Final scores. 12th is the worst week in the league.' : 'By projected final score. Dark is banked, striped is still to come. 12th is the worst week in the league.'}</p>
@@ -129,6 +128,6 @@ export function LivePage({ D, me, h, fin, wk, rows, standings, car, desk, played
         </table></div>
         <p className="sub stand-note">{`Playoff odds are from 10,000 simulations of the season with this week's ${fin ? 'final' : 'live'} scores in.`}</p>
       </section>
-    </Deck>
+    </div>
   </>;
 }
