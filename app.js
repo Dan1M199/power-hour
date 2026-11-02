@@ -6,6 +6,7 @@ import { breakdown, shortName, fits, nfl } from './lib/matchup.js';
 import { MEMBERS, DESK_PEOPLE, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
 import { pageRoot } from './src/mount.jsx';
+import { initLiquid, pourPage } from './src/liquid/pour.js';
 import { LoadError } from './src/shared.jsx';
 import { Lab } from './src/lab/Lab.jsx';
 import { WirePage } from './src/wire/WirePage.jsx';
@@ -1411,6 +1412,7 @@ function route({ fresh = false } = {}) {
     showPage ||= pageRoot(app);
     showPage(Page, { D: DATA, me: myTeam, h: reactHelpers(), ...props });
     if (fresh) { app.focus({ preventScroll: true }); window.scrollTo({ top: 0 }); }
+    pourPage({ entrance: !calm() && key !== currentView });
     reveal(app);
     currentView = key;
     if (key === 'rankings') maybeMessage();
@@ -1534,6 +1536,7 @@ async function main() {
   initAvatarFallback();
   initTheme();
   initBall();
+  initLiquid();
   initTooltips();
   const loader = startLoader();
   try {

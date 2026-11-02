@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-28T01:11:51.057Z",
+  "generatedAt": "2026-11-02T20:17:37.325Z",
   "title": "Design System: The Power Hour",
   "extensions": {
     "colorMeta": {
@@ -186,47 +186,47 @@
       },
       "tile": {
         "role": "neutral",
-        "displayName": "Tray",
-        "canonical": "#E8F0DF",
+        "displayName": "Pool",
+        "canonical": "#DFF2F8",
         "tonalRamp": [
-          "#27321A",
-          "#42611F",
-          "#5F8B2C",
-          "#7FBA3B",
-          "#9DCE64",
-          "#BADD93",
-          "#D8EBC1",
-          "#F3F6EE"
+          "#050D0F",
+          "#172A2F",
+          "#334950",
+          "#536B72",
+          "#768E95",
+          "#9EB2B8",
+          "#CCD6DA",
+          "#EBEFF1"
         ]
       },
       "tile-2": {
         "role": "neutral",
-        "displayName": "Tray 2",
-        "canonical": "#D6E3C9",
+        "displayName": "Pool 2",
+        "canonical": "#C6E7F1",
         "tonalRamp": [
-          "#26311B",
-          "#405E21",
-          "#5C8830",
-          "#7AB540",
-          "#99CA68",
-          "#B8DA95",
-          "#D6EAC3",
-          "#F2F6EF"
+          "#040D10",
+          "#122A31",
+          "#2D4A52",
+          "#4E6C74",
+          "#708F98",
+          "#9AB3BB",
+          "#CAD7DB",
+          "#EAEFF1"
         ]
       },
       "line": {
         "role": "neutral",
         "displayName": "Line",
-        "canonical": "#D2E0C4",
+        "canonical": "#BFE0EA",
         "tonalRamp": [
-          "#252F1D",
-          "#3D5926",
-          "#588137",
-          "#75AC49",
-          "#94C270",
-          "#B4D49B",
-          "#D4E7C6",
-          "#F2F5EF"
+          "#040D10",
+          "#122A31",
+          "#2D4A52",
+          "#4E6C74",
+          "#708F98",
+          "#9AB3BB",
+          "#CAD7DB",
+          "#EAEFF1"
         ]
       },
       "ink": {
@@ -262,16 +262,16 @@
       "ink-3": {
         "role": "neutral",
         "displayName": "Ink 3",
-        "canonical": "#55705A",
+        "canonical": "#4A6757",
         "tonalRamp": [
-          "#232924",
-          "#37483A",
-          "#4F6854",
-          "#6A8B70",
-          "#8BA790",
-          "#AEC1B1",
-          "#D1DCD3",
-          "#F1F3F2"
+          "#040E08",
+          "#152C20",
+          "#304C3D",
+          "#516E5E",
+          "#739280",
+          "#9CB5A7",
+          "#CBD8D0",
+          "#EBF0ED"
         ]
       },
       "good": {
@@ -381,7 +381,7 @@
       },
       "mine-bg": {
         "role": "primary",
-        "displayName": "Your Row",
+        "displayName": "Your Water",
         "canonical": "#FFF9C4",
         "tonalRamp": [
           "#3D390F",
@@ -396,7 +396,7 @@
       },
       "ledge-gold": {
         "role": "primary",
-        "displayName": "Ledge Gold",
+        "displayName": "Bead Gold",
         "canonical": "#E0A100",
         "tonalRamp": [
           "#3D300F",
@@ -422,6 +422,96 @@
           "#82C9ED",
           "#B8E0F5",
           "#EDF4F8"
+        ]
+      },
+      "face": {
+        "role": "neutral",
+        "displayName": "Water Face",
+        "canonical": "#F0FAFD",
+        "tonalRamp": [
+          "#050D0F",
+          "#172A2F",
+          "#334950",
+          "#536B72",
+          "#758E95",
+          "#9EB2B8",
+          "#CCD6DA",
+          "#EBEFF0"
+        ]
+      },
+      "liq-deep": {
+        "role": "neutral",
+        "displayName": "Deep Water",
+        "canonical": "#A8E0F3",
+        "tonalRamp": [
+          "#000E13",
+          "#022C37",
+          "#134C5D",
+          "#396E7F",
+          "#5C92A4",
+          "#8BB6C4",
+          "#C2D9E0",
+          "#E8F0F3"
+        ]
+      },
+      "liq-gold": {
+        "role": "neutral",
+        "displayName": "Deep Gold",
+        "canonical": "#FFCF3F",
+        "tonalRamp": [
+          "#100A00",
+          "#312500",
+          "#554206",
+          "#7E6201",
+          "#A78410",
+          "#CEA940",
+          "#E6D3A2",
+          "#F5EEDC"
+        ]
+      },
+      "liq-board": {
+        "role": "neutral",
+        "displayName": "Deep Board",
+        "canonical": "#2A6A45",
+        "tonalRamp": [
+          "#001005",
+          "#022F18",
+          "#0C532F",
+          "#36754F",
+          "#5A9972",
+          "#8ABC9B",
+          "#C2DCCA",
+          "#E7F1EA"
+        ]
+      },
+      "bead-deep": {
+        "role": "neutral",
+        "displayName": "Bead Shade",
+        "canonical": "rgba(10, 66, 100, 0.2)",
+        "tonalRamp": [
+          "#000C19",
+          "#032941",
+          "#14496C",
+          "#396B90",
+          "#5C8FB6",
+          "#8AB4D3",
+          "#C2D8E9",
+          "#E7F0F6"
+        ]
+      },
+      "ledge": {
+        "role": "neutral",
+        "displayName": "Hard Shade",
+        "canonical": "rgba(14, 46, 22, 0.26)",
+        "tonalRamp": [
+          "#040E05",
+          "#132D19",
+          "#2E4E34",
+          "#4E7054",
+          "#719376",
+          "#9AB79E",
+          "#CAD9CC",
+          "#EAF0EB"
         ]
       }
     },
@@ -453,51 +543,81 @@
     },
     "shadows": [
       {
-        "name": "glass-card",
-        "value": "inset 0 2px 0 #FFFFFF, inset 0 -3px 0 rgba(18,48,26,0.05), 0 0 0 var(--ring-w) #FFEB3B, 0 0 0 calc(var(--ring-w) + 2.5px) #12301A, 0 5px 0 calc(var(--ring-w) + 2.5px) rgba(14,46,22,0.26)",
-        "purpose": "Every card: rim, your yellow ring, ink outline, hard ledge."
+        "name": "body-shade",
+        "value": "fill: rgba(14,46,22,0.26); transform: translateY(6px)",
+        "purpose": "A flat copy of the poured silhouette under the whole body, once."
       },
       {
-        "name": "gold-ledge",
-        "value": "same stack with ledge #E0A100",
-        "purpose": "Featured cards: top three, trades, best trade idea, scoreboards."
+        "name": "css-drop",
+        "value": "inset 0 -7px 0 #A8E0F3, 0 0 0 var(--ring-w) #FFEB3B, 0 0 0 calc(var(--ring-w) + 2.5px) #12301A, 0 5px 0 calc(var(--ring-w) + 2.5px) rgba(14,46,22,0.26)",
+        "purpose": "Sticky panels, overlays and the kicker card, outside the poured shape; ledge #E0A100 when featured."
       },
       {
-        "name": "pill-button",
-        "value": "0 0 0 2px #12301A, 0 3px 0 2px rgba(14,46,22,0.26)",
-        "purpose": "Buttons on light surfaces."
+        "name": "bead",
+        "value": "0 0 0 2px #12301A, inset 0 -3px 0 rgba(10,66,100,0.2)",
+        "purpose": "Beads on light surfaces."
       },
       {
-        "name": "pill-pressed",
-        "value": "0 0 0 2px #12301A, 0 1px 0 2px rgba(14,46,22,0.26)",
-        "purpose": "Active state with translateY(2px)."
+        "name": "bead-pressed",
+        "value": "0 0 0 2px #12301A, inset 0 -1px 0 rgba(10,66,100,0.2)",
+        "purpose": "Pressed: the crescent shrinks, with a squash or a 2px press."
+      },
+      {
+        "name": "bead-amber",
+        "value": "0 0 0 2px #12301A, inset 0 -3px 0 #E0A100",
+        "purpose": "The active tab and a pressed filter."
+      },
+      {
+        "name": "cta",
+        "value": "0 0 0 2.5px #12301A, 0 5px 0 2.5px #E0A100",
+        "purpose": "The big call-to-action bead."
       },
       {
         "name": "chip",
-        "value": "0 2px 0 rgba(14,46,22,0.26)",
+        "value": "inset 0 -2px 0 rgba(10,66,100,0.2)",
         "purpose": "Small tags."
       },
       {
-        "name": "tray-edge",
-        "value": "inset 0 3px 0 rgba(18,48,26,0.07), inset 0 0 0 1.5px rgba(18,48,26,0.1)",
-        "purpose": "Recessed panels inside a card: a hard inner top shadow and a faint inked rim."
+        "name": "section-sign",
+        "value": "inset 0 -7px 0 #A8E0F3, 0 0 0 2.5px #12301A, 0 4px 0 2.5px rgba(14,46,22,0.26)",
+        "purpose": "Section titles on the grass."
+      },
+      {
+        "name": "pool-edge",
+        "value": "inset 0 3px 0 rgba(16,76,104,0.1), inset 0 0 0 1.5px rgba(16,76,104,0.13)",
+        "purpose": "Panels recessed into a card: a hard inner top shadow and a faint rim."
       }
     ],
     "motion": [
       {
-        "name": "ease-slide",
-        "value": "cubic-bezier(0.2, 0.8, 0.2, 1)",
-        "purpose": "Tab pill slide (0.45s)."
+        "name": "tab-bead",
+        "value": "0.55s cubic-bezier(0.3, 1.5, 0.5, 1)",
+        "purpose": "The active tab bead rolls past its stop and rocks back."
+      },
+      {
+        "name": "entrance-swell",
+        "value": "640ms back-out (c = 1.6)",
+        "purpose": "On a real view change the first screen's liquid swells out of each card, overshoots and settles; skipped under reduced motion."
+      },
+      {
+        "name": "droplet-run",
+        "value": "1.6s + run / 26 per second, cubic-bezier(0.45, 0, 0.6, 1), infinite",
+        "purpose": "A 9px droplet through each neck near the screen, the only motion in the liquid at rest; skipped under reduced motion."
+      },
+      {
+        "name": "bead-squash",
+        "value": "scale(1.05, 0.92)",
+        "purpose": "A pressed filter bead, and on a mouse the picks and the game of the week's button."
       },
       {
         "name": "rank-stagger",
         "value": "70ms",
-        "purpose": "Ranking rows rise in, staggered within a batch."
+        "purpose": "Ranking rows' contents rise in, staggered within a batch."
       },
       {
         "name": "carousel-dwell",
-        "value": "7s",
-        "purpose": "Headline carousel auto-advance per story."
+        "value": "10s",
+        "purpose": "Headline carousel auto-advance per story; a video story runs for its clip."
       },
       {
         "name": "loader-fade",
@@ -522,105 +642,107 @@
   },
   "components": [
     {
-      "name": "Primary Button",
+      "name": "Primary Bead",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Glossy amber pill for actions and the pressed filter.",
+      "description": "Amber bead for actions and the pressed filter: small hard highlight, inner gold crescent, a squash when pressed.",
       "html": "<button class=\"ds-btn ds-btn-primary\">Show me the power ranking</button>",
-      "css": ".ds-btn{position:relative;isolation:isolate;overflow:hidden;cursor:pointer;border:0;border-radius:999px;padding:8px 15px;font:700 13.5px/1.2 'Albert Sans',system-ui,sans-serif;transition:transform .12s,box-shadow .12s}.ds-btn::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.2) 48%,rgba(255,255,255,0) 50%);pointer-events:none}.ds-btn:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-btn-primary{background:#FFC107;color:#12301A;box-shadow:0 0 0 2px #12301A,0 3px 0 2px #E0A100}.ds-btn-primary:hover{transform:translateY(-1px)}.ds-btn-primary:active{transform:translateY(2px);box-shadow:0 0 0 2px #12301A,0 1px 0 2px #E0A100}"
+      "css": ".ds-btn{position:relative;isolation:isolate;overflow:hidden;cursor:pointer;border:0;border-radius:999px;padding:8px 15px;font:700 13.5px/1.2 'Albert Sans',system-ui,sans-serif;transition:transform .2s,box-shadow .2s,background .2s}.ds-btn::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:radial-gradient(ellipse 12px 3.6px at 21px 7.5px,rgba(255,255,255,.9) 94%,rgba(255,255,255,0) 100%);pointer-events:none}.ds-btn:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-btn-primary{background:#FFC107;color:#12301A;box-shadow:0 0 0 2px #12301A,inset 0 -3px 0 #E0A100}.ds-btn-primary:hover{transform:translateY(-1px)}.ds-btn-primary:active{transform:scale(1.05,.92);box-shadow:0 0 0 2px #12301A,inset 0 -1px 0 #E0A100}"
     },
     {
-      "name": "Secondary Button",
+      "name": "Secondary Bead",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "White glossy pill for filters and secondary choices.",
+      "description": "White bead for filters and secondary choices; tints sky blue under a mouse.",
       "html": "<button class=\"ds-btn ds-btn-secondary\">Trades</button>",
-      "css": ".ds-btn{position:relative;isolation:isolate;overflow:hidden;cursor:pointer;border:0;border-radius:999px;padding:8px 15px;font:700 13.5px/1.2 'Albert Sans',system-ui,sans-serif;transition:transform .12s,box-shadow .12s}.ds-btn::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.2) 48%,rgba(255,255,255,0) 50%);pointer-events:none}.ds-btn:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-btn-secondary{background:#FFFFFF;color:#3C5A43;box-shadow:0 0 0 2px #12301A,0 3px 0 2px rgba(14,46,22,.26)}.ds-btn-secondary:hover{background:#E1F5FE;color:#12301A}.ds-btn-secondary:active{transform:translateY(2px);box-shadow:0 0 0 2px #12301A,0 1px 0 2px rgba(14,46,22,.26)}"
+      "css": ".ds-btn{position:relative;isolation:isolate;overflow:hidden;cursor:pointer;border:0;border-radius:999px;padding:8px 15px;font:700 13.5px/1.2 'Albert Sans',system-ui,sans-serif;transition:transform .2s,box-shadow .2s,background .2s}.ds-btn::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:radial-gradient(ellipse 12px 3.6px at 21px 7.5px,rgba(255,255,255,.9) 94%,rgba(255,255,255,0) 100%);pointer-events:none}.ds-btn:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-btn-secondary{background:#FFFFFF;color:#3C5A43;box-shadow:0 0 0 2px #12301A,inset 0 -3px 0 rgba(10,66,100,.2)}.ds-btn-secondary:hover{transform:translateY(-1px);background:#E1F5FE}.ds-btn-secondary:active{transform:scale(1.05,.92);box-shadow:0 0 0 2px #12301A,inset 0 -1px 0 rgba(10,66,100,.2)}"
     },
     {
       "name": "Chip",
       "kind": "chip",
       "refersTo": "chip",
-      "description": "Small white tag with a short ledge and optional status dot.",
+      "description": "Small white tag with an inner crescent and optional status dot, beside the yellow You tag.",
       "html": "<span class=\"ds-chip\"><i class=\"ds-dot\"></i>FantasyPros</span> <span class=\"ds-you\">You</span>",
-      "css": ".ds-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font:700 12.5px/1.2 'Albert Sans',system-ui,sans-serif;color:#3C5A43;background:#FFFFFF;box-shadow:0 2px 0 rgba(14,46,22,.26)}.ds-dot{width:8px;height:8px;border-radius:50%;background:#4CAF50}.ds-you{display:inline-block;font:800 11px/1 'Albert Sans',system-ui,sans-serif;color:#12301A;background:#FFEB3B;padding:5px 8px;border-radius:999px;box-shadow:0 2px 0 #E0A100}"
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font:700 12.5px/1.2 'Albert Sans',system-ui,sans-serif;color:#3C5A43;background:#FFFFFF;box-shadow:inset 0 -2px 0 rgba(10,66,100,.2)}.ds-dot{width:8px;height:8px;border-radius:50%;background:#4CAF50}.ds-you{display:inline-block;font:800 11px/1 'Albert Sans',system-ui,sans-serif;color:#12301A;background:#FFEB3B;padding:5px 8px;border-radius:999px;box-shadow:inset 0 -2px 0 #E0A100}"
     },
     {
-      "name": "Glass Card",
+      "name": "Poured Cards",
       "kind": "card",
       "refersTo": "card",
-      "description": "Cartoon glass on a hard ledge: the base surface for every card.",
-      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Dynasty Dan</h3><p class=\"ds-card-body\">Third in points for and the easiest schedule left.</p></div>",
-      "css": ".ds-card{background-color:rgba(255,255,255,.96);background-image:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(255,255,255,.6) 46%,rgba(255,255,255,0) 100%);background-size:100% 150px;background-repeat:no-repeat;padding:18px;border-radius:24px;color:#12301A;box-shadow:inset 0 2px 0 #FFFFFF,inset 0 -3px 0 rgba(18,48,26,.05),0 0 0 2.5px #12301A,0 5px 0 2.5px rgba(14,46,22,.26);transition:transform .2s,box-shadow .2s}.ds-card:hover{transform:translateY(-2px);box-shadow:inset 0 2px 0 #FFFFFF,inset 0 -3px 0 rgba(18,48,26,.05),0 0 0 2.5px #12301A,0 7px 0 2.5px rgba(14,46,22,.26)}.ds-card-title{margin:0 0 6px;font:800 21px/1.1 'Big Shoulders Display','Arial Narrow',sans-serif}.ds-card-body{margin:0;font:400 16px/1.55 'Albert Sans',system-ui,sans-serif;color:#3C5A43}"
-    },
-    {
-      "name": "Your Card",
-      "kind": "card",
-      "refersTo": "card-featured",
-      "description": "Your own team: a 4px First-Down Yellow ring inside the outline, on a gold ledge.",
-      "html": "<div class=\"ds-card-mine\"><b>Your team</b></div>",
-      "css": ".ds-card-mine{background-color:rgba(255,255,255,.88);background-image:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(255,255,255,.6) 46%,rgba(255,255,255,0) 100%);background-size:100% 150px;background-repeat:no-repeat;padding:18px;border-radius:32px;color:#12301A;font:800 21px/1.1 'Big Shoulders Display',sans-serif;box-shadow:inset 0 2px 0 #FFFFFF,0 0 0 4px #FFEB3B,0 0 0 6.5px #12301A,0 5px 0 6.5px #E0A100}"
-    },
-    {
-      "name": "Tab Strip",
-      "kind": "nav",
-      "refersTo": "tab-active",
-      "description": "Tabs in a Tile track; the active one is an amber glossy pill.",
-      "html": "<nav class=\"ds-tabs\"><a class=\"ds-tab ds-on\" href=\"#\">Power</a><a class=\"ds-tab\" href=\"#\">Wire</a><a class=\"ds-tab\" href=\"#\">Games</a></nav>",
-      "css": ".ds-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:#F1F8E9}.ds-tab{padding:8px 16px;border-radius:999px;color:#3C5A43;text-decoration:none;font:700 14px/1.2 'Albert Sans',system-ui,sans-serif}.ds-tab:hover{color:#12301A}.ds-tab:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-on{color:#12301A;background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.2) 48%,rgba(255,255,255,0) 50%),#FFC107;box-shadow:0 0 0 2px #12301A,0 3px 0 2px #E0A100}"
-    },
-    {
-      "name": "Section Sign",
-      "kind": "custom",
-      "refersTo": "section-sign",
-      "description": "White pill sign that carries section titles on the grass.",
-      "html": "<div class=\"ds-field\"><h2 class=\"ds-sign\">Best available <small>top free agents</small></h2></div>",
-      "css": ".ds-field{padding:20px;background:repeating-linear-gradient(180deg,#4CAF50 0 40px,#5AB34F 40px 80px)}.ds-sign{display:flex;width:fit-content;align-items:baseline;gap:12px;margin:0;padding:10px 18px 9px;border-radius:999px;background:#FFFFFF;color:#12301A;font:800 24px/1 'Big Shoulders Display',sans-serif;box-shadow:inset 0 2px 0 #FFFFFF,0 0 0 2.5px #12301A,0 4px 0 2.5px rgba(14,46,22,.26)}.ds-sign small{font:600 13px/1 'Albert Sans',system-ui,sans-serif;color:#55705A}"
-    },
-    {
-      "name": "Yard Number Rank",
-      "kind": "custom",
-      "description": "The signature: a rank painted on the grass, half under its card.",
-      "html": "<div class=\"ds-field2\"><div class=\"ds-rank\"><span class=\"ds-jersey\">1</span><div class=\"ds-rcard\"><b>Mo Money</b><span>87</span></div></div></div>",
-      "css": ".ds-field2{padding:24px 20px;background:repeating-linear-gradient(180deg,#4CAF50 0 60px,#5AB34F 60px 120px)}.ds-rank{position:relative;padding-left:74px}.ds-jersey{position:absolute;left:0;top:50%;transform:translateY(-50%);font:900 150px/0.8 'Big Shoulders Display',sans-serif;letter-spacing:-.04em;color:#FFEB3B;text-shadow:5px 5px 0 rgba(14,46,22,.35)}.ds-rcard{position:relative;display:flex;justify-content:space-between;align-items:center;padding:22px;border-radius:32px;background-color:rgba(255,255,255,.88);background-image:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(255,255,255,.6) 46%,rgba(255,255,255,0) 100%);background-size:100% 150px;background-repeat:no-repeat;box-shadow:inset 0 2px 0 #FFFFFF,0 0 0 2.5px #12301A,0 5px 0 2.5px #E0A100}.ds-rcard b{font:800 32px/1.05 'Big Shoulders Display',sans-serif;color:#12301A}.ds-rcard span{font:900 48px/.9 'Big Shoulders Display',sans-serif;color:#12301A}"
+      "description": "Traced by lib/liquid.js: one inked body joined by a neck, the face tone splitting into your yellow tone at its midpoint, with crescents, drips and hard highlights.",
+      "html": "<div class=\"ds-pour\" style=\"background:repeating-linear-gradient(180deg,#4CAF50 0 60px,#5AB34F 60px 120px)\"><svg class=\"ds-liquid\" viewBox=\"0 0 420 300\" width=\"420\" height=\"300\" aria-hidden=\"true\"><path fill=\"rgba(14,46,22,.26)\" fill-rule=\"evenodd\" transform=\"translate(0 6)\" d=\"M30.3 13.4Q32.5 12 34.3 11.2Q36 10.5 38 9.9Q40 9.3 56 8.8Q72 8.2 88 8.3Q104 8.3 120 8.7Q136 9 152 9.4Q168 9.9 184 10.1Q200 10.4 216 10.4Q232 10.3 248 10Q264 9.7 280 9.4Q296 9 312 8.9Q328 8.7 344 8.8Q360 9 366 9.5Q372 10 376 11.4Q380 12.8 384 15.4Q388 18 390.8 21Q393.6 24 394.9 26Q396.2 28 397.9 32Q399.7 36 400.4 40Q401.1 44 401 60Q400.9 76 400.5 80Q400.1 84 398.8 88Q397.4 92 396.3 94Q395.2 96 393.6 98.1Q392 100.2 390 102.1Q388 104 384 106.4Q380 108.8 376 110Q372 111.2 356 111.3Q340 111.5 324 111.5Q308 111.5 304 111.9Q300 112.2 296 113.3Q292 114.4 290 115.5Q288 116.5 285.8 118.2Q283.6 120 282 122Q280.5 124 279.6 126Q278.7 128 278.3 130Q277.9 132 278.1 134Q278.2 136 279 138Q279.9 140 281.9 141.9Q284 143.9 286 144.7Q288 145.6 292 146.3Q296 147 312 147.1Q328 147.2 344 146.8Q360 146.4 366 146.3Q372 146.2 376 147Q380 147.9 382 148.7Q384 149.5 386.1 150.8Q388.2 152 390.6 154Q392.9 156 394.6 158Q396.3 160 397.5 162Q398.7 164 399.5 166Q400.4 168 401.2 172Q402.1 176 402.5 192Q402.9 208 402.6 212Q402.4 216 401.3 220Q400.2 224 398 228Q395.9 232 393.9 234.3Q392 236.7 390 238.5Q388 240.3 384 242.7Q380 245.2 376 246.5Q372 247.8 356 247.9Q340 248 338 248.3Q336 248.5 334 249.4Q332 250.3 330 253.3Q328 256.4 327.2 258.2Q326.4 260 325.2 261.5Q324 263 322 264.4Q320 265.8 318 266.2Q316 266.6 314 266.3Q312 265.9 310.4 265Q308.8 264 307.1 262Q305.5 260 303.9 256Q302.3 252 301.2 250.5Q300 249 298 248Q296 247.1 280 246.4Q264 245.8 248 246Q232 246.2 216 246.8Q200 247.5 198 248Q196 248.6 194 250Q192 251.5 191.1 253.7Q190.2 256 189.4 260Q188.6 264 187.4 266Q186.2 268 185.1 269.1Q184 270.1 182 271.1Q180 272 178 272.2Q176 272.3 174 271.6Q172 271 170.2 269.5Q168.3 268 167.2 266Q166 264 165 259.7Q164 255.4 163.1 253.7Q162.3 252 159.1 250.4Q156 248.8 140 248.4Q124 248 108 247.8Q92 247.7 76 247.5Q60 247.3 56 247Q52 246.7 48 245.7Q44 244.6 40 242.6Q36 240.6 33.1 238.3Q30.1 236 26.8 232Q23.5 228 21.6 224Q19.7 220 18.7 216Q17.7 212 17 196Q16.2 180 16.6 176Q17 172 18.3 168Q19.6 164 22.1 160Q24.5 156 26.4 154Q28.3 152 32.1 149.2Q36 146.5 40 144.9Q44 143.3 48 142.7Q52 142.1 68 142.6Q84 143.1 100 143.6Q116 144.2 132 144.6Q148 144.9 164 145.2Q180 145.4 196 145.6Q212 145.8 222 145.7Q232 145.6 236 144.7Q240 143.8 242 142.9Q244 141.9 246 140.6Q248 139.2 249.5 137.6Q251 136 252.1 134Q253.2 132 253.7 130Q254.3 128 254.3 126Q254.3 124 253.6 122Q252.8 120 250.9 118Q248.9 116 246.4 114.9Q244 113.8 240 113.1Q236 112.4 220 112.4Q204 112.3 188 112.5Q172 112.6 156 113Q140 113.3 124 113.9Q108 114.5 92 115.1Q76 115.8 62 116.1Q48 116.4 44 115.5Q40 114.6 36 112.7Q32 110.7 30 109.3Q28 107.8 26 105.8Q24 103.8 21.5 99.9Q18.9 96 17.6 92Q16.2 88 15.9 72Q15.7 56 16.4 44Q17.1 32 17.7 30Q18.3 28 19.2 26Q20.1 24 22.1 21.3Q24 18.6 26 16.7Q28 14.9 30.3 13.4Z\"/><path fill=\"#A8E0F3\" fill-rule=\"evenodd\" d=\"M30.3 13.4Q32.5 12 34.3 11.2Q36 10.5 38 9.9Q40 9.3 56 8.8Q72 8.2 88 8.3Q104 8.3 120 8.7Q136 9 152 9.4Q168 9.9 184 10.1Q200 10.4 216 10.4Q232 10.3 248 10Q264 9.7 280 9.4Q296 9 312 8.9Q328 8.7 344 8.8Q360 9 366 9.5Q372 10 376 11.4Q380 12.8 384 15.4Q388 18 390.8 21Q393.6 24 394.9 26Q396.2 28 397.9 32Q399.7 36 400.4 40Q401.1 44 401 60Q400.9 76 400.5 80Q400.1 84 398.8 88Q397.4 92 396.3 94Q395.2 96 393.6 98.1Q392 100.2 390 102.1Q388 104 384 106.4Q380 108.8 376 110Q372 111.2 356 111.3Q340 111.5 324 111.5Q308 111.5 304 111.9Q300 112.2 296 113.3Q292 114.4 290 115.5Q288 116.5 285.8 118.2Q283.6 120 282 122Q280.5 124 279.6 126Q278.7 128 275.4 128.8Q272 129.6 266 129.6Q260 129.6 258 129.2Q256 128.8 254.4 124.4Q252.8 120 250.9 118Q248.9 116 246.4 114.9Q244 113.8 240 113.1Q236 112.4 220 112.4Q204 112.3 188 112.5Q172 112.6 156 113Q140 113.3 124 113.9Q108 114.5 92 115.1Q76 115.8 62 116.1Q48 116.4 44 115.5Q40 114.6 36 112.7Q32 110.7 30 109.3Q28 107.8 26 105.8Q24 103.8 21.5 99.9Q18.9 96 17.6 92Q16.2 88 15.9 72Q15.7 56 16.4 44Q17.1 32 17.7 30Q18.3 28 19.2 26Q20.1 24 22.1 21.3Q24 18.6 26 16.7Q28 14.9 30.3 13.4Z\"/><path fill=\"#F0FAFD\" fill-rule=\"evenodd\" d=\"M30.3 13.4Q32.5 12 34.3 11.2Q36 10.5 38 9.9Q40 9.3 56 8.8Q72 8.2 88 8.3Q104 8.3 120 8.7Q136 9 152 9.4Q168 9.9 184 10.1Q200 10.4 216 10.4Q232 10.3 248 10Q264 9.7 280 9.4Q296 9 312 8.9Q328 8.7 344 8.8Q360 9 366 9.5Q372 10 376 11.4Q380 12.8 384 15.4Q388 18 390.8 21Q393.6 24 394.9 26Q396.2 28 397.9 32Q399.7 36 400.4 40Q401.1 44 400.9 60Q400.7 76 399.9 80Q399 84 397.1 88Q395.2 92 393.6 94.1Q392 96.2 390 98.1Q388 100 384 102.4Q380 104.8 376 106Q372 107.2 356 107.3Q340 107.5 324 107.5Q308 107.5 304 107.9Q300 108.2 296 109.3Q292 110.4 290 111.5Q288 112.5 285.8 114.2Q283.6 116 282 118Q280.5 120 279.6 122Q278.7 124 278.3 126Q277.9 128 275 128.8Q272 129.6 266 129.6Q260 129.6 258 129.2Q256 128.8 255.2 126.4Q254.3 124 254.3 122Q254.3 120 253.6 118Q252.8 116 250.9 114Q248.9 112 246.4 110.9Q244 109.8 240 109.1Q236 108.4 220 108.4Q204 108.3 188 108.5Q172 108.6 156 109Q140 109.3 124 109.9Q108 110.5 92 111.1Q76 111.8 62 112.1Q48 112.4 44 111.5Q40 110.6 36 108.7Q32 106.7 30 105.3Q28 103.8 26 101.8Q24 99.8 21.5 95.9Q18.9 92 17.6 88Q16.2 84 15.7 80Q15.2 76 15.7 60Q16.1 44 16.6 38Q17.1 32 17.7 30Q18.3 28 19.2 26Q20.1 24 22.1 21.3Q24 18.6 26 16.7Q28 14.9 30.3 13.4Z\"/><path fill=\"#FFCF3F\" fill-rule=\"evenodd\" d=\"M252.1 134Q253.2 132 254.6 130.6Q256 129.2 264 128.9Q272 128.6 274 129.1Q276 129.5 277 130.7Q277.9 132 278.1 134Q278.2 136 279 138Q279.9 140 281.9 141.9Q284 143.9 286 144.7Q288 145.6 292 146.3Q296 147 312 147.1Q328 147.2 344 146.8Q360 146.4 366 146.3Q372 146.2 376 147Q380 147.9 382 148.7Q384 149.5 386.1 150.8Q388.2 152 390.6 154Q392.9 156 394.6 158Q396.3 160 397.5 162Q398.7 164 399.5 166Q400.4 168 401.2 172Q402.1 176 402.5 192Q402.9 208 402.6 212Q402.4 216 401.3 220Q400.2 224 398 228Q395.9 232 393.9 234.3Q392 236.7 390 238.5Q388 240.3 384 242.7Q380 245.2 376 246.5Q372 247.8 356 247.9Q340 248 338 248.3Q336 248.5 334 249.4Q332 250.3 330 253.3Q328 256.4 327.2 258.2Q326.4 260 325.2 261.5Q324 263 322 264.4Q320 265.8 318 266.2Q316 266.6 314 266.3Q312 265.9 310.4 265Q308.8 264 307.1 262Q305.5 260 303.9 256Q302.3 252 301.2 250.5Q300 249 298 248Q296 247.1 280 246.4Q264 245.8 248 246Q232 246.2 216 246.8Q200 247.5 198 248Q196 248.6 194 250Q192 251.5 191.1 253.7Q190.2 256 189.4 260Q188.6 264 187.4 266Q186.2 268 185.1 269.1Q184 270.1 182 271.1Q180 272 178 272.2Q176 272.3 174 271.6Q172 271 170.2 269.5Q168.3 268 167.2 266Q166 264 165 259.7Q164 255.4 163.1 253.7Q162.3 252 159.1 250.4Q156 248.8 140 248.4Q124 248 108 247.8Q92 247.7 76 247.5Q60 247.3 56 247Q52 246.7 48 245.7Q44 244.6 40 242.6Q36 240.6 33.1 238.3Q30.1 236 26.8 232Q23.5 228 21.6 224Q19.7 220 18.7 216Q17.7 212 17 196Q16.2 180 16.6 176Q17 172 18.3 168Q19.6 164 22.1 160Q24.5 156 26.4 154Q28.3 152 32.1 149.2Q36 146.5 40 144.9Q44 143.3 48 142.7Q52 142.1 68 142.6Q84 143.1 100 143.6Q116 144.2 132 144.6Q148 144.9 164 145.2Q180 145.4 196 145.6Q212 145.8 222 145.7Q232 145.6 236 144.7Q240 143.8 242 142.9Q244 141.9 246 140.6Q248 139.2 249.5 137.6Q251 136 252.1 134Z\"/><path fill=\"#FFF9C4\" fill-rule=\"evenodd\" d=\"M252.1 134Q253.2 132 254.6 130.6Q256 129.2 264 128.9Q272 128.6 274 129.1Q276 129.5 277 130.7Q277.9 132 278.1 134Q278.2 136 279 138Q279.9 140 281.9 141.9Q284 143.9 286 144.7Q288 145.6 292 146.3Q296 147 312 147.1Q328 147.2 344 146.8Q360 146.4 366 146.3Q372 146.2 376 147Q380 147.9 382 148.7Q384 149.5 386.1 150.8Q388.2 152 390.6 154Q392.9 156 394.6 158Q396.3 160 397.5 162Q398.7 164 399.5 166Q400.4 168 401.2 172Q402.1 176 402.4 192Q402.8 208 402.1 212Q401.5 216 399.9 220Q398.3 224 397.1 226Q395.9 228 393.9 230.3Q392 232.7 390 234.5Q388 236.3 384 238.7Q380 241.2 376 242.5Q372 243.8 356 243.9Q340 244 338 244.3Q336 244.5 334 245.4Q332 246.3 330 249.3Q328 252.4 327.2 254.2Q326.4 256 325.2 257.5Q324 259 322 260.4Q320 261.8 318 262.2Q316 262.6 314 262.3Q312 261.9 310.4 261Q308.8 260 307.1 258Q305.5 256 303.9 252Q302.3 248 301.2 246.5Q300 245 298 244Q296 243.1 280 242.4Q264 241.8 248 242Q232 242.2 216 242.8Q200 243.5 198 244Q196 244.6 194 246Q192 247.5 191.1 249.7Q190.2 252 189.4 256Q188.6 260 187.4 262Q186.2 264 185.1 265.1Q184 266.1 182 267.1Q180 268 178 268.2Q176 268.3 174 267.6Q172 267 170.2 265.5Q168.3 264 167.2 262Q166 260 165 255.7Q164 251.4 163.1 249.7Q162.3 248 159.1 246.4Q156 244.8 140 244.4Q124 244 108 243.8Q92 243.7 76 243.5Q60 243.3 56 243Q52 242.7 48 241.7Q44 240.6 40 238.6Q36 236.6 33.1 234.3Q30.1 232 26.8 228Q23.5 224 21.6 220Q19.7 216 18.7 212Q17.7 208 17.1 192Q16.4 176 17.2 172Q18.1 168 19.9 164Q21.7 160 23.1 158Q24.5 156 26.4 154Q28.3 152 32.1 149.2Q36 146.5 40 144.9Q44 143.3 48 142.7Q52 142.1 68 142.6Q84 143.1 100 143.6Q116 144.2 132 144.6Q148 144.9 164 145.2Q180 145.4 196 145.6Q212 145.8 222 145.7Q232 145.6 236 144.7Q240 143.8 242 142.9Q244 141.9 246 140.6Q248 139.2 249.5 137.6Q251 136 252.1 134Z\"/><path fill=\"none\" stroke=\"#12301A\" stroke-width=\"2.5\" stroke-linejoin=\"round\" d=\"M30.3 13.4Q32.5 12 34.3 11.2Q36 10.5 38 9.9Q40 9.3 56 8.8Q72 8.2 88 8.3Q104 8.3 120 8.7Q136 9 152 9.4Q168 9.9 184 10.1Q200 10.4 216 10.4Q232 10.3 248 10Q264 9.7 280 9.4Q296 9 312 8.9Q328 8.7 344 8.8Q360 9 366 9.5Q372 10 376 11.4Q380 12.8 384 15.4Q388 18 390.8 21Q393.6 24 394.9 26Q396.2 28 397.9 32Q399.7 36 400.4 40Q401.1 44 401 60Q400.9 76 400.5 80Q400.1 84 398.8 88Q397.4 92 396.3 94Q395.2 96 393.6 98.1Q392 100.2 390 102.1Q388 104 384 106.4Q380 108.8 376 110Q372 111.2 356 111.3Q340 111.5 324 111.5Q308 111.5 304 111.9Q300 112.2 296 113.3Q292 114.4 290 115.5Q288 116.5 285.8 118.2Q283.6 120 282 122Q280.5 124 279.6 126Q278.7 128 278.3 130Q277.9 132 278.1 134Q278.2 136 279 138Q279.9 140 281.9 141.9Q284 143.9 286 144.7Q288 145.6 292 146.3Q296 147 312 147.1Q328 147.2 344 146.8Q360 146.4 366 146.3Q372 146.2 376 147Q380 147.9 382 148.7Q384 149.5 386.1 150.8Q388.2 152 390.6 154Q392.9 156 394.6 158Q396.3 160 397.5 162Q398.7 164 399.5 166Q400.4 168 401.2 172Q402.1 176 402.5 192Q402.9 208 402.6 212Q402.4 216 401.3 220Q400.2 224 398 228Q395.9 232 393.9 234.3Q392 236.7 390 238.5Q388 240.3 384 242.7Q380 245.2 376 246.5Q372 247.8 356 247.9Q340 248 338 248.3Q336 248.5 334 249.4Q332 250.3 330 253.3Q328 256.4 327.2 258.2Q326.4 260 325.2 261.5Q324 263 322 264.4Q320 265.8 318 266.2Q316 266.6 314 266.3Q312 265.9 310.4 265Q308.8 264 307.1 262Q305.5 260 303.9 256Q302.3 252 301.2 250.5Q300 249 298 248Q296 247.1 280 246.4Q264 245.8 248 246Q232 246.2 216 246.8Q200 247.5 198 248Q196 248.6 194 250Q192 251.5 191.1 253.7Q190.2 256 189.4 260Q188.6 264 187.4 266Q186.2 268 185.1 269.1Q184 270.1 182 271.1Q180 272 178 272.2Q176 272.3 174 271.6Q172 271 170.2 269.5Q168.3 268 167.2 266Q166 264 165 259.7Q164 255.4 163.1 253.7Q162.3 252 159.1 250.4Q156 248.8 140 248.4Q124 248 108 247.8Q92 247.7 76 247.5Q60 247.3 56 247Q52 246.7 48 245.7Q44 244.6 40 242.6Q36 240.6 33.1 238.3Q30.1 236 26.8 232Q23.5 228 21.6 224Q19.7 220 18.7 216Q17.7 212 17 196Q16.2 180 16.6 176Q17 172 18.3 168Q19.6 164 22.1 160Q24.5 156 26.4 154Q28.3 152 32.1 149.2Q36 146.5 40 144.9Q44 143.3 48 142.7Q52 142.1 68 142.6Q84 143.1 100 143.6Q116 144.2 132 144.6Q148 144.9 164 145.2Q180 145.4 196 145.6Q212 145.8 222 145.7Q232 145.6 236 144.7Q240 143.8 242 142.9Q244 141.9 246 140.6Q248 139.2 249.5 137.6Q251 136 252.1 134Q253.2 132 253.7 130Q254.3 128 254.3 126Q254.3 124 253.6 122Q252.8 120 250.9 118Q248.9 116 246.4 114.9Q244 113.8 240 113.1Q236 112.4 220 112.4Q204 112.3 188 112.5Q172 112.6 156 113Q140 113.3 124 113.9Q108 114.5 92 115.1Q76 115.8 62 116.1Q48 116.4 44 115.5Q40 114.6 36 112.7Q32 110.7 30 109.3Q28 107.8 26 105.8Q24 103.8 21.5 99.9Q18.9 96 17.6 92Q16.2 88 15.9 72Q15.7 56 16.4 44Q17.1 32 17.7 30Q18.3 28 19.2 26Q20.1 24 22.1 21.3Q24 18.6 26 16.7Q28 14.9 30.3 13.4Z\"/><path fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-dasharray=\"66 11 7 999\" opacity=\".9\" d=\"M28 30.2L29.1 28L32 24.2L32.2 24L36 21.2L38.5 20L40 19.4L44 18.5L48 18.3L52 18.2L56 18.1L60 18.1L64 18.1L68 18L72 18L76 18L80 18L84 18.1L88 18.1L92 18.1L96 18.2L100 18.2L104 18.3L108 18.4L112 18.5L116 18.6L120 18.7L124 18.8L128 18.9L132 19L136 19.1L140 19.3L144 19.4M284 157.1L288 157.3L292 157.4L296 157.4L300 157.4L304 157.4L308 157.4L312 157.4L316 157.4L320 157.3L324 157.3L328 157.2L332 157.1L336 157L340 156.9L344 156.8L348 156.7L352 156.6L356 156.4L360 156.2L364 156.1L367.6 156L368 156M28 171L29.2 168L31.5 164L32 163.4L35 160L36 159.1L40 156.2L40.3 156L44 154.2L48 153L52 152.4L56 152.3L60 152.4L64 152.5L68 152.7L72 152.8L76 153L80 153.1L84 153.3L88 153.4L92 153.5L96 153.7L100 153.8L104 153.9L108 154L112 154.2L116 154.3L120 154.4L124 154.5L128 154.5L132 154.6L136 154.7L140 154.8\"/></svg><div class=\"ds-c1\"><b>Dynasty Dan</b><p>Third in points for and the easiest schedule left.</p></div><div class=\"ds-c2\"><b>Your team</b><p>Your Water, on a gold crescent.</p></div></div>",
+      "css": ".ds-pour{position:relative;width:420px;height:300px}.ds-liquid{position:absolute;inset:0}.ds-c1,.ds-c2{position:absolute;left:44px;width:330px}.ds-c1{top:30px}.ds-c2{top:164px}.ds-pour b{font:800 21px/1.1 'Big Shoulders Display','Arial Narrow',sans-serif;color:#12301A}.ds-pour p{margin:4px 0 0;font:400 15px/1.45 'Albert Sans',system-ui,sans-serif;color:#3C5A43}"
     },
     {
       "name": "Scoreboard",
       "kind": "card",
       "refersTo": "scoreboard",
-      "description": "Smoked-glass dark panel with white type, yellow accents and a corner glint.",
-      "html": "<div class=\"ds-board\"><h2>Mo takes the lead</h2><p>Up 14.2 with two players left.</p></div>",
-      "css": ".ds-board{position:relative;padding:26px 28px;border-radius:32px;color:#FFFFFF;background-color:#13301C;background-image:linear-gradient(180deg,rgba(255,255,255,.1) 0,rgba(255,255,255,.03) 55%,rgba(255,255,255,0) 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.2),inset 0 -3px 0 rgba(0,0,0,.18),0 0 0 2.5px #12301A,0 5px 0 2.5px #E0A100}.ds-board h2{margin:0 0 8px;font:900 44px/.94 'Big Shoulders Display',sans-serif}.ds-board p{margin:0;color:#FFEB3B;font:700 15px/1.4 'Albert Sans',system-ui,sans-serif}"
+      "description": "The deep end of the body: Scoreboard face, Deep Board crescent, white type and yellow accents.",
+      "html": "<div class=\"ds-board\" style=\"background:repeating-linear-gradient(180deg,#4CAF50 0 60px,#5AB34F 60px 120px)\"><svg class=\"ds-liquid\" viewBox=\"0 0 420 210\" width=\"420\" height=\"210\" aria-hidden=\"true\"><path fill=\"rgba(14,46,22,.26)\" fill-rule=\"evenodd\" transform=\"translate(0 6)\" d=\"M34.7 13.1Q37.4 12 40.7 11.3Q44 10.7 60 10.4Q76 10.2 92 10.3Q108 10.4 124 10.8Q140 11.1 156 11.6Q172 12 188 12.2Q204 12.5 220 12.4Q236 12.3 252 12Q268 11.7 284 11.3Q300 11 316 10.9Q332 10.8 348 11Q364 11.1 368 11.6Q372 12.1 376 13.5Q380 14.9 384 17.5Q388 20.1 390 22.1Q392 24.1 394.6 28Q397.2 32 398.7 36Q400.1 40 400.6 56Q401 72 401 88Q401 104 400.8 112Q400.7 120 399.6 124Q398.6 128 396.4 132Q394.2 136 392.4 138Q390.7 140 387.3 142.5Q384 145.1 380 146.8Q376 148.5 372 149.1Q368 149.8 352 149.6Q336 149.4 334 149.8Q332 150.3 330.2 151.1Q328.5 152 327.2 154Q325.9 156 325.3 158Q324.8 160 323.9 162Q323 164 321.5 165.5Q320 167 318 167.6Q316 168.3 314 167.9Q312 167.5 310 165.8Q308 164 307.1 162Q306.3 160 305.7 158Q305.2 156 304 154Q302.7 152 301.4 151.2Q300 150.4 298 149.9Q296 149.3 280 149.2Q264 149.2 248 149.5Q232 149.8 216 150.3Q200 150.7 198 151Q196 151.4 194 152.1Q192 152.9 190 154.4Q188 156 187.2 158Q186.4 160 186.6 166Q186.8 172 186 174Q185.2 176 182.6 178Q180 179.9 178 180Q176 180.2 174 179.3Q172 178.4 170.8 177.2Q169.7 176 168.9 174Q168.1 172 167.9 170Q167.8 168 168.1 164Q168.3 160 167.4 158Q166.5 156 165.3 155Q164 154 162 153.1Q160 152.1 144 151.8Q128 151.5 112 151.9Q96 152.3 80 152.9Q64 153.4 56 153.5Q48 153.5 44 152.7Q40 151.8 36 150Q32 148.1 29.4 146Q26.7 144 24.8 142Q23 140 21.5 137.9Q20 135.7 18.3 131.9Q16.6 128 15.8 124Q15 120 15 104Q15 88 15.4 72Q15.7 56 16.2 46Q16.7 36 17.1 34Q17.6 32 18.3 30Q19.1 28 20.2 26Q21.3 24 22.9 22Q24.4 20 26.8 18Q29.1 16 30.6 15.1Q32 14.2 34.7 13.1Z\"/><path fill=\"#2A6A45\" fill-rule=\"evenodd\" d=\"M34.7 13.1Q37.4 12 40.7 11.3Q44 10.7 60 10.4Q76 10.2 92 10.3Q108 10.4 124 10.8Q140 11.1 156 11.6Q172 12 188 12.2Q204 12.5 220 12.4Q236 12.3 252 12Q268 11.7 284 11.3Q300 11 316 10.9Q332 10.8 348 11Q364 11.1 368 11.6Q372 12.1 376 13.5Q380 14.9 384 17.5Q388 20.1 390 22.1Q392 24.1 394.6 28Q397.2 32 398.7 36Q400.1 40 400.6 56Q401 72 401 88Q401 104 400.8 112Q400.7 120 399.6 124Q398.6 128 396.4 132Q394.2 136 392.4 138Q390.7 140 387.3 142.5Q384 145.1 380 146.8Q376 148.5 372 149.1Q368 149.8 352 149.6Q336 149.4 334 149.8Q332 150.3 330.2 151.1Q328.5 152 327.2 154Q325.9 156 325.3 158Q324.8 160 323.9 162Q323 164 321.5 165.5Q320 167 318 167.6Q316 168.3 314 167.9Q312 167.5 310 165.8Q308 164 307.1 162Q306.3 160 305.7 158Q305.2 156 304 154Q302.7 152 301.4 151.2Q300 150.4 298 149.9Q296 149.3 280 149.2Q264 149.2 248 149.5Q232 149.8 216 150.3Q200 150.7 198 151Q196 151.4 194 152.1Q192 152.9 190 154.4Q188 156 187.2 158Q186.4 160 186.6 166Q186.8 172 186 174Q185.2 176 182.6 178Q180 179.9 178 180Q176 180.2 174 179.3Q172 178.4 170.8 177.2Q169.7 176 168.9 174Q168.1 172 167.9 170Q167.8 168 168.1 164Q168.3 160 167.4 158Q166.5 156 165.3 155Q164 154 162 153.1Q160 152.1 144 151.8Q128 151.5 112 151.9Q96 152.3 80 152.9Q64 153.4 56 153.5Q48 153.5 44 152.7Q40 151.8 36 150Q32 148.1 29.4 146Q26.7 144 24.8 142Q23 140 21.5 137.9Q20 135.7 18.3 131.9Q16.6 128 15.8 124Q15 120 15 104Q15 88 15.4 72Q15.7 56 16.2 46Q16.7 36 17.1 34Q17.6 32 18.3 30Q19.1 28 20.2 26Q21.3 24 22.9 22Q24.4 20 26.8 18Q29.1 16 30.6 15.1Q32 14.2 34.7 13.1Z\"/><path fill=\"#13301C\" fill-rule=\"evenodd\" d=\"M34.7 13.1Q37.4 12 40.7 11.3Q44 10.7 60 10.4Q76 10.2 92 10.3Q108 10.4 124 10.8Q140 11.1 156 11.6Q172 12 188 12.2Q204 12.5 220 12.4Q236 12.3 252 12Q268 11.7 284 11.3Q300 11 316 10.9Q332 10.8 348 11Q364 11.1 368 11.6Q372 12.1 376 13.5Q380 14.9 384 17.5Q388 20.1 390 22.1Q392 24.1 394.6 28Q397.2 32 398.7 36Q400.1 40 400.7 44Q401.2 48 401 64Q400.9 80 401 96Q401 112 400.4 116Q399.9 120 398.3 124Q396.7 128 394.4 131.3Q392 134.6 390 136.5Q388 138.3 386 139.7Q384 141.1 380 142.8Q376 144.5 372 145.1Q368 145.8 352 145.6Q336 145.4 334 145.8Q332 146.3 330.2 147.1Q328.5 148 327.2 150Q325.9 152 325.3 154Q324.8 156 323.9 158Q323 160 321.5 161.5Q320 163 318 163.6Q316 164.3 314 163.9Q312 163.5 310 161.8Q308 160 307.1 158Q306.3 156 305.7 154Q305.2 152 304 150Q302.7 148 301.4 147.2Q300 146.4 298 145.9Q296 145.3 280 145.2Q264 145.2 248 145.5Q232 145.8 216 146.3Q200 146.7 198 147Q196 147.4 194 148.1Q192 148.9 190 150.4Q188 152 187.2 154Q186.4 156 186.6 162Q186.8 168 186 170Q185.2 172 182.6 174Q180 175.9 178 176Q176 176.2 174 175.3Q172 174.4 170.8 173.2Q169.7 172 168.9 170Q168.1 168 168.2 162Q168.3 156 167.4 154Q166.5 152 165.3 151Q164 150 162 149.1Q160 148.1 144 147.8Q128 147.5 112 147.9Q96 148.3 80 148.9Q64 149.4 56 149.5Q48 149.5 44 148.7Q40 147.8 36 146Q32 144.1 29.4 142Q26.7 140 24.8 138Q23 136 21.5 133.9Q20 131.7 18.3 127.9Q16.6 124 15.8 120Q15 116 15.1 100Q15.1 84 15.5 68Q15.8 52 16.3 44Q16.7 36 17.1 34Q17.6 32 18.3 30Q19.1 28 20.2 26Q21.3 24 22.9 22Q24.4 20 26.8 18Q29.1 16 30.6 15.1Q32 14.2 34.7 13.1Z\"/><path fill=\"none\" stroke=\"#12301A\" stroke-width=\"2.5\" stroke-linejoin=\"round\" d=\"M34.7 13.1Q37.4 12 40.7 11.3Q44 10.7 60 10.4Q76 10.2 92 10.3Q108 10.4 124 10.8Q140 11.1 156 11.6Q172 12 188 12.2Q204 12.5 220 12.4Q236 12.3 252 12Q268 11.7 284 11.3Q300 11 316 10.9Q332 10.8 348 11Q364 11.1 368 11.6Q372 12.1 376 13.5Q380 14.9 384 17.5Q388 20.1 390 22.1Q392 24.1 394.6 28Q397.2 32 398.7 36Q400.1 40 400.6 56Q401 72 401 88Q401 104 400.8 112Q400.7 120 399.6 124Q398.6 128 396.4 132Q394.2 136 392.4 138Q390.7 140 387.3 142.5Q384 145.1 380 146.8Q376 148.5 372 149.1Q368 149.8 352 149.6Q336 149.4 334 149.8Q332 150.3 330.2 151.1Q328.5 152 327.2 154Q325.9 156 325.3 158Q324.8 160 323.9 162Q323 164 321.5 165.5Q320 167 318 167.6Q316 168.3 314 167.9Q312 167.5 310 165.8Q308 164 307.1 162Q306.3 160 305.7 158Q305.2 156 304 154Q302.7 152 301.4 151.2Q300 150.4 298 149.9Q296 149.3 280 149.2Q264 149.2 248 149.5Q232 149.8 216 150.3Q200 150.7 198 151Q196 151.4 194 152.1Q192 152.9 190 154.4Q188 156 187.2 158Q186.4 160 186.6 166Q186.8 172 186 174Q185.2 176 182.6 178Q180 179.9 178 180Q176 180.2 174 179.3Q172 178.4 170.8 177.2Q169.7 176 168.9 174Q168.1 172 167.9 170Q167.8 168 168.1 164Q168.3 160 167.4 158Q166.5 156 165.3 155Q164 154 162 153.1Q160 152.1 144 151.8Q128 151.5 112 151.9Q96 152.3 80 152.9Q64 153.4 56 153.5Q48 153.5 44 152.7Q40 151.8 36 150Q32 148.1 29.4 146Q26.7 144 24.8 142Q23 140 21.5 137.9Q20 135.7 18.3 131.9Q16.6 128 15.8 124Q15 120 15 104Q15 88 15.4 72Q15.7 56 16.2 46Q16.7 36 17.1 34Q17.6 32 18.3 30Q19.1 28 20.2 26Q21.3 24 22.9 22Q24.4 20 26.8 18Q29.1 16 30.6 15.1Q32 14.2 34.7 13.1Z\"/><path fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-dasharray=\"66 11 7 999\" opacity=\".9\" d=\"M27.9 32L28 31.9L30.4 28L32 26.2L34.6 24L36 23.1L40 21.3L44 20.5L48 20.2L52 20.1L56 20.1L60 20.1L64 20L68 20L71.6 20L72 20L73.4 20L76 20L80 20L84 20L88 20.1L92 20.1L96 20.2L100 20.2L104 20.3L108 20.4L112 20.5L116 20.6L120 20.7L124 20.8L128 20.9L132 21L136 21.2L140 21.3L144 21.4\"/></svg><div class=\"ds-bin\"><h2>Mo takes the lead</h2><p>Up 14.2 with two players left.</p></div></div>",
+      "css": ".ds-board{position:relative;width:420px;height:210px}.ds-liquid{position:absolute;inset:0}.ds-bin{position:absolute;left:48px;top:44px;width:320px}.ds-bin h2{margin:0 0 8px;color:#FFFFFF;font:900 34px/.94 'Big Shoulders Display',sans-serif}.ds-bin p{margin:0;color:#FFEB3B;font:700 15px/1.4 'Albert Sans',system-ui,sans-serif}"
     },
     {
-      "name": "Tray",
+      "name": "CSS Drop",
       "kind": "card",
-      "description": "A panel pressed into a card: Tray fill, hard inner top shadow, faint inked rim.",
-      "html": "<div class=\"ds-card\" style=\"padding:18px;border-radius:24px;background:#fff;box-shadow:0 0 0 2.5px #12301A,0 5px 0 2.5px rgba(14,46,22,.26)\"><div class=\"ds-tray\"><b>Position groups</b><span class=\"ds-chip2\">94% lineup IQ</span></div></div>",
-      "css": ".ds-tray{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#E8F0DF;box-shadow:inset 0 3px 0 rgba(18,48,26,.07),inset 0 0 0 1.5px rgba(18,48,26,.1);font:700 13px/1.2 'Albert Sans',system-ui,sans-serif;color:#55705A}.ds-chip2{padding:7px 12px 6px;border-radius:12px;background:#fff;color:#12301A;box-shadow:0 0 0 1.5px #D2E0C4,0 3px 0 1.5px #D2E0C4}"
+      "refersTo": "drop",
+      "description": "The same material in CSS for what stays out of the poured shape: sticky panels, overlays and the kicker card.",
+      "html": "<div class=\"ds-drop\"><h3>Projected standings</h3><p>Sticky beside the weekly list.</p></div>",
+      "css": ".ds-drop{width:280px;padding:18px 18px 24px;border-radius:38px 28px 42px 26px/30px 40px 28px 36px;background:#F0FAFD;color:#12301A;box-shadow:inset 0 -7px 0 #A8E0F3,0 0 0 2.5px #12301A,0 5px 0 2.5px rgba(14,46,22,.26)}.ds-drop h3{margin:0 0 6px;font:800 21px/1.1 'Big Shoulders Display','Arial Narrow',sans-serif}.ds-drop p{margin:0;font:400 15px/1.45 'Albert Sans',system-ui,sans-serif;color:#3C5A43}"
+    },
+    {
+      "name": "Tab Strip",
+      "kind": "nav",
+      "refersTo": "tab-active",
+      "description": "Tabs in a Pool groove; the active one is an amber bead.",
+      "html": "<nav class=\"ds-tabs\"><a class=\"ds-tab ds-on\" href=\"#\">Power</a><a class=\"ds-tab\" href=\"#\">Wire</a><a class=\"ds-tab\" href=\"#\">Games</a></nav>",
+      "css": ".ds-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:#DFF2F8;box-shadow:inset 0 3px 0 rgba(16,76,104,.1),inset 0 0 0 1.5px rgba(16,76,104,.13)}.ds-tab{padding:8px 16px;border-radius:999px;color:#3C5A43;text-decoration:none;font:700 14px/1.2 'Albert Sans',system-ui,sans-serif;transition:color .2s}.ds-tab:hover{color:#12301A}.ds-tab:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-on{color:#12301A;background:radial-gradient(ellipse 12px 3.6px at 21px 7.5px,rgba(255,255,255,.9) 94%,rgba(255,255,255,0) 100%),#FFC107;box-shadow:0 0 0 2px #12301A,inset 0 -3px 0 #E0A100}"
+    },
+    {
+      "name": "Section Sign",
+      "kind": "custom",
+      "refersTo": "section-sign",
+      "description": "White pill sign that carries section titles on the grass; necks route around it.",
+      "html": "<div class=\"ds-field\"><h2 class=\"ds-sign\">Best available <small>top free agents</small></h2></div>",
+      "css": ".ds-field{padding:20px;background:repeating-linear-gradient(180deg,#4CAF50 0 40px,#5AB34F 40px 80px)}.ds-sign{display:flex;width:fit-content;align-items:baseline;gap:12px;margin:0;padding:10px 18px 9px;border-radius:999px;background:#FFFFFF;color:#12301A;font:800 24px/1 'Big Shoulders Display',sans-serif;box-shadow:inset 0 -7px 0 #A8E0F3,0 0 0 2.5px #12301A,0 4px 0 2.5px rgba(14,46,22,.26)}.ds-sign small{font:600 13px/1 'Albert Sans',system-ui,sans-serif;color:#4A6757}"
+    },
+    {
+      "name": "Yard Number Rank",
+      "kind": "custom",
+      "description": "The signature: a rank painted on the grass, half under the liquid, on a gold-crescent card.",
+      "html": "<div class=\"ds-rank\" style=\"background:repeating-linear-gradient(180deg,#4CAF50 0 60px,#5AB34F 60px 120px)\"><span class=\"ds-jersey\">1</span><svg class=\"ds-liquid\" viewBox=\"0 0 420 170\" width=\"420\" height=\"170\" aria-hidden=\"true\"><path fill=\"rgba(14,46,22,.26)\" fill-rule=\"evenodd\" transform=\"translate(0 6)\" d=\"M94.7 21.8Q97.4 20 100.7 18.7Q104 17.4 120 17.3Q136 17.1 152 17.6Q168 18 184 18.3Q200 18.6 216 18.5Q232 18.4 248 18.1Q264 17.8 280 17.5Q296 17.2 312 17.1Q328 17 344 17.1Q360 17.3 368 17.8Q376 18.4 380 19.8Q384 21.2 388 23.8Q392 26.5 394.6 29.2Q397.2 32 398.6 34Q400 36.1 401.7 40Q403.5 44 404.2 48Q405 52 405 68Q405 84 404.6 90Q404.3 96 402.9 100Q401.6 104 400.5 106Q399.4 108 397.7 110.2Q396 112.4 394 114.3Q392 116.2 388 118.6Q384 121 380 122.2Q376 123.3 360 123.4Q344 123.5 341.5 123.7Q339.1 124 337.5 124.4Q336 124.8 334 126Q332 127.2 330.7 129.6Q329.4 132 329.1 136Q328.9 140 327.8 142Q326.8 144 325.4 145Q324 146 322 146.3Q320 146.5 318 145.5Q316 144.5 314.8 142.2Q313.6 140 313.3 136Q313 132 312.2 130Q311.4 128 309.7 126.8Q308 125.6 306 124.8Q304 124.1 288 123.8Q272 123.6 256 123.8Q240 124 224 124.1Q208 124.3 192 124.4Q176 124.6 160 124.9Q144 125.1 128 125.2Q112 125.4 108 124.2Q104 123.1 100 120.8Q96 118.5 94 116.7Q92 114.9 89.4 111.5Q86.8 108 85.1 104Q83.4 100 82.7 84Q81.9 68 82.2 54Q82.5 40 83.1 38Q83.6 36 84.5 34Q85.4 32 86.7 30Q88 27.9 90 25.8Q92 23.7 94.7 21.8Z\"/><path fill=\"#FFCF3F\" fill-rule=\"evenodd\" d=\"M94.7 21.8Q97.4 20 100.7 18.7Q104 17.4 120 17.3Q136 17.1 152 17.6Q168 18 184 18.3Q200 18.6 216 18.5Q232 18.4 248 18.1Q264 17.8 280 17.5Q296 17.2 312 17.1Q328 17 344 17.1Q360 17.3 368 17.8Q376 18.4 380 19.8Q384 21.2 388 23.8Q392 26.5 394.6 29.2Q397.2 32 398.6 34Q400 36.1 401.7 40Q403.5 44 404.2 48Q405 52 405 68Q405 84 404.6 90Q404.3 96 402.9 100Q401.6 104 400.5 106Q399.4 108 397.7 110.2Q396 112.4 394 114.3Q392 116.2 388 118.6Q384 121 380 122.2Q376 123.3 360 123.4Q344 123.5 341.5 123.7Q339.1 124 337.5 124.4Q336 124.8 334 126Q332 127.2 330.7 129.6Q329.4 132 329.1 136Q328.9 140 327.8 142Q326.8 144 325.4 145Q324 146 322 146.3Q320 146.5 318 145.5Q316 144.5 314.8 142.2Q313.6 140 313.3 136Q313 132 312.2 130Q311.4 128 309.7 126.8Q308 125.6 306 124.8Q304 124.1 288 123.8Q272 123.6 256 123.8Q240 124 224 124.1Q208 124.3 192 124.4Q176 124.6 160 124.9Q144 125.1 128 125.2Q112 125.4 108 124.2Q104 123.1 100 120.8Q96 118.5 94 116.7Q92 114.9 89.4 111.5Q86.8 108 85.1 104Q83.4 100 82.7 84Q81.9 68 82.2 54Q82.5 40 83.1 38Q83.6 36 84.5 34Q85.4 32 86.7 30Q88 27.9 90 25.8Q92 23.7 94.7 21.8Z\"/><path fill=\"#F0FAFD\" fill-rule=\"evenodd\" d=\"M94.7 21.8Q97.4 20 100.7 18.7Q104 17.4 120 17.3Q136 17.1 152 17.6Q168 18 184 18.3Q200 18.6 216 18.5Q232 18.4 248 18.1Q264 17.8 280 17.5Q296 17.2 312 17.1Q328 17 344 17.1Q360 17.3 368 17.8Q376 18.4 380 19.8Q384 21.2 388 23.8Q392 26.5 394.6 29.2Q397.2 32 398.6 34Q400 36.1 401.7 40Q403.5 44 404.2 48Q405 52 405 68Q405 84 404.6 88Q404.3 92 402.9 96Q401.6 100 400.5 102Q399.4 104 397.7 106.2Q396 108.4 394 110.3Q392 112.2 388 114.6Q384 117 380 118.2Q376 119.3 360 119.4Q344 119.5 341.5 119.7Q339.1 120 337.5 120.4Q336 120.8 334 122Q332 123.2 330.7 125.6Q329.4 128 329.1 132Q328.9 136 327.8 138Q326.8 140 325.4 141Q324 142 322 142.3Q320 142.5 318 141.5Q316 140.5 314.8 138.2Q313.6 136 313.3 132Q313 128 312.2 126Q311.4 124 309.7 122.8Q308 121.6 306 120.8Q304 120.1 288 119.8Q272 119.6 256 119.8Q240 120 224 120.1Q208 120.3 192 120.4Q176 120.6 160 120.9Q144 121.1 128 121.2Q112 121.4 108 120.2Q104 119.1 100 116.8Q96 114.5 94 112.7Q92 110.9 89.4 107.5Q86.8 104 85.1 100Q83.4 96 82.7 80Q81.9 64 82.2 52Q82.5 40 83.1 38Q83.6 36 84.5 34Q85.4 32 86.7 30Q88 27.9 90 25.8Q92 23.7 94.7 21.8Z\"/><path fill=\"none\" stroke=\"#12301A\" stroke-width=\"2.5\" stroke-linejoin=\"round\" d=\"M94.7 21.8Q97.4 20 100.7 18.7Q104 17.4 120 17.3Q136 17.1 152 17.6Q168 18 184 18.3Q200 18.6 216 18.5Q232 18.4 248 18.1Q264 17.8 280 17.5Q296 17.2 312 17.1Q328 17 344 17.1Q360 17.3 368 17.8Q376 18.4 380 19.8Q384 21.2 388 23.8Q392 26.5 394.6 29.2Q397.2 32 398.6 34Q400 36.1 401.7 40Q403.5 44 404.2 48Q405 52 405 68Q405 84 404.6 90Q404.3 96 402.9 100Q401.6 104 400.5 106Q399.4 108 397.7 110.2Q396 112.4 394 114.3Q392 116.2 388 118.6Q384 121 380 122.2Q376 123.3 360 123.4Q344 123.5 341.5 123.7Q339.1 124 337.5 124.4Q336 124.8 334 126Q332 127.2 330.7 129.6Q329.4 132 329.1 136Q328.9 140 327.8 142Q326.8 144 325.4 145Q324 146 322 146.3Q320 146.5 318 145.5Q316 144.5 314.8 142.2Q313.6 140 313.3 136Q313 132 312.2 130Q311.4 128 309.7 126.8Q308 125.6 306 124.8Q304 124.1 288 123.8Q272 123.6 256 123.8Q240 124 224 124.1Q208 124.3 192 124.4Q176 124.6 160 124.9Q144 125.1 128 125.2Q112 125.4 108 124.2Q104 123.1 100 120.8Q96 118.5 94 116.7Q92 114.9 89.4 111.5Q86.8 108 85.1 104Q83.4 100 82.7 84Q81.9 68 82.2 54Q82.5 40 83.1 38Q83.6 36 84.5 34Q85.4 32 86.7 30Q88 27.9 90 25.8Q92 23.7 94.7 21.8Z\"/><path fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-dasharray=\"66 11 7 999\" opacity=\".9\" d=\"M94.9 36L96 34.4L98.1 32L100 30.4L104 28.1L104.3 28L108 27L112 26.6L116 26.6L120 26.8L124 26.9L128 27L132 27.1L136 27.3L140 27.4L144 27.5L148 27.7L152 27.8L156 27.9L158.8 28L160 28L164 28.1L168 28.3L172 28.3L176 28.4L180 28.5L184 28.6L188 28.6L192 28.7L196 28.7L200 28.7L204 28.8L208 28.8L212 28.8\"/></svg><div class=\"ds-rcard\"><b>Mo Money</b><span>87</span></div></div>",
+      "css": ".ds-rank{position:relative;isolation:isolate;width:420px;height:170px}.ds-jersey{position:absolute;z-index:-1;left:16px;top:72px;transform:translateY(-50%);font:900 150px/.8 'Big Shoulders Display',sans-serif;letter-spacing:-.04em;color:#FFEB3B;text-shadow:4px 5px 0 rgba(14,46,22,.26)}.ds-liquid{position:absolute;inset:0}.ds-rcard{position:absolute;left:112px;width:268px;top:44px;display:flex;justify-content:space-between;align-items:center}.ds-rcard b{font:800 32px/1.05 'Big Shoulders Display',sans-serif;color:#12301A}.ds-rcard span{font:900 48px/.9 'Big Shoulders Display',sans-serif;color:#12301A}"
+    },
+    {
+      "name": "Pool",
+      "kind": "card",
+      "refersTo": "pool",
+      "description": "A panel recessed into a card: Pool fill, uneven corners, hard inner top shadow and a faint rim, holding a raised chip.",
+      "html": "<div class=\"ds-host\"><div class=\"ds-pool\"><b>Position groups</b><span class=\"ds-chip2\">94% lineup IQ</span></div></div>",
+      "css": ".ds-host{padding:18px;background:#F0FAFD}.ds-pool{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:20px 28px 18px 30px/24px 18px 28px 20px;background:#DFF2F8;box-shadow:inset 0 3px 0 rgba(16,76,104,.1),inset 0 0 0 1.5px rgba(16,76,104,.13);font:700 13px/1.2 'Albert Sans',system-ui,sans-serif;color:#4A6757}.ds-chip2{padding:7px 12px 6px;border-radius:12px;background:#fff;color:#12301A;box-shadow:0 0 0 1.5px #BFE0EA,0 3px 0 1.5px #BFE0EA}"
     },
     {
       "name": "Chart Bar",
       "kind": "custom",
-      "description": "Cartoon-glass bar: hard ledge, ink edge, gloss strip.",
-      "html": "<svg viewBox=\"0 0 220 60\" width=\"220\"><rect x=\"10\" y=\"23\" width=\"160\" height=\"24\" rx=\"5\" fill=\"rgba(14,46,22,.3)\"/><rect x=\"10\" y=\"20\" width=\"160\" height=\"24\" rx=\"5\" fill=\"#FFA000\" stroke=\"#12301A\" stroke-width=\"2\"/><rect x=\"13\" y=\"23\" width=\"154\" height=\"8\" rx=\"3\" fill=\"#fff\" opacity=\".42\"/></svg>",
+      "description": "Chart bar: hard ledge, ink edge, short highlight near the top.",
+      "html": "<svg viewBox=\"0 0 220 60\" width=\"220\"><rect x=\"10\" y=\"23\" width=\"160\" height=\"24\" rx=\"5\" fill=\"rgba(14,46,22,.3)\"/><rect x=\"10\" y=\"20\" width=\"160\" height=\"24\" rx=\"5\" fill=\"#FFA000\" stroke=\"#12301A\" stroke-width=\"2\"/><rect x=\"13\" y=\"23\" width=\"18\" height=\"3.5\" rx=\"1.75\" fill=\"#fff\" opacity=\".8\"/></svg>",
       "css": ""
     }
   ],
   "narrative": {
     "northStar": "The Day Game",
-    "overview": "A flat sky over a mowed football field at one in the afternoon. Every surface is cartoon glass on a hard ledge: an inked outline, a bright sheen across the top, a hint of the field showing through, and a solid ledge under it like a toy you could press down. Nothing is blurred and nothing casts a soft shadow, so a phone draws exactly what a desktop does.\n\nThe page is a stadium in layers. The sky (flat bands of blue and three cartoon clouds) sits behind everything. The field starts right under each page heading: mowing stripes, a chalk yard line every two stripes and a chalk sideline, bleeding to the window edges. Cards stand on the grass. The footer is the end zone, with a white goal line. Dark scoreboards (the headline carousel and the game of the week) are smoked glass with a cartoon glint in the corner, the one place type turns white.\n\nThe energy comes from a single bold move, the power rank painted on the grass like a yard number, half under its card. Everything else stays quiet: one yellow for \"you\", one amber for actions, ink for all text.",
+    "overview": "A flat sky over a mowed football field at one in the afternoon, and across the field, cartoon liquid. The cards on a page are one poured body: an inked outline runs unbroken from card to card through necks with real fillets, drips hang off bottom edges, the sides swell slowly and the edges roll so nothing is ever quite straight. The surface is a pale water face with a crescent of deeper liquid along each bottom edge and hard white highlights on the upper left. Nothing is blurred and nothing casts a soft shadow, so a phone draws the same material as a desktop.\n\nThe page is a stadium in layers. The sky (flat bands of blue and three cartoon clouds) sits behind everything. The field starts right under each page heading: mowing stripes, a chalk yard line every two stripes and a chalk sideline, bleeding to the window edges. The liquid lies on the grass, over the painted rank numbers and under each card's contents. The footer is the end zone, a pool with a rolling surface that the last cards drain into. The header is its own small dripping body, since it scrolls apart from the page. Dark scoreboards (the headline carousel and the game of the week) are the deep end of the same body, the one place type turns white.\n\nThe energy comes from a single bold move, the power rank painted on the grass like a yard number, half under the liquid. The liquid is the material, not a second signature: it stays pale and lets the rank speak. One yellow for \"you\", one amber for actions, ink for all text.",
     "keyCharacteristics": [
-      "Light only: a daytime world, no dark theme.",
-      "Hard edges everywhere: inked outlines, solid ledges, no blur, no `backdrop-filter`, no ambient shadows.",
-      "Glossy and pressable: cards and buttons look like glass toys and press down when touched.",
+      "Two kickoffs: the day game (light, the default) and the night game (dark), the same stadium after sunset. The device's setting picks one; the sun and moon button in the header overrides it on that device.",
+      "One poured body: the cards in `main` are traced together into a single SVG shape, every device drawing the same shape from the same layout.",
+      "Hard edges everywhere: inked outlines, hard highlights, hard crescents, no blur, no `backdrop-filter`, no ambient shadows.",
+      "Beads for controls: small hard highlight, inner crescent, a squash under the finger.",
       "Condensed display numerals for everything that's a score, rank or name; a warm geometric sans for reading.",
       "Data first: charts are hand-drawn SVG, labels wear ink, never the series colour."
     ],
     "rules": [
       {
         "name": "The First-Down Rule",
-        "body": "Yellow means \"this is you\". It never decorates, never marks an action, never highlights someone else's team. Leaders and winners wear Goalpost Amber (the money-week leader, for one). \"You\" takes one of two forms: the 4px yellow ring on a card (`--ring-w`), or Your Row (mine-bg) with a 2px `#F2C200` inset on a row, cell or table line. Yellow type on a dark scoreboard is an accent, not a \"you\" mark.",
+        "body": "Yellow means \"this is you\". It never decorates, never marks an action, never highlights someone else's team. Leaders and winners wear Goalpost Amber (the money-week leader, for one). \"You\" takes one of three forms: the `mine` tone on a poured card (Your Water with a Deep Gold crescent), the 4px yellow ring on a card drawn in CSS (`--ring-w`), or Your Water on a row, cell or table line. Yellow type on a dark scoreboard is an accent, not a \"you\" mark. As shipped, `--mine-edge` in `:root` points at itself, so the 2px inset that rows, cells and the lab lede ask for draws nothing, and any other shadow in the same declaration goes with it. Don't read the missing edge as the design.",
         "section": "colors"
       },
       {
@@ -630,12 +752,12 @@
       },
       {
         "name": "The Two-Ended Heat Rule",
-        "body": "Heat tables run sky blue (the good end) to amber (the bad end) and fade to white in the middle, never green to red, so every kind of colour vision reads them. Chart labels never fade: other teams' lines and dots dim to 22%, their names stay at Ink 3.",
+        "body": "Heat tables run sky blue (the good end) to amber (the bad end) and fade to white in the middle, never green to red, so every kind of colour vision reads them. Chart labels never fade: other teams' lines and dots dim to 38% (faces in the scatter to 70%), their names stay at Ink 3.",
         "section": "colors"
       },
       {
-        "name": "The Background-Color Rule",
-        "body": "Set a card's colour with `background-color`, never the `background` shorthand, or the glass sheen disappears.",
+        "name": "The Tone Rule",
+        "body": "A poured card's colour comes from its tone (`--liq`: `face`, `gold`, `mine`, `board`, `notice`, `good`, `bad`, `toilet`), never from a background of its own, which the liquid discards. Where two tones meet at a neck, the colour changes at the neck's midpoint.",
         "section": "colors"
       },
       {
@@ -650,12 +772,17 @@
       },
       {
         "name": "The Three-Step Rule",
-        "body": "A panel inside a card is always pressed in (Tray plus tray edge), never another raised card and never the same tone as the card face. If two neighbouring surfaces look alike, one of them is on the wrong step.",
+        "body": "A panel inside a card is always a pool (Pool plus pool edge), never another raised card and never the same tone as the Water Face. If two neighbouring surfaces look alike, one of them is on the wrong step.",
         "section": "elevation"
       },
       {
-        "name": "The Hard-Ledge Rule",
-        "body": "No blur, no `backdrop-filter`, no soft drop shadows. If something needs to stand up, give it an ink outline and a solid ledge.",
+        "name": "The Hard-Water Rule",
+        "body": "No blur, no `backdrop-filter`, no soft drop shadows. Liquid here is drawn with an ink outline, a hard crescent and a hard highlight.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One-Body Rule",
+        "body": "A new card only needs `.glass` to join the body. Anything that moves on its own needs `--liq: none`. Nothing moves a poured card by itself, since its surface is the shared shape: no hover lift, and no transform on a rank row, which would lift its number above the liquid.",
         "section": "elevation"
       },
       {
@@ -665,22 +792,28 @@
       }
     ],
     "dos": [
-      "Do keep every surface on the glass card stack and change only its variables for state.",
+      "Do give every new card `.glass` and let the tone (`--liq`) set its colour.",
+      "Do set `--liq: none` on anything sticky or fixed, so it stays a CSS drop.",
+      "Do keep 42px (`--flow`, 34px on phones) between cards so the necks read as necks.",
+      "Do use a pool for any panel inside a card.",
       "Do reserve First-Down Yellow for the viewer's own team and Goalpost Amber for actions and the active state.",
       "Do set figures in Big Shoulders with tabular numbers, and prose in Albert Sans.",
       "Do put small text that sits on the field onto a white chip or sign.",
       "Do keep manager headshots to one or two personal moments per page.",
-      "Do honour `prefers-reduced-motion` and keep phones on the light motion set (transform and opacity only)."
+      "Do honour `prefers-reduced-motion`, and keep phones on the light motion set."
     ],
     "donts": [
       "Don't use emoji or ALL-CAPS labels anywhere.",
-      "Don't add blur, `backdrop-filter` or soft drop shadows; depth is outline plus ledge.",
-      "Don't use the `background` shorthand on a glass card; it wipes the sheen.",
+      "Don't add blur, `backdrop-filter` or soft drop shadows; depth is outline, crescent and hard highlight.",
+      "Don't give a poured card its own background, shadow, hover lift or transform; put an entrance on its contents, and never transform a rank row.",
+      "Don't bleed anything rectangular to a card's edge.",
+      "Don't bring the liquid into the team dashboard, or the dashboard's flat tiles into the rest of the site.",
       "Don't colour chart labels with their series colour; labels wear ink, and they never fade with their dimmed line.",
       "Don't mark a list item or callout with a coloured `border-left`; use a reason pip.",
       "Don't let a paragraph sit straight on the grass; it goes on a card or a white chip.",
       "Don't add a second bold signature next to the yard numbers.",
-      "Don't introduce a dark theme; this is a day game."
+      "Don't hard-code a light-only colour (a white fill, a pale tint, a light chip) on a surface; use a token (`--paper`, `--good-bg`, `--bad-bg`, `--info-bg`, `--hover`, `--notice-bg`, `--header`) so the night game can redefine it.",
+      "Don't put words on a bright fill (amber, yellow, lime, the matchup sides, the pastel chips) without adding that element to the night game's dark-ink list."
     ]
   }
 }
