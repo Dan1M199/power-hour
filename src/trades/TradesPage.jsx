@@ -4,6 +4,7 @@
 // the whole site (onTeam).
 import { useMemo, useState } from 'react';
 import { tradeIdeas } from '../../lib/trades.js';
+import { Deck } from '../deck.jsx';
 import { Headshot, PosTag, TeamAvatar } from '../shared.jsx';
 
 const SHAPES = [['all', 'All'], ['1 for 1', '1 for 1'], ['2 for 1', '2 for 1'], ['1 for 2', '1 for 2']];
@@ -60,7 +61,7 @@ export function TradesPage({ D, me, h, state, onState }) {
       ))}</div>
     </div>
     <p className="sub trade-legend">Green bars are projected starting-lineup points per week gained by each side. The dot on the value balance is your side of the consensus value: right of center you come out ahead, left of center they do. Uneven trades count the cut player or the free-agent pickup they force.</p>
-    {ideas.length ? <div className="ideas">{ideas.map(card)}</div>
+    {ideas.length ? <Deck className="ideas" count={ideas.length} noun="Idea">{ideas.map(card)}</Deck>
       : <p className="empty glass panel">{all.length ? 'No ideas of this shape. Try another filter.' : 'No trade both sides should take right now. Your roster is balanced enough that every fair deal makes one lineup worse. Check back after the next round of waivers or injuries.'}</p>}
   </>;
 }

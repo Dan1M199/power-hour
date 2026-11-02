@@ -1,7 +1,7 @@
 // The power rankings (#rankings): a row per team that opens into its scouting report, with your rank in a strip up
 // top, the fan poll, championship futures and how the score works. The hero (headline carousel, page head and league
 // desk) is the Hero it shares with the Live page.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChampTag, Headshot, TeamAvatar, Xp } from '../shared.jsx';
 import { Hero } from '../hero/Hero.jsx';
 import { Futures } from './Futures.jsx';
@@ -35,7 +35,7 @@ const MoveTag = ({ t }) => (t.movement > 0 ? <span className="move up" title={`U
   : t.movement < 0 ? <span className="move down" title={`Down ${-t.movement} since last week`}>{`▼${-t.movement}`}</span>
   : <span className="move flat" title="No change since last week">–</span>);
 
-function RankRow({ D, t, me, h, open, nudge, onToggle, onClose, rowRef, btnRef }) {
+function RankRow({ D, t, me, h, open, nudge, onToggle, onClose, onStep, rowRef, btnRef }) {
   const { f1, pct, ordinal } = h, mine = t.rid === me;
   const built = useRef(false); // the report is built the first time it opens, then kept (for the fold)
   if (open) built.current = true;
@@ -66,7 +66,11 @@ function RankRow({ D, t, me, h, open, nudge, onToggle, onClose, rowRef, btnRef }
         </button>
         <div className="detail" id={`d-${t.rid}`}><div>{built.current ? <>
           <Report D={D} t={t} h={h} />
-          <button type="button" className="odds-more detail-close" onClick={onClose}><span>Close</span><Xp /></button>
+          <div className="detail-nav">
+            {t.powerRank > 1 ? <button type="button" className="odds-more step-prev" onClick={() => onStep(-1)}>{`‹ No. ${t.powerRank - 1}`}</button> : <span />}
+            <button type="button" className="odds-more detail-close" onClick={onClose}><span>Close</span><Xp /></button>
+            {t.powerRank < D.teams.length ? <button type="button" className="odds-more step-next" onClick={() => onStep(1)}>{`No. ${t.powerRank + 1} ›`}</button> : <span />}
+          </div>
         </> : null}</div></div>
       </div>
     </li>
@@ -118,6 +122,29 @@ export function RankingsPage({ D, me, h, held, car, desk, sources, updated, mess
     if (li && li.getBoundingClientRect().top < 0) li.scrollIntoView({ block: 'start' });
     btns.current.get(rid)?.focus({ preventScroll: true });
   };
+  // From an opened report to the next or previous team's: that report opens with no fold (the one you left is gone at
+  // once, so the page doesn't slide under you), the row comes to the top and its card slides in from the side you
+  // swiped toward. A button here does what the swipe does (src/swipe.js clicks these).
+  const stepping = useRef(null);
+  const step = (rid, dir) => {
+    const i = D.teams.findIndex((t) => t.rid === rid), next = D.teams[i + dir];
+    if (!next) return;
+    stepping.current = { rid: next.rid, dir, keyboard: !!document.activeElement?.matches('.step-prev, .step-next') };
+    rows.current.get(rid).parentElement.classList.add('stepping');
+    toggle(rid, false);
+    toggle(next.rid, true);
+  };
+  useLayoutEffect(() => {
+    const st = stepping.current;
+    if (!st) return;
+    stepping.current = null;
+    const li = rows.current.get(st.rid);
+    li.scrollIntoView({ block: 'start' });
+    if (st.keyboard) btns.current.get(st.rid)?.focus({ preventScroll: true }); // a swipe has no focus to carry over
+    if (!calm) li.querySelector('.rank-card').animate([{ transform: `translateX(${st.dir * 70}%)`, opacity: 0.4 }, { transform: 'none', opacity: 1 }], { duration: 280, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+    requestAnimationFrame(() => requestAnimationFrame(() => li.parentElement.classList.remove('stepping')));
+  }, [open, calm]);
+
   // your rank, right under the page head, so a phone doesn't scroll three screens to find you
   const mine = !held && me != null ? D.teams.find((t) => t.rid === me) : null;
   const jump = () => {
@@ -142,7 +169,7 @@ export function RankingsPage({ D, me, h, held, car, desk, sources, updated, mess
     <div id="poll-slot"><Poll D={D} h={h} poll={poll} /></div>
     <ol className="ranks">{D.teams.map((t) => (
       <RankRow key={t.rid} D={D} t={t} me={me} h={h} open={open.has(t.rid)} nudge={t.powerRank === 1 && nudged}
-        onToggle={() => toggle(t.rid)} onClose={() => close(t.rid)}
+        onToggle={() => toggle(t.rid)} onClose={() => close(t.rid)} onStep={(d) => step(t.rid, d)}
         rowRef={(el) => { if (el) rows.current.set(t.rid, el); else rows.current.delete(t.rid); }}
         btnRef={(el) => { if (el) btns.current.set(t.rid, el); else btns.current.delete(t.rid); }} />
     ))}</ol>

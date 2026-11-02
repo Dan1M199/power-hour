@@ -6,6 +6,7 @@ import { breakdown, shortName, fits, nfl } from './lib/matchup.js';
 import { MEMBERS, DESK_PEOPLE, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
 import { pageRoot } from './src/mount.jsx';
+import { initSwipe } from './src/swipe.js';
 import { LoadError } from './src/shared.jsx';
 import { Lab } from './src/lab/Lab.jsx';
 import { WirePage } from './src/wire/WirePage.jsx';
@@ -1390,6 +1391,31 @@ function reveal(root) {
   below.forEach((el) => { el.classList.add('reveal'); io.observe(el); });
 }
 
+// the stops a sideways swipe moves through, in order: the tabs, with the Lab's three sections counted separately
+const LAB_STOPS = { team: 'Your team', trades: 'Trade ideas', league: 'League charts' };
+function swipeStops() {
+  if (!DATA) return [];
+  const fin = DATA.finalCall || DATA.after;
+  return [
+    ...(DATA.liveMode || DATA.after ? [{ hash: '#live', view: 'live', label: fin ? 'Final scores' : 'Live' }] : []),
+    { hash: '#rankings', view: 'rankings', label: 'Power rankings' },
+    { hash: '#wire', view: 'wire', label: 'The Wire' },
+    { hash: '#matchups', view: 'matchups', label: 'Games' },
+    ...SECTIONS.map((s) => ({ hash: `#lab/${s}`, view: 'lab', sub: s, label: LAB_STOPS[s] ?? s })),
+  ];
+}
+const swipeHere = () => swipeStops().findIndex((s) => s.view === currentView && (s.view !== 'lab' || s.sub === labState.sub));
+// the amber tab bead follows the finger from this tab toward the next one
+function swipeInk(from, to, p) {
+  const list = swipeStops(), ink = $('.tab-ink'), tab = (i) => $(`.tabs a[data-view="${list[i]?.view}"]`), a = tab(from), b = tab(to);
+  if (!ink || !a || !b || a === b) return;
+  ink.classList.remove('live');
+  const k = Math.min(1, p * 1.6);
+  ink.style.width = `${a.offsetWidth + (b.offsetWidth - a.offsetWidth) * k}px`;
+  ink.style.transform = `translateX(${a.offsetLeft + (b.offsetLeft - a.offsetLeft) * k}px)`;
+}
+let swipe = null;
+
 function route({ fresh = false } = {}) {
   // while a week is being played the Live tab is the front page; it only exists then
   const home = DATA.liveMode ? 'live' : 'rankings';
@@ -1407,6 +1433,7 @@ function route({ fresh = false } = {}) {
     placeInk();
     paintMe();
     talk.week = talkWeek();
+    swipe?.pageChanging();
     const app = $('#app'), [Page, props] = PAGES[key]();
     showPage ||= pageRoot(app);
     showPage(Page, { D: DATA, me: myTeam, h: reactHelpers(), ...props });
@@ -1562,6 +1589,8 @@ async function main() {
     el.hidden = false;
   }
   window.addEventListener('hashchange', () => route({ fresh: true }));
+  swipe = initSwipe({ stops: swipeStops, here: swipeHere, go: (s) => { location.hash = s.hash; }, inkAt: swipeInk, inkDone: () => placeInk(), phone, calm });
+  swipe.hint();
   loadVotes({ week: DATA.previews[0]?.week, demo: RAW.isDemo });
   loadPoll();
   talk.week = talkWeek();

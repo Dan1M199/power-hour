@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-28T01:11:51.057Z",
+  "generatedAt": "2026-11-02T20:51:41.274Z",
   "title": "Design System: The Power Hour",
   "extensions": {
     "colorMeta": {
@@ -187,46 +187,46 @@
       "tile": {
         "role": "neutral",
         "displayName": "Tray",
-        "canonical": "#E8F0DF",
+        "canonical": "rgba(24, 84, 52, 0.1)",
         "tonalRamp": [
-          "#27321A",
-          "#42611F",
-          "#5F8B2C",
-          "#7FBA3B",
-          "#9DCE64",
-          "#BADD93",
-          "#D8EBC1",
-          "#F3F6EE"
+          "#001104",
+          "#003018",
+          "#155232",
+          "#3B7452",
+          "#5E9874",
+          "#83BE98",
+          "#AFDABD",
+          "#DAF7E4"
         ]
       },
       "tile-2": {
         "role": "neutral",
         "displayName": "Tray 2",
-        "canonical": "#D6E3C9",
+        "canonical": "rgba(24, 84, 52, 0.18)",
         "tonalRamp": [
-          "#26311B",
-          "#405E21",
-          "#5C8830",
-          "#7AB540",
-          "#99CA68",
-          "#B8DA95",
-          "#D6EAC3",
-          "#F2F6EF"
+          "#001104",
+          "#003018",
+          "#155232",
+          "#3B7452",
+          "#5E9874",
+          "#83BE98",
+          "#AFDABD",
+          "#DAF7E4"
         ]
       },
       "line": {
         "role": "neutral",
         "displayName": "Line",
-        "canonical": "#D2E0C4",
+        "canonical": "rgba(24, 84, 52, 0.2)",
         "tonalRamp": [
-          "#252F1D",
-          "#3D5926",
-          "#588137",
-          "#75AC49",
-          "#94C270",
-          "#B4D49B",
-          "#D4E7C6",
-          "#F2F5EF"
+          "#001104",
+          "#003018",
+          "#155232",
+          "#3B7452",
+          "#5E9874",
+          "#83BE98",
+          "#AFDABD",
+          "#DAF7E4"
         ]
       },
       "ink": {
@@ -262,31 +262,31 @@
       "ink-3": {
         "role": "neutral",
         "displayName": "Ink 3",
-        "canonical": "#55705A",
+        "canonical": "#3D5949",
         "tonalRamp": [
-          "#232924",
-          "#37483A",
-          "#4F6854",
-          "#6A8B70",
-          "#8BA790",
-          "#AEC1B1",
-          "#D1DCD3",
-          "#F1F3F2"
+          "#010F07",
+          "#112D1F",
+          "#304C3D",
+          "#506E5E",
+          "#739280",
+          "#97B7A5",
+          "#BDD5C7",
+          "#E3F3EA"
         ]
       },
       "good": {
         "role": "tertiary",
         "displayName": "Good",
-        "canonical": "#28702C",
+        "canonical": "#1F6123",
         "tonalRamp": [
-          "#1C311D",
-          "#225D25",
-          "#318636",
-          "#42B348",
-          "#6AC86F",
-          "#97D99A",
-          "#C3E9C5",
-          "#EFF6EF"
+          "#001100",
+          "#003103",
+          "#0E5415",
+          "#367738",
+          "#5A9B5B",
+          "#7FC17F",
+          "#ACDDAB",
+          "#D9F9D8"
         ]
       },
       "bad": {
@@ -412,16 +412,91 @@
       "header": {
         "role": "neutral",
         "displayName": "Header Sky",
-        "canonical": "#EAF6FC",
+        "canonical": "rgba(236, 248, 253, 0.76)",
         "tonalRamp": [
-          "#152C37",
-          "#105070",
-          "#1773A1",
-          "#1F99D6",
-          "#4CB2E6",
-          "#82C9ED",
-          "#B8E0F5",
-          "#EDF4F8"
+          "#070C0F",
+          "#1F282C",
+          "#3D474B",
+          "#5E686C",
+          "#808B90",
+          "#A5B0B5",
+          "#C7CFD3",
+          "#EAF0F2"
+        ]
+      },
+      "header-solid": {
+        "role": "neutral",
+        "displayName": "Header Sky, near-solid",
+        "canonical": "rgba(236, 248, 253, 0.93)",
+        "tonalRamp": [
+          "#070C0F",
+          "#1F282C",
+          "#3D474B",
+          "#5E686C",
+          "#808B90",
+          "#A5B0B5",
+          "#C7CFD3",
+          "#EAF0F2"
+        ]
+      },
+      "sheet-fill": {
+        "role": "neutral",
+        "displayName": "Sheet",
+        "canonical": "#CDEBD3",
+        "tonalRamp": [
+          "#020F05",
+          "#142D1B",
+          "#334C39",
+          "#536E59",
+          "#76917C",
+          "#9AB7A0",
+          "#BFD4C3",
+          "#E5F3E7"
+        ]
+      },
+      "sheet-gold": {
+        "role": "primary",
+        "displayName": "Gold Sheet",
+        "canonical": "#FFE184",
+        "tonalRamp": [
+          "#120A00",
+          "#312500",
+          "#554300",
+          "#7B6301",
+          "#A38622",
+          "#C8AB4E",
+          "#E2CD8B",
+          "#FCEEC4"
+        ]
+      },
+      "ledge": {
+        "role": "neutral",
+        "displayName": "Ledge",
+        "canonical": "rgba(14, 46, 22, 0.26)",
+        "tonalRamp": [
+          "#001003",
+          "#0E2E16",
+          "#2E4E34",
+          "#4E7054",
+          "#719376",
+          "#95B99A",
+          "#BBD6BF",
+          "#E2F4E5"
+        ]
+      },
+      "face": {
+        "role": "neutral",
+        "displayName": "Pane Face",
+        "canonical": "rgba(255, 255, 255, 0.62)",
+        "tonalRamp": [
+          "#262626",
+          "#404040",
+          "#5C5C5C",
+          "#7A7A7A",
+          "#999999",
+          "#B8B8B8",
+          "#D6D6D6",
+          "#F2F2F2"
         ]
       }
     },
@@ -453,14 +528,19 @@
     },
     "shadows": [
       {
-        "name": "glass-card",
-        "value": "inset 0 2px 0 #FFFFFF, inset 0 -3px 0 rgba(18,48,26,0.05), 0 0 0 var(--ring-w) #FFEB3B, 0 0 0 calc(var(--ring-w) + 2.5px) #12301A, 0 5px 0 calc(var(--ring-w) + 2.5px) rgba(14,46,22,0.26)",
-        "purpose": "Every card: rim, your yellow ring, ink outline, hard ledge."
+        "name": "bevel",
+        "value": "inset 0 0 0 1.5px rgba(255,255,255,0.8), inset 0 3px 0 #FFFFFF, inset 0 -6px 0 rgba(120,210,250,0.3)",
+        "purpose": "The rim of a pane: a bright lip, brighter along the top, light caught along the bottom."
       },
       {
-        "name": "gold-ledge",
-        "value": "same stack with ledge #E0A100",
-        "purpose": "Featured cards: top three, trades, best trade idea, scoreboards."
+        "name": "glass-pane",
+        "value": "var(--rim), 0 0 0 var(--ring-w) #FFEB3B, 0 0 0 calc(var(--ring-w) + 2.75px) #12301A, 0 15px 0 calc(var(--ring-w) - 7px) #CDEBD3, 0 15px 0 calc(var(--ring-w) - 4.25px) #12301A, 0 21px 0 calc(var(--ring-w) - 4.25px) rgba(14,46,22,0.26)",
+        "purpose": "Every pane: bevel, your yellow ring, ink outline, the sheet behind, the hard cast shadow."
+      },
+      {
+        "name": "featured-pane",
+        "value": "var(--rim), 0 0 0 var(--ring-w) #FFEB3B, 0 0 0 calc(var(--ring-w) + 2.75px) #12301A, 0 15px 0 calc(var(--ring-w) - 7px) #FFE184, 0 15px 0 calc(var(--ring-w) - 4.25px) #12301A, 0 27px 0 calc(var(--ring-w) - 13px) #FFE184, 0 27px 0 calc(var(--ring-w) - 10.25px) #12301A, 0 33px 0 calc(var(--ring-w) - 10.25px) #E0A100",
+        "purpose": "Featured panes: two sheets on gold. Top three, trades, best trade idea, scoreboards, overlays."
       },
       {
         "name": "pill-button",
@@ -479,15 +559,20 @@
       },
       {
         "name": "tray-edge",
-        "value": "inset 0 3px 0 rgba(18,48,26,0.07), inset 0 0 0 1.5px rgba(18,48,26,0.1)",
-        "purpose": "Recessed panels inside a card: a hard inner top shadow and a faint inked rim."
+        "value": "inset 0 3px 0 rgba(18,48,26,0.13), inset 0 -1.5px 0 rgba(255,255,255,0.75), inset 0 0 0 1.5px rgba(18,48,26,0.12)",
+        "purpose": "Panels pressed into a pane: a hard inner top shadow, a bright bottom lip and a faint inked rim."
+      },
+      {
+        "name": "frost",
+        "value": "backdrop-filter: blur(var(--blur)) saturate(1.5); --blur 9px, 5px on phones",
+        "purpose": "The only blur on the glass: what a pane puts on the field behind it."
       }
     ],
     "motion": [
       {
         "name": "ease-slide",
         "value": "cubic-bezier(0.2, 0.8, 0.2, 1)",
-        "purpose": "Tab pill slide (0.45s)."
+        "purpose": "Tab bead slide (0.45s) and swipe settle (0.26s)."
       },
       {
         "name": "rank-stagger",
@@ -496,13 +581,23 @@
       },
       {
         "name": "carousel-dwell",
-        "value": "7s",
-        "purpose": "Headline carousel auto-advance per story."
+        "value": "10s",
+        "purpose": "Headline carousel auto-advance per story; a video story runs for its clip."
       },
       {
         "name": "loader-fade",
         "value": "0.35s ease",
         "purpose": "Kicker loader fade-out."
+      },
+      {
+        "name": "swipe-commit",
+        "value": "28% of the window width, or a flick over 0.45 px/ms",
+        "purpose": "Where letting go of a page or row swipe commits and the peek tag turns amber."
+      },
+      {
+        "name": "swipe-lag",
+        "value": "0.96, 0.92, 0.88",
+        "purpose": "How far the page's second, third and later children trail the finger."
       }
     ],
     "breakpoints": [
@@ -527,7 +622,7 @@
       "refersTo": "button-primary",
       "description": "Glossy amber pill for actions and the pressed filter.",
       "html": "<button class=\"ds-btn ds-btn-primary\">Show me the power ranking</button>",
-      "css": ".ds-btn{position:relative;isolation:isolate;overflow:hidden;cursor:pointer;border:0;border-radius:999px;padding:8px 15px;font:700 13.5px/1.2 'Albert Sans',system-ui,sans-serif;transition:transform .12s,box-shadow .12s}.ds-btn::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.2) 48%,rgba(255,255,255,0) 50%);pointer-events:none}.ds-btn:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-btn-primary{background:#FFC107;color:#12301A;box-shadow:0 0 0 2px #12301A,0 3px 0 2px #E0A100}.ds-btn-primary:hover{transform:translateY(-1px)}.ds-btn-primary:active{transform:translateY(2px);box-shadow:0 0 0 2px #12301A,0 1px 0 2px #E0A100}"
+      "css": ".ds-btn{position:relative;isolation:isolate;overflow:hidden;cursor:pointer;border:0;border-radius:999px;padding:8px 15px;font:700 13.5px/1.2 'Albert Sans',system-ui,sans-serif;transition:transform .12s,box-shadow .12s}.ds-btn::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.72) 0,rgba(255,255,255,.28) 48%,rgba(255,255,255,0) 50%);pointer-events:none}.ds-btn:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-btn-primary{background:#FFC107;color:#12301A;box-shadow:0 0 0 2px #12301A,0 3px 0 2px #E0A100}.ds-btn-primary:hover{transform:translateY(-1px)}.ds-btn-primary:active{transform:translateY(2px);box-shadow:0 0 0 2px #12301A,0 1px 0 2px #E0A100}"
     },
     {
       "name": "Secondary Button",
@@ -535,7 +630,7 @@
       "refersTo": "button-secondary",
       "description": "White glossy pill for filters and secondary choices.",
       "html": "<button class=\"ds-btn ds-btn-secondary\">Trades</button>",
-      "css": ".ds-btn{position:relative;isolation:isolate;overflow:hidden;cursor:pointer;border:0;border-radius:999px;padding:8px 15px;font:700 13.5px/1.2 'Albert Sans',system-ui,sans-serif;transition:transform .12s,box-shadow .12s}.ds-btn::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.2) 48%,rgba(255,255,255,0) 50%);pointer-events:none}.ds-btn:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-btn-secondary{background:#FFFFFF;color:#3C5A43;box-shadow:0 0 0 2px #12301A,0 3px 0 2px rgba(14,46,22,.26)}.ds-btn-secondary:hover{background:#E1F5FE;color:#12301A}.ds-btn-secondary:active{transform:translateY(2px);box-shadow:0 0 0 2px #12301A,0 1px 0 2px rgba(14,46,22,.26)}"
+      "css": ".ds-btn{position:relative;isolation:isolate;overflow:hidden;cursor:pointer;border:0;border-radius:999px;padding:8px 15px;font:700 13.5px/1.2 'Albert Sans',system-ui,sans-serif;transition:transform .12s,box-shadow .12s}.ds-btn::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.72) 0,rgba(255,255,255,.28) 48%,rgba(255,255,255,0) 50%);pointer-events:none}.ds-btn:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-btn-secondary{background:#FFFFFF;color:#3C5A43;box-shadow:0 0 0 2px #12301A,0 3px 0 2px rgba(14,46,22,.26)}.ds-btn-secondary:hover{background:#E1F5FE;color:#12301A}.ds-btn-secondary:active{transform:translateY(2px);box-shadow:0 0 0 2px #12301A,0 1px 0 2px rgba(14,46,22,.26)}"
     },
     {
       "name": "Chip",
@@ -549,25 +644,25 @@
       "name": "Glass Card",
       "kind": "card",
       "refersTo": "card",
-      "description": "Cartoon glass on a hard ledge: the base surface for every card.",
-      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Dynasty Dan</h3><p class=\"ds-card-body\">Third in points for and the easiest schedule left.</p></div>",
-      "css": ".ds-card{background-color:rgba(255,255,255,.96);background-image:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(255,255,255,.6) 46%,rgba(255,255,255,0) 100%);background-size:100% 150px;background-repeat:no-repeat;padding:18px;border-radius:24px;color:#12301A;box-shadow:inset 0 2px 0 #FFFFFF,inset 0 -3px 0 rgba(18,48,26,.05),0 0 0 2.5px #12301A,0 5px 0 2.5px rgba(14,46,22,.26);transition:transform .2s,box-shadow .2s}.ds-card:hover{transform:translateY(-2px);box-shadow:inset 0 2px 0 #FFFFFF,inset 0 -3px 0 rgba(18,48,26,.05),0 0 0 2.5px #12301A,0 7px 0 2.5px rgba(14,46,22,.26)}.ds-card-title{margin:0 0 6px;font:800 21px/1.1 'Big Shoulders Display','Arial Narrow',sans-serif}.ds-card-body{margin:0;font:400 16px/1.55 'Albert Sans',system-ui,sans-serif;color:#3C5A43}"
+      "description": "The base surface: a see-through frosted pane with hard reflections, a sheet behind it and a hard cast shadow, with a tray pressed into it.",
+      "html": "<div class=\"ds-gfield\"><div class=\"ds-card\"><h3 class=\"ds-card-title\">Dynasty Dan</h3><p class=\"ds-card-body\">Third in points for and the easiest schedule left.</p><div class=\"ds-tray\"><b>Position groups</b><span class=\"ds-chip2\">94% lineup IQ</span></div></div></div>",
+      "css": ".ds-gfield{padding:24px 24px 44px;background:repeating-linear-gradient(180deg,#4CAF50 0 60px,#5AB34F 60px 120px)}.ds-card{background-color:rgba(255,255,255,.62);background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Cpath d='M5 33Q5 5 33 5' fill='none' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='44' cy='5' r='2.8' fill='%23fff'/%3E%3C/svg%3E\"),linear-gradient(112deg,rgba(255,255,255,0) 0 57%,rgba(255,255,255,.44) 57% 66%,rgba(255,255,255,0) 66% 69%,rgba(255,255,255,.3) 69% 71.5%,rgba(255,255,255,0) 71.5%),linear-gradient(180deg,rgba(255,255,255,.92) 0,rgba(255,255,255,.42) 42%,rgba(255,255,255,0) 100%);background-size:36px 36px,100% 100%,100% 170px;background-position:6px 6px,0 0,0 0;background-repeat:no-repeat;-webkit-backdrop-filter:blur(9px) saturate(1.5);backdrop-filter:blur(9px) saturate(1.5);padding:18px;border-radius:36px;color:#12301A;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.8),inset 0 3px 0 #FFFFFF,inset 0 -6px 0 rgba(120,210,250,.3),0 0 0 0px #FFEB3B,0 0 0 calc(0px + 2.75px) #12301A,0 15px 0 calc(0px - 7px) #CDEBD3,0 15px 0 calc(0px - 4.25px) #12301A,0 21px 0 calc(0px - 4.25px) rgba(14,46,22,.26);transition:transform .2s,box-shadow .2s}.ds-card:hover{transform:translateY(-3px);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.8),inset 0 3px 0 #FFFFFF,inset 0 -6px 0 rgba(120,210,250,.3),0 0 0 0px #FFEB3B,0 0 0 calc(0px + 2.75px) #12301A,0 15px 0 calc(0px - 7px) #CDEBD3,0 15px 0 calc(0px - 4.25px) #12301A,0 23px 0 calc(0px - 4.25px) rgba(14,46,22,.26)}.ds-card-title{margin:0 0 6px;font:800 21px/1.1 'Big Shoulders Display','Arial Narrow',sans-serif}.ds-card-body{margin:0 0 12px;font:400 16px/1.55 'Albert Sans',system-ui,sans-serif;color:#3C5A43}.ds-tray{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:24px;background:rgba(24,84,52,.1);box-shadow:inset 0 3px 0 rgba(18,48,26,.13),inset 0 -1.5px 0 rgba(255,255,255,.75),inset 0 0 0 1.5px rgba(18,48,26,.12);font:700 13px/1.2 'Albert Sans',system-ui,sans-serif;color:#3C5A43}.ds-chip2{padding:7px 12px 6px;border-radius:12px;background:#FFFFFF;color:#12301A;box-shadow:0 0 0 1.5px rgba(24,84,52,.2),0 3px 0 1.5px rgba(24,84,52,.2)}"
     },
     {
       "name": "Your Card",
       "kind": "card",
       "refersTo": "card-featured",
-      "description": "Your own team: a 4px First-Down Yellow ring inside the outline, on a gold ledge.",
-      "html": "<div class=\"ds-card-mine\"><b>Your team</b></div>",
-      "css": ".ds-card-mine{background-color:rgba(255,255,255,.88);background-image:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(255,255,255,.6) 46%,rgba(255,255,255,0) 100%);background-size:100% 150px;background-repeat:no-repeat;padding:18px;border-radius:32px;color:#12301A;font:800 21px/1.1 'Big Shoulders Display',sans-serif;box-shadow:inset 0 2px 0 #FFFFFF,0 0 0 4px #FFEB3B,0 0 0 6.5px #12301A,0 5px 0 6.5px #E0A100}"
+      "description": "Your own team: a 4px First-Down Yellow ring inside the outline of the pane.",
+      "html": "<div class=\"ds-mfield\"><div class=\"ds-card-mine\"><b>Your team</b></div></div>",
+      "css": ".ds-mfield{padding:24px 24px 44px;background:repeating-linear-gradient(180deg,#4CAF50 0 60px,#5AB34F 60px 120px)}.ds-card-mine{background-color:rgba(255,255,255,.62);background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Cpath d='M5 33Q5 5 33 5' fill='none' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='44' cy='5' r='2.8' fill='%23fff'/%3E%3C/svg%3E\"),linear-gradient(112deg,rgba(255,255,255,0) 0 57%,rgba(255,255,255,.44) 57% 66%,rgba(255,255,255,0) 66% 69%,rgba(255,255,255,.3) 69% 71.5%,rgba(255,255,255,0) 71.5%),linear-gradient(180deg,rgba(255,255,255,.92) 0,rgba(255,255,255,.42) 42%,rgba(255,255,255,0) 100%);background-size:36px 36px,100% 100%,100% 170px;background-position:6px 6px,0 0,0 0;background-repeat:no-repeat;-webkit-backdrop-filter:blur(9px) saturate(1.5);backdrop-filter:blur(9px) saturate(1.5);padding:18px;border-radius:36px;color:#12301A;font:800 21px/1.1 'Big Shoulders Display',sans-serif;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.8),inset 0 3px 0 #FFFFFF,inset 0 -6px 0 rgba(120,210,250,.3),0 0 0 4px #FFEB3B,0 0 0 calc(4px + 2.75px) #12301A,0 15px 0 calc(4px - 7px) #CDEBD3,0 15px 0 calc(4px - 4.25px) #12301A,0 21px 0 calc(4px - 4.25px) rgba(14,46,22,.26)}"
     },
     {
       "name": "Tab Strip",
       "kind": "nav",
       "refersTo": "tab-active",
-      "description": "Tabs in a Tile track; the active one is an amber glossy pill.",
+      "description": "Tabs in a Tray groove; the active one is an amber glossy bead, which follows the finger during a swipe.",
       "html": "<nav class=\"ds-tabs\"><a class=\"ds-tab ds-on\" href=\"#\">Power</a><a class=\"ds-tab\" href=\"#\">Wire</a><a class=\"ds-tab\" href=\"#\">Games</a></nav>",
-      "css": ".ds-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:#F1F8E9}.ds-tab{padding:8px 16px;border-radius:999px;color:#3C5A43;text-decoration:none;font:700 14px/1.2 'Albert Sans',system-ui,sans-serif}.ds-tab:hover{color:#12301A}.ds-tab:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-on{color:#12301A;background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.2) 48%,rgba(255,255,255,0) 50%),#FFC107;box-shadow:0 0 0 2px #12301A,0 3px 0 2px #E0A100}"
+      "css": ".ds-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:rgba(24,84,52,.1);box-shadow:inset 0 3px 0 rgba(18,48,26,.13),inset 0 -1.5px 0 rgba(255,255,255,.75),inset 0 0 0 1.5px rgba(18,48,26,.12)}.ds-tab{padding:8px 16px;border-radius:999px;color:#3C5A43;text-decoration:none;font:700 14px/1.2 'Albert Sans',system-ui,sans-serif}.ds-tab:hover{color:#12301A}.ds-tab:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-on{color:#12301A;background:linear-gradient(180deg,rgba(255,255,255,.72) 0,rgba(255,255,255,.28) 48%,rgba(255,255,255,0) 50%),#FFC107;box-shadow:0 0 0 2px #12301A,0 3px 0 2px #E0A100}"
     },
     {
       "name": "Section Sign",
@@ -575,29 +670,30 @@
       "refersTo": "section-sign",
       "description": "White pill sign that carries section titles on the grass.",
       "html": "<div class=\"ds-field\"><h2 class=\"ds-sign\">Best available <small>top free agents</small></h2></div>",
-      "css": ".ds-field{padding:20px;background:repeating-linear-gradient(180deg,#4CAF50 0 40px,#5AB34F 40px 80px)}.ds-sign{display:flex;width:fit-content;align-items:baseline;gap:12px;margin:0;padding:10px 18px 9px;border-radius:999px;background:#FFFFFF;color:#12301A;font:800 24px/1 'Big Shoulders Display',sans-serif;box-shadow:inset 0 2px 0 #FFFFFF,0 0 0 2.5px #12301A,0 4px 0 2.5px rgba(14,46,22,.26)}.ds-sign small{font:600 13px/1 'Albert Sans',system-ui,sans-serif;color:#55705A}"
+      "css": ".ds-field{padding:20px;background:repeating-linear-gradient(180deg,#4CAF50 0 40px,#5AB34F 40px 80px)}.ds-sign{display:flex;width:fit-content;align-items:baseline;gap:12px;margin:0;padding:10px 18px 9px;border-radius:999px;background:#FFFFFF;color:#12301A;font:800 24px/1 'Big Shoulders Display',sans-serif;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.8),inset 0 3px 0 #FFFFFF,inset 0 -6px 0 rgba(120,210,250,.3),0 0 0 2.75px #12301A,0 4px 0 2.75px rgba(14,46,22,.26)}.ds-sign small{font:600 13px/1 'Albert Sans',system-ui,sans-serif;color:#3D5949}"
     },
     {
       "name": "Yard Number Rank",
       "kind": "custom",
-      "description": "The signature: a rank painted on the grass, half under its card.",
-      "html": "<div class=\"ds-field2\"><div class=\"ds-rank\"><span class=\"ds-jersey\">1</span><div class=\"ds-rcard\"><b>Mo Money</b><span>87</span></div></div></div>",
-      "css": ".ds-field2{padding:24px 20px;background:repeating-linear-gradient(180deg,#4CAF50 0 60px,#5AB34F 60px 120px)}.ds-rank{position:relative;padding-left:74px}.ds-jersey{position:absolute;left:0;top:50%;transform:translateY(-50%);font:900 150px/0.8 'Big Shoulders Display',sans-serif;letter-spacing:-.04em;color:#FFEB3B;text-shadow:5px 5px 0 rgba(14,46,22,.35)}.ds-rcard{position:relative;display:flex;justify-content:space-between;align-items:center;padding:22px;border-radius:32px;background-color:rgba(255,255,255,.88);background-image:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(255,255,255,.6) 46%,rgba(255,255,255,0) 100%);background-size:100% 150px;background-repeat:no-repeat;box-shadow:inset 0 2px 0 #FFFFFF,0 0 0 2.5px #12301A,0 5px 0 2.5px #E0A100}.ds-rcard b{font:800 32px/1.05 'Big Shoulders Display',sans-serif;color:#12301A}.ds-rcard span{font:900 48px/.9 'Big Shoulders Display',sans-serif;color:#12301A}"
+      "description": "The signature: a rank painted on the grass, part of it under its pane, frosted through the glass, with the tier chip on the pane's top edge.",
+      "html": "<div class=\"ds-field2\"><div class=\"ds-rank\"><span class=\"ds-jersey\">1</span><div class=\"ds-rcard\"><span class=\"ds-tier\">Team to beat</span><b>Mo Money</b><span class=\"ds-score\">87</span></div></div></div>",
+      "css": ".ds-field2{padding:30px 20px 52px;background:repeating-linear-gradient(180deg,#4CAF50 0 60px,#5AB34F 60px 120px)}.ds-rank{position:relative;padding-left:62px}.ds-jersey{position:absolute;left:0;top:50%;transform:translateY(-50%);font:900 150px/0.8 'Big Shoulders Display',sans-serif;letter-spacing:-.04em;color:#FFEB3B;text-shadow:4px 5px 0 rgba(14,46,22,.26)}.ds-rcard{background-color:rgba(255,255,255,.62);background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Cpath d='M5 33Q5 5 33 5' fill='none' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='44' cy='5' r='2.8' fill='%23fff'/%3E%3C/svg%3E\"),linear-gradient(112deg,rgba(255,255,255,0) 0 57%,rgba(255,255,255,.44) 57% 66%,rgba(255,255,255,0) 66% 69%,rgba(255,255,255,.3) 69% 71.5%,rgba(255,255,255,0) 71.5%),linear-gradient(180deg,rgba(255,255,255,.92) 0,rgba(255,255,255,.42) 42%,rgba(255,255,255,0) 100%);background-size:36px 36px,100% 100%,100% 170px;background-position:6px 6px,0 0,0 0;background-repeat:no-repeat;-webkit-backdrop-filter:blur(9px) saturate(1.5);backdrop-filter:blur(9px) saturate(1.5);position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;padding:26px 22px 22px;border-radius:46px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.8),inset 0 3px 0 #FFFFFF,inset 0 -6px 0 rgba(120,210,250,.3),0 0 0 2.75px #12301A,0 15px 0 -7px #FFE184,0 15px 0 -4.25px #12301A,0 27px 0 -13px #FFE184,0 27px 0 -10.25px #12301A,0 33px 0 -10.25px #E0A100}.ds-tier{position:absolute;top:-13px;left:22px;padding:6px 12px;border-radius:999px;font:700 12px/1 'Albert Sans',system-ui,sans-serif;color:#12301A;background:linear-gradient(180deg,rgba(255,255,255,.72) 0,rgba(255,255,255,.28) 48%,rgba(255,255,255,0) 50%),#FFC107;box-shadow:0 0 0 2px #12301A,0 3px 0 2px rgba(14,46,22,.26)}.ds-rcard b{font:800 32px/1.05 'Big Shoulders Display',sans-serif;color:#12301A}.ds-score{font:900 48px/.9 'Big Shoulders Display',sans-serif;color:#12301A}"
     },
     {
       "name": "Scoreboard",
       "kind": "card",
       "refersTo": "scoreboard",
-      "description": "Smoked-glass dark panel with white type, yellow accents and a corner glint.",
-      "html": "<div class=\"ds-board\"><h2>Mo takes the lead</h2><p>Up 14.2 with two players left.</p></div>",
-      "css": ".ds-board{position:relative;padding:26px 28px;border-radius:32px;color:#FFFFFF;background-color:#13301C;background-image:linear-gradient(180deg,rgba(255,255,255,.1) 0,rgba(255,255,255,.03) 55%,rgba(255,255,255,0) 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.2),inset 0 -3px 0 rgba(0,0,0,.18),0 0 0 2.5px #12301A,0 5px 0 2.5px #E0A100}.ds-board h2{margin:0 0 8px;font:900 44px/.94 'Big Shoulders Display',sans-serif}.ds-board p{margin:0;color:#FFEB3B;font:700 15px/1.4 'Albert Sans',system-ui,sans-serif}"
+      "description": "A solid dark face in the featured stack: white type, yellow accents, the reflections turned down, gold sheets.",
+      "html": "<div class=\"ds-bfield\"><div class=\"ds-board\"><h2>Mo takes the lead</h2><p>Up 14.2 with two players left.</p></div></div>",
+      "css": ".ds-bfield{padding:24px 24px 44px;background:repeating-linear-gradient(180deg,#4CAF50 0 60px,#5AB34F 60px 120px)}.ds-board{position:relative;padding:26px 28px;border-radius:46px;color:#FFFFFF;background-color:#13301C;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Cpath d='M5 33Q5 5 33 5' fill='none' stroke='%23fff' stroke-opacity='.34' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='44' cy='5' r='2.8' fill='%23fff' fill-opacity='.34'/%3E%3C/svg%3E\"),linear-gradient(112deg,rgba(255,255,255,0) 0 57%,rgba(255,255,255,.06) 57% 66%,rgba(255,255,255,0) 66% 69%,rgba(255,255,255,.04) 69% 71.5%,rgba(255,255,255,0) 71.5%),linear-gradient(180deg,rgba(255,255,255,.1) 0,rgba(255,255,255,.03) 55%,rgba(255,255,255,0) 100%);background-size:36px 36px,100% 100%,100% 170px;background-position:6px 6px,0 0,0 0;background-repeat:no-repeat;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.14),inset 0 3px 0 rgba(255,255,255,.22),inset 0 -6px 0 rgba(120,250,170,.1),0 0 0 2.75px #12301A,0 15px 0 -7px #FFE184,0 15px 0 -4.25px #12301A,0 27px 0 -13px #FFE184,0 27px 0 -10.25px #12301A,0 33px 0 -10.25px #E0A100}.ds-board h2{margin:0 0 8px;font:900 44px/.94 'Big Shoulders Display',sans-serif}.ds-board p{margin:0;color:#FFEB3B;font:700 15px/1.4 'Albert Sans',system-ui,sans-serif}"
     },
     {
-      "name": "Tray",
-      "kind": "card",
-      "description": "A panel pressed into a card: Tray fill, hard inner top shadow, faint inked rim.",
-      "html": "<div class=\"ds-card\" style=\"padding:18px;border-radius:24px;background:#fff;box-shadow:0 0 0 2.5px #12301A,0 5px 0 2.5px rgba(14,46,22,.26)\"><div class=\"ds-tray\"><b>Position groups</b><span class=\"ds-chip2\">94% lineup IQ</span></div></div>",
-      "css": ".ds-tray{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#E8F0DF;box-shadow:inset 0 3px 0 rgba(18,48,26,.07),inset 0 0 0 1.5px rgba(18,48,26,.1);font:700 13px/1.2 'Albert Sans',system-ui,sans-serif;color:#55705A}.ds-chip2{padding:7px 12px 6px;border-radius:12px;background:#fff;color:#12301A;box-shadow:0 0 0 1.5px #D2E0C4,0 3px 0 1.5px #D2E0C4}"
+      "name": "Swipe Peek and Deck Rail",
+      "kind": "custom",
+      "refersTo": "swipe-peek",
+      "description": "The swipe's furniture: the next stop's tag at the window's edge, amber once letting go would commit, and a deck's rail with its count and dots.",
+      "html": "<div class=\"ds-sw\"><span class=\"ds-rail\"><span>Game 2 of 6</span><span class=\"ds-dots\"><i></i><i class=\"ds-dot-on\"></i><i></i><i></i></span></span><span class=\"ds-peeks\"><span class=\"ds-peek\">Games</span><span class=\"ds-peek ds-armed\">Games</span></span></div>",
+      "css": ".ds-sw{display:grid;gap:18px}.ds-rail{display:flex;width:fit-content;align-items:center;gap:10px;padding:7px 13px;border-radius:999px;font:700 13px/1 'Albert Sans',system-ui,sans-serif;color:#3C5A43;background:#FFFFFF;box-shadow:0 0 0 2px #12301A,0 3px 0 2px rgba(14,46,22,.26)}.ds-dots{display:flex;gap:9px}.ds-dots i{width:9px;height:9px;border-radius:50%;background:rgba(24,84,52,.18)}.ds-dots .ds-dot-on{background:#FFC107;box-shadow:0 0 0 1.5px #12301A;transform:scale(1.15)}.ds-peeks{display:flex;gap:16px}.ds-peek{padding:11px 16px;border-radius:999px 0 0 999px;font:800 19px/1 'Big Shoulders Display',sans-serif;color:#12301A;background:linear-gradient(180deg,rgba(255,255,255,.72) 0,rgba(255,255,255,.28) 48%,rgba(255,255,255,0) 50%),#FFFFFF;box-shadow:0 0 0 2.5px #12301A,0 5px 0 2.5px rgba(14,46,22,.26)}.ds-armed{background:linear-gradient(180deg,rgba(255,255,255,.72) 0,rgba(255,255,255,.28) 48%,rgba(255,255,255,0) 50%),#FFC107;box-shadow:0 0 0 2.5px #12301A,0 5px 0 2.5px #E0A100}"
     },
     {
       "name": "Chart Bar",
@@ -609,11 +705,13 @@
   ],
   "narrative": {
     "northStar": "The Day Game",
-    "overview": "A flat sky over a mowed football field at one in the afternoon. Every surface is cartoon glass on a hard ledge: an inked outline, a bright sheen across the top, a hint of the field showing through, and a solid ledge under it like a toy you could press down. Nothing is blurred and nothing casts a soft shadow, so a phone draws exactly what a desktop does.\n\nThe page is a stadium in layers. The sky (flat bands of blue and three cartoon clouds) sits behind everything. The field starts right under each page heading: mowing stripes, a chalk yard line every two stripes and a chalk sideline, bleeding to the window edges. Cards stand on the grass. The footer is the end zone, with a white goal line. Dark scoreboards (the headline carousel and the game of the week) are smoked glass with a cartoon glint in the corner, the one place type turns white.\n\nThe energy comes from a single bold move, the power rank painted on the grass like a yard number, half under its card. Everything else stays quiet: one yellow for \"you\", one amber for actions, ink for all text.",
+    "overview": "A flat sky over a mowed football field at one in the afternoon. Every surface is cartoon glass, and much more glass than card: real see-through panes with big round corners, an inked outline, hard white reflections drawn across them the way a comic draws a window, and a second sheet peeking out from behind, all casting one hard shadow. Depth is the point: field, painted number, sheet, pane, tray, chip, in that order. The only soft thing anywhere is the frost a pane puts on what's behind it.\n\nThe page is a stadium in layers. The sky (flat bands of blue and three cartoon clouds) sits behind everything. The field starts right under each page heading: mowing stripes, a chalk yard line every two stripes and a chalk sideline, bleeding to the window edges. Panes stand on the grass, and you see the stripes through them. The footer is the end zone, with a white goal line. Dark scoreboards (the headline carousel and the game of the week) are the one place type turns white: solid dark faces in the same stack, with the reflections turned down.\n\nThe energy comes from a single bold move, the power rank painted on the grass like a yard number, tucked under its pane so the part underneath shows frosted through the glass. Everything else stays quiet: one yellow for \"you\", one amber for actions, ink for all text.\n\nThe site moves the way it stacks. A sideways swipe slides the page's panes over the still field, one a little behind the next, while the amber tab bead follows the finger.",
     "keyCharacteristics": [
-      "Light only: a daytime world, no dark theme.",
-      "Hard edges everywhere: inked outlines, solid ledges, no blur, no `backdrop-filter`, no ambient shadows.",
-      "Glossy and pressable: cards and buttons look like glass toys and press down when touched.",
+      "Two kickoffs: the day game (light, the default) and the night game (dark), the same stadium after sunset. The device's setting picks one; the sun and moon button in the header overrides it on that device.",
+      "See-through and frosted: panes show the field through a 62% white face (68% on phones) and a `backdrop-filter` frost of 9px (5px on phones).",
+      "Hard edges everywhere else: inked outlines, hard reflections, hard cast shadows, no soft shadows.",
+      "Round and layered: 46/36/24px corners (38/32/22 on phones), a sheet behind every pane, two on featured cards.",
+      "Glossy and pressable: buttons look like glass toys and press down when touched.",
       "Condensed display numerals for everything that's a score, rank or name; a warm geometric sans for reading.",
       "Data first: charts are hand-drawn SVG, labels wear ink, never the series colour."
     ],
@@ -630,12 +728,12 @@
       },
       {
         "name": "The Two-Ended Heat Rule",
-        "body": "Heat tables run sky blue (the good end) to amber (the bad end) and fade to white in the middle, never green to red, so every kind of colour vision reads them. Chart labels never fade: other teams' lines and dots dim to 22%, their names stay at Ink 3.",
+        "body": "Heat tables run sky blue (the good end) to amber (the bad end) and fade to white in the middle, never green to red, so every kind of colour vision reads them. Chart labels never fade: other teams' lines and dots dim to 38% (scatter faces to 70%), their names stay at Ink 3.",
         "section": "colors"
       },
       {
         "name": "The Background-Color Rule",
-        "body": "Set a card's colour with `background-color`, never the `background` shorthand, or the glass sheen disappears.",
+        "body": "Set a pane's colour with `background-color`, never the `background` shorthand, or the reflections disappear.",
         "section": "colors"
       },
       {
@@ -650,22 +748,22 @@
       },
       {
         "name": "The Three-Step Rule",
-        "body": "A panel inside a card is always pressed in (Tray plus tray edge), never another raised card and never the same tone as the card face. If two neighbouring surfaces look alike, one of them is on the wrong step.",
+        "body": "A panel inside a pane is always pressed in (Tray plus tray edge), never another raised pane and never the same tone as the pane's face. If two neighbouring surfaces look alike, one of them is on the wrong step.",
         "section": "elevation"
       },
       {
-        "name": "The Hard-Ledge Rule",
-        "body": "No blur, no `backdrop-filter`, no soft drop shadows. If something needs to stand up, give it an ink outline and a solid ledge.",
+        "name": "The One-Frost Rule",
+        "body": "The pane's `backdrop-filter` is the only blur, and `--blur` is the one switch for all of them. Every shadow has a blur radius of zero. If something needs to stand up, give it an ink outline, a sheet and a hard cast shadow.",
         "section": "elevation"
       },
       {
         "name": "The One-Soft-Edge Rule",
-        "body": "The kicker loader's feathered mask is the only soft edge on the site, by request. Don't add another.",
+        "body": "Frost softens what's behind a pane, never the pane's own outline. On the glass, the kicker loader's feathered mask is the only soft edge, by request. Don't add another.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "Do keep every surface on the glass card stack and change only its variables for state.",
+      "Do keep every pane on the one glass stack and change only its variables for state.",
       "Do reserve First-Down Yellow for the viewer's own team and Goalpost Amber for actions and the active state.",
       "Do set figures in Big Shoulders with tabular numbers, and prose in Albert Sans.",
       "Do put small text that sits on the field onto a white chip or sign.",
@@ -674,13 +772,15 @@
     ],
     "donts": [
       "Don't use emoji or ALL-CAPS labels anywhere.",
-      "Don't add blur, `backdrop-filter` or soft drop shadows; depth is outline plus ledge.",
-      "Don't use the `background` shorthand on a glass card; it wipes the sheen.",
+      "Don't add blur beyond the pane's frost, or any soft drop shadow; depth is the stack: outline, sheet, hard cast shadow.",
+      "Don't use the `background` shorthand on a pane; it wipes the reflections.",
       "Don't colour chart labels with their series colour; labels wear ink, and they never fade with their dimmed line.",
       "Don't mark a list item or callout with a coloured `border-left`; use a reason pip.",
-      "Don't let a paragraph sit straight on the grass; it goes on a card or a white chip.",
+      "Don't let a paragraph sit straight on the grass; it goes on a pane or a white chip.",
       "Don't add a second bold signature next to the yard numbers.",
-      "Don't introduce a dark theme; this is a day game."
+      "Don't carry the glass into the team dashboard, or its paper style out of it.",
+      "Don't hard-code a light-only colour (a white fill, a pale tint, a light chip) on a surface; use a token (`--paper`, `--good-bg`, `--bad-bg`, `--info-bg`, `--hover`, `--notice-bg`, `--header`) so the night game can redefine it.",
+      "Don't put words on a bright fill (amber, yellow, lime, the matchup sides, the pastel chips) without adding that element to the night game's dark-ink list."
     ]
   }
 }

@@ -1,6 +1,6 @@
-/* The Power Hour: a day game. A flat sky over mowed grass and chalk lines. Every surface is cartoon glass on a hard
-   ledge: an inked outline, a bright sheen across the top and a hint of the field showing through. No blur and no soft
-   shadows, so phones draw exactly what desktops do. */
+/* The Power Hour: a day game. A flat sky over mowed grass and chalk lines. Every surface is comic glass: real panes you
+   can see the field and the painted numbers through, inked outlines, hard white reflections, big round corners, each
+   pane a stack of sheets casting a hard shadow. Depth is the point: field, number, sheet, pane, pool, chip, in that order. */
 
 /* The two typefaces, served from this site (assets/fonts, SIL Open Font License) instead of Google Fonts: no
    third-party stylesheet holding up the first paint, and index.html preloads the Latin files. Both are variable fonts,
@@ -45,14 +45,15 @@
   --stripe: #5AB34F;   /* the lighter mowing stripe */
   --turf: #1B5E20;     /* the end zone */
   --board: #13301C;    /* scoreboards */
+  --board-glass: rgba(19, 48, 28, 0.88); /* the boards themselves are smoked panes */
   --chalk: #FFFFFF;
-  --tile: #E8F0DF;     /* the tray: a panel recessed into a card (ink-3 4.7:1 on it) */
-  --tile-2: #D6E3C9;   /* tracks and hover fills, a step darker so they read inside a tray too */
-  --line: #D2E0C4;     /* dividers */
+  --tile: rgba(24, 84, 52, 0.1);   /* the tray: a panel pressed into a pane (a tint, so the field still shows through) */
+  --tile-2: rgba(24, 84, 52, 0.18); /* tracks and hover fills, a step darker so they read inside a tray too */
+  --line: rgba(24, 84, 52, 0.2); /* dividers */
   --ink: #12301A;
   --ink-2: #3C5A43;
-  --ink-3: #55705A;
-  --good: #28702C;
+  --ink-3: #3D5949;
+  --good: #1F6123;
   --bad: #C62828;
   --flag: #D32F2F;
   --a: #29B6F6;        /* left team in a matchup */
@@ -60,10 +61,11 @@
   --b: #FFC107;        /* right team */
   --b-ink: #985700;
   --mine-bg: #FFF9C4;
-  --mine-edge: var(--mine-edge); /* the 2px inset that marks your row, cell or trade side */
+  --mine-edge: #F2C200; /* the 2px inset that marks your row, cell or trade side */
   /* surfaces that change with the theme (the night game redefines them at the end of this file) */
+  --header-solid: rgba(236, 248, 253, 0.93); /* the phone's header, which folds, so it isn't frosted */
   --paper: #FFFFFF;     /* white chips and inputs: chalk is the colour, paper is the surface */
-  --header: #EAF6FC;    /* the solid sticky header */
+  --header: rgba(236, 248, 253, 0.76); /* the sticky header: a pane too, the page scrolls under it */
   --good-bg: #EEF7E9;   /* tinted chips: up, strong, good */
   --bad-bg: #FDE7E7;    /* tinted chips: down, need, bad */
   --info-bg: #DDF2FD;
@@ -73,22 +75,30 @@
   --ledge-gold: #E0A100;
   /* cartoon glass: the inked edge, the card face (a breath of the field shows through), the sheen across its top and
      the bright rim along its upper edge. The face is near-white so the trays inside a card read a clear step darker. */
-  --edge: 2.5px;
+  --edge: 2.75px;
+  --blur: 9px;         /* how frosted a pane is: the one switch for all of them */
+  --sheet: 15px;       /* how far down the sheet behind a pane sits (it's 7px narrower all round, so 8px shows) */
+  --sheet-fill: #CDEBD3;
+  --sheet-gold: #FFE184;
   --outline: var(--ink);
-  --face: rgba(255, 255, 255, 0.96);
+  --face: rgba(255, 255, 255, 0.62);
   /* a tray is pressed into the card: a hard inner shadow under its top edge and a faint inked rim, no blur */
-  --tray-edge: inset 0 3px 0 rgba(18, 48, 26, 0.07), inset 0 0 0 1.5px rgba(18, 48, 26, 0.1);
-  --sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0, rgba(255, 255, 255, 0.6) 46%, rgba(255, 255, 255, 0) 100%);
-  --rim: inset 0 2px 0 #FFFFFF, inset 0 -3px 0 rgba(18, 48, 26, 0.05);
+  --tray-edge: inset 0 3px 0 rgba(18, 48, 26, 0.13), inset 0 -1.5px 0 rgba(255, 255, 255, 0.75), inset 0 0 0 1.5px rgba(18, 48, 26, 0.12);
+  --sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0, rgba(255, 255, 255, 0.42) 42%, rgba(255, 255, 255, 0) 100%);
+  /* the hard reflection across a pane, a wide band and a thin one, the way a comic draws a window */
+  --glare: linear-gradient(112deg, rgba(255, 255, 255, 0) 0 57%, rgba(255, 255, 255, 0.44) 57% 66%, rgba(255, 255, 255, 0) 66% 69%, rgba(255, 255, 255, 0.3) 69% 71.5%, rgba(255, 255, 255, 0) 71.5%);
+  /* the bevel: a bright lip all the way round, brighter along the top, and light caught along the bottom */
+  --rim: inset 0 0 0 1.5px rgba(255, 255, 255, 0.8), inset 0 3px 0 #FFFFFF, inset 0 -6px 0 rgba(120, 210, 250, 0.3);
   /* buttons: a hard-edged cartoon gloss over the top half */
-  --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0, rgba(255, 255, 255, 0.2) 48%, rgba(255, 255, 255, 0) 50%);
+  --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0, rgba(255, 255, 255, 0.28) 48%, rgba(255, 255, 255, 0) 50%);
   /* a cartoon glint for the dark scoreboards: a stroke hugging the corner and a dot */
   --glint: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Cpath d='M5 33Q5 5 33 5' fill='none' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='44' cy='5' r='2.8' fill='%23fff'/%3E%3C/svg%3E");
+  --glint-dim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Cpath d='M5 33Q5 5 33 5' fill='none' stroke='%23fff' stroke-opacity='.34' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='44' cy='5' r='2.8' fill='%23fff' fill-opacity='.34'/%3E%3C/svg%3E");
   --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
   --body: 'Albert Sans', 'Segoe UI', system-ui, sans-serif;
-  --r-xl: 32px;
-  --r-lg: 24px;
-  --r-md: 16px;
+  --r-xl: 46px;
+  --r-lg: 36px;
+  --r-md: 24px;
   --page: min(1180px, calc(100% - 24px));
   color-scheme: light;
 }
@@ -123,20 +133,27 @@ button, select { font: inherit; color: inherit; }
 .cloud.c3 { left: 50vw; top: 112px; transform: scale(0.45); transform-origin: left top; }
 
 /* ---------- cards: cartoon glass on a hard ledge ---------- */
-/* The shadow stack, top to bottom: the glass rim, your team's yellow ring (--ring-w, 0 unless it's yours), the inked
-   outline around both, then the ledge, as wide as the outline. States change the variables, never the stack. The sheen
-   is a fixed band so a card that opens up doesn't stretch it. */
-.glass { position: relative; --lift: 5px; --ledge-c: var(--ledge); --ring-w: 0px;
-  background-color: var(--face); background-image: var(--sheen); background-size: 100% 150px; background-repeat: no-repeat;
+/* A pane: a see-through, frosted face, the hard reflections on it (background layers, so nothing here uses a pseudo-
+   element), and one shadow stack. Top to bottom: the bevel, your team's yellow ring (--ring-w, 0 unless it's yours), the
+   inked outline around both, the sheet behind it (a narrower pane peeking out below, inked too), then the hard shadow it
+   casts. States change the variables, never the stack. The sheen is a fixed band, so a card that opens doesn't stretch it.
+   An outer shadow is never drawn under its own box, so the sheets don't show through the pane. Featured cards stack a
+   second sheet. */
+.glass { position: relative; --lift: 6px; --ledge-c: var(--ledge); --ring-w: 0px; --stack: var(--sheet); --stack-in: 7px;
+  background-color: var(--face); background-image: var(--glint), var(--glare), var(--sheen);
+  background-size: 36px 36px, 100% 100%, 100% 170px; background-position: 6px 6px, 0 0, 0 0; background-repeat: no-repeat;
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.5); backdrop-filter: blur(var(--blur)) saturate(1.5);
   box-shadow: var(--rim), 0 0 0 var(--ring-w) var(--yellow), 0 0 0 calc(var(--ring-w) + var(--edge)) var(--outline),
-    0 var(--lift) 0 calc(var(--ring-w) + var(--edge)) var(--ledge-c); }
-/* featured cards (top three, trades, the best trade idea) stand on a gold ledge */
-.glass.rim { --ledge-c: var(--ledge-gold); }
-/* the dark scoreboards are smoked glass: a faint sheen, a bright rim and a cartoon glint in the corner */
-.lead-car, .gotw { --rim: inset 0 2px 0 rgba(255, 255, 255, 0.2), inset 0 -3px 0 rgba(0, 0, 0, 0.18);
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0, rgba(255, 255, 255, 0.03) 55%, rgba(255, 255, 255, 0) 100%); }
-.lead-car::after, .gotw::after { content: ''; position: absolute; z-index: 3; top: 7px; left: 7px; width: 56px; height: 56px;
-  background: var(--glint) no-repeat; opacity: 0.5; pointer-events: none; }
+    0 var(--sheet) 0 calc(var(--ring-w) - 7px) var(--sheet-fill), 0 var(--sheet) 0 calc(var(--ring-w) - 7px + var(--edge)) var(--outline),
+    var(--sheet-back, 0 0 0 0 transparent),
+    0 calc(var(--stack) + var(--lift)) 0 calc(var(--ring-w) + var(--edge) - var(--stack-in)) var(--ledge-c); }
+/* featured cards (top three, trades, the best trade idea) are a deeper stack on gold */
+.glass.rim { --ledge-c: var(--ledge-gold); --sheet-fill: var(--sheet-gold); --stack: 27px; --stack-in: 13px;
+  --sheet-back: 0 27px 0 calc(var(--ring-w) - 13px) var(--sheet-gold), 0 27px 0 calc(var(--ring-w) - 13px + var(--edge)) var(--outline); }
+/* the dark scoreboards are smoked glass: darker, the same reflections turned down, the field just showing */
+.lead-car, .gotw { --glint: var(--glint-dim); --sheet-fill: #2B5A3A; --glare: linear-gradient(112deg, rgba(255, 255, 255, 0) 0 57%, rgba(255, 255, 255, 0.06) 57% 66%, rgba(255, 255, 255, 0) 66% 69%, rgba(255, 255, 255, 0.04) 69% 71.5%, rgba(255, 255, 255, 0) 71.5%);
+  --sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0, rgba(255, 255, 255, 0.03) 55%, rgba(255, 255, 255, 0) 100%);
+  --rim: inset 0 0 0 1.5px rgba(255, 255, 255, 0.14), inset 0 3px 0 rgba(255, 255, 255, 0.22), inset 0 -6px 0 rgba(120, 250, 170, 0.1); }
 
 /* ---------- buttons: glossy cartoon pills ---------- */
 /* a hard-edged gloss over the top half of every button (under the label, over the fill), and on a mouse, a glint that
@@ -152,7 +169,7 @@ button, select { font: inherit; color: inherit; }
   position: sticky; top: 12px; z-index: 20;
   margin: 12px auto 0; width: var(--page);
   display: flex; align-items: center; gap: 16px; padding: 8px 10px; border-radius: 999px;
-  /* solid, unlike the cards: the page scrolls under it, and text showing through would muddy the tabs */
+  /* frosted harder than a card and less see-through: the page scrolls under it, and text mustn't muddy the tabs */
   background-color: var(--header);
 }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); min-width: 0; }
@@ -196,11 +213,10 @@ button, select { font: inherit; color: inherit; }
    backwards: the ball spins away, the skin grows back, the contents fade in. Desktop keeps the plain bar. */
 .navball { display: none; }
 @media (max-width: 760px) {
-  .topbar { background: none; box-shadow: none; }
+  .topbar { background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .topbar::before { content: ''; position: absolute; z-index: -1; left: 0; top: 0; width: 100%; height: 100%; border-radius: inherit;
-    background-color: var(--header); background-image: var(--sheen); background-size: 100% 150px; background-repeat: no-repeat;
-    box-shadow: var(--rim), 0 0 0 var(--ring-w) var(--yellow), 0 0 0 calc(var(--ring-w) + var(--edge)) var(--outline),
-      0 var(--lift) 0 calc(var(--ring-w) + var(--edge)) var(--ledge-c);
+    background-color: var(--header-solid); background-image: var(--glare), var(--sheen); background-size: 100% 100%, 100% 150px; background-repeat: no-repeat;
+    box-shadow: var(--rim), 0 0 0 var(--edge) var(--outline), 0 var(--lift) 0 var(--edge) var(--ledge-c);
     transition: left 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s, top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s,
       width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s, height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s, opacity 0s; }
   .topbar > :not(.navball) { transition: opacity 0.28s ease 0.36s, visibility 0s 0.36s; }
@@ -292,15 +308,15 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 
 /* ---------- ranking rows ---------- */
 /* the rank is painted on the grass like a yard number, half under its card */
-.ranks { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
-.rank { position: relative; padding-left: 58px; }
+.ranks { list-style: none; margin: 0; padding: 0; display: grid; gap: 26px; }
+.rank { position: relative; padding-left: 46px; }
 .rank .jersey {
   position: absolute; left: 0; top: 50%; transform: translateY(-50%); z-index: 0;
   font: 900 112px/0.8 var(--display); letter-spacing: -0.04em; pointer-events: none; user-select: none;
   color: var(--chalk); text-shadow: 4px 5px 0 var(--ledge);
 }
 .rank:nth-child(-n + 3) .jersey { font-size: 150px; color: var(--yellow); }
-.rank:nth-child(-n + 3) { padding-left: 74px; }
+.rank:nth-child(-n + 3) { padding-left: 62px; }
 .rank-card { position: relative; z-index: 1; border-radius: var(--r-lg); }
 .rank:nth-child(-n + 3) .rank-card { border-radius: var(--r-xl); }
 .rank-btn {
@@ -322,6 +338,8 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .move.down { color: var(--bad); background: var(--bad-bg); }
 .move.flat { display: none; }
 .tier { font: 700 12px/1 var(--body); padding: 5px 10px; border-radius: 999px; letter-spacing: 0.01em; color: var(--ink); }
+/* a ranking row's tier sits on the card's top edge, a chip in front of the pane */
+.rank-card .tier { position: absolute; z-index: 2; top: -13px; left: 22px; padding: 6px 12px; background-image: var(--gloss); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge); }
 .tier.elite { background: var(--amber); }
 .tier.good { background: #D7EDC1; }
 .tier.mid { background: var(--sky-3); }
@@ -398,7 +416,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .lineup .pl { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lineup .pt { color: var(--ink-2); font-weight: 700; }
 .sched { display: grid; grid-template-columns: repeat(auto-fit, minmax(38px, 1fr)); gap: 4px; }
-.sched .g { display: grid; justify-items: center; padding: 5px 0 6px; border-radius: 10px; line-height: 1.1;
+.sched .g { display: grid; justify-items: center; padding: 5px 0 6px; border-radius: 14px; line-height: 1.1;
   background: hsl(calc(var(--p) * 120) 58% 84%); color: var(--ink); }
 .sched .g small { font-size: 11.5px; font-weight: 700; color: var(--ink-2); }
 .sched .g b { font: 800 18px/1 var(--display); }
@@ -409,10 +427,10 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .seed-axis { display: grid; grid-template-columns: repeat(var(--n), 1fr); font-size: 11.5px; color: var(--ink-3); text-align: center; margin-top: 3px; }
 
 /* ---------- layout helpers ---------- */
-.two-col { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 22px; align-items: start; }
+.two-col { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; align-items: start; }
 .panel { border-radius: var(--r-lg); padding: 20px; }
-.panel + .panel { margin-top: 18px; }
-.lab-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
+.panel + .panel { margin-top: 26px; }
+.lab-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 26px; }
 .lab-grid .panel { margin: 0; }
 .span-12 { grid-column: span 12; } .span-7 { grid-column: span 7; } .span-5 { grid-column: span 5; } .span-6 { grid-column: span 6; }
 
@@ -429,8 +447,8 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 /* the Lab's section switcher: a tray like the header's tabs, a segment per section with a line saying what's in it,
    the active one on the amber pill */
 .lab-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; max-width: 660px; margin: 24px 0 0; padding: 5px;
-  border-radius: 22px; background: var(--tile); box-shadow: var(--tray-edge); }
-.lab-tabs a { display: grid; gap: 3px; min-width: 0; padding: 10px 16px 11px; border-radius: 17px; text-decoration: none; transition: background-color 0.15s; }
+  border-radius: 30px; background: var(--tile); box-shadow: var(--tray-edge); }
+.lab-tabs a { display: grid; gap: 3px; min-width: 0; padding: 10px 16px 11px; border-radius: 25px; text-decoration: none; transition: background-color 0.15s; }
 .lab-tabs b { font: 800 20px/1 var(--display); letter-spacing: 0.01em; color: var(--ink-2); }
 .lab-tabs small { font-size: 12px; font-weight: 600; line-height: 1.25; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (hover: hover) { .lab-tabs a:not([aria-current]):hover { background-color: var(--tile-2); } }
@@ -441,7 +459,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .lab-head > div > p { margin-top: 16px; }
 .day { margin: 0 0 20px; }
 .day > h3 { display: inline-block; font: 700 13px/1 var(--body); color: var(--chalk); background: var(--ink); padding: 6px 12px; border-radius: 999px; margin: 0 0 10px; }
-.moves { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.moves { list-style: none; margin: 0; padding: 0; display: grid; gap: 24px; }
 .wire-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-radius: var(--r-lg); margin: 0 0 24px; }
 .wire-stats > div { padding: 14px 20px; display: grid; gap: 2px; }
 .wire-stats > div + div { border-left: 2px solid var(--line); }
@@ -504,7 +522,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .empty { color: var(--ink-3); padding: 18px; text-align: center; }
 
 /* ---------- matchups ---------- */
-.matchups { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+.matchups { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 26px; }
 .mu { position: relative; border-radius: var(--r-lg); padding: 18px; }
 /* your own game wears the first-down line */
 .mu.rim { --ledge-c: var(--ledge); --ring-w: 4px; }
@@ -637,7 +655,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .talk-invites li small { font-size: 11.5px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .talk-invites input { flex: 2; min-width: 0; padding: 6px 8px; border: 0; border-radius: 8px; font: 12px var(--body); color: var(--ink-2); background-color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--line); }
 /* square by default; overflow stays visible so a long story grows the card instead of being clipped */
-.lead-car { display: flex; flex-direction: column; aspect-ratio: 1; border-radius: var(--r-xl); color: var(--chalk); background-color: var(--board); }
+.lead-car { display: flex; flex-direction: column; aspect-ratio: 1; border-radius: var(--r-xl); color: var(--chalk); background-color: var(--board-glass); }
 .car-track { flex: 1 0 auto; display: grid; border-radius: var(--r-xl) var(--r-xl) 0 0; grid-auto-flow: column; grid-auto-columns: 100%; overflow-x: auto; overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory; scrollbar-width: none; outline: none; }
 .car-track::-webkit-scrollbar { display: none; }
@@ -732,7 +750,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .lead-car :focus-visible, .gotw :focus-visible { outline-color: var(--yellow); }
 
 .gotw { border-radius: var(--r-xl); padding: 26px 28px; margin: 0 0 24px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 30px; align-items: center;
-  color: var(--chalk); background-color: var(--board); }
+  color: var(--chalk); background-color: var(--board-glass); }
 .gotw h2 { font: 900 clamp(34px, 4.4vw, 56px)/0.94 var(--display); text-wrap: balance; color: var(--chalk); }
 .gotw-score { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; margin-top: 20px; }
 .gotw-score .tn { display: block; color: rgba(255, 255, 255, 0.7); font-size: 12.5px; max-width: 16ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -817,7 +835,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .mu.odds-open .odds-more .xp { transform: rotate(180deg); }
 /* the rest of the book, behind "More odds" */
 .line { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding-top: 10px; }
-.line > span { display: grid; gap: 3px; align-content: start; padding: 7px 10px; border-radius: 12px; background: var(--tile); box-shadow: var(--tray-edge); min-width: 0; }
+.line > span { display: grid; gap: 3px; align-content: start; padding: 7px 10px; border-radius: 18px; background: var(--tile); box-shadow: var(--tray-edge); min-width: 0; }
 .line small { font-size: 11.5px; color: var(--ink-3); }
 .line b { font: 800 19px/1.05 var(--display); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .line .pair { grid-template-columns: 1fr 1fr; column-gap: 8px; }
@@ -926,7 +944,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .need-chip.strong { color: var(--good); background: var(--good-bg); }
 .trade-legend { width: fit-content; max-width: 78ch; margin: -4px 0 18px; padding: 12px 16px; border-radius: var(--r-md); font-size: 14px; color: var(--ink-2);
   background-color: var(--paper); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge); }
-.ideas { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 18px; }
+.ideas { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 26px; }
 .idea { border-radius: var(--r-lg); padding: 18px; display: grid; gap: 14px; align-content: start; }
 .idea-head { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; }
 .idea-head .avatar { width: 40px; height: 40px; }
@@ -1024,7 +1042,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .heat thead th { text-align: center; font-weight: 800; color: var(--ink-2); }
 .heat tbody th { position: sticky; left: 0; z-index: 1; padding-inline: 10px; border-radius: 8px; background-color: var(--paper); }
 .heat tr.mine th { color: var(--ink); font-weight: 800; background-color: var(--mine-bg); box-shadow: inset 0 0 0 2px var(--mine-edge); }
-.heat td { text-align: center; padding: 7px 4px 8px; border-radius: 9px; font-weight: 800; color: var(--ink); min-width: 34px;
+.heat td { text-align: center; padding: 7px 4px 8px; border-radius: 13px; font-weight: 800; color: var(--ink); min-width: 34px;
   background-color: var(--paper); background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.36) 0 40%, rgba(255, 255, 255, 0) 44%), linear-gradient(hsla(var(--h), 72%, 50%, var(--a)), hsla(var(--h), 72%, 50%, var(--a)));
   box-shadow: inset 0 0 0 1.5px rgba(18, 48, 26, 0.16), inset 0 -3px 0 rgba(18, 48, 26, 0.12); }
 .heat tr.mine td { box-shadow: inset 0 0 0 2px var(--mine-edge), inset 0 -3px 0 rgba(18, 48, 26, 0.12); }
@@ -1260,7 +1278,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 
 /* ---------- live week: weekly rankings and projected standings ---------- */
 /* the two live cards side by side on wide screens: both are 12-team lists, so a team's week and its standing line up */
-.live-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: start; }
+.live-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; }
 @media (min-width: 1100px) {
   .live-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .live-grid .stand .pf { display: none; }
@@ -1595,7 +1613,10 @@ html.locked { overflow: hidden; }
 @media (hover: hover) { .you-strip:hover { --lift: 7px; transform: translateY(-2px); } .you-strip:hover .xp { background: var(--tile-2); } }
 
 /* an opened ranking row closes from its foot too, so a long read doesn't end in a scroll back up */
-.detail-close { margin: 0 auto 18px; }
+.detail-nav { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; padding: 0 18px 20px; }
+.detail-nav .step-prev { justify-self: start; }
+.detail-nav .step-next { justify-self: end; }
+.ranks.stepping .detail { transition: none; }
 
 /* from tablets up the page keeps a 20px gutter instead of 12px */
 @media (min-width: 761px) {
@@ -1616,7 +1637,7 @@ html.locked { overflow: hidden; }
 
 @media (max-width: 760px) {
   html { scroll-padding-top: 146px; } /* the phone header is two rows tall */
-  .topbar { flex-wrap: wrap; border-radius: 26px; padding: 10px; gap: 10px; }
+  .topbar { flex-wrap: wrap; border-radius: 34px; padding: 10px; gap: 10px; }
   .tabs { order: 3; width: 100%; justify-content: space-between; margin: 0; }
   .tabs a { padding: 8px 7px; font-size: 12.5px; flex: 1 1 auto; text-align: center; }
   .tabs .tl { display: none; }
@@ -1653,7 +1674,7 @@ html.locked { overflow: hidden; }
   .lab-tabs b { font-size: 18px; }
   .lab-tabs small { display: none; }
   .sources { justify-content: flex-start; }
-  .rank, .rank:nth-child(-n + 3) { padding-left: 46px; }
+  .rank, .rank:nth-child(-n + 3) { padding-left: 38px; }
   .rank .jersey { font-size: 76px; text-shadow: 3px 4px 0 var(--ledge); }
   .rank:nth-child(-n + 3) .jersey { font-size: 96px; }
   .rank-btn { grid-template-columns: 44px minmax(0, 1fr) auto; padding: 14px; gap: 10px 12px; }
@@ -2154,6 +2175,54 @@ html.locked { overflow: hidden; }
   .pf-odds { font-size: 44px; }
 }
 
+/* ---------- swiping (src/swipe.js, src/deck.jsx) ---------- */
+html { overscroll-behavior-x: none; overflow-x: clip; }
+@media (pointer: coarse) { main, .car-track, .deck { touch-action: pan-y pinch-zoom; } }
+/* the page's cards follow the finger over the still field, each a little behind the one above it */
+main.swiping > * { transform: translate3d(calc(var(--sx, 0px) * var(--lag, 1)), 0, 0); will-change: transform; }
+main.swiping > :nth-child(2) { --lag: 0.96; }
+main.swiping > :nth-child(3) { --lag: 0.92; }
+main.swiping > :nth-child(n + 4) { --lag: 0.88; }
+main.settling > * { transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1); }
+/* the next stop's tag, in from the edge the page is leaving by */
+#swipe-peek { position: fixed; z-index: 30; top: 50%; display: flex; align-items: center; gap: 6px; max-width: 62vw; padding: 11px 16px; pointer-events: none; visibility: hidden;
+  font: 800 19px/1 var(--display); color: var(--ink); background: var(--gloss), var(--paper); box-shadow: 0 0 0 2.5px var(--outline), 0 5px 0 2.5px var(--ledge);
+  transition: background-color 0.15s, transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s 0.18s; }
+#swipe-peek b { font-weight: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#swipe-peek svg { flex: none; }
+#swipe-peek.right { right: 0; border-radius: 999px 0 0 999px; transform: translate(calc((1 - var(--p, 0)) * 100%), -50%); }
+#swipe-peek.left { left: 0; border-radius: 0 999px 999px 0; transform: translate(calc((var(--p, 0) - 1) * 100%), -50%); }
+#swipe-peek.left svg { transform: rotate(180deg); }
+#swipe-peek.show { visibility: visible; transition: background-color 0.15s; }
+#swipe-peek.armed { background: var(--gloss), var(--amber); box-shadow: 0 0 0 2.5px var(--outline), 0 5px 0 2.5px var(--ledge-gold); }
+.deck-rail { display: none; }
+@media (max-width: 760px) {
+  /* a deck: the cards sideways, the next one peeking in; the page's gutter is the deck's padding, so a card can reach the edge */
+  .deck { display: grid; grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: calc(100% - 22px); gap: 14px; align-items: start;
+    margin-inline: -12px; padding: 16px 12px 26px; scroll-padding-inline: 12px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .deck::-webkit-scrollbar { display: none; }
+  .deck > * { scroll-snap-align: start; scroll-snap-stop: always; min-width: 0; }
+  .deck.dragging, .car-track.dragging { scroll-snap-type: none; }
+  .deck.fut-list { grid-template-rows: repeat(3, auto); grid-auto-columns: calc(100% - 34px); gap: 8px 10px; margin-inline: -32px; padding-inline: 32px; scroll-padding-inline: 32px; padding-block: 2px 8px; }
+  .deck.moves, .deck.ideas { margin-block: -6px 0; }
+  /* the rail says where you are; a card under it can be a screen tall, so it comes first */
+  .deck-rail { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: fit-content; max-width: 100%; margin: 0 0 2px; padding: 7px 13px; border-radius: 999px; color: var(--ink-2); background: var(--paper); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge); }
+  .deck-count { font: 700 13px/1 var(--body); white-space: nowrap; }
+  .deck-dots { display: flex; gap: 2px; }
+  .deck-dots button { position: relative; width: 16px; height: 22px; padding: 0; border: 0; background: none; cursor: pointer; }
+  .deck-dots button::before { content: ''; position: absolute; left: 3.5px; top: 6.5px; width: 9px; height: 9px; border-radius: 50%; background: var(--tile-2); transition: background-color 0.15s, transform 0.15s; }
+  .deck-dots button.on::before { background: var(--amber); box-shadow: 0 0 0 1.5px var(--outline); transform: scale(1.15); }
+  .deck-rail.named { gap: 4px; padding: 4px; background: var(--tile); box-shadow: var(--tray-edge), 0 0 0 2px var(--outline); }
+  .deck-rail.named button { padding: 8px 16px; border: 0; border-radius: 999px; font: 700 14px/1 var(--body); color: var(--chalk); background: none; cursor: pointer; }
+  .deck-rail.named { background: var(--board); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge); }
+  .deck-rail.named button[aria-pressed='true'] { color: #12301A; background: var(--gloss), var(--amber); box-shadow: inset 0 0 0 2px var(--outline); }
+  .rank-card .tier { left: 14px; }
+  .detail-nav { padding-inline: 10px; }
+  /* a phone's frost is lighter and its panes a touch less clear, for scrolling and for text at this size */
+  :root { --blur: 5px; --face: rgba(255, 255, 255, 0.68); --r-xl: 38px; --r-lg: 32px; --r-md: 22px; }
+  :root[data-theme='dark'] { --face: rgba(16, 30, 22, 0.8); }
+}
+
 /* ---------- the night game: the dark theme ----------
    The same stadium after sunset, under the lights: a navy night sky, the field floodlit a deeper green, the cards
    smoked glass (a dark green face, a faint sheen, a near-black inked edge on a black ledge) and every word in a pale
@@ -2170,11 +2239,11 @@ html.locked { overflow: hidden; }
   --sky-3: #162C52;
   --turf: #0E3812;
   --board: #06120A;
+  --board-glass: rgba(6, 18, 10, 0.86);
   --paper: #1E3226;
-  --header: #0C1912;
-  --tile: #0C170F;
-  --tile-2: #23382A;
-  --line: #2C4433;
+  --tile: rgba(0, 0, 0, 0.3);
+  --tile-2: rgba(234, 244, 230, 0.14);
+  --line: rgba(234, 244, 230, 0.16);
   --ink: #EAF4E6;
   --ink-2: #BCD0BC;
   --ink-3: #9AB29C;
@@ -2192,10 +2261,16 @@ html.locked { overflow: hidden; }
   --ledge: rgba(0, 0, 0, 0.6);
   --ledge-gold: #9C7000;
   --outline: #020804;
-  --face: rgba(20, 35, 26, 0.97);
-  --tray-edge: inset 0 3px 0 rgba(0, 0, 0, 0.35), inset 0 0 0 1.5px rgba(234, 244, 230, 0.07);
-  --sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0, rgba(255, 255, 255, 0.03) 46%, rgba(255, 255, 255, 0) 100%);
-  --rim: inset 0 2px 0 rgba(255, 255, 255, 0.1), inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+  --glint: var(--glint-dim);
+  --face: rgba(16, 30, 22, 0.76);
+  --header: rgba(12, 25, 18, 0.74);
+  --header-solid: rgba(12, 25, 18, 0.93);
+  --sheet-fill: #1C3425;
+  --sheet-gold: #6B5310;
+  --glare: linear-gradient(112deg, rgba(255, 255, 255, 0) 0 57%, rgba(255, 255, 255, 0.05) 57% 66%, rgba(255, 255, 255, 0) 66% 69%, rgba(255, 255, 255, 0.035) 69% 71.5%, rgba(255, 255, 255, 0) 71.5%);
+  --tray-edge: inset 0 3px 0 rgba(0, 0, 0, 0.4), inset 0 -1.5px 0 rgba(255, 255, 255, 0.08), inset 0 0 0 1.5px rgba(234, 244, 230, 0.08);
+  --sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0, rgba(255, 255, 255, 0.03) 46%, rgba(255, 255, 255, 0) 100%);
+  --rim: inset 0 0 0 1.5px rgba(255, 255, 255, 0.11), inset 0 3px 0 rgba(255, 255, 255, 0.17), inset 0 -6px 0 rgba(120, 210, 250, 0.09);
   --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.34) 0, rgba(255, 255, 255, 0.1) 48%, rgba(255, 255, 255, 0) 50%);
 }
 /* anything on a bright fill (amber, yellow, lime, the matchup sides, the pastel position and tier chips) keeps the
@@ -2204,15 +2279,22 @@ html.locked { overflow: hidden; }
   .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .tabs a[aria-current='page'], .lab-tabs a[aria-current='page'], .key-tag,
   .kicker > span:first-child, .tc-face.ph, .talk-btn.primary, .car-pause[aria-pressed='true'], .drive-pick button[aria-pressed='true'],
   .drive-field .endzone, .gotw-more, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
-  :is(.lead-face, .mgr-face, .fo-face, .stat-face, .deal-face, .pitch-face).ph, .lf .cap, .mu .vs, .day > h3, .clip-frame .clip-sound, .fo-side, .fo-vs i,
+  :is(.lead-face, .mgr-face, .fo-face, .stat-face, .deal-face, .pitch-face).ph, .lf .cap, .day > h3, .clip-frame .clip-sound, .fo-side, .fo-vs i,
   .desk-note, .you-face.ph, .st-chip.won, .sup.champ, .bull-tag.lead, .chip.to-again, .pp-img.ph, .cta, .verdict-face.ph,
   .strip-face.ph, .pos, .champ, .ball-pct, .pp-card, .fo-fav.dog) {
-  --ink: #12301A; --ink-2: #3C5A43; --ink-3: #55705A; --good: #28702C; --bad: #C62828; --a-ink: #0266A3; --b-ink: #985700;
-  --paper: #FFFFFF; --line: #D2E0C4; --tile: #E8F0DF;
+  --ink: #12301A; --ink-2: #3C5A43; --ink-3: #3D5949; --good: #1F6123; --bad: #C62828; --a-ink: #0266A3; --b-ink: #985700;
+  --paper: #FFFFFF; --line: #D2E0C4; --tile: #E8F0DF; --tile-2: #D6E3C9;
   color: var(--ink);
 }
 :root[data-theme='dark'] .fo-fav:not(.dog) { color: var(--yellow); background: var(--board); }
 :root[data-theme='dark'] .tabs a[aria-current='page'] { color: #12301A; }
+:root[data-theme='dark'] .mu .vs { background: var(--yellow); color: #12301A; }
+
+/* for anyone who's asked their device for less transparency, panes go near-solid in both themes and on every width */
+@media (prefers-reduced-transparency: reduce) {
+  :root:root { --blur: 0px; --face: rgba(255, 255, 255, 0.96); --board-glass: var(--board); }
+  :root:root[data-theme='dark'] { --face: rgba(20, 35, 26, 0.97); }
+}
 
 /* the night sky: dim clouds and a few stars; the field's chalk lines dimmer under the lights */
 :root[data-theme='dark'] .sky { background:

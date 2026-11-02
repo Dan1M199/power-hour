@@ -3,6 +3,7 @@
 // plain React state, kept in app.js's wireState so they survive leaving the page.
 import { useState } from 'react';
 import { TZ } from '../../lib/newsclock.js';
+import { Deck } from '../deck.jsx';
 import { Headshot, PosTag, TeamAvatar } from '../shared.jsx';
 
 function dayLabel(ts) {
@@ -131,7 +132,7 @@ export function WirePage({ D, me, h, state, onState }) {
         </div>
         {showTrades ? <section className="wire-sec">
           <h2 className="sec-title"><span>Trades</span><small>{`${trades.length} this season`}</small></h2>
-          {trades.length ? <ul className="moves">{trades.slice(0, s.trades).map(tradeCard)}</ul> : <p className="empty glass panel">No trades yet.</p>}
+          {trades.length ? <Deck as="ul" className="moves" count={Math.min(trades.length, s.trades)} noun="Trade">{trades.slice(0, s.trades).map(tradeCard)}</Deck> : <p className="empty glass panel">No trades yet.</p>}
           {trades.length > s.trades ? <div className="filters"><button type="button" onClick={() => set({ trades: Infinity })}>{`Show all ${trades.length} trades`}</button></div> : null}
         </section> : null}
         {showMoves ? <section className="wire-sec">
