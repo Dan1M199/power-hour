@@ -2319,3 +2319,9 @@ html.locked { overflow: hidden; }
   box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge); }
 .share-go button:disabled { opacity: 0.5; cursor: default; }
 .share-note { margin: 0; font-size: 13px; color: var(--ink-3); text-align: center; text-wrap: pretty; }
+
+/* ---------- electric magenta: tiny hints only, on ledges and selection. Never for small text (3.6:1 on white), and yellow still means you ---------- */
+:root { --pop: #FF0080; }
+::selection { background: var(--pop); color: #FFFFFF; }
+.tab-ink, .lab-tabs a[aria-current='page'], .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'] { box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--pop); }
+.view-head :is(h1, .page-title) .wk { box-shadow: 0 3px 0 var(--pop); }
