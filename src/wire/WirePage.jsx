@@ -113,7 +113,7 @@ export function WirePage({ D, me, h, state, onState }) {
   return <>
     <section className="view-head">
       <div>
-        <h1>The Wire</h1>
+        <h1><span className="wk">{today ? `${today} move${today === 1 ? '' : 's'} today` : 'Quiet day so far'}</span>The Wire</h1>
         <p>Trades up top, adds and drops below, grouped by day and team. Numbers are the consensus rest-of-season value a move gained or gave up.</p>
       </div>
     </section>

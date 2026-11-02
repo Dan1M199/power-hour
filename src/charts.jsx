@@ -12,17 +12,21 @@ export const TEAM_COLORS = [
   '#6250d6', '#e34948', '#ad1457', '#7a8b00', '#0097a7', '#a0522d',
 ];
 
-// Flat, like the tiles: marks wear an ink outline, bars stand on a hard ledge, and each plot sits on its own plate with
-// chalk gridlines.
+// Cartoon glass, like the cards: marks wear an ink outline, bars stand on a hard ledge with a gloss over their top
+// half, dots carry a white glint, and each plot sits on its own plate with chalk gridlines.
 
-// a dot with an ink ring
-const Dot = ({ cx, cy, r, color, tip }) => <circle cx={cx} cy={cy} r={r} fill={color} className="dot" data-tip={tip} />;
-// a bar: ledge underneath, ink-edged body
+// a dot with an ink ring and a glint in its upper left
+const Dot = ({ cx, cy, r, color, tip }) => <>
+  <circle cx={cx} cy={cy} r={r} fill={color} className="dot" data-tip={tip} />
+  <circle cx={(cx - r * 0.35).toFixed(1)} cy={(cy - r * 0.35).toFixed(1)} r={Math.max(1.2, r * 0.3).toFixed(1)} className="glint" />
+</>;
+// a bar: ledge underneath, ink-edged body, gloss over the top half (skipped when the bar is too small to hold it)
 function Bar({ x, y, w, h, cls, tip, rx = 5 }) {
   w = Math.max(w, 2);
   return <>
     <rect x={x.toFixed(1)} y={(y + 3).toFixed(1)} width={w.toFixed(1)} height={h.toFixed(1)} rx={rx} className="bar-ledge" />
     <rect x={x.toFixed(1)} y={y.toFixed(1)} width={w.toFixed(1)} height={h.toFixed(1)} rx={rx} className={`bar ${cls}`} data-tip={tip} />
+    {w > 10 && h > 10 ? <rect x={(x + 3).toFixed(1)} y={(y + 3).toFixed(1)} width={(w - 6).toFixed(1)} height={Math.min((h - 6) * 0.45, 12).toFixed(1)} rx={Math.max(2, rx - 2)} className="bar-gloss" /> : null}
   </>;
 }
 // the plate a plot sits on: a tray on a card, or white inside a tray (light)
@@ -55,10 +59,10 @@ export function BumpChart({ series, weeks, n, width = 720, height = 340, focus }
         const dim = focus && se.id !== focus ? ' dim' : se.id === focus ? ' focus' : '';
         const d = se.values.map((r, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(r).toFixed(1)}`).join('');
         const k = se.values.length - 1, last = se.values[k];
-        // an ink casing under the team colour; with a photo, the line ends on the face
+        // an ink casing under the team colour, and a thin gloss along its top; with a photo, the line ends on the face
         return (
           <g key={se.id} className={`series${dim}`} data-team={se.id}>
-            <path d={d} className="line case" pathLength="1" /><path d={d} stroke={se.color} className="line" pathLength="1" />
+            <path d={d} className="line case" pathLength="1" /><path d={d} stroke={se.color} className="line" pathLength="1" /><path d={d} className="line shine" pathLength="1" transform="translate(0 -1)" />
             {se.values.map((r, i) => (se.img && i === k
               ? <g key={i} className="face-end"><FaceDot cx={x(i)} cy={y(r)} r={10} img={se.img} color={se.color} tip={`${se.label}: #${r} after week ${weeks[i]}`} /></g>
               : <Dot key={i} cx={x(i)} cy={y(r)} r={se.id === focus ? 6 : 5} color={se.color} tip={`${se.label} — #${r} after week ${weeks[i]}`} />))}
@@ -118,10 +122,7 @@ export function Scatter({ points, xLabel, yLabel, refX, refY, width = 560, heigh
         return (
           <g key={p.id} className={`pt${dim}`}>
             {p.img ? <FaceDot cx={X(p.x)} cy={Y(p.y)} r={r} img={p.img} color={p.color} tip={p.tip || p.label} /> : <Dot cx={X(p.x)} cy={Y(p.y)} r={r} color={p.color} tip={p.tip || p.label} />}
-            {/* labels near the right edge sit left of their mark, so they stay on the plate */}
-            {X(p.x) > width * 0.74
-              ? <text x={X(p.x) - r - (p.img ? 6 : 4)} y={Y(p.y) + 4} className="pt-label" textAnchor="end">{p.short || p.label}</text>
-              : <text x={X(p.x) + r + (p.img ? 6 : 4)} y={Y(p.y) + 4} className="pt-label">{p.short || p.label}</text>}
+            <text x={X(p.x) + r + (p.img ? 6 : 4)} y={Y(p.y) + 4} className="pt-label">{p.short || p.label}</text>
           </g>
         );
       })}

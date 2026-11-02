@@ -60,11 +60,10 @@ function YourWeek({ rows, standings, me, h, bull }) {
 function LiveHead({ fin, wk, played, fetched }) {
   return <>
     <div>
-      <h2 className="page-title">{fin ? 'Final Scores' : 'Weekly Rankings'}</h2>
+      <h2 className="page-title"><span className="wk">{fin ? `Week ${wk} final` : `Week ${wk} live`}</span>{fin ? 'Final Scores' : 'Weekly Rankings'}</h2>
       <p>{fin
         ? "Every game is in. The week, best score to worst, and the standings it leaves behind. Sleeper makes it official Tuesday; the new power rankings are ready now."
         : 'How this week is going, best to worst: everything scored so far plus the projection for everyone still to play. The power rankings are on hold until every game is final.'}</p>
-      <p className="wk">{fin ? `Week ${wk} final` : `Week ${wk} live`}</p>
     </div>
     <div className="sources">
       {fin ? <span className="chip"><span className="dot" />All games final</span> : <span className="chip"><span className="dot live" />{`${played} NFL team${played === 1 ? '' : 's'} played so far`}</span>}

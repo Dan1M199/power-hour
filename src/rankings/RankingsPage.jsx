@@ -15,9 +15,8 @@ function RankHead({ wk, held, sources, updated, message }) {
   useEffect(() => { message?.ready().then((ok) => setAgain(!!ok)); }, []);
   return <>
     <div>
-      <h2 className="page-title">Power Rankings</h2>
+      <h2 className="page-title"><span className="wk">{held ? `On hold during week ${wk}` : `Week ${wk}`}</span>Power Rankings</h2>
       <p>Where you sit in the standings, how much you score, who's left on your schedule and how your roster projects, in that order. Tap any team to see why it sits where it does.</p>
-      <p className="wk">{held ? `On hold during week ${wk}` : `Week ${wk}`}</p>
     </div>
     <div className="sources">
       {sources
