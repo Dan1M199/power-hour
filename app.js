@@ -1101,7 +1101,7 @@ function openReveal() {
   const close = () => { el.remove(); document.documentElement.classList.remove('locked'); };
   const pick = () => `
     <div class="unveil-card glass rim">
-      <button type="button" class="unveil-x" aria-label="Close">×</button>
+      <button type="button" class="unveil-x" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2 2 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
       <h2 id="unveil-title">Which team is yours?</h2>
       <p class="sub">The desk has your result. Brace yourself.</p>
       <div class="unveil-teams">${[...live.teams].sort((a, b) => a.name.localeCompare(b.name)).map((t) => `

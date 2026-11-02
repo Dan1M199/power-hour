@@ -11,19 +11,20 @@ export function LabPage({ D, me, h }) {
   const teams = D.teams, n = teams.length, team = (rid) => D.byRid[rid];
   const weeks = D.history.map((x) => x.week);
   const focus = me || null;
+  const colorOf = (rid) => (rid === me ? 'var(--you)' : D.color[rid]); // your team is violet on every chart
   const mineAt = (list) => list.findIndex((t) => t.rid === me);
 
   const bump = {
-    series: teams.map((t) => ({ id: t.rid, label: t.name, short: short(t.name, 21), color: D.color[t.rid], values: t.rankHistory, img: t.rid === focus ? h.faceSrc(t) : null })),
+    series: teams.map((t) => ({ id: t.rid, label: t.name, short: short(t.name, 24), color: colorOf(t.rid), values: t.rankHistory, img: t.rid === focus ? h.faceSrc(t) : null })),
     weeks, n, focus,
   };
   const luckRows = [...teams].sort((a, b) => b.luck - a.luck).map((t) => ({
-    label: short(t.name, 20), value: t.luck, mine: t.rid === me,
+    label: short(t.name, 22), value: t.luck, mine: t.rid === me,
     tip: `${t.name}: ${h.record(t)} actual vs ${f1(t.expectedWins)} expected wins from a ${t.allPlayW.toFixed(0)}-${t.allPlayL.toFixed(0)} all-play record`,
   }));
   const avgPf = teams.reduce((a, t) => a + t.pfPerGame, 0) / n;
   const sc = {
-    points: teams.map((t) => ({ id: t.rid, x: t.pfPerGame, y: t.pa / Math.max(1, t.games), color: D.color[t.rid], img: h.faceSrc(t), label: t.name, short: short(t.name, 12), tip: `${t.name}: ${f1(t.pfPerGame)} for, ${f1(t.pa / Math.max(1, t.games))} against per game` })),
+    points: teams.map((t) => ({ id: t.rid, x: t.pfPerGame, y: t.pa / Math.max(1, t.games), color: colorOf(t.rid), img: h.faceSrc(t), label: t.name, short: short(t.name, t.rid === me ? 22 : 12), tip: `${t.name}: ${f1(t.pfPerGame)} for, ${f1(t.pa / Math.max(1, t.games))} against per game` })),
     xLabel: 'Points for per game', yLabel: 'Points against per game', refX: avgPf, refY: avgPf,
     quadrants: ['Snakebitten', 'Good but unlucky', 'Struggling', 'Cruising'], focus,
   };

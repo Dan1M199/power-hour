@@ -1,172 +1,247 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-28T01:11:51.057Z",
+  "generatedAt": "2026-11-02T17:59:22.940Z",
   "title": "Design System: The Power Hour",
   "extensions": {
     "colorMeta": {
-      "grass": {
-        "role": "secondary",
-        "displayName": "Mowed Grass",
-        "canonical": "#4CAF50",
-        "tonalRamp": [
-          "#1D2F1E",
-          "#275929",
-          "#38803B",
-          "#4AAB4E",
-          "#71C174",
-          "#9BD49E",
-          "#C6E6C7",
-          "#EFF5EF"
-        ]
-      },
-      "grass-2": {
-        "role": "secondary",
-        "displayName": "Spring Grass",
-        "canonical": "#8BC34A",
-        "tonalRamp": [
-          "#27321B",
-          "#426020",
-          "#5F8A2E",
-          "#7FB83D",
-          "#9DCC66",
-          "#BADB94",
-          "#D8EBC2",
-          "#F3F6EE"
-        ]
-      },
-      "stripe": {
-        "role": "secondary",
-        "displayName": "Light Stripe",
-        "canonical": "#5AB34F",
-        "tonalRamp": [
-          "#1F2F1D",
-          "#2C5926",
-          "#3F8037",
-          "#55AB4A",
-          "#79C171",
-          "#A2D49B",
-          "#CAE6C6",
-          "#F0F5EF"
-        ]
-      },
-      "lime": {
-        "role": "secondary",
-        "displayName": "Lime",
-        "canonical": "#CDDC39",
-        "tonalRamp": [
-          "#333616",
-          "#646C13",
-          "#909C1C",
-          "#C0D025",
-          "#D3E052",
-          "#E0EA86",
-          "#EDF3BA",
-          "#F7F8ED"
-        ]
-      },
-      "yellow": {
-        "role": "primary",
-        "displayName": "First-Down Yellow",
-        "canonical": "#FFEB3B",
-        "tonalRamp": [
-          "#3D390F",
-          "#807200",
-          "#B8A500",
-          "#F5DC00",
-          "#FFEA33",
-          "#FFF070",
-          "#FFF7AD",
-          "#FAF8EB"
-        ]
-      },
       "amber": {
         "role": "primary",
         "displayName": "Goalpost Amber",
         "canonical": "#FFC107",
         "tonalRamp": [
-          "#3D320F",
-          "#806000",
-          "#B88A00",
-          "#F5B800",
-          "#FFCC33",
-          "#FFDB70",
-          "#FFEBAD",
-          "#FAF6EB"
+          "#120900",
+          "#302100",
+          "#523C00",
+          "#775801",
+          "#A1790B",
+          "#CF9C00",
+          "#ECC573",
+          "#F9EDD5"
+        ]
+      },
+      "ledge-gold": {
+        "role": "primary",
+        "displayName": "Gold Ledge",
+        "canonical": "#E0A100",
+        "tonalRamp": [
+          "#130900",
+          "#322000",
+          "#543A01",
+          "#7A5604",
+          "#A57710",
+          "#D49909",
+          "#ECC47E",
+          "#FAEDD8"
+        ]
+      },
+      "you": {
+        "role": "secondary",
+        "displayName": "Your Team Violet",
+        "canonical": "#6A4F9C",
+        "tonalRamp": [
+          "#100225",
+          "#2D0B55",
+          "#492C76",
+          "#674C98",
+          "#896FBF",
+          "#AE93E7",
+          "#D0C0F7",
+          "#F0EBFD"
+        ]
+      },
+      "you-ink": {
+        "role": "secondary",
+        "displayName": "Words on Violet",
+        "canonical": "#FFFCF7",
+        "tonalRamp": [
+          "#0C0B09",
+          "#262420",
+          "#423F3B",
+          "#605D59",
+          "#82807B",
+          "#A7A49F",
+          "#CCCAC7",
+          "#EFEEED"
+        ]
+      },
+      "mine-bg": {
+        "role": "secondary",
+        "displayName": "Violet Wash",
+        "canonical": "#EBE3F3",
+        "tonalRamp": [
+          "#0D0A10",
+          "#27212D",
+          "#433D49",
+          "#615A68",
+          "#847D8B",
+          "#A9A1B0",
+          "#CDC8D2",
+          "#EFEEF1"
+        ]
+      },
+      "grass": {
+        "role": "neutral",
+        "displayName": "Mown Grass",
+        "canonical": "#4CAF50",
+        "tonalRamp": [
+          "#001000",
+          "#002E04",
+          "#004F0B",
+          "#017216",
+          "#329839",
+          "#5CBE5F",
+          "#A1DDA0",
+          "#E2F5E1"
+        ]
+      },
+      "stripe": {
+        "role": "neutral",
+        "displayName": "Mowing Stripe",
+        "canonical": "#5AB34F",
+        "tonalRamp": [
+          "#001000",
+          "#022D00",
+          "#0D4E04",
+          "#18710A",
+          "#3D9732",
+          "#64BD59",
+          "#A4DC9D",
+          "#E3F4E0"
+        ]
+      },
+      "data": {
+        "role": "tertiary",
+        "displayName": "Data Grass",
+        "canonical": "#4CAF50",
+        "tonalRamp": [
+          "#001000",
+          "#002E04",
+          "#004F0B",
+          "#017216",
+          "#329839",
+          "#5CBE5F",
+          "#A1DDA0",
+          "#E2F5E1"
+        ]
+      },
+      "grass-2": {
+        "role": "tertiary",
+        "displayName": "Young Grass",
+        "canonical": "#8BC34A",
+        "tonalRamp": [
+          "#050F00",
+          "#182A00",
+          "#2D4904",
+          "#446B09",
+          "#5D9200",
+          "#81B83E",
+          "#B3D990",
+          "#E7F3DD"
+        ]
+      },
+      "lime": {
+        "role": "tertiary",
+        "displayName": "Lime Chip",
+        "canonical": "#CDDC39",
+        "tonalRamp": [
+          "#0B0D00",
+          "#232700",
+          "#3F4403",
+          "#5C6407",
+          "#7F8814",
+          "#A3AF12",
+          "#C8D37B",
+          "#EDF2D7"
+        ]
+      },
+      "yellow": {
+        "role": "tertiary",
+        "displayName": "First-Down Yellow",
+        "canonical": "#FFEB3B",
+        "tonalRamp": [
+          "#0E0B00",
+          "#292500",
+          "#484103",
+          "#685F09",
+          "#8F8200",
+          "#B7A715",
+          "#D9CE71",
+          "#F3F0D5"
         ]
       },
       "sky-1": {
-        "role": "secondary",
-        "displayName": "Sky",
+        "role": "neutral",
+        "displayName": "Upper Sky",
         "canonical": "#81D4FA",
         "tonalRamp": [
-          "#112E3B",
-          "#05567B",
-          "#077BB1",
-          "#09A4EB",
-          "#3BBCF7",
-          "#76D0FA",
-          "#B1E4FC",
-          "#EBF5F9"
+          "#000D16",
+          "#002838",
+          "#04465E",
+          "#096787",
+          "#358BAE",
+          "#5DB0D5",
+          "#A1D3EB",
+          "#E2F1F9"
         ]
       },
       "sky-2": {
-        "role": "secondary",
+        "role": "neutral",
         "displayName": "Middle Sky",
         "canonical": "#9EDDFB",
         "tonalRamp": [
-          "#112E3B",
-          "#05557A",
-          "#077AB0",
-          "#0AA2EB",
-          "#3BBAF7",
-          "#76CFF9",
-          "#B1E4FC",
-          "#EBF5F9"
+          "#000D16",
+          "#012837",
+          "#01465E",
+          "#276680",
+          "#4C89A5",
+          "#70AECB",
+          "#ABD1E4",
+          "#E5F1F7"
         ]
       },
       "sky-3": {
-        "role": "secondary",
+        "role": "neutral",
         "displayName": "Low Sky",
         "canonical": "#B3E5FC",
         "tonalRamp": [
-          "#112E3B",
-          "#05567B",
-          "#077BB1",
-          "#09A4EC",
-          "#3BBCF7",
-          "#76D0FA",
-          "#B0E4FC",
-          "#EBF5F9"
+          "#000E16",
+          "#002837",
+          "#154659",
+          "#366478",
+          "#58889D",
+          "#7CADC3",
+          "#B1D0DF",
+          "#E7F0F5"
         ]
       },
       "turf": {
         "role": "neutral",
-        "displayName": "End Zone",
+        "displayName": "End Zone Turf",
         "canonical": "#1B5E20",
         "tonalRamp": [
-          "#1A331B",
-          "#1C6322",
-          "#298F31",
-          "#37BE41",
-          "#61D169",
-          "#90DF96",
-          "#C0EDC3",
-          "#EEF6EF"
+          "#001000",
+          "#002E03",
+          "#044E0F",
+          "#2D6E30",
+          "#519252",
+          "#75B876",
+          "#AED8AD",
+          "#E6F3E5"
         ]
       },
       "board": {
         "role": "neutral",
-        "displayName": "Scoreboard",
+        "displayName": "The Board",
         "canonical": "#13301C",
         "tonalRamp": [
-          "#1C3022",
-          "#245B35",
-          "#34844D",
-          "#45AF66",
-          "#6DC588",
-          "#99D7AC",
-          "#C5E8D0",
-          "#EFF6F1"
+          "#020F05",
+          "#0E2B17",
+          "#2A4832",
+          "#48664F",
+          "#6A8971",
+          "#8EAE95",
+          "#BCD1C0",
+          "#EAF1EB"
         ]
       },
       "chalk": {
@@ -174,104 +249,149 @@
         "displayName": "Chalk",
         "canonical": "#FFFFFF",
         "tonalRamp": [
-          "#262626",
+          "#0B0B0B",
+          "#242424",
           "#404040",
-          "#5C5C5C",
-          "#7A7A7A",
-          "#999999",
-          "#B8B8B8",
-          "#D6D6D6",
-          "#F2F2F2"
+          "#5D5D5D",
+          "#808080",
+          "#A4A4A4",
+          "#CACACA",
+          "#EEEEEE"
+        ]
+      },
+      "face": {
+        "role": "neutral",
+        "displayName": "Bone Face",
+        "canonical": "#FBF6EF",
+        "tonalRamp": [
+          "#0D0B08",
+          "#27231E",
+          "#433F3A",
+          "#615D57",
+          "#847F79",
+          "#A8A49D",
+          "#CDCAC6",
+          "#EFEEED"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#FFFCF7",
+        "tonalRamp": [
+          "#0C0B09",
+          "#262420",
+          "#423F3B",
+          "#605D59",
+          "#82807B",
+          "#A7A49F",
+          "#CCCAC7",
+          "#EFEEED"
         ]
       },
       "tile": {
         "role": "neutral",
-        "displayName": "Tray",
-        "canonical": "#E8F0DF",
+        "displayName": "Warm Well",
+        "canonical": "#F2EAE0",
         "tonalRamp": [
-          "#27321A",
-          "#42611F",
-          "#5F8B2C",
-          "#7FBA3B",
-          "#9DCE64",
-          "#BADD93",
-          "#D8EBC1",
-          "#F3F6EE"
+          "#0E0B07",
+          "#29231C",
+          "#453F37",
+          "#635C54",
+          "#867F76",
+          "#ABA39A",
+          "#CFCAC3",
+          "#F0EEEC"
         ]
       },
       "tile-2": {
         "role": "neutral",
-        "displayName": "Tray 2",
-        "canonical": "#D6E3C9",
+        "displayName": "Track Fill",
+        "canonical": "#E8DDD1",
         "tonalRamp": [
-          "#26311B",
-          "#405E21",
-          "#5C8830",
-          "#7AB540",
-          "#99CA68",
-          "#B8DA95",
-          "#D6EAC3",
-          "#F2F6EF"
+          "#0E0A06",
+          "#2A2219",
+          "#473E34",
+          "#655C52",
+          "#887E73",
+          "#ADA397",
+          "#D0C9C2",
+          "#F0EEEC"
         ]
       },
       "line": {
         "role": "neutral",
-        "displayName": "Line",
-        "canonical": "#D2E0C4",
+        "displayName": "Divider",
+        "canonical": "#E6DBD0",
         "tonalRamp": [
-          "#252F1D",
-          "#3D5926",
-          "#588137",
-          "#75AC49",
-          "#94C270",
-          "#B4D49B",
-          "#D4E7C6",
-          "#F2F5EF"
+          "#0E0A06",
+          "#2A221A",
+          "#473E35",
+          "#655C52",
+          "#887E74",
+          "#ADA398",
+          "#D0C9C2",
+          "#F0EEEC"
+        ]
+      },
+      "hover": {
+        "role": "neutral",
+        "displayName": "Hover Fill",
+        "canonical": "#EFE6DA",
+        "tonalRamp": [
+          "#0E0B06",
+          "#29231A",
+          "#463F35",
+          "#645C52",
+          "#877F74",
+          "#ACA398",
+          "#CFCAC2",
+          "#F0EEEC"
         ]
       },
       "ink": {
         "role": "neutral",
-        "displayName": "Ink",
+        "displayName": "Field Ink",
         "canonical": "#12301A",
         "tonalRamp": [
-          "#1C3121",
-          "#235D32",
-          "#328648",
-          "#43B260",
-          "#6BC783",
-          "#97D8A8",
-          "#C4E9CE",
-          "#EFF6F1"
+          "#020F05",
+          "#0D2B15",
+          "#2A4830",
+          "#47664E",
+          "#698A6F",
+          "#8DAF93",
+          "#BBD1BF",
+          "#EAF1EB"
         ]
       },
       "ink-2": {
         "role": "neutral",
-        "displayName": "Ink 2",
+        "displayName": "Field Ink, Second",
         "canonical": "#3C5A43",
         "tonalRamp": [
-          "#222B24",
-          "#334D39",
-          "#496E52",
-          "#62936D",
-          "#85AD8E",
-          "#A9C6B0",
-          "#CEDED2",
-          "#F1F4F1"
+          "#020F05",
+          "#0E2B17",
+          "#2A4832",
+          "#48664F",
+          "#6A8971",
+          "#8EAE94",
+          "#BCD1C0",
+          "#EAF1EB"
         ]
       },
       "ink-3": {
         "role": "neutral",
-        "displayName": "Ink 3",
-        "canonical": "#55705A",
+        "displayName": "Field Ink, Muted",
+        "canonical": "#4F6854",
         "tonalRamp": [
-          "#232924",
-          "#37483A",
-          "#4F6854",
-          "#6A8B70",
-          "#8BA790",
-          "#AEC1B1",
-          "#D1DCD3",
-          "#F1F3F2"
+          "#040E06",
+          "#132A19",
+          "#2F4634",
+          "#4C6551",
+          "#6E8873",
+          "#92AD97",
+          "#BED0C1",
+          "#EAF0EB"
         ]
       },
       "good": {
@@ -279,14 +399,29 @@
         "displayName": "Good",
         "canonical": "#28702C",
         "tonalRamp": [
-          "#1C311D",
-          "#225D25",
-          "#318636",
-          "#42B348",
-          "#6AC86F",
-          "#97D99A",
-          "#C3E9C5",
-          "#EFF6EF"
+          "#001000",
+          "#012D05",
+          "#014F0C",
+          "#276F2B",
+          "#4C934E",
+          "#71B971",
+          "#ABD9AA",
+          "#E5F3E4"
+        ]
+      },
+      "good-bg": {
+        "role": "tertiary",
+        "displayName": "Good Tint",
+        "canonical": "#E6F0DC",
+        "tonalRamp": [
+          "#090D06",
+          "#202718",
+          "#3B4333",
+          "#596150",
+          "#7B8472",
+          "#9FA896",
+          "#C7CDC1",
+          "#EDEFEB"
         ]
       },
       "bad": {
@@ -294,14 +429,29 @@
         "displayName": "Bad",
         "canonical": "#C62828",
         "tonalRamp": [
-          "#351717",
-          "#6A1515",
-          "#991F1F",
-          "#CC2929",
-          "#DD5555",
-          "#E78888",
-          "#F1BBBB",
-          "#F7EDED"
+          "#200000",
+          "#4B0104",
+          "#7C010A",
+          "#B10414",
+          "#DC403B",
+          "#FB756A",
+          "#FEB5AC",
+          "#FFE9E6"
+        ]
+      },
+      "bad-bg": {
+        "role": "tertiary",
+        "displayName": "Bad Tint",
+        "canonical": "#F9E2DC",
+        "tonalRamp": [
+          "#110907",
+          "#301F1B",
+          "#4D3B36",
+          "#6C5954",
+          "#8F7B76",
+          "#B59F99",
+          "#D5C7C3",
+          "#F2EDEC"
         ]
       },
       "flag": {
@@ -309,185 +459,589 @@
         "displayName": "Flag",
         "canonical": "#D32F2F",
         "tonalRamp": [
-          "#351717",
-          "#691616",
-          "#982020",
-          "#CA2B2B",
-          "#DB5757",
-          "#E68989",
-          "#F1BCBC",
-          "#F7EDED"
+          "#210000",
+          "#4C0003",
+          "#7B040D",
+          "#B00B18",
+          "#DF3C39",
+          "#FE7369",
+          "#FDB6AD",
+          "#FEE9E6"
+        ]
+      },
+      "info-bg": {
+        "role": "tertiary",
+        "displayName": "Info Tint",
+        "canonical": "#DCEEF6",
+        "tonalRamp": [
+          "#060C0F",
+          "#18262C",
+          "#344249",
+          "#516067",
+          "#73838A",
+          "#97A8AF",
+          "#C1CDD2",
+          "#EBEFF1"
         ]
       },
       "side-a": {
         "role": "tertiary",
-        "displayName": "Matchup Blue",
+        "displayName": "Left Team Blue",
         "canonical": "#29B6F6",
         "tonalRamp": [
-          "#112E3B",
-          "#05567A",
-          "#077BB0",
-          "#0AA5EB",
-          "#3BBCF7",
-          "#76D0F9",
-          "#B1E4FC",
-          "#EBF5F9"
+          "#000D18",
+          "#00283A",
+          "#004563",
+          "#00668E",
+          "#0B8BBF",
+          "#21B2F1",
+          "#8DD5FE",
+          "#DEF2FF"
         ]
       },
       "side-a-ink": {
         "role": "tertiary",
-        "displayName": "Matchup Blue Ink",
+        "displayName": "Left Team Ink",
         "canonical": "#0266A3",
         "tonalRamp": [
-          "#102C3D",
-          "#024F7E",
-          "#0271B5",
-          "#0397F2",
-          "#35B1FD",
-          "#72C8FD",
-          "#AEE0FE",
-          "#EBF4FA"
+          "#000C1D",
+          "#002642",
+          "#03436D",
+          "#09629B",
+          "#3486C5",
+          "#5BACEE",
+          "#9FD1FC",
+          "#E1F1FF"
         ]
       },
       "side-b": {
         "role": "tertiary",
-        "displayName": "Matchup Amber",
+        "displayName": "Right Team Amber",
         "canonical": "#FFC107",
         "tonalRamp": [
-          "#3D320F",
-          "#806000",
-          "#B88A00",
-          "#F5B800",
-          "#FFCC33",
-          "#FFDB70",
-          "#FFEBAD",
-          "#FAF6EB"
+          "#120900",
+          "#302100",
+          "#523C00",
+          "#775801",
+          "#A1790B",
+          "#CF9C00",
+          "#ECC573",
+          "#F9EDD5"
         ]
       },
       "side-b-ink": {
         "role": "tertiary",
-        "displayName": "Matchup Amber Ink",
-        "canonical": "#985700",
+        "displayName": "Right Team Ink",
+        "canonical": "#8C5000",
         "tonalRamp": [
-          "#3D2A0F",
-          "#804900",
-          "#B86900",
-          "#F58C00",
-          "#FFA833",
-          "#FFC270",
-          "#FFDCAD",
-          "#FAF3EB"
+          "#160700",
+          "#381C00",
+          "#5D3403",
+          "#874E07",
+          "#AF7030",
+          "#D69456",
+          "#EDC19A",
+          "#FAECE0"
         ]
       },
-      "mine-bg": {
-        "role": "primary",
-        "displayName": "Your Row",
-        "canonical": "#FFF9C4",
-        "tonalRamp": [
-          "#3D390F",
-          "#807300",
-          "#B8A500",
-          "#F5DC00",
-          "#FFEA33",
-          "#FFF070",
-          "#FFF7AD",
-          "#FAF8EB"
-        ]
-      },
-      "ledge-gold": {
-        "role": "primary",
-        "displayName": "Ledge Gold",
-        "canonical": "#E0A100",
-        "tonalRamp": [
-          "#3D300F",
-          "#805C00",
-          "#B88400",
-          "#F5B000",
-          "#FFC633",
-          "#FFD770",
-          "#FFE8AD",
-          "#FAF6EB"
-        ]
-      },
-      "header": {
+      "night-sky-1": {
         "role": "neutral",
-        "displayName": "Header Sky",
-        "canonical": "#EAF6FC",
+        "displayName": "Night Sky 1",
+        "canonical": "#0A1630",
         "tonalRamp": [
-          "#152C37",
-          "#105070",
-          "#1773A1",
-          "#1F99D6",
-          "#4CB2E6",
-          "#82C9ED",
-          "#B8E0F5",
-          "#EDF4F8"
+          "#050B19",
+          "#16233E",
+          "#313F5D",
+          "#4E5E7D",
+          "#7080A1",
+          "#93A5C8",
+          "#BFCBE2",
+          "#EBEFF6"
+        ]
+      },
+      "night-sky-2": {
+        "role": "neutral",
+        "displayName": "Night Sky 2",
+        "canonical": "#0F2142",
+        "tonalRamp": [
+          "#030A1C",
+          "#112344",
+          "#2B3F63",
+          "#485E84",
+          "#6A81A9",
+          "#8DA5CF",
+          "#BBCBE7",
+          "#E9EFF8"
+        ]
+      },
+      "night-sky-3": {
+        "role": "neutral",
+        "displayName": "Night Sky 3",
+        "canonical": "#162C52",
+        "tonalRamp": [
+          "#020A1E",
+          "#0D2247",
+          "#283F67",
+          "#455E88",
+          "#6681AD",
+          "#8AA6D4",
+          "#B9CCEA",
+          "#E9EFF9"
+        ]
+      },
+      "night-grass": {
+        "role": "neutral",
+        "displayName": "Night Grass",
+        "canonical": "#2C7A31",
+        "tonalRamp": [
+          "#001100",
+          "#002E04",
+          "#004F0C",
+          "#207027",
+          "#48944A",
+          "#6DBA6E",
+          "#A9DAA8",
+          "#E4F4E4"
+        ]
+      },
+      "night-stripe": {
+        "role": "neutral",
+        "displayName": "Night Stripe",
+        "canonical": "#33873A",
+        "tonalRamp": [
+          "#001000",
+          "#002E05",
+          "#054E12",
+          "#177123",
+          "#429548",
+          "#68BB6C",
+          "#A7DAA7",
+          "#E4F4E3"
+        ]
+      },
+      "night-board": {
+        "role": "neutral",
+        "displayName": "Night Board",
+        "canonical": "#06120A",
+        "tonalRamp": [
+          "#070D08",
+          "#1A281F",
+          "#36443A",
+          "#536257",
+          "#75857A",
+          "#99A99E",
+          "#C3CEC6",
+          "#ECEFED"
+        ]
+      },
+      "night-face": {
+        "role": "neutral",
+        "displayName": "Night Face",
+        "canonical": "#14231A",
+        "tonalRamp": [
+          "#060D09",
+          "#19281F",
+          "#34443A",
+          "#516258",
+          "#74857A",
+          "#97AA9E",
+          "#C2CEC6",
+          "#ECF0ED"
+        ]
+      },
+      "night-paper": {
+        "role": "neutral",
+        "displayName": "Night Paper",
+        "canonical": "#1E3226",
+        "tonalRamp": [
+          "#050E08",
+          "#15291D",
+          "#314539",
+          "#4E6456",
+          "#708778",
+          "#94AB9C",
+          "#C0CFC5",
+          "#EBF0ED"
+        ]
+      },
+      "night-tile": {
+        "role": "neutral",
+        "displayName": "Night Tile",
+        "canonical": "#0C170F",
+        "tonalRamp": [
+          "#070D08",
+          "#1C271F",
+          "#37433A",
+          "#546257",
+          "#77847A",
+          "#9BA99E",
+          "#C4CDC6",
+          "#ECEFED"
+        ]
+      },
+      "night-tile-2": {
+        "role": "neutral",
+        "displayName": "Night Tile 2",
+        "canonical": "#23382A",
+        "tonalRamp": [
+          "#040E07",
+          "#15291C",
+          "#304637",
+          "#4E6454",
+          "#708777",
+          "#93AC9B",
+          "#BFCFC4",
+          "#EBF0EC"
+        ]
+      },
+      "night-outline": {
+        "role": "neutral",
+        "displayName": "Night Outline",
+        "canonical": "#020804",
+        "tonalRamp": [
+          "#070D09",
+          "#1C2720",
+          "#38433C",
+          "#556159",
+          "#77847C",
+          "#9BA8A0",
+          "#C4CDC7",
+          "#ECEFED"
+        ]
+      },
+      "night-ink": {
+        "role": "neutral",
+        "displayName": "Night Ink",
+        "canonical": "#EAF4E6",
+        "tonalRamp": [
+          "#090C07",
+          "#1F271C",
+          "#3B4237",
+          "#586155",
+          "#7A8377",
+          "#9FA89B",
+          "#C6CDC4",
+          "#EDEFEC"
+        ]
+      },
+      "night-ink-2": {
+        "role": "neutral",
+        "displayName": "Night Ink 2",
+        "canonical": "#BCD0BC",
+        "tonalRamp": [
+          "#060E06",
+          "#192919",
+          "#344534",
+          "#526352",
+          "#748674",
+          "#97AB98",
+          "#C2CFC2",
+          "#ECF0EC"
+        ]
+      },
+      "night-ink-3": {
+        "role": "neutral",
+        "displayName": "Night Ink 3",
+        "canonical": "#9AB29C",
+        "tonalRamp": [
+          "#050E06",
+          "#162918",
+          "#314633",
+          "#4E6450",
+          "#708772",
+          "#94AC96",
+          "#C0D0C1",
+          "#EBF0EB"
+        ]
+      },
+      "night-you": {
+        "role": "neutral",
+        "displayName": "Night You",
+        "canonical": "#B39DEB",
+        "tonalRamp": [
+          "#0F0323",
+          "#2B1052",
+          "#472F73",
+          "#644E95",
+          "#8771BB",
+          "#AB95E3",
+          "#CFC1F5",
+          "#F0ECFC"
+        ]
+      },
+      "night-you-ink": {
+        "role": "neutral",
+        "displayName": "Night You Ink",
+        "canonical": "#1E1724",
+        "tonalRamp": [
+          "#0D0910",
+          "#28212E",
+          "#443C4B",
+          "#625A69",
+          "#857C8D",
+          "#A9A0B2",
+          "#CEC8D3",
+          "#EFEDF1"
+        ]
+      },
+      "night-mine-bg": {
+        "role": "neutral",
+        "displayName": "Night Mine Bg",
+        "canonical": "#2C2640",
+        "tonalRamp": [
+          "#0C0916",
+          "#251F39",
+          "#413B57",
+          "#5F5976",
+          "#817B9A",
+          "#A69FC0",
+          "#CBC7DD",
+          "#EEEDF4"
+        ]
+      },
+      "night-data": {
+        "role": "neutral",
+        "displayName": "Night Data",
+        "canonical": "#6FBF73",
+        "tonalRamp": [
+          "#001000",
+          "#012D07",
+          "#024E12",
+          "#1C7027",
+          "#45954B",
+          "#6BBA6F",
+          "#A8DAA9",
+          "#E4F4E4"
+        ]
+      },
+      "dash-sheet": {
+        "role": "tertiary",
+        "displayName": "Dash Sheet",
+        "canonical": "#E4DAE6",
+        "tonalRamp": [
+          "#0D0A0E",
+          "#28212A",
+          "#453D46",
+          "#635A64",
+          "#867D87",
+          "#AAA1AC",
+          "#CEC8D0",
+          "#F0EEF0"
+        ]
+      },
+      "dash-tile": {
+        "role": "tertiary",
+        "displayName": "Dash Tile",
+        "canonical": "#FBF6EF",
+        "tonalRamp": [
+          "#0D0B08",
+          "#27231E",
+          "#433F3A",
+          "#615D57",
+          "#847F79",
+          "#A8A49D",
+          "#CDCAC6",
+          "#EFEEED"
+        ]
+      },
+      "dash-ink": {
+        "role": "tertiary",
+        "displayName": "Dash Ink",
+        "canonical": "#2A2230",
+        "tonalRamp": [
+          "#0D0910",
+          "#28202E",
+          "#443C4B",
+          "#63596A",
+          "#857C8D",
+          "#AAA0B2",
+          "#CEC7D3",
+          "#F0EDF1"
+        ]
+      },
+      "dash-muted": {
+        "role": "tertiary",
+        "displayName": "Dash Muted",
+        "canonical": "#6B5B66",
+        "tonalRamp": [
+          "#10090E",
+          "#2D1F29",
+          "#493A45",
+          "#685863",
+          "#8B7A86",
+          "#B09FAB",
+          "#D2C6CE",
+          "#F1EDF0"
+        ]
+      },
+      "dash-clay": {
+        "role": "tertiary",
+        "displayName": "Dash Clay",
+        "canonical": "#B5573D",
+        "tonalRamp": [
+          "#1F0000",
+          "#460C00",
+          "#721E03",
+          "#983D23",
+          "#C06147",
+          "#E9866A",
+          "#FBB8A5",
+          "#FEE9E3"
+        ]
+      },
+      "dash-violet": {
+        "role": "tertiary",
+        "displayName": "Dash Violet",
+        "canonical": "#6A4F9C",
+        "tonalRamp": [
+          "#100225",
+          "#2D0B55",
+          "#492C76",
+          "#674C98",
+          "#896FBF",
+          "#AE93E7",
+          "#D0C0F7",
+          "#F0EBFD"
+        ]
+      },
+      "dash-apricot": {
+        "role": "tertiary",
+        "displayName": "Dash Apricot",
+        "canonical": "#E9A66A",
+        "tonalRamp": [
+          "#170600",
+          "#381C00",
+          "#5F3300",
+          "#894D01",
+          "#AF7033",
+          "#D69458",
+          "#EDC19C",
+          "#FAECE0"
+        ]
+      },
+      "dash-dark": {
+        "role": "tertiary",
+        "displayName": "Dash Dark",
+        "canonical": "#2E2235",
+        "tonalRamp": [
+          "#0E0812",
+          "#2A1E31",
+          "#473A4E",
+          "#65586D",
+          "#887A91",
+          "#AD9EB6",
+          "#D0C6D6",
+          "#F0EDF2"
         ]
       }
     },
     "typographyMeta": {
-      "display": {
-        "displayName": "Display",
-        "purpose": "Page titles only."
+      "page-title": {
+        "displayName": "Page Title",
+        "purpose": "Each page's name, on the sky in ink."
+      },
+      "painted-rank": {
+        "displayName": "Painted Rank",
+        "purpose": "The yard numbers on the grass; top three 108px, ten and up 66px, smaller on phones."
       },
       "headline": {
         "displayName": "Headline",
-        "purpose": "Section headings; scoreboard headlines run larger."
-      },
-      "title": {
-        "displayName": "Title",
-        "purpose": "Team names and card heads."
+        "purpose": "Board headlines."
       },
       "numeral": {
         "displayName": "Numeral",
-        "purpose": "Scores, points, odds, stat values."
+        "purpose": "Scores and odds, stepping down to 38px and 30px."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Panel and section headings."
+      },
+      "team-name": {
+        "displayName": "Team Name",
+        "purpose": "Names in ranking rows and matchups."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Small headings, where 300 would go faint."
       },
       "body": {
         "displayName": "Body",
-        "purpose": "Explanations and decks, about 62ch."
+        "purpose": "Reasons and notes."
       },
-      "label": {
-        "displayName": "Label",
-        "purpose": "Chips, tabs, filters, small in-card headings."
+      "control": {
+        "displayName": "Control",
+        "purpose": "Tabs, pills, chips, tags and inline bold."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Units under a numeral, table headers, axes, timestamps."
+      },
+      "data-small": {
+        "displayName": "Small Data",
+        "purpose": "Tight columns of figures."
+      },
+      "panel-label": {
+        "displayName": "Panel Label",
+        "purpose": "A panel's own name, after an inked dot."
       }
     },
     "shadows": [
       {
-        "name": "glass-card",
-        "value": "inset 0 2px 0 #FFFFFF, inset 0 -3px 0 rgba(18,48,26,0.05), 0 0 0 var(--ring-w) #FFEB3B, 0 0 0 calc(var(--ring-w) + 2.5px) #12301A, 0 5px 0 calc(var(--ring-w) + 2.5px) rgba(14,46,22,0.26)",
-        "purpose": "Every card: rim, your yellow ring, ink outline, hard ledge."
+        "name": "tile",
+        "value": "0 0 0 2px var(--outline), 0 5px 0 2px var(--ledge)",
+        "purpose": "Every tile. Hover deepens the ledge to 7px, on a mouse."
       },
       {
-        "name": "gold-ledge",
-        "value": "same stack with ledge #E0A100",
-        "purpose": "Featured cards: top three, trades, best trade idea, scoreboards."
+        "name": "tile-featured",
+        "value": "0 0 0 2px var(--outline), 0 5px 0 2px var(--ledge-gold)",
+        "purpose": "Top three, trades, the best trade idea."
       },
       {
-        "name": "pill-button",
-        "value": "0 0 0 2px #12301A, 0 3px 0 2px rgba(14,46,22,0.26)",
-        "purpose": "Buttons on light surfaces."
+        "name": "tile-yours",
+        "value": "0 0 0 4px var(--you), 0 0 0 6px var(--outline), 0 5px 0 6px var(--ledge)",
+        "purpose": "Your team's tile: a violet ring inside the ink edge."
       },
       {
-        "name": "pill-pressed",
-        "value": "0 0 0 2px #12301A, 0 1px 0 2px rgba(14,46,22,0.26)",
-        "purpose": "Active state with translateY(2px)."
+        "name": "control",
+        "value": "0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge)",
+        "purpose": "Pills."
       },
       {
-        "name": "chip",
-        "value": "0 2px 0 rgba(14,46,22,0.26)",
-        "purpose": "Small tags."
+        "name": "control-pressed",
+        "value": "0 0 0 2px var(--outline), 0 1px 0 2px var(--ledge)",
+        "purpose": "A pill pressed, moved 2px down."
       },
       {
-        "name": "tray-edge",
-        "value": "inset 0 3px 0 rgba(18,48,26,0.07), inset 0 0 0 1.5px rgba(18,48,26,0.1)",
-        "purpose": "Recessed panels inside a card: a hard inner top shadow and a faint inked rim."
+        "name": "cta",
+        "value": "0 0 0 2px var(--outline), 0 5px 0 2px var(--ledge-gold)",
+        "purpose": "The largest amber action."
+      },
+      {
+        "name": "well",
+        "value": "inset 0 0 0 1.5px rgba(18, 48, 26, 0.12)",
+        "purpose": "A panel pressed into a tile."
+      },
+      {
+        "name": "print",
+        "value": "5px 6px 0 rgba(0, 0, 0, 0.35)",
+        "purpose": "Tilted photo prints."
+      },
+      {
+        "name": "painted-number",
+        "value": "3px 3px 0 var(--turf)",
+        "purpose": "Text shadow on the painted rank numbers, 2px 2px on phones."
+      },
+      {
+        "name": "dashboard-tile",
+        "value": "0 0 0 2px var(--p-ink), 0 5px 0 2px var(--p-ledge)",
+        "purpose": "Team dashboard tiles, scoped to the sheet."
       }
     ],
     "motion": [
       {
         "name": "ease-slide",
         "value": "cubic-bezier(0.2, 0.8, 0.2, 1)",
-        "purpose": "Tab pill slide (0.45s)."
+        "purpose": "Tab pill slide (0.45s) and opening drawers (0.4s)."
       },
       {
         "name": "rank-stagger",
@@ -496,16 +1050,25 @@
       },
       {
         "name": "carousel-dwell",
-        "value": "7s",
-        "purpose": "Headline carousel auto-advance per story."
+        "value": "10s",
+        "purpose": "Headline carousel auto-advance; a video story's dot runs for its clip."
       },
       {
         "name": "loader-fade",
         "value": "0.35s ease",
         "purpose": "Kicker loader fade-out."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "prefers-reduced-motion: reduce",
+        "purpose": "Skips view transitions, reveals, count-ups and CSS animation."
       }
     ],
     "breakpoints": [
+      {
+        "name": "smallest-phone",
+        "value": "360px"
+      },
       {
         "name": "phone",
         "value": "760px"
@@ -517,6 +1080,14 @@
       {
         "name": "wide",
         "value": "1100px"
+      },
+      {
+        "name": "dashboard-two-col",
+        "value": "612px (container)"
+      },
+      {
+        "name": "dashboard-three-col",
+        "value": "928px (container)"
       }
     ]
   },
@@ -525,162 +1096,176 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Glossy amber pill for actions and the pressed filter.",
-      "html": "<button class=\"ds-btn ds-btn-primary\">Show me the power ranking</button>",
-      "css": ".ds-btn{position:relative;isolation:isolate;overflow:hidden;cursor:pointer;border:0;border-radius:999px;padding:8px 15px;font:700 13.5px/1.2 'Albert Sans',system-ui,sans-serif;transition:transform .12s,box-shadow .12s}.ds-btn::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.2) 48%,rgba(255,255,255,0) 50%);pointer-events:none}.ds-btn:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-btn-primary{background:#FFC107;color:#12301A;box-shadow:0 0 0 2px #12301A,0 3px 0 2px #E0A100}.ds-btn-primary:hover{transform:translateY(-1px)}.ds-btn-primary:active{transform:translateY(2px);box-shadow:0 0 0 2px #12301A,0 1px 0 2px #E0A100}"
+      "description": "The amber action on a gold ledge; it presses down.",
+      "html": "<button class=\"ds-btn-primary\">Show me the power ranking</button>",
+      "css": ".ds-btn-primary { font-family: Geist, system-ui, sans-serif; font-weight: 300; font-size: 22px; line-height: 1.1; letter-spacing: -0.03em; padding: 16px 30px; border: 0; border-radius: 999px; cursor: pointer; color: var(--ink, #12301A); background: var(--amber, #FFC107); box-shadow: 0 0 0 2px var(--outline, #12301A), 0 5px 0 2px var(--ledge-gold, #E0A100); } .ds-btn-primary:active { transform: translateY(3px); box-shadow: 0 0 0 2px var(--outline, #12301A), 0 2px 0 2px var(--ledge-gold, #E0A100); } .ds-btn-primary:focus-visible { outline: 3px solid var(--ink, #12301A); outline-offset: 3px; }"
     },
     {
       "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "White glossy pill for filters and secondary choices.",
-      "html": "<button class=\"ds-btn ds-btn-secondary\">Trades</button>",
-      "css": ".ds-btn{position:relative;isolation:isolate;overflow:hidden;cursor:pointer;border:0;border-radius:999px;padding:8px 15px;font:700 13.5px/1.2 'Albert Sans',system-ui,sans-serif;transition:transform .12s,box-shadow .12s}.ds-btn::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.2) 48%,rgba(255,255,255,0) 50%);pointer-events:none}.ds-btn:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-btn-secondary{background:#FFFFFF;color:#3C5A43;box-shadow:0 0 0 2px #12301A,0 3px 0 2px rgba(14,46,22,.26)}.ds-btn-secondary:hover{background:#E1F5FE;color:#12301A}.ds-btn-secondary:active{transform:translateY(2px);box-shadow:0 0 0 2px #12301A,0 1px 0 2px rgba(14,46,22,.26)}"
+      "description": "A paper pill for everything that is not the main action.",
+      "html": "<button class=\"ds-btn-secondary\">More odds</button>",
+      "css": ".ds-btn-secondary { font-family: Geist, system-ui, sans-serif; font-weight: 500; font-size: 13.5px; line-height: 1.2; padding: 7px 15px; border: 0; border-radius: 999px; cursor: pointer; color: var(--ink-2, #3C5A43); background: var(--paper, #FFFCF7); box-shadow: 0 0 0 2px var(--outline, #12301A), 0 3px 0 2px var(--ledge, rgba(14,46,22,.24)); } .ds-btn-secondary:hover { background: var(--hover, #EFE6DA); } .ds-btn-secondary:active { transform: translateY(2px); box-shadow: 0 0 0 2px var(--outline, #12301A), 0 1px 0 2px var(--ledge, rgba(14,46,22,.24)); } .ds-btn-secondary:focus-visible { outline: 3px solid var(--ink, #12301A); outline-offset: 3px; }"
     },
     {
-      "name": "Chip",
-      "kind": "chip",
-      "refersTo": "chip",
-      "description": "Small white tag with a short ledge and optional status dot.",
-      "html": "<span class=\"ds-chip\"><i class=\"ds-dot\"></i>FantasyPros</span> <span class=\"ds-you\">You</span>",
-      "css": ".ds-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font:700 12.5px/1.2 'Albert Sans',system-ui,sans-serif;color:#3C5A43;background:#FFFFFF;box-shadow:0 2px 0 rgba(14,46,22,.26)}.ds-dot{width:8px;height:8px;border-radius:50%;background:#4CAF50}.ds-you{display:inline-block;font:800 11px/1 'Albert Sans',system-ui,sans-serif;color:#12301A;background:#FFEB3B;padding:5px 8px;border-radius:999px;box-shadow:0 2px 0 #E0A100}"
-    },
-    {
-      "name": "Glass Card",
-      "kind": "card",
-      "refersTo": "card",
-      "description": "Cartoon glass on a hard ledge: the base surface for every card.",
-      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Dynasty Dan</h3><p class=\"ds-card-body\">Third in points for and the easiest schedule left.</p></div>",
-      "css": ".ds-card{background-color:rgba(255,255,255,.96);background-image:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(255,255,255,.6) 46%,rgba(255,255,255,0) 100%);background-size:100% 150px;background-repeat:no-repeat;padding:18px;border-radius:24px;color:#12301A;box-shadow:inset 0 2px 0 #FFFFFF,inset 0 -3px 0 rgba(18,48,26,.05),0 0 0 2.5px #12301A,0 5px 0 2.5px rgba(14,46,22,.26);transition:transform .2s,box-shadow .2s}.ds-card:hover{transform:translateY(-2px);box-shadow:inset 0 2px 0 #FFFFFF,inset 0 -3px 0 rgba(18,48,26,.05),0 0 0 2.5px #12301A,0 7px 0 2.5px rgba(14,46,22,.26)}.ds-card-title{margin:0 0 6px;font:800 21px/1.1 'Big Shoulders Display','Arial Narrow',sans-serif}.ds-card-body{margin:0;font:400 16px/1.55 'Albert Sans',system-ui,sans-serif;color:#3C5A43}"
-    },
-    {
-      "name": "Your Card",
-      "kind": "card",
-      "refersTo": "card-featured",
-      "description": "Your own team: a 4px First-Down Yellow ring inside the outline, on a gold ledge.",
-      "html": "<div class=\"ds-card-mine\"><b>Your team</b></div>",
-      "css": ".ds-card-mine{background-color:rgba(255,255,255,.88);background-image:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(255,255,255,.6) 46%,rgba(255,255,255,0) 100%);background-size:100% 150px;background-repeat:no-repeat;padding:18px;border-radius:32px;color:#12301A;font:800 21px/1.1 'Big Shoulders Display',sans-serif;box-shadow:inset 0 2px 0 #FFFFFF,0 0 0 4px #FFEB3B,0 0 0 6.5px #12301A,0 5px 0 6.5px #E0A100}"
+      "name": "Team Picker",
+      "kind": "input",
+      "refersTo": "filter-pill",
+      "description": "A paper select pill with a pale line edge.",
+      "html": "<select class=\"ds-select\"><option>Operation: Championshp</option><option>The Wardfather</option></select>",
+      "css": ".ds-select { font-family: Geist, system-ui, sans-serif; font-weight: 500; font-size: 14px; padding: 8px 14px; border-radius: 999px; border: 2px solid var(--line, #E6DBD0); color: var(--ink, #12301A); background: var(--paper, #FFFCF7); cursor: pointer; } .ds-select:focus-visible { outline: 3px solid var(--ink, #12301A); outline-offset: 3px; }"
     },
     {
       "name": "Tab Strip",
       "kind": "nav",
       "refersTo": "tab-active",
-      "description": "Tabs in a Tile track; the active one is an amber glossy pill.",
-      "html": "<nav class=\"ds-tabs\"><a class=\"ds-tab ds-on\" href=\"#\">Power</a><a class=\"ds-tab\" href=\"#\">Wire</a><a class=\"ds-tab\" href=\"#\">Games</a></nav>",
-      "css": ".ds-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:#F1F8E9}.ds-tab{padding:8px 16px;border-radius:999px;color:#3C5A43;text-decoration:none;font:700 14px/1.2 'Albert Sans',system-ui,sans-serif}.ds-tab:hover{color:#12301A}.ds-tab:focus-visible{outline:3px solid #12301A;outline-offset:3px}.ds-on{color:#12301A;background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.2) 48%,rgba(255,255,255,0) 50%),#FFC107;box-shadow:0 0 0 2px #12301A,0 3px 0 2px #E0A100}"
+      "description": "Tabs on a well, the active one on the amber pill.",
+      "html": "<nav class=\"ds-tabs\"><a href=\"#\">Live</a><a href=\"#\" aria-current=\"page\">Rankings</a><a href=\"#\">Wire</a><a href=\"#\">Games</a><a href=\"#\">Lab</a></nav>",
+      "css": ".ds-tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--tile, #F2EAE0); box-shadow: inset 0 0 0 1.5px rgba(18,48,26,.12); font-family: Geist, system-ui, sans-serif; } .ds-tabs a { padding: 8px 16px; border-radius: 999px; color: var(--ink-2, #3C5A43); text-decoration: none; font-weight: 500; font-size: 14px; } .ds-tabs a:hover { color: var(--ink, #12301A); } .ds-tabs a[aria-current='page'] { color: var(--ink, #12301A); background: var(--amber, #FFC107); box-shadow: 0 0 0 2px var(--outline, #12301A), 0 3px 0 2px var(--ledge-gold, #E0A100); } .ds-tabs a:focus-visible { outline: 3px solid var(--ink, #12301A); outline-offset: 3px; }"
     },
     {
-      "name": "Section Sign",
-      "kind": "custom",
-      "refersTo": "section-sign",
-      "description": "White pill sign that carries section titles on the grass.",
-      "html": "<div class=\"ds-field\"><h2 class=\"ds-sign\">Best available <small>top free agents</small></h2></div>",
-      "css": ".ds-field{padding:20px;background:repeating-linear-gradient(180deg,#4CAF50 0 40px,#5AB34F 40px 80px)}.ds-sign{display:flex;width:fit-content;align-items:baseline;gap:12px;margin:0;padding:10px 18px 9px;border-radius:999px;background:#FFFFFF;color:#12301A;font:800 24px/1 'Big Shoulders Display',sans-serif;box-shadow:inset 0 2px 0 #FFFFFF,0 0 0 2.5px #12301A,0 4px 0 2.5px rgba(14,46,22,.26)}.ds-sign small{font:600 13px/1 'Albert Sans',system-ui,sans-serif;color:#55705A}"
+      "name": "Chips and Tags",
+      "kind": "chip",
+      "refersTo": "you-tag",
+      "description": "A source chip, a tier pill, the bad tier and the violet You tag.",
+      "html": "<div class=\"ds-chips\"><span class=\"ds-chip\"><i></i>FantasyPros</span><span class=\"ds-tier\">Team to beat</span><span class=\"ds-stinks\">This Guy Stinks</span><span class=\"ds-you\">You</span></div>",
+      "css": ".ds-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-family: Geist, system-ui, sans-serif; font-weight: 500; } .ds-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font-size: 12.5px; color: var(--ink-2, #3C5A43); background: var(--paper, #FFFCF7); box-shadow: 0 2px 0 var(--ledge, rgba(14,46,22,.24)); } .ds-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--grass, #4CAF50); } .ds-tier, .ds-stinks, .ds-you { font-size: 12px; line-height: 1; padding: 5px 10px; border-radius: 999px; } .ds-tier { color: #12301A; background: #FFC107; } .ds-stinks { color: #fff; background: var(--flag, #D32F2F); } .ds-you { color: var(--you-ink, #FFFCF7); background: var(--you, #6A4F9C); }"
     },
     {
-      "name": "Yard Number Rank",
-      "kind": "custom",
-      "description": "The signature: a rank painted on the grass, half under its card.",
-      "html": "<div class=\"ds-field2\"><div class=\"ds-rank\"><span class=\"ds-jersey\">1</span><div class=\"ds-rcard\"><b>Mo Money</b><span>87</span></div></div></div>",
-      "css": ".ds-field2{padding:24px 20px;background:repeating-linear-gradient(180deg,#4CAF50 0 60px,#5AB34F 60px 120px)}.ds-rank{position:relative;padding-left:74px}.ds-jersey{position:absolute;left:0;top:50%;transform:translateY(-50%);font:900 150px/0.8 'Big Shoulders Display',sans-serif;letter-spacing:-.04em;color:#FFEB3B;text-shadow:5px 5px 0 rgba(14,46,22,.35)}.ds-rcard{position:relative;display:flex;justify-content:space-between;align-items:center;padding:22px;border-radius:32px;background-color:rgba(255,255,255,.88);background-image:linear-gradient(180deg,rgba(255,255,255,.96) 0,rgba(255,255,255,.6) 46%,rgba(255,255,255,0) 100%);background-size:100% 150px;background-repeat:no-repeat;box-shadow:inset 0 2px 0 #FFFFFF,0 0 0 2.5px #12301A,0 5px 0 2.5px #E0A100}.ds-rcard b{font:800 32px/1.05 'Big Shoulders Display',sans-serif;color:#12301A}.ds-rcard span{font:900 48px/.9 'Big Shoulders Display',sans-serif;color:#12301A}"
-    },
-    {
-      "name": "Scoreboard",
+      "name": "Tile with a Well",
       "kind": "card",
-      "refersTo": "scoreboard",
-      "description": "Smoked-glass dark panel with white type, yellow accents and a corner glint.",
-      "html": "<div class=\"ds-board\"><h2>Mo takes the lead</h2><p>Up 14.2 with two players left.</p></div>",
-      "css": ".ds-board{position:relative;padding:26px 28px;border-radius:32px;color:#FFFFFF;background-color:#13301C;background-image:linear-gradient(180deg,rgba(255,255,255,.1) 0,rgba(255,255,255,.03) 55%,rgba(255,255,255,0) 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.2),inset 0 -3px 0 rgba(0,0,0,.18),0 0 0 2.5px #12301A,0 5px 0 2.5px #E0A100}.ds-board h2{margin:0 0 8px;font:900 44px/.94 'Big Shoulders Display',sans-serif}.ds-board p{margin:0;color:#FFEB3B;font:700 15px/1.4 'Albert Sans',system-ui,sans-serif}"
+      "refersTo": "tile",
+      "description": "The bone tile, ink edge and hard ledge, with a panel pressed into it under an Inter label.",
+      "html": "<article class=\"ds-tile\"><h3>Championship futures</h3><div class=\"ds-well\"><h4>Starting lineup</h4><p>A panel in a tile is always a well, never the tile's own tone.</p></div></article>",
+      "css": ".ds-tile { max-width: 380px; padding: 20px; border-radius: 30px; color: var(--ink, #12301A); background-color: var(--face, #FBF6EF); box-shadow: 0 0 0 2px var(--outline, #12301A), 0 5px 0 2px var(--ledge, rgba(14,46,22,.24)); font-family: Geist, system-ui, sans-serif; transition: transform .2s, box-shadow .2s; } .ds-tile:hover { transform: translateY(-2px); box-shadow: 0 0 0 2px var(--outline, #12301A), 0 7px 0 2px var(--ledge, rgba(14,46,22,.24)); } .ds-tile h3 { margin: 0 0 12px; font-weight: 300; font-size: 28px; line-height: 1.08; letter-spacing: -0.03em; } .ds-well { padding: 12px 14px; border-radius: 18px; background: var(--tile, #F2EAE0); box-shadow: inset 0 0 0 1.5px rgba(18,48,26,.12); } .ds-well h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font: 400 14px/1.2 Inter, system-ui, sans-serif; letter-spacing: -0.1px; color: var(--ink-3, #4F6854); } .ds-well h4::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--grass, #4CAF50); box-shadow: 0 0 0 1.5px var(--outline, #12301A); } .ds-well p { margin: 0; font-size: 14.5px; color: var(--ink-2, #3C5A43); }"
     },
     {
-      "name": "Tray",
+      "name": "Your Tile",
       "kind": "card",
-      "description": "A panel pressed into a card: Tray fill, hard inner top shadow, faint inked rim.",
-      "html": "<div class=\"ds-card\" style=\"padding:18px;border-radius:24px;background:#fff;box-shadow:0 0 0 2.5px #12301A,0 5px 0 2.5px rgba(14,46,22,.26)\"><div class=\"ds-tray\"><b>Position groups</b><span class=\"ds-chip2\">94% lineup IQ</span></div></div>",
-      "css": ".ds-tray{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#E8F0DF;box-shadow:inset 0 3px 0 rgba(18,48,26,.07),inset 0 0 0 1.5px rgba(18,48,26,.1);font:700 13px/1.2 'Albert Sans',system-ui,sans-serif;color:#55705A}.ds-chip2{padding:7px 12px 6px;border-radius:12px;background:#fff;color:#12301A;box-shadow:0 0 0 1.5px #D2E0C4,0 3px 0 1.5px #D2E0C4}"
+      "refersTo": "your-row",
+      "description": "Your team: a 4px violet ring inside the ink edge.",
+      "html": "<article class=\"ds-mine\"><b>Operation: Championshp</b> <span>You</span></article>",
+      "css": ".ds-mine { max-width: 380px; padding: 16px 20px; border-radius: 30px; font-family: Geist, system-ui, sans-serif; font-weight: 300; font-size: 24px; letter-spacing: -0.03em; color: var(--ink, #12301A); background-color: var(--face, #FBF6EF); box-shadow: 0 0 0 4px var(--you, #6A4F9C), 0 0 0 6px var(--outline, #12301A), 0 5px 0 6px var(--ledge, rgba(14,46,22,.24)); } .ds-mine b { font-weight: 300; } .ds-mine span { font-size: 12px; font-weight: 500; letter-spacing: 0; vertical-align: 4px; padding: 5px 8px; border-radius: 999px; color: var(--you-ink, #FFFCF7); background: var(--you, #6A4F9C); }"
     },
     {
-      "name": "Chart Bar",
+      "name": "Painted Rank Number",
       "kind": "custom",
-      "description": "Cartoon-glass bar: hard ledge, ink edge, gloss strip.",
-      "html": "<svg viewBox=\"0 0 220 60\" width=\"220\"><rect x=\"10\" y=\"23\" width=\"160\" height=\"24\" rx=\"5\" fill=\"rgba(14,46,22,.3)\"/><rect x=\"10\" y=\"20\" width=\"160\" height=\"24\" rx=\"5\" fill=\"#FFA000\" stroke=\"#12301A\" stroke-width=\"2\"/><rect x=\"13\" y=\"23\" width=\"154\" height=\"8\" rx=\"3\" fill=\"#fff\" opacity=\".42\"/></svg>",
-      "css": ""
+      "refersTo": "tile",
+      "description": "The signature: a thin number on the grass, in the gutter beside its tile.",
+      "html": "<div class=\"ds-field\"><span class=\"ds-num\">1</span><div class=\"ds-row\">The Wardfather</div></div>",
+      "css": ".ds-field { position: relative; padding: 18px 16px 18px 104px; background: repeating-linear-gradient(180deg, #4CAF50 0 60px, #5AB34F 60px 120px); font-family: Geist, system-ui, sans-serif; } .ds-num { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 84px; text-align: right; font-weight: 300; font-size: 108px; line-height: 1.04; letter-spacing: -0.04em; color: #FFEB3B; text-shadow: 3px 3px 0 #1B5E20; } .ds-row { position: relative; padding: 24px 20px; border-radius: 38px; font-weight: 300; font-size: 34px; line-height: 1.08; letter-spacing: -0.03em; color: #12301A; background: #FBF6EF; box-shadow: 0 0 0 2px #12301A, 0 5px 0 2px #E0A100; }"
+    },
+    {
+      "name": "Dark Board",
+      "kind": "custom",
+      "refersTo": "board",
+      "description": "The flat dark green board with a thin headline and yellow accents.",
+      "html": "<section class=\"ds-board\"><h2>A coin flip with both seasons riding on it</h2><p>The projections split it 55% to 45%.</p><div class=\"ds-dots\"><i class=\"on\"></i><i></i><i></i></div></section>",
+      "css": ".ds-board { max-width: 460px; padding: 26px 28px; border-radius: 38px; color: #fff; background-color: var(--board, #13301C); box-shadow: 0 0 0 2px var(--outline, #12301A), 0 5px 0 2px var(--ledge-gold, #E0A100); font-family: Geist, system-ui, sans-serif; } .ds-board h2 { margin: 0; font-weight: 300; font-size: 40px; line-height: 1.04; letter-spacing: -0.04em; } .ds-board p { margin: 14px 0; color: rgba(255,255,255,.8); } .ds-dots { display: flex; gap: 12px; } .ds-dots i { width: 10px; height: 10px; border-radius: 99px; background: rgba(255,255,255,.3); } .ds-dots i.on { width: 36px; background: #FFEB3B; }"
+    },
+    {
+      "name": "Fight Poster",
+      "kind": "custom",
+      "refersTo": "poster-burst",
+      "description": "Two sides on a diagonal, tilted faces and a 12-point burst. Games only, once.",
+      "html": "<div class=\"ds-poster\"><div class=\"a\"><span class=\"ph\"></span>Dan</div><div class=\"b\"><span class=\"ph\"></span>Shahan</div><i>VS</i></div>",
+      "css": ".ds-poster { position: relative; display: grid; grid-template-columns: 1fr 1fr; max-width: 520px; font-family: Geist, system-ui, sans-serif; font-weight: 300; font-size: 30px; letter-spacing: -0.03em; color: #12301A; } .ds-poster > div { display: flex; align-items: flex-end; gap: 12px; padding: 18px 40px 18px 18px; } .ds-poster .a { margin-right: -14px; background: #29B6F6; clip-path: polygon(0 0, 100% 0, calc(100% - 28px) 100%, 0 100%); } .ds-poster .b { margin-left: -14px; flex-direction: row-reverse; padding: 18px 18px 18px 40px; background: #FFC107; clip-path: polygon(28px 0, 100% 0, 100% 100%, 0 100%); } .ds-poster .ph { width: 72px; height: 72px; border-radius: 16px; background: #F2EAE0; border: 3px solid #fff; box-shadow: 4px 5px 0 rgba(0,0,0,.28); transform: rotate(-3deg); } .ds-poster > i { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; display: grid; place-items: center; font-style: normal; font-size: 20px; background: #FFEB3B; clip-path: polygon(50% 0%, 60.1% 12.3%, 75% 6.7%, 77.6% 22.4%, 93.3% 25%, 87.7% 39.9%, 100% 50%, 87.7% 60.1%, 93.3% 75%, 77.6% 77.6%, 75% 93.3%, 60.1% 87.7%, 50% 100%, 39.9% 87.7%, 25% 93.3%, 22.4% 77.6%, 6.7% 75%, 12.3% 60.1%, 0% 50%, 12.3% 39.9%, 6.7% 25%, 22.4% 22.4%, 25% 6.7%, 39.9% 12.3%); }"
     }
   ],
   "narrative": {
-    "northStar": "The Day Game",
-    "overview": "A flat sky over a mowed football field at one in the afternoon. Every surface is cartoon glass on a hard ledge: an inked outline, a bright sheen across the top, a hint of the field showing through, and a solid ledge under it like a toy you could press down. Nothing is blurred and nothing casts a soft shadow, so a phone draws exactly what a desktop does.\n\nThe page is a stadium in layers. The sky (flat bands of blue and three cartoon clouds) sits behind everything. The field starts right under each page heading: mowing stripes, a chalk yard line every two stripes and a chalk sideline, bleeding to the window edges. Cards stand on the grass. The footer is the end zone, with a white goal line. Dark scoreboards (the headline carousel and the game of the week) are smoked glass with a cartoon glint in the corner, the one place type turns white.\n\nThe energy comes from a single bold move, the power rank painted on the grass like a yard number, half under its card. Everything else stays quiet: one yellow for \"you\", one amber for actions, ink for all text.",
+    "northStar": "A Day Game, on Paper",
+    "overview": "The Power Hour is one flat sheet of dashboard tiles standing on a football field. The ground is the world: flat sky bands and clouds at the top, mowed stripes and chalk lines below, the end zone as the footer. On that ground sit bone tiles with a dark green ink edge and a hard ledge, and inside them, warm wells. Nothing shines. Depth is an outline and a solid shape under it, so phones draw exactly what desktops draw.\n\nThe system is bold through scale, not weight. Names and numbers are very large, very thin Geist; a manager reads their rank and odds at a glance as big numerals, then opens a tile for the reasons. Everything small is plain and quiet so the numerals carry the page. A few loud moments are kept on purpose, and they are loud because everything around them is still.\n\nThe density is that of a sports desk: plenty of numbers per screen, usable at 390px, read in short visits from a group chat link. Two themes share one structure: the day game and the night game, the same stadium after sunset. The cartoon-glass league site this replaced is rejected: gloss, sheen, glint, condensed stadium lettering.",
     "keyCharacteristics": [
-      "Light only: a daytime world, no dark theme.",
-      "Hard edges everywhere: inked outlines, solid ledges, no blur, no `backdrop-filter`, no ambient shadows.",
-      "Glossy and pressable: cards and buttons look like glass toys and press down when touched.",
-      "Condensed display numerals for everything that's a score, rank or name; a warm geometric sans for reading.",
-      "Data first: charts are hand-drawn SVG, labels wear ink, never the series colour."
+      "Flat bone tiles with a 2px ink edge and a hard ledge, on the sky and the mowed field.",
+      "Bold through scale: Geist 300 for names and numbers, never heavy weights for emphasis.",
+      "Three type voices with distinct jobs: Geist, Geist Mono, Inter.",
+      "Amber acts, violet means you, yellow is an accent, grass measures.",
+      "Four kept loud moments: the painted rank numbers, the dark boards, the tilted prints, the Games fight poster.",
+      "No gloss, sheen, glint, blur or surface gradients in either theme."
     ],
     "rules": [
       {
-        "name": "The First-Down Rule",
-        "body": "Yellow means \"this is you\". It never decorates, never marks an action, never highlights someone else's team. Leaders and winners wear Goalpost Amber (the money-week leader, for one). \"You\" takes one of two forms: the 4px yellow ring on a card (`--ring-w`), or Your Row (mine-bg) with a 2px `#F2C200` inset on a row, cell or table line. Yellow type on a dark scoreboard is an accent, not a \"you\" mark.",
+        "name": "The Violet Is You Rule",
+        "body": "Violet means your team and nothing else on the site. If a violet mark does not point at the viewer's team, it is wrong. The team dashboard's violet leader is the one scoped exception, inside its own sheet.",
         "section": "colors"
       },
       {
-        "name": "The Ink-On-Grass Rule",
-        "body": "Text sitting directly on the field must be Ink (5.2:1). Muted inks fail on green, so small text there goes on a white chip or sign.",
+        "name": "The One Measure Rule",
+        "body": "A plain measure uses one data colour. Only give a bar a second colour when the colour itself says something: your team, a win or loss, a matchup side.",
         "section": "colors"
       },
       {
-        "name": "The Two-Ended Heat Rule",
-        "body": "Heat tables run sky blue (the good end) to amber (the bad end) and fade to white in the middle, never green to red, so every kind of colour vision reads them. Chart labels never fade: other teams' lines and dots dim to 22%, their names stay at Ink 3.",
+        "name": "The Sky to Amber Rule",
+        "body": "Heat tables run sky blue at the good end to amber at the bad end, through white, never green to red, so they read colour-blind. What it takes is the one exception and runs on grass.",
         "section": "colors"
       },
       {
-        "name": "The Background-Color Rule",
-        "body": "Set a card's colour with `background-color`, never the `background` shorthand, or the glass sheen disappears.",
+        "name": "The Dark-Ink Rule",
+        "body": "Anything with words on a bright fill stays on the day's dark ink at night. Add every new bright chip to the dark-ink list in the night game section of the stylesheet.",
         "section": "colors"
       },
       {
-        "name": "The Sentence-Case Rule",
-        "body": "Sentence case everywhere, no ALL-CAPS eyebrow labels, no emoji, no \"A · B · C\" middle-dot strings.",
+        "name": "The Bold Through Scale Rule",
+        "body": "Emphasis comes from size. Names and numbers go up and thin (300); reading sizes use 400; only small controls and inline bold reach 500, the heaviest weight on the site.",
         "section": "typography"
       },
       {
-        "name": "The Numbers-Wear-Display Rule",
-        "body": "Any figure a manager would read aloud (rank, score, points, odds) is set in Big Shoulders; prose stays in Albert Sans.",
+        "name": "The Three Voices Rule",
+        "body": "Geist speaks, Geist Mono measures, Inter names a panel. Don't mix the jobs.",
         "section": "typography"
       },
       {
-        "name": "The Three-Step Rule",
-        "body": "A panel inside a card is always pressed in (Tray plus tray edge), never another raised card and never the same tone as the card face. If two neighbouring surfaces look alike, one of them is on the wrong step.",
+        "name": "The Digits Line Up Rule",
+        "body": "Geist's digits are proportional, so tight columns of small figures take the mono, and large numerals get a fixed box and a little more tracking (-0.02em) so the decimal point does not vanish.",
+        "section": "typography"
+      },
+      {
+        "name": "The Floor Rule",
+        "body": "Nothing sets smaller than 11.5px. On the mono and on bright chips this is a contrast floor as much as a size floor.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "Sentence case and plain verbs everywhere, no all-caps labels, no emoji, no strings of items separated by middle dots. \"This Guy Stinks\" and \"Toilet Time\" stay title case by request.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hard Edge Rule",
+        "body": "Every shadow has zero blur. A ledge is a solid shape, as wide as the edge above it. `backdrop-filter` and `blur()` are not used anywhere. The soft edges are two small exceptions: the kicker loader's feathered clip, by request, and a mask fading the foot of a list in the team dashboard.",
         "section": "elevation"
       },
       {
-        "name": "The Hard-Ledge Rule",
-        "body": "No blur, no `backdrop-filter`, no soft drop shadows. If something needs to stand up, give it an ink outline and a solid ledge.",
-        "section": "elevation"
-      },
-      {
-        "name": "The One-Soft-Edge Rule",
-        "body": "The kicker loader's feathered mask is the only soft edge on the site, by request. Don't add another.",
+        "name": "The Variables Only Rule",
+        "body": "States change a tile's lift, ledge colour and ring through its variables, never by rewriting the shadow stack.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "Do keep every surface on the glass card stack and change only its variables for state.",
-      "Do reserve First-Down Yellow for the viewer's own team and Goalpost Amber for actions and the active state.",
-      "Do set figures in Big Shoulders with tabular numbers, and prose in Albert Sans.",
-      "Do put small text that sits on the field onto a white chip or sign.",
-      "Do keep manager headshots to one or two personal moments per page.",
-      "Do honour `prefers-reduced-motion` and keep phones on the light motion set (transform and opacity only)."
+      "Do build every new surface from the bone face, the 2px ink edge and the hard ledge, with a well for any panel inside it.",
+      "Do make emphasis larger and thinner: Geist 300 for names and numbers, 400 for reading, 500 only for small controls.",
+      "Do set captions and tight columns of small figures in Geist Mono, because Geist's digits are proportional.",
+      "Do open a panel with Inter and its inked dot when it needs its own label.",
+      "Do use amber for actions and the active state, and violet (`--you`) for your team, on charts too.",
+      "Do use `--data` for a plain measure.",
+      "Do run heat tables from sky to amber through white; What it takes alone runs on grass.",
+      "Do put `--ink` on anything sitting directly on the grass (5.2:1); small muted text there goes on a paper chip.",
+      "Do lead reasons and things to watch with an inked pip.",
+      "Do define every colour as a token with a night value, and add new bright chips to the dark-ink list.",
+      "Do write in sentence case with plain verbs.",
+      "Do keep the team dashboard's colours scoped to its own sheet."
     ],
     "donts": [
-      "Don't use emoji or ALL-CAPS labels anywhere.",
-      "Don't add blur, `backdrop-filter` or soft drop shadows; depth is outline plus ledge.",
-      "Don't use the `background` shorthand on a glass card; it wipes the sheen.",
-      "Don't colour chart labels with their series colour; labels wear ink, and they never fade with their dimmed line.",
-      "Don't mark a list item or callout with a coloured `border-left`; use a reason pip.",
-      "Don't let a paragraph sit straight on the grass; it goes on a card or a white chip.",
-      "Don't add a second bold signature next to the yard numbers.",
-      "Don't introduce a dark theme; this is a day game."
+      "Don't add gloss, sheen, glint, blur or gradients to a surface. Hard-stop bands for the sky, the mowing stripes and a filled track are flat colour, and are fine.",
+      "Don't use yellow for your team, or as an action colour on a light surface. It is an accent for dark boards and the top three's painted numbers.",
+      "Don't use violet for anything but your team.",
+      "Don't add another loud moment. The painted numbers, dark boards, tilted prints and fight poster are the full set.",
+      "Don't hard-code a light-only colour.",
+      "Don't set text below 11.5px.",
+      "Don't use emoji, all-caps labels or a coloured left border on reasons.",
+      "Don't put paragraphs straight on the grass.",
+      "Don't use green to red for a heat scale.",
+      "Don't return to condensed stadium lettering or heavy display weights."
     ]
   }
 }
