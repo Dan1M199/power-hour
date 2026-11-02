@@ -12,21 +12,21 @@ export const TEAM_COLORS = [
   '#6250d6', '#e34948', '#ad1457', '#7a8b00', '#0097a7', '#a0522d',
 ];
 
-// Cartoon liquid, like the cards: marks wear an ink outline, bars stand on a hard ledge with a short highlight near
-// their top, dots carry a white glint, and each plot sits on its own plate with chalk gridlines.
+// Cartoon glass, like the cards: marks wear an ink outline, bars stand on a hard ledge with a gloss over their top
+// half, dots carry a white glint, and each plot sits on its own plate with chalk gridlines.
 
 // a dot with an ink ring and a glint in its upper left
 const Dot = ({ cx, cy, r, color, tip }) => <>
   <circle cx={cx} cy={cy} r={r} fill={color} className="dot" data-tip={tip} />
   <circle cx={(cx - r * 0.35).toFixed(1)} cy={(cy - r * 0.35).toFixed(1)} r={Math.max(1.2, r * 0.3).toFixed(1)} className="glint" />
 </>;
-// a bar: ledge underneath, ink-edged body, a short highlight (skipped when the bar is too small to hold it)
+// a bar: ledge underneath, ink-edged body, gloss over the top half (skipped when the bar is too small to hold it)
 function Bar({ x, y, w, h, cls, tip, rx = 5 }) {
   w = Math.max(w, 2);
   return <>
     <rect x={x.toFixed(1)} y={(y + 3).toFixed(1)} width={w.toFixed(1)} height={h.toFixed(1)} rx={rx} className="bar-ledge" />
     <rect x={x.toFixed(1)} y={y.toFixed(1)} width={w.toFixed(1)} height={h.toFixed(1)} rx={rx} className={`bar ${cls}`} data-tip={tip} />
-    {w > 10 && h > 10 ? <rect x={(x + 3).toFixed(1)} y={(y + 3).toFixed(1)} width={Math.min(w - 6, 18).toFixed(1)} height="3.5" rx="1.75" className="bar-gloss" /> : null}
+    {w > 10 && h > 10 ? <rect x={(x + 3).toFixed(1)} y={(y + 3).toFixed(1)} width={(w - 6).toFixed(1)} height={Math.min((h - 6) * 0.45, 12).toFixed(1)} rx={Math.max(2, rx - 2)} className="bar-gloss" /> : null}
   </>;
 }
 // the plate a plot sits on: a tray on a card, or white inside a tray (light)

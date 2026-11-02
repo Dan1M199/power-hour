@@ -16,8 +16,7 @@ export function GamesPage({ D, me, h, calm, lite }) {
     const now = force ?? !open.has(i);
     if (now === open.has(i)) return;
     // Desktop: the open card takes the whole row. Phones are one column already, so nothing moves sideways there.
-    const g = grid.current, poured = document.documentElement.classList.contains('poured'); // poured cards have no surface of their own to glide with
-    const glide = g && !lite && !calm && !poured && getComputedStyle(g).gridTemplateColumns.split(' ').length > 1;
+    const g = grid.current, glide = g && !lite && !calm && getComputedStyle(g).gridTemplateColumns.split(' ').length > 1;
     flip.current = { i, now, first: glide ? new Map([...g.children].map((c) => [c, c.getBoundingClientRect()])) : null };
     setOpened((s) => new Set(s).add(i));
     setOpen((s) => { const n = new Set(s); if (now) n.add(i); else n.delete(i); return n; });
