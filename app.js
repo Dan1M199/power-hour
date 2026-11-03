@@ -171,7 +171,7 @@ function build(raw, after = null) {
   const now = RAW.isDemo && DATA.feed.length ? DATA.feed[0].ts + 6 * 36e5 : Date.now();
   DATA.now = now;
   DATA.bull = MONEY_WEEK ? bullseye(DATA, MONEY_WEEK) : null;
-  DATA.stories = after ? (shakeupOn() ? shakeupStories() : null) : headlines();
+  DATA.stories = after ? (shakeupOn() ? shakeupStories() : finalsOn() ? finalsStories() : null) : headlines();
   DATA.key = keyMatchup(DATA);
   DATA.quips = matchupQuips(DATA);
   return DATA;
@@ -181,6 +181,7 @@ function build(raw, after = null) {
 function headlines() {
   // once the week is final the headlines come down; the week after, the shakeup leads
   if (DATA.finalCall) return null;
+  if (finalsOn()) return finalsStories(); // the week just finished: Dan's headlines until Thursday's kickoff
   if (!DATA.liveMode && shakeupOn()) {
     const shake = shakeupStories(); // always run: it also sets the week's movement arrows on the ranking rows
     return (deskOn() && deskStories()) || shake;
@@ -537,6 +538,72 @@ function closeGames(wk) {
     `Next closest: ${line(g2)}, a ${f1(g2.margin)}-point margin.`,
   ].join(' ');
   return { type: 'nailbiter', kicker: 'Down to the wire', tone: 'neutral', stamp: 'Phew', rids: [g1.W.rid, g1.L.rid], headline, deck };
+}
+
+// ---------- week 8's final call ----------
+// Dan's headlines once week 8 is final (from the final call, then Sleeper's own scoring, until Thursday's kickoff):
+// Hamza's birthday on top, then Chubbs swearing he's better than Jalal (the deck checks his claim against the numbers),
+// then the week's closest finish. Headlines are Dan's words; every number comes from the snapshot. Null drops it.
+const FINALS = {
+  week: 8,
+  birthday: '1004101328819351552', // Hamza
+  wallahi: { by: '1004099157217685504', vs: '1005154707439980544' }, // Chubbs, Jalal
+};
+const finalsOn = () => !!FINALS && DATA.meta.lastScored === FINALS.week && !DATA.liveMode;
+const weekOf = (t, w) => t?.weeks.find((x) => x.week === w);
+
+function birthdayStory() {
+  const t = ownerTeam(FINALS.birthday);
+  if (!t) return null;
+  const g = weekOf(t, FINALS.week), opp = g && team(g.opp), N = firstName(t);
+  const how = !g || g.result == null ? '' : g.result === 'W'
+    ? `${N} got an early present: a win over ${opp ? opp.name : 'the week\'s opponent'} in week ${FINALS.week}, ${f1(g.pts)} to ${f1(g.oppPts)}.`
+    : g.result === 'L'
+    ? `Week ${FINALS.week} didn't bring a present (${f1(g.pts)} to ${f1(g.oppPts)} against ${opp ? opp.name : 'the week\'s opponent'}), but nobody's talking about that today.`
+    : `Week ${FINALS.week} ended dead level at ${f1(g.pts)}, which is about as rare as a birthday.`;
+  return {
+    type: 'birthday', kicker: 'From the whole league', tone: 'good', stamp: 'Birthday', rids: [t.rid],
+    headline: "Happy birthday Hamza, we love you a lot bro, this league wouldn't be fun without you",
+    deck: [
+      how,
+      `${t.name} sits ${ordinal(t.powerRank)} in the new power rankings at ${record(t)}, with ${pct(t.playoffPct)} playoff odds.`,
+      `Happy birthday from all twelve of us, ${N}.`,
+    ].filter(Boolean).join(' '),
+  };
+}
+
+// Chubbs lost, and he swears he's better than Jalal: the numbers get a say
+function wallahiStory() {
+  const C = ownerTeam(FINALS.wallahi.by), J = ownerTeam(FINALS.wallahi.vs);
+  if (!C || !J) return null;
+  const g = weekOf(C, FINALS.week), jg = weekOf(J, FINALS.week), opp = g && team(g.opp);
+  const head = g && g.opp === J.rid;
+  const claims = [
+    ['power rank', C.powerRank < J.powerRank, `${ordinal(C.powerRank)} vs ${ordinal(J.powerRank)}`],
+    ['points per game', C.pfPerGame > J.pfPerGame, `${f1(C.pfPerGame)} vs ${f1(J.pfPerGame)}`],
+    ['record', C.wins > J.wins || (C.wins === J.wins && C.pf > J.pf), `${record(C)} vs ${record(J)}`],
+    ['playoff odds', C.playoffPct > J.playoffPct, `${pct(C.playoffPct)} vs ${pct(J.playoffPct)}`],
+  ];
+  const won = claims.filter((c) => c[1]).length;
+  const verdict = won >= 3 ? 'The numbers back him up. Wallahi checks out.'
+    : won === 2 ? 'The numbers call it a split. The group chat will have to settle it.'
+    : 'The numbers are not on his side. Jalal would like a word.';
+  return {
+    type: 'wallahi', kicker: 'Sore loser desk', tone: 'neutral', stamp: 'Wallahi', rids: [C.rid, J.rid],
+    drain: g?.result === 'L' ? C.rid : undefined,
+    headline: 'Chubbs lost, but he says wallahi he is better than Jalal',
+    deck: [
+      g?.result === 'L' ? `${C.name} went down ${f1(g.pts)} to ${f1(g.oppPts)}${head ? `, head to head against Jalal's ${J.name}` : opp ? ` against ${opp.name}` : ''} in week ${FINALS.week}.` : '',
+      !head && jg?.result ? `Jalal ${jg.result === 'W' ? 'won' : jg.result === 'L' ? 'lost' : 'tied'}, ${f1(jg.pts)} to ${f1(jg.oppPts)}.` : '',
+      `The tale of the tape, Chubbs first: ${claims.map((c) => `${c[0]} ${c[2]}`).join('; ')}.`,
+      `Chubbs takes ${['none', 'one', 'two', 'three', 'all four'][won]} of four. ${verdict}`,
+    ].filter(Boolean).join(' '),
+  };
+}
+
+function finalsStories() {
+  const sel = [birthdayStory(), wallahiStory(), closeGames(FINALS.week)].filter(Boolean);
+  return sel.length ? { lead: sel[0], more: sel.slice(1) } : null;
 }
 
 // ---------- the week's desk ----------
