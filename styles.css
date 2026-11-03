@@ -2154,6 +2154,47 @@ html.locked { overflow: hidden; }
   .pf-odds { font-size: 44px; }
 }
 
+/* ---------- the news ticker ----------
+   Scrolled past the headline card, its headlines run on as a scoreboard strip (src/hero/Ticker.jsx, portaled to body):
+   under the nav bar on desktop, beside the folded football on phones (only while folded). It drops in from its top edge,
+   transform and opacity only, and the loop is one transform animation that only runs while the strip shows. */
+.ticker { position: fixed; z-index: 19; top: var(--tk-top, 84px); left: 0; right: 0; width: var(--page); margin: 0 auto; height: 42px;
+  display: flex; align-items: center; gap: 10px; padding: 0 6px; border-radius: 999px; color: var(--chalk); background-color: var(--board);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 0 var(--edge) var(--outline), 0 4px 0 var(--edge) var(--ledge-gold);
+  transform-origin: 50% 0; opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-12px) scaleY(0.4);
+  transition: transform 0.3s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.2s, visibility 0s 0.3s; }
+.ticker.on { opacity: 1; visibility: visible; pointer-events: auto; transform: none;
+  transition: transform 0.42s cubic-bezier(0.2, 0.8, 0.2, 1.15), opacity 0.2s, visibility 0s; }
+.tk-badge { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px;
+  font: 800 13px/1 var(--body); color: var(--chalk); background: var(--flag); }
+.tk-badge i { width: 7px; height: 7px; border-radius: 50%; background: var(--chalk); animation: brk-blink 1s steps(2, start) infinite; }
+.tk-window { flex: 1; min-width: 0; overflow: hidden; align-self: stretch; display: flex; align-items: center;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 22px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 22px), transparent); }
+.tk-track { display: flex; width: max-content; animation: tk-run var(--tk-dur, 40s) linear infinite paused; }
+.ticker.on .tk-track { animation-play-state: running; }
+@media (hover: hover) and (pointer: fine) { .ticker.on:hover .tk-track { animation-play-state: paused; } }
+@keyframes tk-run { to { transform: translateX(-50%); } }
+.tk-item { display: inline-flex; align-items: center; gap: 8px; padding: 6px 2px; border: 0; border-radius: 8px; background: none; cursor: pointer;
+  color: var(--chalk); font: 600 14px/1.2 var(--body); white-space: nowrap; }
+.tk-item:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+@media (hover: hover) { .tk-item:hover span { color: var(--yellow); } }
+.tk-kick { font: 800 15px/1 var(--display); letter-spacing: 0.02em; color: var(--yellow); }
+.tk-sep { flex: none; width: 20px; height: 12px; margin: 0 12px; fill: #8D5A2B; stroke: var(--chalk); stroke-width: 1.1; stroke-linecap: round; }
+@media (prefers-reduced-motion: reduce) {
+  .ticker, .ticker.on { transition: opacity 0.2s, visibility 0s; transform: none; }
+  .tk-track { animation: none; }
+  .tk-window { overflow-x: auto; scrollbar-width: none; -webkit-mask-image: none; mask-image: none; }
+  .tk-window::-webkit-scrollbar { display: none; }
+}
+@media (max-width: 760px) {
+  /* in the header's place: the row of the folded football, beside the ball */
+  .ticker { top: 21px; left: calc((100vw - var(--page)) / 2 + 72px); right: calc((100vw - var(--page)) / 2); width: auto; margin: 0; height: 44px; gap: 8px; padding: 0 5px; }
+  .tk-badge { padding: 9px; } /* just the blinking dot: the strip needs the room */
+  .tk-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .tk-item { font-size: 13.5px; }
+}
+
 /* ---------- the night game: the dark theme ----------
    The same stadium after sunset, under the lights: a navy night sky, the field floodlit a deeper green, the cards
    smoked glass (a dark green face, a faint sheen, a near-black inked edge on a black ledge) and every word in a pale
