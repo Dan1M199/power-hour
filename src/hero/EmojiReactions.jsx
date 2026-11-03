@@ -213,6 +213,17 @@ export function EmojiReactions({
     clearTimeout(shut.current);
     if (!open) { setOpen(true); }
   };
+  /* The Power Hour: a finger's touch on the add button is handled on
+     the way up, but the browser still sends that touch a click
+     afterwards, aimed at whatever is under the finger by then — and
+     by then the pill has opened and an emoji is rising in right
+     there, so a first tap picked one (and a slid pick counted twice).
+     The one click that follows the button's own touch is swallowed */
+  const swallowClick = () => {
+    const stop = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+    document.addEventListener('click', stop, { capture: true, once: true });
+    window.setTimeout(() => document.removeEventListener('click', stop, true), 700);
+  };
   const hide = (ms = 0) => {
     clearTimeout(shut.current);
     shut.current = window.setTimeout(() => { setOpen(false); setHx(null); }, ms);
@@ -226,7 +237,7 @@ export function EmojiReactions({
   }, [corner, label]);
   /* the display font arriving changes the words' width */
   useEffect(() => { document.fonts?.ready.then(() => textRef.current && setTextW(textRef.current.offsetWidth)); }, []);
-  const hold = useRef({ t: 0, sliding: false, touch: false });
+  const hold = useRef({ t: 0, sliding: false, touch: false, over: false });
 
   /* a press anywhere outside the button and the pill shuts it */
   useEffect(() => {
@@ -243,11 +254,17 @@ export function EmojiReactions({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  /* where a finger is along the pill, in the pill's own pixels */
-  const along = (clientX) => {
+  /* where a finger is along the pill, in the pill's own pixels.
+     The Power Hour: Bencho's measured across only, so a finger
+     lifted on the add button, which sits level with the pill's
+     columns, read as a pick of whatever emoji was in that column.
+     A finger has to be on the pill (a little slack above and below
+     for a thumb) to be anywhere along it */
+  const along = (clientX, clientY) => {
     const p = pill.current;
     if (!p) return null;
     const b = p.getBoundingClientRect();
+    if (clientY != null && (clientY < b.top - 14 || clientY > b.bottom + 14)) return null;
     const k = b.width / p.offsetWidth || 1;
     const x = (clientX - b.left) / k;
     return x < 0 || x > p.offsetWidth ? null : x;
@@ -260,6 +277,7 @@ export function EmojiReactions({
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* a scripted pointer */ }
     clearTimeout(hold.current.t);
     hold.current.sliding = false;
+    hold.current.over = false;
     hold.current.t = window.setTimeout(() => {
       hold.current.sliding = true;
       show();
@@ -267,16 +285,24 @@ export function EmojiReactions({
   };
   const onAddMove = (e) => {
     if (!hold.current.sliding) return;
-    setHx(along(e.clientX));
+    const x = along(e.clientX, e.clientY);
+    if (x !== null) hold.current.over = true; // the finger has made it onto the pill
+    setHx(x);
   };
   const onAddUp = (e) => {
     if (!hold.current.touch) return;
+    hold.current.touch = false;
+    swallowClick();
     clearTimeout(hold.current.t);
     try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* never captured */ }
     if (hold.current.sliding) {
-      /* lifted: on an emoji picks it, anywhere else lets go */
       hold.current.sliding = false;
-      const x = along(e.clientX);
+      /* a slow tap, or a hold that never went anywhere: the pill
+         has opened, so leave it open for a second tap to pick from
+         (a first tap always brings up the tray, never a reaction) */
+      if (!hold.current.over) { setHx(null); return; }
+      /* lifted: on an emoji picks it, anywhere else lets go */
+      const x = along(e.clientX, e.clientY);
       const i = x === null ? -1 : Math.floor((x - 6) / EMO);
       const el = i >= 0 ? pill.current?.querySelectorAll('.rxn-emo')[i] : undefined;
       if (el && emo[i]) pick(emo[i].e, el);
@@ -465,8 +491,8 @@ export function EmojiReactions({
               onPointerCancel={onAddUp}
               onContextMenu={(e) => e.preventDefault()}
               onClick={() => {
-                /* a touch was handled on the way up */
-                if (hold.current.touch) { hold.current.touch = false; return; }
+                /* a touch was handled on the way up (and its click
+                   swallowed): this is a mouse or a keyboard */
                 if (open) hide(); else show();
               }}
             >
