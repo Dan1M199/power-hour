@@ -1594,7 +1594,8 @@ async function claimTalk(token) {
   try {
     const r = await talkCall({ action: 'claim', token });
     const t = DATA.teams.find((x) => x.ownerId === r.me);
-    setTalk({ flash: `You're in, ${DESK_PEOPLE[r.me]?.first || 'friend'}. Your comments post as ${t ? t.name : 'you'}.` });
+    // the desk is anonymous now (Nov 3): a link only matters for Dan, whose session can delete
+    setTalk({ flash: r.admin ? `You're signed in, ${DESK_PEOPLE[r.me]?.first || 'Dan'}. You can delete comments; your own posts stay anonymous.` : 'No link needed any more: anyone can post on the league desk, anonymously.' });
     if (t && !myTeam) { myTeam = t.rid; store.set('ph-my-team', String(t.rid)); $('#my-team').value = String(t.rid); paintMe(); }
   } catch (e) {
     setTalk({ flash: e.message });

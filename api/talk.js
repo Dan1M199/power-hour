@@ -1,7 +1,7 @@
-// /api/talk — the league desk: one discussion thread per week beside the headlines. Anyone can read; only managers
-// signed in with their personal link can post.
+// /api/talk — the league desk: one discussion thread per week beside the headlines. Anyone can read and post, and new
+// posts are anonymous (Dan's call, Nov 3). Only Dan, signed in with his link, can delete.
 //
-//   GET  /api/talk?week=8                       -> { enabled, week, now, me, admin, comments: [{ id, uid, text, ref, ts, edited }] }
+//   GET  /api/talk?week=8                       -> { enabled, week, now, me, admin, comments: [{ id, uid, text, ref, ts, edited, mine }] }
 //   POST /api/talk { action: 'claim', token }   -> signs this device in as the link's manager (HttpOnly cookie ph_who)
 //   POST /api/talk { action: 'post', week, text, ref }    ref: { key: 'w8:leak', title: 'the headline' } or null
 //   POST /api/talk { action: 'edit', week, id, text }     the author only, within EDIT_MS of posting
@@ -13,8 +13,11 @@
 // Nothing here lives in the code or the CDN: comments, links and sessions are all in the store, so deploys, headline
 // changes and cache purges leave them alone. Comments keep their own copy of the headline they're about.
 //
-// Who posted is always the server's call: a comment stores the Sleeper user id from the signed-in session, and the page
-// turns it into a first name and the current team name. A personal link carries a random token after the # (so it never
+// Anonymous posts: a comment is filed as uid 'anon' with a hash of this device's random id (HttpOnly cookie ph_anon),
+// which is never sent out; the page only learns which comments are its own (mine), for the one-minute edit. Posting is
+// held to one every GAP_S seconds per device and per network, and MAX_PER_HOUR per network. Comments from before Nov 3
+// keep the manager they were posted under. Links still sign a device in, which only matters for Dan: his session is what
+// lets him delete. A personal link carries a random token after the # (so it never
 // reaches server logs or the CDN); the page trades it for a session cookie the page's scripts can't read. Only hashes of
 // tokens and sessions are stored. Dan gets in the first time with TALK_ADMIN_KEY (an env var only he knows) as his
 // token, then makes everyone else's links from the panel. Storage is the Upstash store (lib/snapstore.js); without it GET
@@ -30,6 +33,7 @@ const TTL = 60 * 60 * 24 * 300; // a season and then some
 const SESSION_TTL = 60 * 60 * 24 * 365;
 const GAP_S = 6; // seconds between posts from one manager
 const MAX_PER_WEEK = 3000;
+const MAX_PER_HOUR = 40; // posts per network
 
 const now = () => Number(process.env.TALK_NOW) || Date.now(); // overridable for tests
 // The NFL season a moment belongs to: September through the following summer. Threads are kept per season so next year's
@@ -40,7 +44,17 @@ export const threadKey = (week, ts = now()) => { const s = seasonOf(ts); return 
 const sha = (s) => createHash('sha256').update(String(s)).digest('hex');
 const k = (...parts) => `ph:talk:${parts.join(':')}`;
 const cookieOf = (req) => (/(?:^|;\s*)ph_who=([A-Za-z0-9_-]{20,80})/.exec(req.headers.cookie || '') || [])[1] || null;
-const setSession = (res, sid, age = SESSION_TTL) => res.setHeader('Set-Cookie', `ph_who=${sid}; Path=/; Max-Age=${age}; SameSite=Lax; Secure; HttpOnly`);
+const addCookie = (res, c) => { const was = res.headers?.['Set-Cookie'] ?? res.getHeader?.('Set-Cookie'); res.setHeader('Set-Cookie', [...[was ?? []].flat(), c]); };
+const setSession = (res, sid, age = SESSION_TTL) => addCookie(res, `ph_who=${sid}; Path=/; Max-Age=${age}; SameSite=Lax; Secure; HttpOnly`);
+// this device's anonymous id, made on its first visit; only its hash is ever stored
+const anonOf = (req, res) => {
+  const have = (/(?:^|;\s*)ph_anon=([A-Za-z0-9_-]{20,80})/.exec(req.headers.cookie || '') || [])[1];
+  if (have) return have;
+  const id = randomBytes(24).toString('base64url');
+  addCookie(res, `ph_anon=${id}; Path=/; Max-Age=${SESSION_TTL}; SameSite=Lax; Secure; HttpOnly`);
+  return id;
+};
+const netOf = (req) => sha(`net:${String(req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.socket?.remoteAddress || '').split(',')[0].trim()}`);
 const validWeek = (w) => Number.isInteger(w) && w >= 1 && w <= 22;
 const same = (a, b) => { const x = Buffer.from(sha(a)), y = Buffer.from(sha(b)); return timingSafeEqual(x, y); };
 
@@ -66,7 +80,12 @@ async function thread(week) {
   for (let i = 0; i + 1 < (h || []).length; i += 2) out.push(JSON.parse(h[i + 1]));
   return out.sort((a, b) => a.ts - b.ts);
 }
-const state = async (week, me) => ({ enabled: true, week, now: now(), me, admin: me === ADMIN, editMs: EDIT_MS, maxLen: MAX_LEN, comments: await thread(week) });
+// what the page gets: no device hashes, just which comments are this device's own
+const state = async (week, me, anon) => {
+  const by = anon && sha(anon);
+  return { enabled: true, week, now: now(), me, admin: me === ADMIN, editMs: EDIT_MS, maxLen: MAX_LEN,
+    comments: (await thread(week)).map(({ by: b, ...c }) => ({ ...c, mine: b ? b === by : c.uid === me })) };
+};
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -75,7 +94,7 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const week = Number(req.query?.week);
       if (!validWeek(week)) return res.status(400).json({ error: 'Bad week' });
-      return res.status(200).json(await state(week, await whoAmI(req)));
+      return res.status(200).json(await state(week, await whoAmI(req), anonOf(req, res)));
     }
     if (req.method !== 'POST') { res.setHeader('Allow', 'GET, POST'); return res.status(405).json({ error: 'Method not allowed' }); }
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
@@ -101,8 +120,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ me: null });
     }
 
-    const me = await whoAmI(req);
-    if (!me) return res.status(401).json({ error: 'Open your personal link from Dan to post' });
+    const me = await whoAmI(req), anon = anonOf(req, res);
 
     if (action === 'invite') {
       if (me !== ADMIN) return res.status(403).json({ error: 'Only Dan can make links' });
@@ -129,12 +147,17 @@ export default async function handler(req, res) {
       if (text.length > MAX_LEN) return res.status(400).json({ error: `Keep it under ${MAX_LEN} characters` });
       const [len] = await redis([['HLEN', threadKey(week)]]);
       if (len >= MAX_PER_WEEK) return res.status(429).json({ error: 'This week\'s thread is full' });
-      const [slot] = await redis([['SET', k('gap', me), '1', 'NX', 'EX', String(GAP_S)]]);
-      if (slot !== 'OK') return res.status(429).json({ error: 'Easy, one at a time. Try again in a few seconds.' });
+      const net = netOf(req);
+      const [slot, slotNet, hour] = await redis([
+        ['SET', k('gap', sha(anon)), '1', 'NX', 'EX', String(GAP_S)], ['SET', k('gap', net), '1', 'NX', 'EX', String(GAP_S)], ['INCR', k('hour', net)],
+      ]);
+      if (hour === 1) await redis([['EXPIRE', k('hour', net), '3600']]);
+      if (slot !== 'OK' || slotNet !== 'OK') return res.status(429).json({ error: 'Easy, one at a time. Try again in a few seconds.' });
+      if (hour > MAX_PER_HOUR) return res.status(429).json({ error: 'That is a lot of posts. Take a breather and try again later.' });
       const ts = now(), id = `${ts.toString(36)}${randomBytes(3).toString('hex')}`;
-      const c = { id, uid: me, text, ref: cleanRef(body.ref), ts };
+      const c = { id, uid: 'anon', by: sha(anon), text, ref: cleanRef(body.ref), ts };
       await redis([['HSET', threadKey(week), id, JSON.stringify(c)], ['EXPIRE', threadKey(week), String(TTL)]]);
-      return res.status(200).json(await state(week, me));
+      return res.status(200).json(await state(week, me, anon));
     }
 
     const id = String(body.id || '');
@@ -143,17 +166,17 @@ export default async function handler(req, res) {
     const c = JSON.parse(raw);
 
     if (action === 'edit') {
-      if (c.uid !== me) return res.status(403).json({ error: 'You can only edit your own comments' });
+      if (!(c.by ? c.by === sha(anon) : me && c.uid === me)) return res.status(403).json({ error: 'You can only edit your own comments' });
       if (now() - c.ts > EDIT_MS) return res.status(403).json({ error: 'Comments can only be edited in the first minute' });
       const text = clean(body.text);
       if (!text || text.length > MAX_LEN) return res.status(400).json({ error: `Between 1 and ${MAX_LEN} characters` });
       await redis([['HSET', threadKey(week), id, JSON.stringify({ ...c, text, edited: now() })]]);
-      return res.status(200).json(await state(week, me));
+      return res.status(200).json(await state(week, me, anon));
     }
     if (action === 'delete') {
       if (me !== ADMIN) return res.status(403).json({ error: 'Only Dan can delete comments' });
       await redis([['HDEL', threadKey(week), id]]);
-      return res.status(200).json(await state(week, me));
+      return res.status(200).json(await state(week, me, anon));
     }
     return res.status(400).json({ error: 'Unknown action' });
   } catch (e) {

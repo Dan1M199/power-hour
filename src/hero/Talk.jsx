@@ -1,10 +1,10 @@
-// The league desk: one discussion thread a week, beside the headlines. Anyone can read; managers post once they've
-// opened their personal link from Dan (api/talk.js). A comment can carry the headline it's about (taken from the slide
+// The league desk: one discussion thread a week, beside the headlines. Anyone can read and post, anonymously (api/talk.js);
+// comments from before Nov 3 keep the manager who posted them. Dan signs in with his link to delete. A comment can carry the headline it's about (taken from the slide
 // on screen when its author starts typing), shown as a chip that turns the carousel back to that slide. Authors can edit
 // for a minute; only Dan deletes. It refreshes every 25 seconds while the tab is visible, unless a comment is being
 // edited. The demo and the preview bundle leave it out.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { MEMBERS, GUESTS, DESK_PEOPLE } from '../../lib/members.js';
+import { GUESTS, DESK_PEOPLE } from '../../lib/members.js';
 import { Headshot } from '../shared.jsx';
 import { useTalk, setTalk, talk, talkCall, keepTalk, loadTalk, viewWeek, talkNow, storyKeys } from './talk.js';
 
@@ -26,16 +26,16 @@ function About({ about, onTag, onUnref, h }) {
 }
 
 function Comment({ c, D, h, keys, editing, onEdit, onCancel, onSave, onDelete, onGoto }) {
-  const t = h.teams.find((x) => x.ownerId === c.uid), m = DESK_PEOPLE[c.uid];
-  const mine = D.me === c.uid, left = D.editMs - (talkNow() - c.ts);
+  const anon = c.uid === 'anon', t = !anon && h.teams.find((x) => x.ownerId === c.uid), m = DESK_PEOPLE[c.uid];
+  const mine = !!c.mine, left = D.editMs - (talkNow() - c.ts);
   const [text, setText] = useState(c.text);
   const i = c.ref ? keys.indexOf(c.ref.key) : -1;
   const canEdit = mine && left > 0 && !editing;
   return (
     <li className={`tc${mine ? ' mine' : ''}`} data-id={c.id}>
-      {t ? <Headshot t={t} cls="tc-face" h={h} /> : m?.icon ? <img className="tc-face icon" src={m.icon} alt="" decoding="async" /> : <span className="tc-face ph">{(m?.first || '?')[0]}</span>}
+      {anon ? <img className="tc-face icon" src="assets/heads/helmet.svg" alt="" decoding="async" /> : t ? <Headshot t={t} cls="tc-face" h={h} /> : m?.icon ? <img className="tc-face icon" src={m.icon} alt="" decoding="async" /> : <span className="tc-face ph">{(m?.first || '?')[0]}</span>}
       <div className="tc-body">
-        <p className="tc-who"><b>{m?.first || 'Manager'}</b>{t ? <span>{t.name}</span> : GUESTS[c.uid] ? <span>Guest</span> : null}<time>{`${ago(c.ts)}${c.edited ? ', edited' : ''}`}</time></p>
+        <p className="tc-who"><b>{anon ? 'Anonymous' : m?.first || 'Manager'}</b>{t ? <span>{t.name}</span> : GUESTS[c.uid] ? <span>Guest</span> : null}<time>{`${ago(c.ts)}${c.edited ? ', edited' : ''}`}</time></p>
         {c.ref ? (
           <button type="button" className="tc-ref" disabled={i < 0} data-tip={i < 0 ? `${c.ref.title} (no longer in the headlines)` : `Show this headline: ${c.ref.title}`}
             onClick={() => onGoto(i)}>{`On: ${h.short(c.ref.title, 56)}`}</button>
@@ -54,35 +54,6 @@ function Comment({ c, D, h, keys, editing, onEdit, onCancel, onSave, onDelete, o
         ) : null}
       </div>
     </li>
-  );
-}
-
-function Invites({ h }) {
-  const [copied, setCopied] = useState({});
-  const people = [...Object.entries(MEMBERS).sort((a, b) => a[1].first.localeCompare(b[1].first)), ...Object.entries(GUESTS)];
-  const make = async (uid) => {
-    if (!confirm(`Make a new link for ${DESK_PEOPLE[uid]?.first}? Their old link stops working.`)) return;
-    try { const r = await talkCall({ action: 'invite', uid }); setTalk({ links: { ...talk.links, [uid]: `${location.origin}${location.pathname}#join=${r.token}` } }); }
-    catch (x) { setTalk({ flash: x.message }); }
-  };
-  const copy = async (uid, e) => {
-    const input = e.currentTarget.closest('li').querySelector('input');
-    try { await navigator.clipboard.writeText(talk.links[uid]); setCopied({ ...copied, [uid]: true }); } catch { input?.select(); }
-  };
-  return (
-    <div className="talk-invites">
-      <p className="talk-note">Each link signs one manager in, on as many of their devices as they like. A new link replaces the old one and signs those devices out.</p>
-      <ul>{people.map(([uid, m]) => {
-        const t = h.teams.find((x) => x.ownerId === uid), url = talk.links[uid];
-        return (
-          <li key={uid}><span><b>{m.first}</b>{t ? <small>{t.name}</small> : GUESTS[uid] ? <small>Guest</small> : null}</span>
-            {url
-              ? <><input readOnly value={url} aria-label={`${m.first}'s link`} /><button type="button" className="talk-btn" onClick={(e) => copy(uid, e)}>{copied[uid] ? 'Copied' : 'Copy'}</button></>
-              : <button type="button" className="talk-btn" onClick={() => make(uid)}>New link</button>}
-          </li>
-        );
-      })}</ul>
-    </div>
   );
 }
 
@@ -121,7 +92,7 @@ export function Talk({ h, stories, nav, onGoto }) {
   // the edit buttons come off when their minute is up
   useEffect(() => {
     if (!D) return;
-    const next = D.comments.filter((c) => c.uid === D.me).map((c) => D.editMs - (talkNow() - c.ts)).filter((x) => x > 0);
+    const next = D.comments.filter((c) => c.mine).map((c) => D.editMs - (talkNow() - c.ts)).filter((x) => x > 0);
     if (!next.length) return;
     const t = setTimeout(() => tick((x) => x + 1), Math.min(...next, 10000) + 50);
     return () => clearTimeout(t);
@@ -167,7 +138,7 @@ export function Talk({ h, stories, nav, onGoto }) {
     <aside className="talk glass" id="talk" aria-label="League desk">
       <div className="talk-in">
         <div className="talk-head">
-          <div className="talk-title"><h2>League desk</h2>{D.admin ? <button type="button" className="talk-btn" aria-expanded={String(!!T.invites)} onClick={() => setTalk({ invites: !T.invites })}>Invite links</button> : null}</div>
+          <div className="talk-title"><h2>League desk</h2></div>
           <div className="talk-bar">
             <span className="talk-meta">
               {cur > 1
@@ -175,11 +146,12 @@ export function Talk({ h, stories, nav, onGoto }) {
                 : <span className="talk-n">{`Week ${D.week}`}</span>}
               <span className="talk-n">{`${n} comment${n === 1 ? '' : 's'}`}</span>
             </span>
-            {D.me ? <span className="talk-me">Posting as <b>{DESK_PEOPLE[D.me]?.first || ''}</b><button type="button" className="tc-pill" onClick={signout}>Sign out</button></span> : null}
+            {D.admin
+              ? <span className="talk-me">Posting anonymously, signed in as <b>{DESK_PEOPLE[D.me]?.first || ''}</b><button type="button" className="tc-pill" onClick={signout}>Sign out</button></span>
+              : <span className="talk-me">Posting anonymously</span>}
           </div>
         </div>
         {T.flash ? <p className="talk-flash" role="status">{T.flash}</p> : null}
-        {T.invites ? <Invites h={h} /> : null}
         <ol className="talk-list" ref={list}>
           {n ? D.comments.map((c) => (
             <Comment key={c.id} c={c} D={D} h={h} keys={keys} editing={editing === c.id}
@@ -188,9 +160,7 @@ export function Talk({ h, stories, nav, onGoto }) {
         </ol>
         {T.view
           ? <p className="talk-note">{`Week ${T.view}'s thread is closed. `}<button type="button" className="tc-link" onClick={() => { setTalk({ view: null }); loadTalk(); }}>{`Back to week ${cur}`}</button></p>
-          : !D.me
-            ? <p className="talk-note">Reading only. Ask Dan for your personal link to join in.</p>
-            : (
+          : (
               <form className="talk-form" onSubmit={post}>
                 <div className="talk-about"><About about={about} h={h} onTag={() => { setAbout(headline()); touched.current = true; }} onUnref={() => { setAbout(null); touched.current = true; }} /></div>
                 <textarea rows="3" maxLength={D.maxLen} placeholder="Say something to the league" aria-label="Your comment" value={draft}
