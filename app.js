@@ -601,9 +601,52 @@ function wallahiStory() {
   };
 }
 
+// Dan's tip, Nov 2: Hamza (Lemme CeeDee Tets) is closing in on Jonathan Taylor from Khalil, who needs a quarterback,
+// and Hamza has a spare one. A breaking slide with Taylor's card while he's still Khalil's; once he lands with Hamza it
+// turns into the done deal from the snapshot's trade. Null drops it.
+const TAYLOR = { player: '6813', buyer: '1004101328819351552', seller: '1004155263252824064' };
+function taylorStory() {
+  const T = TAYLOR, buyer = ownerTeam(T.buyer), seller = ownerTeam(T.seller), at = rosterOf(T.player);
+  if (!buyer || !seller || (at !== seller && at !== buyer)) return null; // it went somewhere else: the tip is dead
+  const P = nameOf(T.player), info = DATA.helpers.player(T.player), r = RAW.ros?.values?.[T.player] || {};
+  const H = firstName(buyer), K = firstName(seller);
+  const qbs = (t) => t.players.filter((id) => posOf(id) === 'QB').sort((a, b) => valueOf(b) - valueOf(a));
+  const starts = (t, id) => t.rosLineup.some((l) => l?.id === id);
+  const spare = qbs(buyer).find((id) => !starts(buyer, id)), kq = qbs(seller).find((id) => starts(seller, id));
+  const qbSaid = (id) => { const v = RAW.ros?.values?.[id] || {}; return `${nameOf(id)}${v.prk ? ` (the ${ordinal(v.prk)}-ranked quarterback in the consensus${v.wk ? `, ${f1(v.wk)} a week projected` : ''})` : ''}`; };
+  const card = { id: T.player, name: P, short: shortName(info), line: `${info.pos}, ${nfl(info.team)}` };
+  if (at === buyer) {
+    const deal = DATA.feed.find((f) => f.type === 'trade' && f.sides.some((x) => x.rid === buyer.rid && x.adds.some((a) => a.id === T.player)));
+    return {
+      type: 'deal', kicker: 'Trade desk', tone: 'trade', stamp: 'Done deal', rids: [buyer.rid, seller.rid], breaking: true, mark: [P],
+      player: { ...card, pin: { team: buyer, label: `To ${H}` } },
+      headline: `Done deal: ${buyer.name} lands ${P}`,
+      deck: [
+        `The desk had ${H} closing in on ${P}, and it's done.`,
+        deal ? `The full deal: ${dealSaid(deal)}` : '',
+        deal ? valueSaid(deal) : '',
+        deal ? roomsSaid(deal) : '',
+        `${H} is ${record(buyer)} with ${pct(buyer.playoffPct)} playoff odds; ${K} is ${record(seller)} with ${pct(seller.playoffPct)}.`,
+      ].filter(Boolean).join(' '),
+    };
+  }
+  return {
+    type: 'rumor', kicker: 'Trade desk', tone: 'trade', stamp: 'Rumor', rids: [buyer.rid, seller.rid], breaking: true, mark: [P],
+    player: { ...card, pin: { team: buyer, label: `Talks with ${H}` } },
+    headline: `${buyer.name} is closing in on a trade for ${P}: ${K} needs a QB, and ${H} has what he's looking for`,
+    deck: [
+      `The desk hears ${H} and ${K} are getting close on ${P}${r.prk ? `, the ${ordinal(r.prk)}-ranked running back in the consensus${r.wk ? ` at ${f1(r.wk)} a week projected` : ''}` : ''}.`,
+      `The word is ${K} needs a quarterback: ${poss(K)} quarterback room ranks ${ordinal(seller.posRanks.QB)} in the league${kq ? `, with ${nameOf(kq)} starting` : ''}${seller.posRanks.QB <= 6 ? ', so this is about insurance as much as need' : ''}.`,
+      spare ? `${H} has one to spare: ${qbSaid(spare)} sits behind ${qbs(buyer).filter((id) => id !== spare).map(nameOf)[0] || 'the starter'} on the bench.` : `${poss(H)} quarterback room ranks ${ordinal(buyer.posRanks.QB)}.`,
+      `${P} would walk into a backfield that ranks ${ordinal(buyer.posRanks.RB)} right now.`,
+      `${H} is ${record(buyer)} with ${pct(buyer.playoffPct)} playoff odds; ${K} is ${record(seller)} with ${pct(seller.playoffPct)}. Nothing is signed yet.`,
+    ].join(' '),
+  };
+}
+
 function finalsStories() {
-  const sel = [birthdayStory(), wallahiStory(), closeGames(FINALS.week)].filter(Boolean);
-  return sel.length ? { lead: sel[0], more: sel.slice(1) } : null;
+  const sel = [birthdayStory(), TAYLOR && taylorStory(), wallahiStory(), closeGames(FINALS.week)].filter(Boolean);
+  return sel.length ? { lead: sel[0], more: sel.slice(1), size: sel.length } : null;
 }
 
 // ---------- the week's desk ----------
