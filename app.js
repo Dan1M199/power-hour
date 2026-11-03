@@ -348,7 +348,7 @@ function rankingsProps() {
 // important message is incoming, counts down, then plays the video with sound. Phones block sound without a tap, so if
 // the browser refuses it shows a "Tap to play" button instead. Seen once it ends or is skipped; a chip on the page plays
 // it again. It only appears once the file is actually there. Set MESSAGE_VIDEO to null to drop it.
-const MESSAGE_VIDEO = { id: 'w7-message', src: 'assets/important-message.mp4' };
+const MESSAGE_VIDEO = null; // the week 7 message ({ id: 'w7-message', src: 'assets/important-message.mp4' }), taken down Nov 2 at Dan's request
 const messageSeen = () => store.get(`ph-video-${MESSAGE_VIDEO.id}`) === '1';
 const messageOn = () => !!MESSAGE_VIDEO && !window.__DEMO__ && !DATA.liveMode;
 let messageReady = null; // the HEAD check for the file, once
