@@ -6,19 +6,9 @@
 // strip you can swipe.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { stampOf } from './Carousel.jsx';
+import { tickOf } from './Carousel.jsx';
 
 const SPEED = 70; // px a second
-// what the ticker says: an attention catcher and one sentence. A story can carry its own (tick: { hook, line });
-// otherwise the hook is its photo stamp (or kicker) and the line is its headline's first sentence, kept short.
-const MAX = 110;
-function tickOf(st) {
-  if (st.tick) return st.tick;
-  let line = st.headline.split(/(?<=[.?!])\s+/)[0];
-  if (line.length < 28) line = st.headline; // "Stop everything." isn't a summary
-  if (line.length > MAX) line = `${line.slice(0, line.lastIndexOf(' ', MAX - 1))}…`;
-  return { hook: stampOf(st) || st.kicker, line: /[.?!…]$/.test(line) ? line : `${line}.` };
-}
 const phone = () => matchMedia('(max-width: 760px)').matches;
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 

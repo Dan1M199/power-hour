@@ -2,11 +2,16 @@
 // the week's desk), swiped, stepped with the arrows or picked from the dots; the active dot's fill is the auto-advance
 // timer. The stories themselves are written in app.js (and lib/stories.js, lib/nightdesk.js) as plain data; this draws
 // them and runs the card. A video story's clip plays muted on a loop while its slide shows (useClip).
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { shortName } from '../../lib/matchup.js';
+import { storyKeys } from './talk.js';
+import { useReactions, loadReactions, react } from './reactions.js';
 import { TeamAvatar, Headshot, ChampTag, ChampBadge } from '../shared.jsx';
 
 const asset = (p) => window.__ASSETS__?.[p] || p;
+// the reaction bar under each headline (EmojiReactions.jsx), in its own chunk: framer-motion only downloads once the
+// league's store says reactions are on
+const Reactions = lazy(() => import('./EmojiReactions.jsx'));
 const mq = (q) => matchMedia(q).matches;
 const calm = () => mq('(prefers-reduced-motion: reduce)');
 
@@ -21,6 +26,17 @@ const STAMPS = {
 };
 // a story's stamp: its own, or its type's
 export const stampOf = (st) => st.stamp || (st.type === 'streak' ? (st.tone === 'good' ? 'Heater' : 'Skid') : STAMPS[st.type]);
+// a story in brief, for the ticker and the reaction bar's message: an attention catcher and one sentence. A story can
+// carry its own (tick: { hook, line }); otherwise the hook is its photo stamp (or kicker) and the line is its headline's
+// first sentence, kept short.
+const MAX = 110;
+export function tickOf(st) {
+  if (st.tick) return st.tick;
+  let line = st.headline.split(/(?<=[.?!])\s+/)[0];
+  if (line.length < 28) line = st.headline; // "Stop everything." isn't a summary
+  if (line.length > MAX) line = `${line.slice(0, line.lastIndexOf(' ', MAX - 1))}…`;
+  return { hook: stampOf(st) || st.kicker, line: /[.?!…]$/.test(line) ? line : `${line}.` };
+}
 function Faces({ st, D, h }) {
   const ts = st.rids.map((r) => D.byRid[r]).filter((t) => t && h.faceSrc(t)).slice(0, 2);
   if (!ts.length) return null;
@@ -146,7 +162,7 @@ function ScoreBug({ bug: { w, l, kw, kl }, h }) {
 const Brk = () => <span className="brk"><i aria-hidden="true" />Breaking</span>;
 const TONIGHT = new Set(['monday', 'locked', 'tonight']);
 
-function Slide({ st, i, n, D, h, groups, runs, date, night, clip, slideRef }) {
+function Slide({ st, i, n, D, h, groups, runs, date, night, clip, slideRef, hk, rx }) {
   const run = runs?.find((x) => x.i.includes(i));
   const breaking = st.type === 'shakeup' || st.breaking;
   const top = (
@@ -165,6 +181,7 @@ function Slide({ st, i, n, D, h, groups, runs, date, night, clip, slideRef }) {
     <article ref={slideRef} className={`slide${breaking ? ' breaking' : ''}${st.clip ? ' has-clip' : ''}`} id={`slide-${i}`} role="group" aria-roledescription="slide" aria-label={`Headline ${i + 1} of ${n}`}>
       {st.clip ? <><div className="clip-head">{top}{hed}</div><ClipPrint st={st} D={D} h={h} clip={clip} /></> : <>{top}{hed}</>}
       <p className="lead-deck"><Marked text={st.deck} marks={st.mark} /></p>
+      {rx.enabled ? <Suspense fallback={<div className="rxn-hold" />}><Reactions hk={hk} label={tickOf(st).hook} rx={rx} react={react} /></Suspense> : null}
       {st.bug ? <ScoreBug bug={st.bug} h={h} /> : <Cast st={st} D={D} h={h} />}
     </article>
   );
@@ -195,6 +212,10 @@ export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
   const clipVideo = useRef(null), clipButton = useRef(null);
   const [clipState, setClipState] = useState('play');
   const clipSync = useRef(null);
+  // the league's reactions to these headlines, by their desk keys
+  const rx = useReactions();
+  const keys = storyKeys(stories);
+  useEffect(() => { loadReactions(keys); }, [keys.join()]);
 
   // sections: runs of slides sharing a group, when every slide has one
   const runs = stories.every((st) => groups[st.group])
@@ -238,6 +259,9 @@ export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
     if (n < 2) return () => { seen.disconnect(); if (nav) nav.current = null; };
     fit();
     document.fonts?.ready.then(fit); // headline height changes once the display font arrives
+    // and whenever a slide's own height changes: the reaction bar arrives after the first paint and its chips wrap
+    const grown = new ResizeObserver(() => fit());
+    slides.current.forEach((s) => s && grown.observe(s));
     // re-fit on real width changes only: iPhone fires resize as its toolbar hides during every scroll
     let width = innerWidth;
     const onResize = () => { if (innerWidth !== width) { width = innerWidth; fit(); } };
@@ -259,6 +283,7 @@ export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
     tr.addEventListener('pointercancel', up);
     return () => {
       seen.disconnect();
+      grown.disconnect();
       removeEventListener('resize', onResize);
       tr.removeEventListener('scroll', onScroll);
       tr.removeEventListener('pointerdown', down);
@@ -286,7 +311,7 @@ export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
       <div className="car-track" tabIndex="0" ref={track}>
         {stories.map((st, i) => (
           <Slide key={i} st={st} i={i} n={n} D={D} h={h} groups={groups} runs={runs} date={date} night={night}
-            clip={{ video: clipVideo, button: clipButton, state: clipState }} slideRef={(s) => (slides.current[i] = s)} />
+            clip={{ video: clipVideo, button: clipButton, state: clipState }} slideRef={(s) => (slides.current[i] = s)} hk={keys[i]} rx={rx} />
         ))}
       </div>
       {n > 1 ? (
