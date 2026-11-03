@@ -19,10 +19,12 @@ const STAMPS = {
   winless: 'Winless', upset: 'Upset', blowout: 'Boom', nailbiter: 'Phew', explosion: 'Boom', climb: 'Rising',
   fall: 'Sliding', unlucky: 'Robbed', lucky: 'Lucky', giant: 'Giant', gotw: 'Big game',
 };
+// a story's stamp: its own, or its type's
+export const stampOf = (st) => st.stamp || (st.type === 'streak' ? (st.tone === 'good' ? 'Heater' : 'Skid') : STAMPS[st.type]);
 function Faces({ st, D, h }) {
   const ts = st.rids.map((r) => D.byRid[r]).filter((t) => t && h.faceSrc(t)).slice(0, 2);
   if (!ts.length) return null;
-  const stamp = st.stamp || (st.type === 'streak' ? (st.tone === 'good' ? 'Heater' : 'Skid') : STAMPS[st.type]);
+  const stamp = stampOf(st);
   return (
     <div className={`lead-faces n${ts.length} ${st.tone || ''}`} aria-hidden="true">
       {ts.map((t, k) => (

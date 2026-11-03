@@ -537,7 +537,8 @@ function closeGames(wk) {
     r ? `It didn't have to end that way for ${fn(g1.L)}: ${nameOf(r.b)} scored ${f1(r.bp)} on the bench while ${nameOf(r.s)} started and scored ${f1(r.sp)}. That swap wins it.` : `${fn(g1.L)} will be replaying every lineup call all week.`,
     `Next closest: ${line(g2)}, a ${f1(g2.margin)}-point margin.`,
   ].join(' ');
-  return { type: 'nailbiter', kicker: 'Down to the wire', tone: 'neutral', stamp: 'Phew', rids: [g1.W.rid, g1.L.rid], headline, deck };
+  const tick = { hook: 'Photo finish', line: `${fn(g1.W)} survived ${fn(g1.L)} by ${f1(g1.margin)} points, the closest game of week ${wk}.` };
+  return { type: 'nailbiter', kicker: 'Down to the wire', tone: 'neutral', stamp: 'Phew', rids: [g1.W.rid, g1.L.rid], headline, deck, tick };
 }
 
 // ---------- week 8's final call ----------
@@ -571,6 +572,7 @@ function wallahiStory() {
     type: 'wallahi', kicker: 'Sore loser desk', tone: 'neutral', stamp: 'Wallahi', rids: [C.rid, J.rid],
     drain: g?.result === 'L' ? C.rid : undefined,
     headline: 'Chubbs lost, but he says wallahi he is better than Jalal',
+    tick: { hook: 'Wallahi', line: `Chubbs lost but swears he's better than Jalal, and the numbers give him ${['none', 'one', 'two', 'three', 'all four'][won]} of four.` },
     deck: [
       g?.result === 'L' ? `${C.name} went down ${f1(g.pts)} to ${f1(g.oppPts)}${head ? `, head to head against Jalal's ${J.name}` : opp ? ` against ${opp.name}` : ''} in week ${FINALS.week}.` : '',
       !head && jg?.result ? `Jalal ${jg.result === 'W' ? 'won' : jg.result === 'L' ? 'lost' : 'tied'}, ${f1(jg.pts)} to ${f1(jg.oppPts)}.` : '',
@@ -598,6 +600,7 @@ function blockbusterStory() {
     type: 'blockbuster', kicker: 'Trade desk', tone: 'trade', stamp: 'Blockbuster', breaking: true, rids: sides.map((x) => x.rid),
     player: { id: star.id, name: P, short: shortName(info.name ? info : { name: P }), line: `${info.pos || posOf(star.id)}, ${nfl(info.team)}`, pin: { team: star.to, label: `To ${firstName(star.to)}` } },
     mark: [P],
+    tick: { hook: 'Blockbuster', line: `${P} heads to ${firstName(star.to)} in ${n === 8 || n === 11 ? 'an' : 'a'} ${count(n)}-player deal with ${listOf(others)}.` },
     headline: `Stop everything. ${P} is headed to ${firstName(star.to)} in ${n === 8 || n === 11 ? 'an' : 'a'} ${count(n)}-player blockbuster with ${listOf(others)}`,
     deck: [
       `Nobody saw this coming. ${listOf(sides.map((x) => firstName(x.t)))} just shook on the biggest deal of the season${r.prk ? `, and ${P}, the ${ordinal(r.prk)}-ranked ${SLOT_WORD[star.pos] || star.pos} in the consensus, is on the move` : ''}.`,
@@ -643,6 +646,7 @@ function smashStory() {
     type: 'smash', kicker: 'Trade desk', tone: 'trade', stamp: 'Smash or pass', breaking: true, rids: [H.rid, K.rid],
     player: { id: SMASH.toHamza[0], name: JT, short: shortName(info.name ? info : { name: JT }), line: `${info.pos || 'RB'}, ${nfl(info.team)}`, pin: { team: H, label: done ? 'To Hamza' : 'Pending: to Hamza' } },
     mark: [JT],
+    tick: { hook: 'Smash or pass', line: `Hamza's three-for-one for JT is in review, and ROS values say ${kWins ? 'Khalil' : 'Hamza'} wins it, ${f1(Math.max(kGets, hGets))} to ${f1(Math.min(kGets, hGets))}.` },
     headline: `Smash or pass: Hamza sends a haul for JT. Is Khalil really getting much value? ${verdict}`,
     deck: [
       done ? 'It cleared review.' : `It's sitting in Sleeper's review right now.`,

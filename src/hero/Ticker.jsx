@@ -6,20 +6,31 @@
 // strip you can swipe.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { stampOf } from './Carousel.jsx';
 
 const SPEED = 70; // px a second
+// what the ticker says: an attention catcher and one sentence. A story can carry its own (tick: { hook, line });
+// otherwise the hook is its photo stamp (or kicker) and the line is its headline's first sentence, kept short.
+const MAX = 110;
+function tickOf(st) {
+  if (st.tick) return st.tick;
+  let line = st.headline.split(/(?<=[.?!])\s+/)[0];
+  if (line.length < 28) line = st.headline; // "Stop everything." isn't a summary
+  if (line.length > MAX) line = `${line.slice(0, line.lastIndexOf(' ', MAX - 1))}…`;
+  return { hook: stampOf(st) || st.kicker, line: /[.?!…]$/.test(line) ? line : `${line}.` };
+}
 const phone = () => matchMedia('(max-width: 760px)').matches;
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function Items({ stories, onPick, copy }) {
-  return stories.map((st, i) => (
+  return stories.map((st, i) => { const t = tickOf(st); return (
     <button type="button" key={`${copy}-${i}`} className="tk-item" tabIndex={copy ? -1 : 0} aria-hidden={copy ? 'true' : undefined}
-      onClick={() => onPick(i)} title="Show this headline">
-      <b className={`tk-kick${st.breaking || st.type === 'shakeup' ? ' brk-k' : ''}`}>{st.kicker}</b>
-      <span>{st.headline}</span>
+      onClick={() => onPick(i)} title={st.headline}>
+      <b className="tk-kick">{t.hook}</b>
+      <span>{t.line}</span>
       <svg className="tk-sep" viewBox="0 0 20 12" aria-hidden="true"><ellipse cx="10" cy="6" rx="9" ry="5.2" /><path d="M7 6h6M8.5 4.6v2.8M10 4.6v2.8M11.5 4.6v2.8" /></svg>
     </button>
-  ));
+  ); });
 }
 
 /** stories: the carousel's headlines; nav: the carousel's { at, go }; hero: a ref to the hero holding the card; live: Live page. */
