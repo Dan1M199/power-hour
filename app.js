@@ -542,35 +542,14 @@ function closeGames(wk) {
 
 // ---------- week 8's final call ----------
 // Dan's headlines once week 8 is final (from the final call, then Sleeper's own scoring, until Thursday's kickoff):
-// Hamza's birthday on top, then Chubbs swearing he's better than Jalal (the deck checks his claim against the numbers),
-// then the week's closest finish. Headlines are Dan's words; every number comes from the snapshot. Null drops it.
+// the overnight blockbuster on top, then Chubbs swearing he's better than Jalal (the deck checks his claim against the
+// numbers), then the week's closest finish. Headlines are Dan's words; every number comes from the snapshot. Null drops it.
 const FINALS = {
   week: 8,
-  birthday: '1004101328819351552', // Hamza
   wallahi: { by: '1004099157217685504', vs: '1005154707439980544' }, // Chubbs, Jalal
 };
 const finalsOn = () => !!FINALS && DATA.meta.lastScored === FINALS.week && !DATA.liveMode;
 const weekOf = (t, w) => t?.weeks.find((x) => x.week === w);
-
-function birthdayStory() {
-  const t = ownerTeam(FINALS.birthday);
-  if (!t) return null;
-  const g = weekOf(t, FINALS.week), opp = g && team(g.opp), N = firstName(t);
-  const how = !g || g.result == null ? '' : g.result === 'W'
-    ? `${N} got an early present: a win over ${opp ? opp.name : 'the week\'s opponent'} in week ${FINALS.week}, ${f1(g.pts)} to ${f1(g.oppPts)}.`
-    : g.result === 'L'
-    ? `Week ${FINALS.week} didn't bring a present (${f1(g.pts)} to ${f1(g.oppPts)} against ${opp ? opp.name : 'the week\'s opponent'}), but nobody's talking about that today.`
-    : `Week ${FINALS.week} ended dead level at ${f1(g.pts)}, which is about as rare as a birthday.`;
-  return {
-    type: 'birthday', kicker: 'From the whole league', tone: 'good', stamp: 'Birthday', rids: [t.rid],
-    headline: "Happy birthday Hamza, we love you a lot bro, this league wouldn't be fun without you",
-    deck: [
-      how,
-      `${t.name} sits ${ordinal(t.powerRank)} in the new power rankings at ${record(t)}, with ${pct(t.playoffPct)} playoff odds.`,
-      `Happy birthday from all twelve of us, ${N}.`,
-    ].filter(Boolean).join(' '),
-  };
-}
 
 // Chubbs lost, and he swears he's better than Jalal: the numbers get a say
 function wallahiStory() {
@@ -601,51 +580,37 @@ function wallahiStory() {
   };
 }
 
-// Dan's tip, Nov 2: Hamza (Lemme CeeDee Tets) is closing in on Jonathan Taylor from Khalil, who needs a quarterback,
-// and Hamza has a spare one. A breaking slide with Taylor's card while he's still Khalil's; once he lands with Hamza it
-// turns into the done deal from the snapshot's trade. Null drops it.
-const TAYLOR = { player: '6813', buyer: '1004101328819351552', seller: '1004155263252824064' };
-function taylorStory() {
-  const T = TAYLOR, buyer = ownerTeam(T.buyer), seller = ownerTeam(T.seller), at = rosterOf(T.player);
-  if (!buyer || !seller || (at !== seller && at !== buyer)) return null; // it went somewhere else: the tip is dead
-  const P = nameOf(T.player), info = DATA.helpers.player(T.player), r = RAW.ros?.values?.[T.player] || {};
-  const H = firstName(buyer), K = firstName(seller);
-  const qbs = (t) => t.players.filter((id) => posOf(id) === 'QB').sort((a, b) => valueOf(b) - valueOf(a));
-  const starts = (t, id) => t.rosLineup.some((l) => l?.id === id);
-  const spare = qbs(buyer).find((id) => !starts(buyer, id)), kq = qbs(seller).find((id) => starts(seller, id));
-  const qbSaid = (id) => { const v = RAW.ros?.values?.[id] || {}; return `${nameOf(id)}${v.prk ? ` (the ${ordinal(v.prk)}-ranked quarterback in the consensus${v.wk ? `, ${f1(v.wk)} a week projected` : ''})` : ''}`; };
-  const card = { id: T.player, name: P, short: shortName(info), line: `${info.pos}, ${nfl(info.team)}` };
-  if (at === buyer) {
-    const deal = DATA.feed.find((f) => f.type === 'trade' && f.sides.some((x) => x.rid === buyer.rid && x.adds.some((a) => a.id === T.player)));
-    return {
-      type: 'deal', kicker: 'Trade desk', tone: 'trade', stamp: 'Done deal', rids: [buyer.rid, seller.rid], breaking: true, mark: [P],
-      player: { ...card, pin: { team: buyer, label: `To ${H}` } },
-      headline: `Done deal: ${buyer.name} lands ${P}`,
-      deck: [
-        `The desk had ${H} closing in on ${P}, and it's done.`,
-        deal ? `The full deal: ${dealSaid(deal)}` : '',
-        deal ? valueSaid(deal) : '',
-        deal ? roomsSaid(deal) : '',
-        `${H} is ${record(buyer)} with ${pct(buyer.playoffPct)} playoff odds; ${K} is ${record(seller)} with ${pct(seller.playoffPct)}.`,
-      ].filter(Boolean).join(' '),
-    };
-  }
+// Dan's lead for Nov 3: a huge trade went down overnight (pulled in with an extra snapshot, EXTRA_PULLS in
+// lib/newsclock.js). The biggest trade since `since` by value moved, told with shock: its biggest name on the player card,
+// the full deal, who won it on consensus value, the position groups after and both sides' odds. Null drops it.
+const BLOCKBUSTER = { since: Date.parse('2026-11-02T12:00:00-06:00') };
+function blockbusterStory() {
+  const moved = (f) => f.sides.reduce((a, x) => a + x.adds.reduce((b, p) => b + valueOf(p.id), 0), 0);
+  const deal = DATA.feed.filter((f) => f.type === 'trade' && f.ts >= BLOCKBUSTER.since).sort((a, b) => moved(b) - moved(a))[0];
+  if (!deal) return null;
+  const sides = deal.sides.map((x) => ({ ...x, t: team(x.rid) })).filter((x) => x.t);
+  const star = sides.flatMap((x) => x.adds.map((p) => ({ ...p, to: x.t }))).sort((a, b) => valueOf(b.id) - valueOf(a.id))[0];
+  if (!star || sides.length < 2) return null;
+  const P = nameOf(star.id), info = DATA.helpers.player(star.id) || {}, n = sides.reduce((a, x) => a + x.adds.length, 0);
+  const others = sides.filter((x) => x.t !== star.to).map((x) => firstName(x.t));
+  const r = RAW.ros?.values?.[star.id] || {};
   return {
-    type: 'rumor', kicker: 'Trade desk', tone: 'trade', stamp: 'Rumor', rids: [buyer.rid, seller.rid], breaking: true, mark: [P],
-    player: { ...card, pin: { team: buyer, label: `Talks with ${H}` } },
-    headline: `${buyer.name} is closing in on a trade for ${P}: ${K} needs a QB, and ${H} has what he's looking for`,
+    type: 'blockbuster', kicker: 'Trade desk', tone: 'trade', stamp: 'Blockbuster', breaking: true, rids: sides.map((x) => x.rid),
+    player: { id: star.id, name: P, short: shortName(info.name ? info : { name: P }), line: `${info.pos || posOf(star.id)}, ${nfl(info.team)}`, pin: { team: star.to, label: `To ${firstName(star.to)}` } },
+    mark: [P],
+    headline: `Stop everything. ${P} is headed to ${firstName(star.to)} in ${n === 8 || n === 11 ? 'an' : 'a'} ${count(n)}-player blockbuster with ${listOf(others)}`,
     deck: [
-      `The desk hears ${H} and ${K} are getting close on ${P}${r.prk ? `, the ${ordinal(r.prk)}-ranked running back in the consensus${r.wk ? ` at ${f1(r.wk)} a week projected` : ''}` : ''}.`,
-      `The word is ${K} needs a quarterback: ${poss(K)} quarterback room ranks ${ordinal(seller.posRanks.QB)} in the league${kq ? `, with ${nameOf(kq)} starting` : ''}${seller.posRanks.QB <= 6 ? ', so this is about insurance as much as need' : ''}.`,
-      spare ? `${H} has one to spare: ${qbSaid(spare)} sits behind ${qbs(buyer).filter((id) => id !== spare).map(nameOf)[0] || 'the starter'} on the bench.` : `${poss(H)} quarterback room ranks ${ordinal(buyer.posRanks.QB)}.`,
-      `${P} would walk into a backfield that ranks ${ordinal(buyer.posRanks.RB)} right now.`,
-      `${H} is ${record(buyer)} with ${pct(buyer.playoffPct)} playoff odds; ${K} is ${record(seller)} with ${pct(seller.playoffPct)}. Nothing is signed yet.`,
-    ].join(' '),
+      `Nobody saw this coming. ${listOf(sides.map((x) => firstName(x.t)))} just shook on the biggest deal of the season${r.prk ? `, and ${P}, the ${ordinal(r.prk)}-ranked ${SLOT_WORD[star.pos] || star.pos} in the consensus, is on the move` : ''}.`,
+      `The full deal: ${dealSaid(deal)}`,
+      valueSaid(deal),
+      roomsSaid(deal),
+      `${sides.map((x) => `${firstName(x.t)} is ${record(x.t)} with ${pct(x.t.playoffPct)} playoff odds`).join('; ')}. The group chat is not ready.`,
+    ].filter(Boolean).join(' '),
   };
 }
 
 function finalsStories() {
-  const sel = [birthdayStory(), TAYLOR && taylorStory(), wallahiStory(), closeGames(FINALS.week)].filter(Boolean);
+  const sel = [BLOCKBUSTER && blockbusterStory(), wallahiStory(), closeGames(FINALS.week)].filter(Boolean);
   return sel.length ? { lead: sel[0], more: sel.slice(1), size: sel.length } : null;
 }
 
