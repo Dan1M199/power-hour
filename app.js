@@ -626,7 +626,10 @@ function smashStory() {
   const H = ownerTeam(SMASH.hamza), K = ownerTeam(SMASH.khalil);
   if (!H || !K) return null;
   const pending = SMASH.toHamza.every((id) => rosterOf(id) === K) && SMASH.toKhalil.every((id) => rosterOf(id) === H);
-  const done = SMASH.toHamza.every((id) => rosterOf(id) === H) && SMASH.toKhalil.every((id) => rosterOf(id) === K);
+  // official once the snapshot carries the trade itself (players dropped to make room since don't undo it), or once
+  // everyone sits where the deal sends them
+  const deal = DATA.feed.find((f) => f.type === 'trade' && f.sides.some((x) => x.rid === H.rid && x.adds.some((a) => SMASH.toHamza.includes(a.id))));
+  const done = !!deal || (SMASH.toHamza.every((id) => rosterOf(id) === H) && SMASH.toKhalil.every((id) => rosterOf(id) === K));
   if (!pending && !done) return null;
   const ros = (id) => RAW.ros?.values?.[id] || {};
   const sum = (ids) => ids.reduce((a, id) => a + valueOf(id), 0);
@@ -642,14 +645,33 @@ function smashStory() {
     ? `ROS values say Khalil wins it, ${f1(kGets)} to ${f1(hGets)}`
     : `ROS values say Hamza wins it, ${f1(hGets)} to ${f1(kGets)}`;
   const flip = (kNet > hNet) !== kWins;
+  const card = { id: SMASH.toHamza[0], name: JT, short: shortName(info.name ? info : { name: JT }), line: `${info.pos || 'RB'}, ${nfl(info.team)}` };
+  // Nov 3, 4:30pm: it went through. Same numbers, now as done news, with what it does to both rooms
+  if (done) {
+    const rooms = deal ? roomsSaid(deal) : '';
+    return {
+      type: 'smash', kicker: 'Trade desk', tone: 'trade', stamp: 'Official', breaking: true, rids: [H.rid, K.rid],
+      player: { ...card, pin: { team: H, label: 'To Hamza' } },
+      mark: [JT],
+      tick: { hook: 'Official', line: `JT is Hamza's after the three-for-one cleared review, and ROS values say ${kWins ? 'Khalil' : 'Hamza'} won it, ${f1(Math.max(kGets, hGets))} to ${f1(Math.min(kGets, hGets))}.` },
+      headline: `It's official: JT is Hamza's. Did Khalil get enough? ${verdict.replace('wins it', 'won it')}`,
+      deck: [
+        `The three-for-one cleared Sleeper's review: Hamza gets ${listOf(SMASH.toHamza.map(said))}; Khalil gets ${listOf(SMASH.toKhalil.map(said))}.`,
+        `Add up the consensus rest-of-season values and ${kWins ? 'Khalil' : 'Hamza'} is ${f1(gap)} ahead.`,
+        extra && rep ? `Khalil had to clear ${count(Math.abs(extra))} roster spot${Math.abs(extra) === 1 ? '' : 's'} for the extra bodies, worth ${f1(rep)} each at replacement level, which makes it ${f1(kNet)} to ${f1(hNet)}${flip ? `: ${kNet > hNet ? 'Khalil' : 'Hamza'} wins it that way` : ''}.` : '',
+        rooms,
+        `Hamza is ${record(H)} with ${pct(H.playoffPct)} playoff odds; Khalil is ${record(K)} with ${pct(K.playoffPct)}.`,
+      ].filter(Boolean).join(' '),
+    };
+  }
   return {
     type: 'smash', kicker: 'Trade desk', tone: 'trade', stamp: 'Smash or pass', breaking: true, rids: [H.rid, K.rid],
-    player: { id: SMASH.toHamza[0], name: JT, short: shortName(info.name ? info : { name: JT }), line: `${info.pos || 'RB'}, ${nfl(info.team)}`, pin: { team: H, label: done ? 'To Hamza' : 'Pending: to Hamza' } },
+    player: { ...card, pin: { team: H, label: 'Pending: to Hamza' } },
     mark: [JT],
     tick: { hook: 'Smash or pass', line: `Hamza's three-for-one for JT is in review, and ROS values say ${kWins ? 'Khalil' : 'Hamza'} wins it, ${f1(Math.max(kGets, hGets))} to ${f1(Math.min(kGets, hGets))}.` },
     headline: `Smash or pass: Hamza sends a haul for JT. Is Khalil really getting much value? ${verdict}`,
     deck: [
-      done ? 'It cleared review.' : `It's sitting in Sleeper's review right now.`,
+      `It's sitting in Sleeper's review right now.`,
       `Hamza gets ${listOf(SMASH.toHamza.map(said))}; Khalil gets ${listOf(SMASH.toKhalil.map(said))}.`,
       `Add up the consensus rest-of-season values and ${kWins ? 'Khalil' : 'Hamza'} is ${f1(gap)} ahead.`,
       extra && rep ? `But Khalil has to clear ${count(Math.abs(extra))} roster spot${Math.abs(extra) === 1 ? '' : 's'} for the extra bodies, worth ${f1(rep)} each at replacement level, which makes it ${f1(kNet)} to ${f1(hNet)}${flip ? `: ${kNet > hNet ? 'Khalil' : 'Hamza'} wins it that way` : ''}.` : '',
@@ -660,7 +682,8 @@ function smashStory() {
 }
 
 function finalsStories() {
-  const sel = [(SMASH && smashStory()) || (BLOCKBUSTER && blockbusterStory()), wallahiStory(), closeGames(FINALS.week)].filter(Boolean);
+  // the trade, then this week's key games (raceStory: the two games with the most playoff odds on them), then last week
+  const sel = [(SMASH && smashStory()) || (BLOCKBUSTER && blockbusterStory()), raceStory(), wallahiStory(), closeGames(FINALS.week)].filter(Boolean);
   return sel.length ? { lead: sel[0], more: sel.slice(1), size: sel.length } : null;
 }
 
@@ -987,7 +1010,7 @@ function raceStory() {
   const swing = (t) => (t.playoffIfWin ?? t.playoffPct) - (t.playoffIfLoss ?? t.playoffPct);
   const games = [...DATA.previews].sort((a, b) => b.stakes - a.stakes).slice(0, 2).filter((p) => p.stakes >= 0.2);
   if (!games.length) return null;
-  const leak = leakStory() ? [ownerTeam(DESK.leak.buyer), ownerTeam(DESK.leak.seller)] : []; // only while the talks are live
+  const leak = DESK?.leak && leakStory() ? [ownerTeam(DESK.leak.buyer), ownerTeam(DESK.leak.seller)] : []; // only while the talks are live
   const vs = (p) => `${firstName(team(p.a))} vs ${firstName(team(p.b))}`;
   const side = (t) => `${t.name} (${record(t)}) goes to ${pct(t.playoffIfWin)} with a win and ${pct(t.playoffIfLoss)} with a loss`;
   const deck = games.map((p) => {
@@ -998,6 +1021,7 @@ function raceStory() {
   });
   return {
     type: 'race', group: 'week', kicker: 'Playoff picture', tone: 'neutral', stamp: 'Big game', rids: [games[0].a, games[0].b],
+    tick: { hook: 'Key games', line: `${games.map(vs).join(' and ')} ${games.length > 1 ? 'swing' : 'swings'} the playoff race in week ${games[0].week}.` },
     headline: games.length === 2 ? `${vs(games[0])} and ${vs(games[1])}: the two games that swing the playoff race` : `${vs(games[0])} is the week's playoff swing game`,
     deck: deck.join(' '),
   };
