@@ -609,8 +609,54 @@ function blockbusterStory() {
   };
 }
 
+// Dan's lead for Nov 3: the trade that went down overnight, still in Sleeper's review so it isn't in the snapshot yet,
+// entered by hand from his screenshot. Hamza gets Jonathan Taylor; Khalil gets Braelon Allen, Tetairoa McMillan and
+// C.J. Stroud. The headline adds up each side's rest-of-season consensus values (today's, from /api/ros) and says who
+// wins on paper; the deck adds the over-replacement view (the trade ledger's rule: each extra player received costs an
+// open roster spot), the weekly projections and both sides' odds. It runs while every player is still where he was
+// (pending) or where the deal sends him (done), and drops out otherwise. Null drops it.
+const SMASH = {
+  hamza: '1004101328819351552', khalil: '1004155263252824064',
+  toHamza: ['6813'], toKhalil: ['11576', '12526', '9758'],
+};
+function smashStory() {
+  const H = ownerTeam(SMASH.hamza), K = ownerTeam(SMASH.khalil);
+  if (!H || !K) return null;
+  const pending = SMASH.toHamza.every((id) => rosterOf(id) === K) && SMASH.toKhalil.every((id) => rosterOf(id) === H);
+  const done = SMASH.toHamza.every((id) => rosterOf(id) === H) && SMASH.toKhalil.every((id) => rosterOf(id) === K);
+  if (!pending && !done) return null;
+  const ros = (id) => RAW.ros?.values?.[id] || {};
+  const sum = (ids) => ids.reduce((a, id) => a + valueOf(id), 0);
+  const wk = (ids) => ids.reduce((a, id) => a + (ros(id).wk || 0), 0);
+  const hGets = sum(SMASH.toHamza), kGets = sum(SMASH.toKhalil);
+  // over replacement: the side taking more players has to open roster spots for them
+  const extra = SMASH.toKhalil.length - SMASH.toHamza.length, rep = DATA.meta.replacement || 0;
+  const kNet = kGets - Math.max(0, extra) * rep, hNet = hGets - Math.max(0, -extra) * rep;
+  const said = (id) => { const r = ros(id), pos = posOf(id); return `${nameOf(id)}${r.prk ? ` (${SLOT_WORD[pos] || pos} ${r.prk}, ${f1(valueOf(id))})` : ` (${f1(valueOf(id))})`}`; };
+  const JT = nameOf(SMASH.toHamza[0]), info = DATA.helpers.player(SMASH.toHamza[0]) || {};
+  const kWins = kGets > hGets, gap = Math.abs(kGets - hGets);
+  const verdict = kWins
+    ? `ROS values say Khalil wins it, ${f1(kGets)} to ${f1(hGets)}`
+    : `ROS values say Hamza wins it, ${f1(hGets)} to ${f1(kGets)}`;
+  const flip = (kNet > hNet) !== kWins;
+  return {
+    type: 'smash', kicker: 'Trade desk', tone: 'trade', stamp: 'Smash or pass', breaking: true, rids: [H.rid, K.rid],
+    player: { id: SMASH.toHamza[0], name: JT, short: shortName(info.name ? info : { name: JT }), line: `${info.pos || 'RB'}, ${nfl(info.team)}`, pin: { team: H, label: done ? 'To Hamza' : 'Pending: to Hamza' } },
+    mark: [JT],
+    headline: `Smash or pass: Hamza sends a haul for JT. Is Khalil really getting much value? ${verdict}`,
+    deck: [
+      done ? 'It cleared review.' : `It's sitting in Sleeper's review right now.`,
+      `Hamza gets ${listOf(SMASH.toHamza.map(said))}; Khalil gets ${listOf(SMASH.toKhalil.map(said))}.`,
+      `Add up the consensus rest-of-season values and ${kWins ? 'Khalil' : 'Hamza'} is ${f1(gap)} ahead.`,
+      extra && rep ? `But Khalil has to clear ${count(Math.abs(extra))} roster spot${Math.abs(extra) === 1 ? '' : 's'} for the extra bodies, worth ${f1(rep)} each at replacement level, which makes it ${f1(kNet)} to ${f1(hNet)}${flip ? `: ${kNet > hNet ? 'Khalil' : 'Hamza'} wins it that way` : ''}.` : '',
+      `Week to week, ${JT} projects ${f1(wk(SMASH.toHamza))} a week; Khalil's three add up to ${f1(wk(SMASH.toKhalil))}, but only so many of them can start.`,
+      `Hamza is ${record(H)} with ${pct(H.playoffPct)} playoff odds; Khalil is ${record(K)} with ${pct(K.playoffPct)}. Smash or pass?`,
+    ].filter(Boolean).join(' '),
+  };
+}
+
 function finalsStories() {
-  const sel = [BLOCKBUSTER && blockbusterStory(), wallahiStory(), closeGames(FINALS.week)].filter(Boolean);
+  const sel = [(SMASH && smashStory()) || (BLOCKBUSTER && blockbusterStory()), wallahiStory(), closeGames(FINALS.week)].filter(Boolean);
   return sel.length ? { lead: sel[0], more: sel.slice(1), size: sel.length } : null;
 }
 
