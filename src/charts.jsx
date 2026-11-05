@@ -21,7 +21,7 @@ const Dot = ({ cx, cy, r, color, tip }) => <>
   <circle cx={(cx - r * 0.35).toFixed(1)} cy={(cy - r * 0.35).toFixed(1)} r={Math.max(1.2, r * 0.3).toFixed(1)} className="glint" />
 </>;
 // a bar: ledge underneath, ink-edged body, gloss over the top half (skipped when the bar is too small to hold it)
-function Bar({ x, y, w, h, cls, tip, rx = 5 }) {
+function Bar({ x, y, w, h, cls, tip, rx = Math.min(w, h, 20) / 2 }) {
   w = Math.max(w, 2);
   return <>
     <rect x={x.toFixed(1)} y={(y + 3).toFixed(1)} width={w.toFixed(1)} height={h.toFixed(1)} rx={rx} className="bar-ledge" />
@@ -30,7 +30,7 @@ function Bar({ x, y, w, h, cls, tip, rx = 5 }) {
   </>;
 }
 // the plate a plot sits on: a tray on a card, or white inside a tray (light)
-const Plate = ({ x, y, w, h, light = false }) => <rect x={x} y={y} width={w} height={h} rx="12" className={`plate${light ? ' light' : ''}`} />;
+const Plate = ({ x, y, w, h, light = false }) => <rect x={x} y={y} width={w} height={h} rx="26" className={`plate${light ? ' light' : ''}`} />;
 
 // a manager photo as a chart mark: clipped to a circle on a ring of the team colour, inked like every other mark
 function FaceDot({ cx, cy, r, img, color, tip }) {
@@ -98,7 +98,7 @@ export function Scatter({ points, xLabel, yLabel, refX, refY, width = 560, heigh
       <Plate x={padL} y={padT} w={pw} h={ph} />
       {quadrants && refX != null && refY != null ? <>
         {/* each quadrant of the league-average cross gets its own tint */}
-        <clipPath id={cid}><rect x={padL} y={padT} width={pw} height={ph} rx="12" /></clipPath>
+        <clipPath id={cid}><rect x={padL} y={padT} width={pw} height={ph} rx="26" /></clipPath>
         <g clipPath={`url(#${cid})`}>
           <rect x={padL} y={padT} width={qx - padL} height={qy - padT} className="q q-tl" />
           <rect x={qx} y={padT} width={width - padR - qx} height={qy - padT} className="q q-tr" />
@@ -189,7 +189,7 @@ export function DivergingBars({ rows, width = 520, rowH = 30, unit = '' }) {
         const y = i * rowH + 6, len = (Math.abs(r.value) / max) * half;
         const x = r.value >= 0 ? mid : mid - len;
         return <g key={i}>
-          {r.mine ? <rect x="0" y={y - 1} width={width} height={rowH - 4} rx="9" className="mine-band" /> : null}
+          {r.mine ? <rect x="0" y={y - 1} width={width} height={rowH - 4} rx={(rowH - 4) / 2} className="mine-band" /> : null}
           <text x={labelW - 10} y={y + rowH / 2} className={`row-label${r.mine ? ' mine' : ''}`} textAnchor="end">{r.label}</text>
           <Bar x={x} y={y + 2} w={len} h={rowH - 12} cls={r.value >= 0 ? 'pos' : 'neg'} tip={r.tip || ''} />
           <text x={r.value >= 0 ? mid + len + 6 : mid - len - 6} y={y + rowH / 2} className="val" textAnchor={r.value >= 0 ? 'start' : 'end'}>{`${r.value > 0 ? '+' : ''}${fmt(r.value)}${unit}`}</text>

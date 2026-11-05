@@ -266,7 +266,7 @@ function initTheme() {
   const html = document.documentElement, btn = $('#theme-btn'), dark = matchMedia('(prefers-color-scheme: dark)');
   const paint = (t) => {
     html.dataset.theme = t;
-    $('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#0A1630' : '#81D4FA');
+    $('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#0A1630' : '#4FBDF2');
     btn?.setAttribute('aria-label', t === 'dark' ? 'Switch to the day game (light mode)' : 'Switch to the night game (dark mode)');
   };
   paint(html.dataset.theme === 'dark' ? 'dark' : 'light');

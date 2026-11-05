@@ -1,25 +1,29 @@
 ---
 name: The Power Hour
-description: A league sports desk staged as a day game, with cartoon glass cards on a mowed field under a flat sky.
+description: A league sports desk built like a stadium bowl, with shaded stadium-shaped cards stacked in tiers on a mowed field under a deep sky.
 colors:
-  grass: "#4CAF50"
-  grass-2: "#8BC34A"
-  stripe: "#5AB34F"
-  lime: "#CDDC39"
-  yellow: "#FFEB3B"
-  amber: "#FFC107"
-  sky-1: "#81D4FA"
-  sky-2: "#9EDDFB"
-  sky-3: "#B3E5FC"
-  turf: "#1B5E20"
-  board: "#13301C"
+  grass: "#3E9F46"
+  grass-2: "#76B038"
+  stripe: "#359A3F"
+  lime: "#BFD02A"
+  yellow: "#FFE01A"
+  amber: "#F9B000"
+  pop: "#E0007A"
+  pop-ink: "#C70069"
+  pop-deep: "#8F004C"
+  drawer: "#CBDCBB"
+  sky-1: "#4FBDF2"
+  sky-2: "#6DC9F5"
+  sky-3: "#8ED6F8"
+  turf: "#134A18"
+  board: "#0D2415"
   chalk: "#FFFFFF"
-  tile: "#E8F0DF"
-  tile-2: "#D6E3C9"
-  line: "#D2E0C4"
-  ink: "#12301A"
-  ink-2: "#3C5A43"
-  ink-3: "#55705A"
+  tile: "#D9E6CC"
+  tile-2: "#C3D6B2"
+  line: "#BFD2AE"
+  ink: "#0B2412"
+  ink-2: "#2E4B35"
+  ink-3: "#47604C"
   good: "#28702C"
   bad: "#C62828"
   flag: "#D32F2F"
@@ -122,6 +126,8 @@ components:
     rounded: "{rounded.pill}"
     padding: "8px 16px"
 ---
+
+> The current language is **the bowl**: everything is a stadium shape or a circle, shaded and stacked in tiers; things come out from behind other things; magenta means you can press it. Where anything below still says cartoon glass, ink outlines, hard ledges or no soft shadows, the bowl wins. The rules live in the "the bowl" section of `styles.css` and the Design system section of `CLAUDE.md`.
 
 # Design System: The Power Hour
 
