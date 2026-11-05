@@ -141,9 +141,9 @@ button, select { font: inherit; color: inherit; }
 /* ---------- buttons: glossy cartoon pills ---------- */
 /* a hard-edged gloss over the top half of every button (under the label, over the fill), and on a mouse, a glint that
    sweeps across on hover */
-:is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip.to-again, .car-arrow, .to-skip, .xp, .clip-sound, .talk-btn, .car-pause) {
+:is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip:is(.to-again, .rank-pdf), .car-arrow, .to-skip, .xp, .clip-sound, .talk-btn, .car-pause) {
   position: relative; isolation: isolate; overflow: hidden; }
-:is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip.to-again, .car-arrow, .to-skip, .xp, .clip-sound, .talk-btn, .car-pause)::before {
+:is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip:is(.to-again, .rank-pdf), .car-arrow, .to-skip, .xp, .clip-sound, .talk-btn, .car-pause)::before {
   content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--gloss); pointer-events: none; }
 /* buttons on light surfaces carry the inked edge too, thinner than a card's, with their ledge as wide as the outline */
 
@@ -1446,11 +1446,11 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   /* white pills pick up a sky tint under the mouse, so their gloss and the glint below show on them too */
   .filters :is(button:not([aria-pressed='true']), a:not([aria-current='page'])):hover, .pick:not(.on):hover { background: var(--hover); }
   /* the shine: a glint sweeps across a button as the mouse arrives (transform only; it waits off the left edge) */
-  :is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .chip.to-again)::after {
+  :is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .chip:is(.to-again, .rank-pdf))::after {
     content: ''; position: absolute; z-index: -1; inset: 0; pointer-events: none;
     background: linear-gradient(105deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.75) 50%, rgba(255, 255, 255, 0) 62%);
     transform: translateX(-101%); }
-  :is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .chip.to-again):hover::after {
+  :is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .chip:is(.to-again, .rank-pdf)):hover::after {
     transform: translateX(101%); transition: transform 0.75s cubic-bezier(0.45, 0, 0.25, 1); }
 }
 
@@ -1482,7 +1482,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .to-count { font: 900 clamp(90px, 16vw, 180px)/1 var(--display); color: var(--chalk); font-variant-numeric: tabular-nums; }
 .to-video { width: 100%; max-height: 70vh; border-radius: var(--r-md); background: #000; }
 .to-skip { cursor: pointer; padding: 8px 16px; border: 0; border-radius: 999px; font: 700 14px/1 var(--body); color: var(--chalk); background: rgba(255, 255, 255, 0.14); }
-.chip.to-again { cursor: pointer; border: 0; font: 700 12.5px/1.2 var(--body); background: var(--amber); color: var(--ink); }
+.chip:is(.to-again, .rank-pdf) { cursor: pointer; border: 0; font: 700 12.5px/1.2 var(--body); background: var(--amber); color: var(--ink); }
 
 /* the reveal button's deep pass (passThenReveal) */
 .pass-ball { position: fixed; z-index: 65; width: 72px; height: 72px; pointer-events: none; will-change: transform; }
@@ -2594,7 +2594,7 @@ html.locked { overflow: hidden; }
   .kicker > span:first-child, .tc-face.ph, .talk-btn.primary, .car-pause[aria-pressed='true'], .drive-pick button[aria-pressed='true'],
   .drive-field .endzone, .gotw-more, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
   :is(.lead-face, .mgr-face, .fo-face, .stat-face, .deal-face, .pitch-face).ph, .lf .cap, .mu .vs, .day > h3, .clip-frame .clip-sound, .fo-side, .fo-vs i,
-  .desk-note, .you-face.ph, .st-chip.won, .sup.champ, .bull-tag.lead, .chip.to-again, .pp-img.ph, .cta, .verdict-face.ph,
+  .desk-note, .you-face.ph, .st-chip.won, .sup.champ, .bull-tag.lead, .chip:is(.to-again, .rank-pdf), .pp-img.ph, .cta, .verdict-face.ph,
   .strip-face.ph, .pos, .champ, .ball-pct, .pp-card, .fo-fav.dog) {
   --ink: #12301A; --ink-2: #3C5A43; --ink-3: #55705A; --good: #28702C; --bad: #C62828; --a-ink: #0266A3; --b-ink: #985700;
   --paper: #FFFFFF; --line: #D2E0C4; --tile: #E8F0DF;

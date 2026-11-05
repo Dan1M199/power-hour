@@ -198,6 +198,12 @@ function headlines() {
     const all = [...leaks, ...keep];
     stories = { ...stories, lead: all[0], more: all.slice(1), size: Math.min(all.length, CAROUSEL_SIZE + leaks.length) };
   }
+  // week 9 being played: Mo and Khalil's trade stays on top, in place of the generic trade slides
+  const mk = MO_KHALIL && DATA.meta.lastScored === 8 && moKhalilStory();
+  if (mk) {
+    const keep = [stories.lead, ...stories.more].filter((st) => st && st.type !== 'trade');
+    stories = { ...stories, lead: mk, more: keep, ...(stories.size ? { size: stories.size + 1 } : { pinned: true }) };
+  }
   // after Sunday night football the night desk takes over the headlines
   if (nightDesk() && DATA.live) {
     const people = Object.fromEntries(DATA.teams.map((t) => [t.rid, firstName(t)]));
@@ -681,9 +687,51 @@ function smashStory() {
   };
 }
 
+// Dan's lead for Nov 4: Mo and Khalil traded (pulled in with an extra snapshot that evening, EXTRA_PULLS in
+// lib/newsclock.js). Read from the snapshot's trades, so it only shows once the deal has gone through: the latest trade
+// with both of them on it since `since`, its biggest name on the player card pinned to his new manager, the full deal,
+// who won it on consensus value, the position groups after and both sides' odds. It leads the week 8 finals carousel and
+// stays on top of the week 9 live headlines. Null drops it.
+const MO_KHALIL = { mo: '1004163936612089856', khalil: '1004155263252824064', since: Date.parse('2026-11-03T12:00:00-06:00') };
+const NTH = ['', 'first', 'second', 'third', 'fourth', 'fifth'];
+function moKhalilStory() {
+  const M = ownerTeam(MO_KHALIL.mo), K = ownerTeam(MO_KHALIL.khalil);
+  if (!M || !K) return null;
+  const deal = DATA.feed.filter((f) => f.type === 'trade' && f.ts >= MO_KHALIL.since && [M.rid, K.rid].every((r) => f.sides.some((s) => s.rid === r)))
+    .sort((a, b) => b.ts - a.ts)[0];
+  if (!deal) return null;
+  const sides = deal.sides.map((x) => ({ ...x, t: team(x.rid) })).filter((x) => x.t);
+  const star = sides.flatMap((x) => x.adds.map((p) => ({ ...p, to: x.t }))).sort((a, b) => valueOf(b.id) - valueOf(a.id))[0];
+  if (!star) return null;
+  const from = sides.find((x) => x.t !== star.to)?.t || (star.to === M ? K : M);
+  const P = nameOf(star.id), info = DATA.helpers.player(star.id) || {}, r = RAW.ros?.values?.[star.id] || {};
+  // Khalil's deals since Monday: the JT trade came first, so this is likely his second of the week
+  const kDeals = DATA.feed.filter((f) => f.type === 'trade' && f.ts >= (BLOCKBUSTER?.since || MO_KHALIL.since) && f.sides.some((s) => s.rid === K.rid)).length;
+  const busy = kDeals > 1 && NTH[kDeals];
+  const n = sides.reduce((a, x) => a + x.adds.length + x.picks.filter((p) => p.dir === 'in').length, 0);
+  const [w, l] = [...sides].sort((a, b) => b.net - a.net);
+  const winner = l && w.net - l.net >= 4 ? firstName(w.t) : null;
+  return {
+    type: 'mokhalil', kicker: 'Trade desk', tone: 'trade', stamp: 'Done deal', breaking: true, rids: sides.map((x) => x.rid),
+    player: { id: star.id, name: P, short: shortName(info.name ? info : { name: P }), line: `${info.pos || posOf(star.id)}, ${nfl(info.team)}`, pin: { team: star.to, label: `To ${firstName(star.to)}` } },
+    mark: [P],
+    tick: { hook: busy ? 'Khalil again' : 'Done deal', line: `${P} heads to ${firstName(star.to)} as Mo and Khalil swap${winner ? `, and ${winner} wins it on value` : ', close to even on value'}.` },
+    headline: busy
+      ? `Khalil isn't done dealing: ${P} heads to ${firstName(star.to)} in his ${busy} trade of the week, this time with Mo`
+      : `Mo and Khalil shake on it: ${P} heads to ${firstName(star.to)}`,
+    deck: [
+      `${firstName(from)} lets ${P}${r.prk ? `, the ${ordinal(r.prk)}-ranked ${SLOT_WORD[star.pos] || star.pos} in the consensus,` : ''} go in ${n === 8 || n === 11 ? 'an' : 'a'} ${count(n)}-player deal.`,
+      `The full deal: ${dealSaid(deal)}`,
+      valueSaid(deal),
+      roomsSaid(deal),
+      `${sides.map((x) => `${firstName(x.t)} is ${record(x.t)} with ${pct(x.t.playoffPct)} playoff odds`).join('; ')}.`,
+    ].filter(Boolean).join(' '),
+  };
+}
+
 function finalsStories() {
-  // the trade, then this week's key games (raceStory: the two games with the most playoff odds on them), then last week
-  const sel = [(SMASH && smashStory()) || (BLOCKBUSTER && blockbusterStory()), raceStory(), wallahiStory(), closeGames(FINALS.week)].filter(Boolean);
+  // Mo and Khalil's trade, then the JT trade, then this week's key games (raceStory: the two games with the most playoff odds on them), then last week
+  const sel = [MO_KHALIL && moKhalilStory(), (SMASH && smashStory()) || (BLOCKBUSTER && blockbusterStory()), raceStory(), wallahiStory(), closeGames(FINALS.week)].filter(Boolean);
   return sel.length ? { lead: sel[0], more: sel.slice(1), size: sel.length } : null;
 }
 
@@ -1320,7 +1368,7 @@ function carouselProps() {
   const s = DATA.stories;
   if (!s?.lead) return null;
   return {
-    stories: [s.lead, ...s.more].slice(0, s.size || CAROUSEL_SIZE + (s.night ? 1 : 0) + (s.extra ? 1 : 0)),
+    stories: [s.lead, ...s.more].slice(0, s.size || CAROUSEL_SIZE + (s.night ? 1 : 0) + (s.extra ? 1 : 0) + (s.pinned ? 1 : 0)),
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
     hold: onHold() ? NEWS_CLOCK.holdNote : null, night: !!s.night, groups: GROUPS,
   };

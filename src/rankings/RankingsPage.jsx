@@ -7,10 +7,32 @@ import { Hero } from '../hero/Hero.jsx';
 import { Futures } from './Futures.jsx';
 import { Poll } from './Poll.jsx';
 import { Report } from './Report.jsx';
+import { useTalk } from '../hero/talk.js';
+
+// Dan's share button: the rankings as a one-page PDF for the group chat. Shown only while the league desk says he's
+// signed in (the desk's admin session), so leaguemates never see it; the module loads on the first tap.
+function SharePdf({ D, h }) {
+  const t = useTalk();
+  const [busy, setBusy] = useState('');
+  if (!t.data?.admin) return null;
+  const go = async () => {
+    setBusy('Making the PDF…');
+    try {
+      const { rankingsPdf, shareFile } = await import('./rankPdf.js');
+      const { blob, name } = await rankingsPdf(D, h);
+      const how = await shareFile(blob, name, `Week ${D.meta.lastScored + 1} Power Rankings`);
+      setBusy(how === 'saved' ? 'Saved' : '');
+    } catch (e) {
+      setBusy(e?.message || 'The PDF could not be made');
+    }
+    setTimeout(() => setBusy(''), 2500);
+  };
+  return <button type="button" className="chip rank-pdf" onClick={go} disabled={!!busy && busy.endsWith('…')}>{busy || 'Share rankings PDF'}</button>;
+}
 
 // the page head: the week, what the ranks weigh, the ROS sources and when they were refreshed, and the important
 // message's replay chip once its file is known to be there
-function RankHead({ wk, held, sources, updated, message }) {
+function RankHead({ D, h, wk, held, sources, updated, message }) {
   const [again, setAgain] = useState(false);
   useEffect(() => { message?.ready().then((ok) => setAgain(!!ok)); }, []);
   return <>
@@ -23,6 +45,7 @@ function RankHead({ wk, held, sources, updated, message }) {
         ? sources.map((s) => <span key={s.name} className={`chip ${s.ok ? '' : 'off'}`} title={s.title}><span className="dot" />{s.name}</span>)
         : <span className="chip off"><span className="dot" />ROS rankings unavailable</span>}
       {updated ? <span className="chip">{updated}</span> : null}
+      {!held && D ? <SharePdf D={D} h={h} /> : null}
       {message ? <button type="button" className="chip to-again" data-message hidden={!again} onClick={message.play}>Watch the important message again</button> : null}
     </div>
   </>;
@@ -130,7 +153,7 @@ export function RankingsPage({ D, me, h, held, car, desk, sources, updated, mess
   return <>
     {held
       ? <section className="view-head"><RankHead wk={wk} held sources={sources} updated={updated} /></section>
-      : <Hero D={D} h={h} car={car} desk={desk} head={<RankHead wk={wk} sources={sources} updated={updated} message={message} />} />}
+      : <Hero D={D} h={h} car={car} desk={desk} head={<RankHead D={D} h={h} wk={wk} sources={sources} updated={updated} message={message} />} />}
     {held ? <div className="notice glass hold"><span><strong>Power rankings are on hold.</strong>{` Week ${wk} is being played, so these are the ranks going into the week. They update as soon as every game is final. For how this week is going, see the `}<a href="#live">Live</a> tab.</span></div> : null}
     {rosError ? <div className="notice glass"><strong>Results-only mode.</strong>{` The rest-of-season rankings couldn't be loaded (${rosError}), so these ranks use this season's results alone until they come back.`}</div> : null}
     {mine ? <button type="button" className="you-strip glass" aria-label={`Jump to your team, ${mine.name}, ranked ${mine.powerRank}`} onClick={jump}>
