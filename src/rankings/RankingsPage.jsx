@@ -11,10 +11,12 @@ import { useTalk } from '../hero/talk.js';
 
 // Dan's share button: the rankings as a one-page PDF for the group chat. Shown only while the league desk says he's
 // signed in (the desk's admin session), so leaguemates never see it; the module loads on the first tap.
+// Nov 4: Dan lost his desk key, so the button was open to everyone until 8:15pm Central that night. Past now, so inert.
+const PDF_OPEN_UNTIL = Date.parse('2026-11-05T02:15:00Z');
 function SharePdf({ D, h }) {
   const t = useTalk();
   const [busy, setBusy] = useState('');
-  if (!t.data?.admin) return null;
+  if (!t.data?.admin && Date.now() > PDF_OPEN_UNTIL) return null;
   const go = async () => {
     setBusy('Making the PDF…');
     try {
