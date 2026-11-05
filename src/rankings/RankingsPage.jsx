@@ -2,6 +2,8 @@
 // top, the fan poll, championship futures and how the score works. The hero (headline carousel, page head and league
 // desk) is the Hero it shares with the Live page.
 import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
+import { closeDrawer, openDrawer, slides, sliding } from './drawer.js';
 import { ChampTag, Headshot, TeamAvatar, Xp } from '../shared.jsx';
 import { Hero } from '../hero/Hero.jsx';
 import { Futures } from './Futures.jsx';
@@ -119,10 +121,10 @@ export function RankingsPage({ D, me, h, held, car, desk, sources, updated, mess
   const rows = useRef(new Map()), btns = useRef(new Map()), unpin = useRef(new Map());
   const wk = D.meta.lastScored + 1;
 
-  const toggle = (rid, force) => {
+  const toggle = (rid, force, { toTop = false } = {}) => {
     const li = rows.current.get(rid);
     const now = force ?? !open.has(rid);
-    if (!li || now === open.has(rid)) return;
+    if (!li || now === open.has(rid) || sliding()) return false;
     // The jersey number is centred on the row. Pin it at its current pixel spot while the row is open so it neither
     // jumps nor drifts as the row grows; release the pin once the row has finished closing.
     const jersey = li.querySelector('.jersey');
@@ -131,16 +133,19 @@ export function RankingsPage({ D, me, h, held, car, desk, sources, updated, mess
       jersey.style.top = `${jersey.getBoundingClientRect().top - li.getBoundingClientRect().top}px`;
       jersey.style.transform = 'none';
     } else {
-      unpin.current.set(rid, setTimeout(() => { if (!li.classList.contains('open')) jersey.style.top = jersey.style.transform = ''; }, 450));
+      unpin.current.set(rid, setTimeout(() => { if (!li.classList.contains('open')) jersey.style.top = jersey.style.transform = ''; }, 620));
     }
-    setOpen((s) => { const n = new Set(s); if (now) n.add(rid); else n.delete(rid); return n; });
+    const change = () => setOpen((s) => { const n = new Set(s); if (now) n.add(rid); else n.delete(rid); return n; });
+    if (!slides()) change();
+    else if (now) openDrawer(li, () => flushSync(change));
+    else closeDrawer(li, () => flushSync(change), { toTop });
     // the first open teaches it: the #1 row's amber pull goes quiet for good on this device
     if (now && nudged) { learn(); setNudged(false); }
+    return true;
   };
   const close = (rid) => {
     const li = rows.current.get(rid);
-    toggle(rid, false);
-    if (li && li.getBoundingClientRect().top < 0) li.scrollIntoView({ block: 'start' });
+    if (toggle(rid, false, { toTop: true }) && !slides() && li && li.getBoundingClientRect().top < 0) li.scrollIntoView({ block: 'start' });
     btns.current.get(rid)?.focus({ preventScroll: true });
   };
   // your rank, right under the page head, so a phone doesn't scroll three screens to find you

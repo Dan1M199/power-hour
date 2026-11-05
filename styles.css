@@ -380,7 +380,6 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .pull-n, .pull-x { display: none; }
 .rank-btn:hover .pull { color: var(--ink); background-color: var(--tile-2); }
 .rank-btn:hover .pull .xp { background: var(--paper); }
-.rank.open .pull { border-radius: 0; }
 .rank.open .pull-t, .rank.open .pull-n { display: none; }
 .rank.open .pull-x { display: inline; }
 .rank.nudge:not(.open) .pull { color: var(--ink); background-color: var(--amber); box-shadow: inset 0 1.5px 0 var(--ledge-gold); }
@@ -1789,9 +1788,6 @@ html.locked { overflow: hidden; }
   .ys-body > b { font-size: 18px; }
   .ys-tags { margin-top: 4px; }
   .ys-odds b { font-size: 24px; }
-  /* an opened row takes the full width: the yard number steps aside instead of squeezing the read into 320px */
-  .rank.open, .rank.open:nth-child(-n + 3) { padding-left: 0; }
-  .rank.open .jersey { opacity: 0; }
 }
 
 @media (max-width: 760px) {
@@ -2659,7 +2655,8 @@ main::after { border-radius: 56px 56px 0 0; }
 .ranks > .rank:nth-child(5) { z-index: 8; } .ranks > .rank:nth-child(6) { z-index: 7; } .ranks > .rank:nth-child(7) { z-index: 6; } .ranks > .rank:nth-child(8) { z-index: 5; }
 .ranks > .rank:nth-child(9) { z-index: 4; } .ranks > .rank:nth-child(10) { z-index: 3; } .ranks > .rank:nth-child(11) { z-index: 2; } .ranks > .rank:nth-child(12) { z-index: 1; }
 .ranks { gap: 20px; }
-.rank-card { background-color: var(--face); }
+.rank-card { background-color: var(--face); overflow: hidden; } /* the card's rounding clips what's inside, so nothing in it changes shape as it opens */
+.rank-card .pull, .rank:nth-child(-n + 3) .pull { border-radius: 0; }
 .rank .jersey { text-shadow: 0 8px 14px rgba(0, 40, 12, 0.5); }
 :is(.pull, .mu-more) { position: relative; background-color: var(--drawer); box-shadow: inset 0 -8px 10px -8px rgba(11, 36, 18, 0.3); color: var(--ink-2); }
 :is(.pull, .mu-more)::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: var(--lip); background-color: var(--face);
@@ -2668,14 +2665,14 @@ main::after { border-radius: 56px 56px 0 0; }
 .rank-btn:hover .pull { color: var(--ink); background-color: var(--drawer); }
 .rank.open .pull { box-shadow: none; }
 .rank.nudge:not(.open) .pull { color: var(--ink); background-color: var(--amber); box-shadow: inset 0 -8px 10px -8px rgba(120, 70, 0, 0.55); }
-.rank .detail { background-color: var(--drawer); border-radius: 0 0 var(--r-lg) var(--r-lg); }
-.rank:nth-child(-n + 3) .detail { border-radius: 0 0 var(--r-xl) var(--r-xl); }
+.rank .detail { background-color: var(--drawer); }
 .rank .detail, .mu-detail { --tile: var(--in-tile); --tile-2: var(--in-tile-2); --line: var(--in-line); --tray-edge: var(--in-tray); }
 .detail-inner { border-top: 0; padding-top: 10px; }
 .mu { padding-bottom: 0; }
 .mu-more { width: calc(100% + 36px); margin: 14px -18px 0; padding: calc(var(--lip) + 10px) 20px 13px; border-top: 0; border-radius: 0 0 var(--r-lg) var(--r-lg); }
 .mu-more:hover { color: var(--ink); }
-.mu.open .mu-more { border-radius: 0; box-shadow: none; }
+.mu-more { transition: border-radius 0s 0.4s; } /* keeps its square foot until the breakdown has folded away */
+.mu.open .mu-more { border-radius: 0; box-shadow: none; transition: none; }
 .mu-detail { margin: 0 -18px; padding: 0; background-color: var(--drawer); border-radius: 0 0 var(--r-lg) var(--r-lg); }
 .mu-detail .bd { padding: 8px 18px 22px; }
 .mu-detail .bd-note { margin: 0; padding: 0 26px 20px; color: var(--ink-2); }
@@ -2719,9 +2716,22 @@ main::after { border-radius: 56px 56px 0 0; }
   :root { --lip: 16px; }
   .ranks { gap: 16px; }
   .pull { margin: 0 -14px -14px; padding: calc(var(--lip) + 6px) 14px 8px; }
-  .rank:nth-child(-n + 3) .pull { margin-bottom: -16px; border-radius: 0 0 var(--r-lg) var(--r-lg); }
-  .rank:nth-child(-n + 3) .rank-card { border-radius: var(--r-lg); }
-  .rank:nth-child(-n + 3) .detail { border-radius: 0 0 var(--r-lg) var(--r-lg); }
+  .rank:nth-child(-n + 3) .pull { margin-bottom: -16px; }
+  /* The card's face stays put at its own width with its number beside it. The report is a wider sheet behind it, the
+     full width of the page, that slides out from under the face on transforms only (src/rankings/drawer.js). .detail is
+     the still window it slides in: it clips only along its top, behind the face, and leaves room for the sheet's shadow. */
+  .rank .rank-card, .rank:nth-child(-n + 3) .rank-card { overflow: visible; background: none; border-radius: var(--r-lg); box-shadow: none; }
+  .rank .rank-btn { position: relative; z-index: 2; overflow: hidden; border-radius: var(--r-lg); background-color: var(--face); background-image: var(--sheen); background-size: 100% 150px; background-repeat: no-repeat;
+    box-shadow: var(--rim), 0 0 0 var(--ring-w) var(--yellow), 0 0 0 calc(var(--ring-w) + var(--edge)) var(--outline),
+      0 var(--lift) 0 calc(var(--ring-w) + var(--edge)) var(--ledge-c), 0 calc(var(--lift) + 12px) 20px -8px var(--cast); }
+  .rank .detail { display: none; position: relative; z-index: 1; margin: -26px 0 0 -46px; background: none; clip-path: inset(0 -30px -60px -6px round var(--r-lg) 0 0 0); }
+  .rank.open .detail { display: block; }
+  .rank .detail > div { overflow: visible; padding-top: 34px; border-radius: var(--r-lg); background-color: var(--drawer);
+    box-shadow: 0 0 0 var(--ring-w) var(--yellow), 0 0 0 calc(var(--ring-w) + var(--edge)) var(--outline),
+      0 var(--lift) 0 calc(var(--ring-w) + var(--edge)) var(--ledge-c), 0 calc(var(--lift) + 12px) 20px -8px var(--cast); }
+  .rank.closing .pull-x { display: none; }
+  .rank.closing .pull-t { display: inline; }
+  .rank.closing .pull .xp { transform: none; }
   .lead-car { box-shadow: var(--rim), 0 0 0 1px rgba(0, 0, 0, 0.5), 0 9px 0 -5px var(--deck-1), 0 18px 0 -11px var(--deck-2), 0 30px 22px -14px var(--cast); }
   main::before { border-radius: 48px 48px 0 0; }
   .footer::before { border-radius: 48px 48px 0 0; }
