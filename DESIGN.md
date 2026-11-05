@@ -8,9 +8,7 @@ colors:
   lime: "#BFD02A"
   yellow: "#FFE01A"
   amber: "#F9B000"
-  pop: "#E0007A"
-  pop-ink: "#C70069"
-  pop-deep: "#8F004C"
+  pop: "#FF0080"
   drawer: "#CBDCBB"
   sky-1: "#4FBDF2"
   sky-2: "#6DC9F5"
@@ -127,7 +125,7 @@ components:
     padding: "8px 16px"
 ---
 
-> The current language is **the bowl**: everything is a stadium shape or a circle, shaded and stacked in tiers; things come out from behind other things; magenta means you can press it. Where anything below still says cartoon glass, ink outlines, hard ledges or no soft shadows, the bowl wins. The rules live in the "the bowl" section of `styles.css` and the Design system section of `CLAUDE.md`.
+> The current language is **the bowl**: everything is a stadium shape or a circle, shaded and stacked in tiers; things come out from behind other things. Amber marks actions and what's on; magenta is a tiny hint on a few ledges and text selection. Where anything below still says cartoon glass, ink outlines, hard ledges or no soft shadows, the bowl wins. The rules live in the "the bowl" section of `styles.css` and the Design system section of `CLAUDE.md`.
 
 # Design System: The Power Hour
 

@@ -1,6 +1,6 @@
 /* The Power Hour: a day game. A deep sky over mowed grass and chalk lines. The language is the bowl: everything is a
    stadium shape, shaded like a real rounded thing, stacked in tiers, and things come out from behind other things.
-   Magenta means you can press it. See "the bowl" near the end of this file. No backdrop-filter, so phones draw exactly
+   See "the bowl" near the end of this file. No backdrop-filter, so phones draw exactly
    what desktops do. */
 
 /* The two typefaces, served from this site (assets/fonts, SIL Open Font License) instead of Google Fonts: no
@@ -68,7 +68,7 @@
   --good-bg: #DFF0D6;   /* tinted chips: up, strong, good */
   --bad-bg: #FBD9D9;    /* tinted chips: down, need, bad */
   --info-bg: #C9E9FB;
-  --hover: #FCE3F0;     /* white pills under the mouse: a blush of the accent */
+  --hover: #CFEBFA;     /* white pills under the mouse */
   --notice-bg: #FFF0C2;
   --ledge: #1F6B2C;     /* the tier behind a card: a darker ring of the bowl */
   --ledge-gold: #C98600;
@@ -82,23 +82,17 @@
   --sheen: linear-gradient(180deg, #FFFFFF 0, rgba(255, 255, 255, 0) 100%);
   --rim: inset 0 1.5px 0 #FFFFFF, inset 0 -16px 20px -16px rgba(11, 36, 18, 0.22);
   /* buttons: a hard-edged cartoon gloss over the top half */
-  --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0, rgba(255, 255, 255, 0.06) 52%, rgba(40, 0, 25, 0.1) 100%);
+  --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0, rgba(255, 255, 255, 0.06) 52%, rgba(60, 35, 0, 0.1) 100%);
   /* a cartoon glint for the dark scoreboards: a stroke hugging the corner and a dot */
   --glint: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Cpath d='M5 33Q5 5 33 5' fill='none' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='44' cy='5' r='2.8' fill='%23fff'/%3E%3C/svg%3E");
-  /* the accent: anything you can press. --pop fills (white text 4.7:1), --pop-ink is text on light (5.8:1 on white),
-     --pop-deep is the ledge under a filled pill */
-  --pop: #E0007A;
-  --pop-hi: #F2108C;
-  --pop-ink: #C70069;
-  --pop-deep: #8F004C;
-  --pop-drawer: #AD005B; /* words on a drawer, which is darker than a card */
+  --pop: #FF0080;       /* electric magenta: tiny hints only, on a few ledges and text selection. Never a fill, never text */
   /* shading: the soft shadow a raised thing casts, a small chip's volume, and a pressable pill's two states */
   --cast: rgba(6, 34, 14, 0.55);
   --chip-shade: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -2px 3px rgba(11, 36, 18, 0.14), 0 2px 4px -1px rgba(6, 34, 14, 0.4);
-  --press: inset 0 1.5px 0 rgba(255, 255, 255, 0.42), inset 0 -3px 5px rgba(80, 0, 45, 0.35), 0 3px 0 var(--pop-deep), 0 7px 10px -3px rgba(70, 0, 40, 0.55);
-  --press-down: inset 0 2px 4px rgba(60, 0, 35, 0.5), 0 1px 0 var(--pop-deep);
-  --soft: inset 0 1.5px 0 #FFFFFF, inset 0 -3px 5px rgba(11, 36, 18, 0.1), 0 0 0 1px rgba(143, 0, 76, 0.28), 0 3px 0 var(--pop), 0 7px 9px -4px rgba(6, 34, 14, 0.45);
-  --soft-down: inset 0 2px 4px rgba(11, 36, 18, 0.2), 0 0 0 1px rgba(143, 0, 76, 0.28), 0 1px 0 var(--pop);
+  --press: inset 0 1.5px 0 rgba(255, 255, 255, 0.55), inset 0 -3px 5px rgba(120, 70, 0, 0.3), 0 0 0 1px rgba(11, 36, 18, 0.28), 0 3px 0 var(--ledge-gold), 0 7px 10px -3px rgba(90, 50, 0, 0.5);
+  --press-down: inset 0 2px 4px rgba(90, 50, 0, 0.45), 0 0 0 1px rgba(11, 36, 18, 0.28), 0 1px 0 var(--ledge-gold);
+  --soft: inset 0 1.5px 0 rgba(255, 255, 255, 0.9), inset 0 -3px 5px rgba(11, 36, 18, 0.1), 0 0 0 1px rgba(11, 36, 18, 0.24), 0 3px 0 var(--ledge), 0 7px 9px -4px rgba(6, 34, 14, 0.45);
+  --soft-down: inset 0 2px 4px rgba(11, 36, 18, 0.2), 0 0 0 1px rgba(11, 36, 18, 0.24), 0 1px 0 var(--ledge);
   /* the drawer a report slides out of, and what a panel inside it looks like: raised, not recessed */
   --drawer: #CBDCBB;
   --in-tile: #F7FAF3;
@@ -194,7 +188,7 @@ button, select { font: inherit; color: inherit; }
 .team-pick select {
   appearance: none; -webkit-appearance: none; cursor: pointer; max-width: 190px;
   padding: 8px 34px 8px 14px; border-radius: 999px; border: 2px solid var(--line); background: var(--paper)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23C70069' stroke-width='1.8' fill='none'/%3E%3C/svg%3E") no-repeat right 14px center;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230B2412' stroke-width='1.8' fill='none'/%3E%3C/svg%3E") no-repeat right 14px center;
   font-size: 14px; font-weight: 700; color: var(--ink);
 }
 .team-pick option { color: #000; }
@@ -934,7 +928,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 /* ---------- trade lab ---------- */
 .trade-pick { display: grid; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-2); }
 .trade-pick select { appearance: none; -webkit-appearance: none; cursor: pointer; min-width: 220px; padding: 11px 38px 11px 16px; border-radius: 999px; border: 0; font-size: 15px; font-weight: 700; color: var(--ink);
-  background: var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23C70069' stroke-width='1.8' fill='none'/%3E%3C/svg%3E") no-repeat right 16px center;
+  background: var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230B2412' stroke-width='1.8' fill='none'/%3E%3C/svg%3E") no-repeat right 16px center;
   box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge); }
 .trade-pick option { color: #000; }
 .trade-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 20px; margin: 0 0 18px; }
@@ -2571,56 +2565,37 @@ html.locked { overflow: hidden; }
    1. Everything is a stadium or a circle. Nothing has a sharp corner.
    2. Things come from behind other things. A card stands on a darker tier, a report slides out of a drawer under its
       card's lip, tags and section signs rise from behind the card they label.
-   3. Magenta means you can press it. Nothing else wears it. Amber is for leaders, yellow still means you. */
+   3. Everything is shaded like a real rounded thing. Amber is for what's on or primary, yellow still means you. */
 
-/* --- the accent: filled pills --- */
+/* --- controls keep the site's colours: amber for what's on or primary, white pills with ink words for the rest. Only
+   their shape and shading come from the bowl --- */
 :is(.tab-ink, .lab-tabs a[aria-current='page'], .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .cta, .gotw-more, .talk-btn.primary,
-  .drive-pick button[aria-pressed='true'], .car-arrow, .car-pause, .clip-frame .clip-sound:not([aria-pressed='true']), .chip:is(.to-again, .rank-pdf)) {
-  color: #FFFFFF; background: var(--gloss), var(--pop); box-shadow: var(--press); }
+  .drive-pick button[aria-pressed='true'], .clip-frame .clip-sound:not([aria-pressed='true']), .chip:is(.to-again, .rank-pdf)) {
+  color: var(--ink); background: var(--gloss), var(--amber); box-shadow: var(--press); }
 :is(.filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .cta, .gotw-more, .talk-btn.primary, .drive-pick button[aria-pressed='true'], .clip-frame .clip-sound:not([aria-pressed='true']), .chip:is(.to-again, .rank-pdf)):active {
   box-shadow: var(--press-down); }
-@media (hover: hover) { :is(.cta, .gotw-more, .talk-btn.primary, .car-arrow, .car-pause, .chip:is(.to-again, .rank-pdf)):hover { color: #FFFFFF; background: var(--gloss), var(--pop-hi); } }
-.tabs a[aria-current='page'], .tabs a[aria-current='page']:hover { color: #FFFFFF; }
-.lab-tabs a[aria-current='page'] b, .lab-tabs a[aria-current='page'] small { color: #FFFFFF; }
-.car-pause[aria-pressed='true'] { color: var(--ink); background: var(--gloss), var(--yellow); box-shadow: var(--chip-shade); }
-
-/* --- the accent: light pills. Magenta words on a magenta ledge --- */
+@media (hover: hover) { :is(.cta, .gotw-more, .talk-btn.primary, .chip:is(.to-again, .rank-pdf)):hover { color: var(--ink); background: var(--gloss), #FFC21A; } }
 :is(.filters :is(button, a):not([aria-pressed='true'], [aria-current='page'], :disabled), .pick:not(.on), .odds-more, .talk-btn:not(.primary), .poll-pick, .unveil-team, .unveil-x, .to-skip,
   .team-pick select, .trade-pick select) {
-  color: var(--pop-ink); background-color: var(--paper); box-shadow: var(--soft); border-color: transparent; }
+  background-color: var(--paper); box-shadow: var(--soft); border-color: transparent; }
 .odds-more { background: var(--paper); }
-:is(.poll-pick, .unveil-team) { color: var(--ink); }
 :is(.filters :is(button, a):not([aria-pressed='true'], [aria-current='page'], :disabled), .pick:not(.on), .odds-more, .talk-btn:not(.primary), .poll-pick, .unveil-team):active { box-shadow: var(--soft-down); }
-.pick:first-child.on, .pick:last-child.on { box-shadow: var(--chip-shade); } /* your vote wears your side's colour: data, not a control any more */
-.odds-more:hover { color: var(--pop-ink); background: var(--hover); }
-.theme-btn { color: var(--pop-ink); box-shadow: var(--soft); }
+.pick:first-child.on, .pick:last-child.on { box-shadow: var(--chip-shade); }
+.odds-more:hover { background: var(--hover); }
+.theme-btn { box-shadow: var(--soft); }
 .team-pick select { border: 0; }
-/* quieter controls on the desk: words and a thin ring in the accent, no ledge */
-:is(.tc-pill, .tc-act:not(.bad), .tc-ref:not(:disabled), .tc-x, .talk-wk select) { color: var(--pop-ink); background-color: var(--paper); box-shadow: inset 0 0 0 1.5px rgba(199, 0, 105, 0.35), 0 2px 3px -1px var(--cast); }
-:is(.tc-pill, .tc-act:not(.bad), .tc-ref:not(:disabled), .tc-x):hover { color: var(--pop-ink); background-color: var(--hover); }
-.tc.mine .tc-act:not(.bad) { box-shadow: inset 0 0 0 1.5px rgba(199, 0, 105, 0.35); }
-.tc-tag { color: var(--pop-ink); border-color: var(--pop-ink); }
-.tc-tag:hover { color: var(--pop-ink); background-color: var(--hover); }
-.tc-link, a { color: var(--pop-ink); }
-.footer a { color: var(--yellow); }
-.tabs a { color: var(--pop-ink); }
-.tabs a:hover { color: var(--pop-deep); }
-.lab-tabs a:not([aria-current]) b { color: var(--pop-ink); }
-@media (hover: hover) { .lab-tabs a:not([aria-current]):hover { background-color: var(--hover); } }
-:focus-visible, .rank-btn:focus-visible, .mu-more:focus-visible, .odds-more:focus-visible, .tc-pill:focus-visible, .tc-act:focus-visible, .tc-tag:focus-visible, .tc-ref:focus-visible, .tc-x:focus-visible { outline-color: var(--pop-ink); }
+.xp { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 0 1px rgba(11, 36, 18, 0.2), 0 2px 3px -1px var(--cast); }
+.pull .xp, .odds-more .xp { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 0 1px rgba(11, 36, 18, 0.2), 0 2px 3px -1px var(--cast); }
+.gotw-more .xp { box-shadow: none; }
+
+/* electric magenta: tiny hints only, on ledges and selection. Never for small text (3.6:1 on white), and yellow still means you */
 ::selection { background: var(--pop); color: #FFFFFF; }
-
-/* the expand circle: the same magenta everywhere, white inside a magenta pill */
-.xp { color: #FFFFFF; background: var(--gloss), var(--pop); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 2px 0 var(--pop-deep), 0 4px 6px -2px rgba(70, 0, 40, 0.5); }
-.rank-btn:hover .xp, .method-box summary:hover .xp, .you-strip:hover .xp, .rank-btn:hover .pull .xp { background: var(--gloss), var(--pop-hi); }
-.pull .xp, .odds-more .xp, .gotw-more .xp { background: var(--gloss), var(--pop); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 2px 0 var(--pop-deep); }
-.gotw-more .xp { background: rgba(255, 255, 255, 0.22); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3); }
-
-.rxn-add { color: #FFFFFF; background: var(--gloss), var(--pop); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 2px 0 var(--pop-deep); }
-@media (hover: hover) { .rxn-add:hover { color: #FFFFFF; background: var(--gloss), var(--pop-hi); } }
+.tab-ink, .lab-tabs a[aria-current='page'], .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'] {
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.55), inset 0 -3px 5px rgba(120, 70, 0, 0.3), 0 0 0 1px rgba(11, 36, 18, 0.28), 0 3px 0 var(--pop), 0 7px 10px -3px rgba(90, 50, 0, 0.5); }
 
 /* --- shading on everything small --- */
-:is(.tier, .move, .pos, .sup, .you, .need-chip, .chip:not(.to-again, .rank-pdf), .st, .fo-fav, .lf .cap, .kicker > span:first-child, .day > h3, .fut.fav .odds-tag, .view-head .wk, .ball-pct, .stamp) { box-shadow: var(--chip-shade); }
+:is(.tier, .move, .pos, .sup, .you, .need-chip, .chip:not(.to-again, .rank-pdf), .st, .fo-fav, .lf .cap, .kicker > span:first-child, .day > h3, .fut.fav .odds-tag, .ball-pct, .stamp) { box-shadow: var(--chip-shade); }
+.view-head :is(h1, .page-title) .wk { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 3px 0 var(--pop); }
 .stamp { border-radius: 999px; box-shadow: inset 0 0 0 2px currentColor, 0 4px 8px -2px rgba(0, 0, 0, 0.6); }
 .kicker .k { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.3); }
 .fo-side.b .fo-face { box-shadow: 0 10px 18px -6px rgba(0, 0, 0, 0.55); }
@@ -2637,7 +2612,7 @@ html.locked { overflow: hidden; }
 .h2h-row .slot { box-shadow: var(--tray-edge); }
 :is(.talk-form, .tc-edit) textarea { border-radius: 26px; box-shadow: var(--tray-edge); }
 :is(.talk-form, .tc-edit) textarea:hover { box-shadow: var(--tray-edge); }
-:is(.talk-form, .tc-edit) textarea:focus { box-shadow: var(--tray-edge), inset 0 0 0 2px var(--pop-ink); }
+:is(.talk-form, .tc-edit) textarea:focus { box-shadow: var(--tray-edge), inset 0 0 0 2px var(--ink-2); }
 .tc { box-shadow: 0 0 0 1px rgba(11, 36, 18, 0.1), 0 6px 9px -5px var(--cast); }
 .tc.mine { box-shadow: inset 0 0 0 1.5px var(--mine-edge), 0 6px 9px -5px var(--cast); }
 .sec-title { background-image: var(--sheen); background-size: 100% 60px; background-repeat: no-repeat; }
@@ -2686,21 +2661,20 @@ main::after { border-radius: 56px 56px 0 0; }
 .ranks { gap: 20px; }
 .rank-card { background-color: var(--face); }
 .rank .jersey { text-shadow: 0 8px 14px rgba(0, 40, 12, 0.5); }
-:is(.pull, .mu-more) { position: relative; background-color: var(--drawer); box-shadow: inset 0 -8px 10px -8px rgba(11, 36, 18, 0.3); color: var(--pop-drawer); }
+:is(.pull, .mu-more) { position: relative; background-color: var(--drawer); box-shadow: inset 0 -8px 10px -8px rgba(11, 36, 18, 0.3); color: var(--ink-2); }
 :is(.pull, .mu-more)::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: var(--lip); background-color: var(--face);
   border-radius: 0 0 var(--lip) var(--lip); box-shadow: 0 5px 7px -2px rgba(6, 34, 14, 0.45); }
 .pull { margin-top: -6px; padding: calc(var(--lip) + 7px) 14px 9px; }
-.rank-btn:hover .pull { color: var(--pop-drawer); background-color: var(--drawer); }
+.rank-btn:hover .pull { color: var(--ink); background-color: var(--drawer); }
 .rank.open .pull { box-shadow: none; }
-.rank.nudge:not(.open) .pull { color: #FFFFFF; background-color: var(--pop); box-shadow: inset 0 -8px 10px -8px rgba(80, 0, 45, 0.6); }
-.rank.nudge:not(.open) .pull .xp { background: rgba(255, 255, 255, 0.24); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.rank.nudge:not(.open) .pull { color: var(--ink); background-color: var(--amber); box-shadow: inset 0 -8px 10px -8px rgba(120, 70, 0, 0.55); }
 .rank .detail { background-color: var(--drawer); border-radius: 0 0 var(--r-lg) var(--r-lg); }
 .rank:nth-child(-n + 3) .detail { border-radius: 0 0 var(--r-xl) var(--r-xl); }
 .rank .detail, .mu-detail { --tile: var(--in-tile); --tile-2: var(--in-tile-2); --line: var(--in-line); --tray-edge: var(--in-tray); }
 .detail-inner { border-top: 0; padding-top: 10px; }
 .mu { padding-bottom: 0; }
 .mu-more { width: calc(100% + 36px); margin: 14px -18px 0; padding: calc(var(--lip) + 10px) 20px 13px; border-top: 0; border-radius: 0 0 var(--r-lg) var(--r-lg); }
-.mu-more:hover { color: var(--pop-drawer); }
+.mu-more:hover { color: var(--ink); }
 .mu.open .mu-more { border-radius: 0; box-shadow: none; }
 .mu-detail { margin: 0 -18px; padding: 0; background-color: var(--drawer); border-radius: 0 0 var(--r-lg) var(--r-lg); }
 .mu-detail .bd { padding: 8px 18px 22px; }
@@ -2787,7 +2761,7 @@ main::after { border-radius: 56px 56px 0 0; }
   --good-bg: #173A1E;
   --bad-bg: #44201F;
   --info-bg: #10304A;
-  --hover: #4A1B38;
+  --hover: #24415A;
   --notice-bg: #33290C;
   --ledge: #06130A;
   --ledge-gold: #9C7000;
@@ -2797,13 +2771,11 @@ main::after { border-radius: 56px 56px 0 0; }
   --sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0, rgba(255, 255, 255, 0) 100%);
   --rim: inset 0 1.5px 0 rgba(255, 255, 255, 0.11), inset 0 -16px 20px -16px rgba(0, 0, 0, 0.6);
   --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0, rgba(255, 255, 255, 0.05) 52%, rgba(0, 0, 0, 0.14) 100%);
-  --pop-ink: #FF5CAD;
-  --pop-drawer: #FF5CAD;
   --cast: rgba(0, 0, 0, 0.7);
   --mine-edge: #C9A400;
   --chip-shade: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -2px 3px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.6);
-  --soft: inset 0 1.5px 0 rgba(255, 255, 255, 0.14), inset 0 -3px 5px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 92, 173, 0.4), 0 3px 0 var(--pop), 0 7px 9px -4px rgba(0, 0, 0, 0.7);
-  --soft-down: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 92, 173, 0.4), 0 1px 0 var(--pop);
+  --soft: inset 0 1.5px 0 rgba(255, 255, 255, 0.14), inset 0 -3px 5px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.6), 0 3px 0 var(--ledge), 0 7px 9px -4px rgba(0, 0, 0, 0.7);
+  --soft-down: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.6), 0 1px 0 var(--ledge);
   --drawer: #0A140D;
   --in-tile: #1B2E22;
   --in-tile-2: #2B4133;
@@ -2813,16 +2785,17 @@ main::after { border-radius: 56px 56px 0 0; }
 /* anything on a bright fill (amber, yellow, lime, the matchup sides, the pastel position and tier chips) keeps the
    day's dark ink, so its words stay readable */
 :root[data-theme='dark'] :is(.view-head .wk, .avatar.ph, .tier:not(.low, .stinks), .you, .rank.nudge:not(.open) .pull,
-  .key-tag,
-  .kicker > span:first-child, .tc-face.ph, 
-  .drive-field .endzone, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
-  :is(.lead-face, .mgr-face, .fo-face, .stat-face, .deal-face, .pitch-face).ph, .lf .cap, .mu .vs, .day > h3, .fo-side, .fo-vs i,
-  .desk-note, .you-face.ph, .st-chip.won, .sup.champ, .bull-tag.lead, .pp-img.ph, .verdict-face.ph,
+  .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .tabs a[aria-current='page'], .lab-tabs a[aria-current='page'], .key-tag,
+  .kicker > span:first-child, .tc-face.ph, .talk-btn.primary, .car-pause[aria-pressed='true'], .drive-pick button[aria-pressed='true'],
+  .drive-field .endzone, .gotw-more, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
+  :is(.lead-face, .mgr-face, .fo-face, .stat-face, .deal-face, .pitch-face).ph, .lf .cap, .mu .vs, .day > h3, .clip-frame .clip-sound, .fo-side, .fo-vs i,
+  .desk-note, .you-face.ph, .st-chip.won, .sup.champ, .bull-tag.lead, .chip:is(.to-again, .rank-pdf), .pp-img.ph, .cta, .verdict-face.ph,
   .strip-face.ph, .pos, .champ, .ball-pct, .pp-card, .fo-fav.dog) {
   --ink: #0B2412; --ink-2: #2E4B35; --ink-3: #47604C; --good: #28702C; --bad: #C62828; --a-ink: #0266A3; --b-ink: #985700;
   --paper: #FFFFFF; --line: #BFD2AE; --tile: #D9E6CC;
   color: var(--ink);
 }
+:root[data-theme='dark'] .tabs a[aria-current='page'] { color: #0B2412; }
 :root[data-theme='dark'] .mu .vs { color: var(--yellow); background: var(--board); }
 :root[data-theme='dark'] .footer .version { color: #CFE3CB; }
 :root[data-theme='dark'] .fo-fav:not(.dog) { color: var(--yellow); background: var(--board); }
@@ -2876,7 +2849,7 @@ main::after { border-radius: 56px 56px 0 0; }
 :root[data-theme='dark'] .mgr-stats > div.good { background: #173A1E; box-shadow: 0 0 0 1.5px #3F7F45, 0 3px 0 1.5px #000; }
 :root[data-theme='dark'] .mgr-stats > div.bad { background: #44201F; box-shadow: 0 0 0 1.5px #8A3B37, 0 3px 0 1.5px #000; }
 :root[data-theme='dark'] .heat tr.mine td { box-shadow: inset 0 0 0 2px var(--mine-edge), inset 0 -3px 0 rgba(0, 0, 0, 0.3); }
-:root[data-theme='dark'] :is(.team-pick, .trade-pick) select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23FF5CAD' stroke-width='1.8' fill='none'/%3E%3C/svg%3E"); }
+:root[data-theme='dark'] :is(.team-pick, .trade-pick) select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23EAF4E6' stroke-width='1.8' fill='none'/%3E%3C/svg%3E"); }
 :root[data-theme='dark'] :is(.team-pick, .trade-pick) option { color: var(--ink); background: var(--tile); }
 
 /* the team dashboard at night: the same opposite-of-the-wheel colours, deepened to an aubergine sheet and plum tiles,
