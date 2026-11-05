@@ -91,10 +91,10 @@ function RankRow({ D, t, me, h, open, nudge, onToggle, onClose, rowRef, btnRef }
           <div className="odds"><b>{pct(t.playoffPct)}</b><small>playoffs</small></div>
           <span className="pull" aria-hidden="true"><span className="pull-t">Scouting report</span><span className="pull-n">Tap for the scouting report</span><span className="pull-x">Hide report</span><Xp /></span>
         </button>
-        <div className="detail" id={`d-${t.rid}`}><div>{built.current ? <>
+        <div className="detail" id={`d-${t.rid}`}><div>{built.current ? <div className="detail-body">
           <Report D={D} t={t} h={h} />
           <button type="button" className="odds-more detail-close" onClick={onClose}><span>Close</span><Xp /></button>
-        </> : null}</div></div>
+        </div> : null}</div></div>
       </div>
     </li>
   );
@@ -133,7 +133,7 @@ export function RankingsPage({ D, me, h, held, car, desk, sources, updated, mess
       jersey.style.top = `${jersey.getBoundingClientRect().top - li.getBoundingClientRect().top}px`;
       jersey.style.transform = 'none';
     } else {
-      unpin.current.set(rid, setTimeout(() => { if (!li.classList.contains('open')) jersey.style.top = jersey.style.transform = ''; }, 620));
+      unpin.current.set(rid, setTimeout(() => { if (!li.classList.contains('open')) jersey.style.top = jersey.style.transform = ''; }, 760));
     }
     const change = () => setOpen((s) => { const n = new Set(s); if (now) n.add(rid); else n.delete(rid); return n; });
     if (!slides()) change();

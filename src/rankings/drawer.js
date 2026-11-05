@@ -1,9 +1,9 @@
-// Phones: a scouting report slides out from behind its card, and everything under it moves with it, on transforms only.
-// The page's layout changes once, in one go, and the compositor runs the rest, so a long report can't stutter or reflow
-// mid-way the way animating its height did.
+// Phones: a scouting report opens by the card's own foot sliding down and uncovering it, and everything under the card
+// moves with the foot, on transforms only. The foot is moved up inside its window while the report is counter-moved so it
+// holds still, all on one clock. The page's layout changes once, in one go, so a long report can't stutter or reflow.
 
-const MS = 480;
-const EASE = 'cubic-bezier(0.22, 0.9, 0.24, 1)';
+const MS = 620;
+const EASE = 'cubic-bezier(0.42, 0, 0.12, 1)'; // a soft start, so you see the foot begin to move, and a soft landing
 let busy = false;
 
 export const slides = () => matchMedia('(max-width: 760px)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -24,32 +24,32 @@ const move = (el, from, to) => el.animate([{ transform: `translateY(${from}px)` 
 
 // `change` applies the open or close to the page, synchronously
 export function openDrawer(li, change) {
-  const before = li.offsetHeight;
   change();
-  const grew = li.offsetHeight - before;
-  const inner = li.querySelector('.detail > div');
+  const foot = li.querySelector('.detail > div');
+  const body = li.querySelector('.detail-body');
+  const d = body.offsetHeight;
   // anything that starts below the screen and only moves further down never shows, so it needs no layer
-  const rows = below(li).filter((el) => el.getBoundingClientRect().top - grew < innerHeight);
+  const rows = below(li).filter((el) => el.getBoundingClientRect().top - d < innerHeight);
   busy = true;
-  const runs = [move(inner, -inner.offsetHeight, 0), ...rows.map((el) => move(el, -grew, 0))];
+  const runs = [move(foot, -d, 0), move(body, d, 0), ...rows.map((el) => move(el, -d, 0))];
   Promise.all(runs.map((r) => r.finished)).catch(() => {}).finally(() => { runs.forEach((r) => r.cancel()); busy = false; });
 }
 
 // toTop: closing from the foot of a long report, so bring the row's head back into view on the way. Whatever would be
 // left past the end of the shorter page has to come back too.
 export function closeDrawer(li, change, { toTop = false } = {}) {
-  const inner = li.querySelector('.detail > div');
-  const detail = li.querySelector('.detail');
-  const shrink = detail.getBoundingClientRect().height + parseFloat(getComputedStyle(detail).marginTop);
+  const foot = li.querySelector('.detail > div');
+  const body = li.querySelector('.detail-body');
+  const d = body.offsetHeight;
   const top = li.getBoundingClientRect().top;
   const headroom = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
-  const pastEnd = scrollY - (document.documentElement.scrollHeight - shrink - innerHeight);
+  const pastEnd = scrollY - (document.documentElement.scrollHeight - d - innerHeight);
   const back = Math.max(toTop && top < 0 ? headroom - top : 0, pastEnd, 0);
-  const rows = below(li).filter((el) => el.getBoundingClientRect().top - shrink + back < innerHeight);
+  const rows = below(li).filter((el) => el.getBoundingClientRect().top - d + back < innerHeight);
   const page = back ? [document.querySelector('main'), document.querySelector('.footer')].filter(Boolean) : [];
   busy = true;
   li.classList.add('closing');
-  const runs = [move(inner, 0, -inner.offsetHeight), ...rows.map((el) => move(el, 0, -shrink)), ...page.map((el) => move(el, 0, back))];
+  const runs = [move(foot, 0, -d), move(body, 0, d), ...rows.map((el) => move(el, 0, -d)), ...page.map((el) => move(el, 0, back))];
   Promise.all(runs.map((r) => r.finished)).catch(() => {}).finally(() => {
     change();
     li.classList.remove('closing');

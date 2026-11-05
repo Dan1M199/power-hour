@@ -88,6 +88,7 @@
   --pop: #FF0080;       /* electric magenta: tiny hints only, on a few ledges and text selection. Never a fill, never text */
   /* shading: the soft shadow a raised thing casts, a small chip's volume, and a pressable pill's two states */
   --cast: rgba(6, 34, 14, 0.55);
+  --rim-top: inset 0 1.5px 0 #FFFFFF;
   --chip-shade: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -2px 3px rgba(11, 36, 18, 0.14), 0 2px 4px -1px rgba(6, 34, 14, 0.4);
   --press: inset 0 1.5px 0 rgba(255, 255, 255, 0.55), inset 0 -3px 5px rgba(120, 70, 0, 0.3), 0 0 0 1px rgba(11, 36, 18, 0.28), 0 3px 0 var(--ledge-gold), 0 7px 10px -3px rgba(90, 50, 0, 0.5);
   --press-down: inset 0 2px 4px rgba(90, 50, 0, 0.45), 0 0 0 1px rgba(11, 36, 18, 0.28), 0 1px 0 var(--ledge-gold);
@@ -2717,18 +2718,28 @@ main::after { border-radius: 56px 56px 0 0; }
   .ranks { gap: 16px; }
   .pull { margin: 0 -14px -14px; padding: calc(var(--lip) + 6px) 14px 8px; }
   .rank:nth-child(-n + 3) .pull { margin-bottom: -16px; }
-  /* The card's face stays put at its own width with its number beside it. The report is a wider sheet behind it, the
-     full width of the page, that slides out from under the face on transforms only (src/rankings/drawer.js). .detail is
-     the still window it slides in: it clips only along its top, behind the face, and leaves room for the sheet's shadow. */
+  /* One shape, open or closed. The card's green foot (.detail > div: rounded corners, ledge and shadow) is always there,
+     behind the handle's words, and opening just slides it down. The report sits still and the foot uncovers it, on
+     transforms only (src/rankings/drawer.js). .detail is the still window it moves in: it clips only along the top,
+     under the card's face, and leaves room for the shadow. */
+  .rank { --pull-h: 54px; }
   .rank .rank-card, .rank:nth-child(-n + 3) .rank-card { overflow: visible; background: none; border-radius: var(--r-lg); box-shadow: none; }
-  .rank .rank-btn { position: relative; z-index: 2; overflow: hidden; border-radius: var(--r-lg); background-color: var(--face); background-image: var(--sheen); background-size: 100% 150px; background-repeat: no-repeat;
-    box-shadow: var(--rim), 0 0 0 var(--ring-w) var(--yellow), 0 0 0 calc(var(--ring-w) + var(--edge)) var(--outline),
+  .rank .rank-btn { position: relative; z-index: 2; isolation: isolate; }
+  .rank .rank-btn::before { content: ''; position: absolute; z-index: -1; inset: 0 0 var(--pull-h) 0; border-radius: var(--r-lg) var(--r-lg) 0 0;
+    background-color: var(--face); background-image: var(--sheen); background-size: 100% 150px; background-repeat: no-repeat;
+    box-shadow: var(--rim-top), 0 0 0 var(--ring-w) var(--yellow), 0 0 0 calc(var(--ring-w) + var(--edge)) var(--outline);
+    clip-path: inset(-12px -12px 0 -12px); }
+  .rank .pull, .rank.open .pull, .rank.nudge:not(.open) .pull, .rank-btn:hover .pull { height: var(--pull-h); background: none; box-shadow: none; }
+  .rank .detail { display: block; position: relative; z-index: 1; margin: calc(-1 * var(--pull-h)) 0 0; background: none; clip-path: inset(0 -30px -60px -30px); }
+  .rank .detail > div { overflow: hidden; isolation: isolate; padding-top: var(--pull-h); border-radius: 0 0 var(--r-lg) var(--r-lg); background-color: var(--drawer);
+    box-shadow: inset 0 -8px 10px -8px rgba(11, 36, 18, 0.3), 0 0 0 var(--ring-w) var(--yellow), 0 0 0 calc(var(--ring-w) + var(--edge)) var(--outline),
       0 var(--lift) 0 calc(var(--ring-w) + var(--edge)) var(--ledge-c), 0 calc(var(--lift) + 12px) 20px -8px var(--cast); }
-  .rank .detail { display: none; position: relative; z-index: 1; margin: -26px 0 0 -46px; background: none; clip-path: inset(0 -30px -60px -6px round var(--r-lg) 0 0 0); }
-  .rank.open .detail { display: block; }
-  .rank .detail > div { overflow: visible; padding-top: 34px; border-radius: var(--r-lg); background-color: var(--drawer);
-    box-shadow: 0 0 0 var(--ring-w) var(--yellow), 0 0 0 calc(var(--ring-w) + var(--edge)) var(--outline),
-      0 var(--lift) 0 calc(var(--ring-w) + var(--edge)) var(--ledge-c), 0 calc(var(--lift) + 12px) 20px -8px var(--cast); }
+  .rank.nudge:not(.open) .detail > div { background-color: var(--amber); }
+  .rank:not(.open) .detail-body { display: none; }
+  .rank .detail-inner { padding: 8px 10px 14px; }
+  .rank .mgr-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; justify-content: stretch; }
+  .rank .mgr-stats > div { padding: 7px 1px 6px; border-radius: 16px; }
+  .rank .mgr-stats b { font-size: 18px; }
   .rank.closing .pull-x { display: none; }
   .rank.closing .pull-t { display: inline; }
   .rank.closing .pull .xp { transform: none; }
@@ -2782,6 +2793,7 @@ main::after { border-radius: 56px 56px 0 0; }
   --rim: inset 0 1.5px 0 rgba(255, 255, 255, 0.11), inset 0 -16px 20px -16px rgba(0, 0, 0, 0.6);
   --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0, rgba(255, 255, 255, 0.05) 52%, rgba(0, 0, 0, 0.14) 100%);
   --cast: rgba(0, 0, 0, 0.7);
+  --rim-top: inset 0 1.5px 0 rgba(255, 255, 255, 0.11);
   --mine-edge: #C9A400;
   --chip-shade: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -2px 3px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.6);
   --soft: inset 0 1.5px 0 rgba(255, 255, 255, 0.14), inset 0 -3px 5px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.6), 0 3px 0 var(--ledge), 0 7px 9px -4px rgba(0, 0, 0, 0.7);
