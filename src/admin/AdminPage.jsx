@@ -39,6 +39,8 @@ const EMPTY = { kicker: 'From the desk', stamp: '', tone: 'neutral', group: '', 
 const formOf = (s, run = 'week') => ({
   ...EMPTY, ...s, stamp: s.stamp || '', group: s.group || '', hook: s.tick?.hook || '', line: s.tick?.line || '',
   player: s.player?.id || '', marks: (s.mark || []).join(', '), tx: s.tx || [], run,
+  // the card's pinned manager and its words, kept while the same player stays on the card
+  player0: s.player?.id || '', pinRid: s.player?.pin?.team?.rid ?? s.player?.pin?.rid ?? null, pinLabel: s.player?.pin?.label || '',
 });
 const KIND = { trade: 'Trade', waiver: 'Waiver claim', free_agent: 'Free agent' };
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -117,13 +119,82 @@ function Move({ f, D, h, on, toggle }) {
   );
 }
 
+// the week pills over the players and the matchups: the week being played (or ahead), then the scored ones
+function WeekPills({ weeks, w, setW, ahead }) {
+  const first = ahead ? weeks.ahead : weeks.live;
+  const list = [...(first != null ? [[first, ahead ? `Week ${first}${weeks.live === first ? ', live' : ', ahead'}` : `Week ${first} so far`]] : []),
+    ...weeks.scored.filter((x) => x !== first).map((x) => [x, `Week ${x}`])];
+  return list.map(([k, l]) => <button key={k} type="button" aria-pressed={w === k} onClick={() => setW(k)}>{l}</button>);
+}
+const SHOWN = 40;
+// a week's box score: every rostered player by points, tickable
+function Players({ D, h, weeks, w, setW, kind, setKind, rows, picked, toggle }) {
+  const list = rows.filter((r) => kind === 'all' || (kind === 'started') === r.started).slice(0, SHOWN);
+  return <>
+    <div className="filters adm-filters" role="group" aria-label="Which players">
+      <WeekPills weeks={weeks} w={w} setW={setW} />
+      <span className="adm-gap" />
+      {[['all', 'Everyone'], ['started', 'Started'], ['bench', 'Bench']].map(([k, l]) => <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)}>{l}</button>)}
+    </div>
+    {list.length ? <ul className="adm-players">{list.map((r) => {
+      const t = D.byRid[r.rid], on = picked.includes(r.id);
+      return (
+        <li key={r.id}>
+          <button type="button" className={`adm-player${on ? ' on' : ''}`} aria-pressed={on} onClick={() => toggle(r.id)}>
+            <span className="adm-pts">{h.f1(r.pts)}</span>
+            <span className="adm-pl-text"><b><PosTag pos={r.pos} />{h.nameOf(r.id)}</b><small><TeamAvatar t={t} />{`${t.name}${r.started ? '' : ', bench'}`}</small></span>
+            <span className="adm-tick" aria-hidden="true">{on ? <Check /> : null}</span>
+          </button>
+        </li>
+      );
+    })}</ul> : <p className="adm-note glass">No points on the board for this week yet.</p>}
+  </>;
+}
+// a week's games: scores once played, projections and win odds while ahead or live
+function Games({ D, h, weeks, w, setW, games, picked, toggle }) {
+  return <>
+    <div className="filters adm-filters" role="group" aria-label="Which week"><WeekPills weeks={weeks} w={w} setW={setW} ahead /></div>
+    {games.length ? <ul className="adm-games">{games.map((g) => {
+      const k = `${g.a}-${g.b}`, on = picked.includes(k), live = g.ahead && (g.ptsA || g.ptsB);
+      const side = (rid, pts, proj, p) => {
+        const t = D.byRid[rid], won = !g.ahead && pts > (rid === g.a ? g.ptsB : g.ptsA);
+        return (
+          <span className={`adm-gside${won ? ' won' : ''}`}>
+            <TeamAvatar t={t} /><b>{h.first(t)}</b><small>{t.name}</small>
+            <em>{g.ahead ? (live ? h.f1(pts) : pct0(p)) : h.f1(pts)}</em>
+            {g.ahead ? <small className="adm-gsub">{`projects ${h.f1(proj)}`}</small> : null}
+          </span>
+        );
+      };
+      return (
+        <li key={k}>
+          <button type="button" className={`adm-game${on ? ' on' : ''}`} aria-pressed={on} onClick={() => toggle(k)}>
+            <span className="adm-move-head"><b>{g.ahead ? (live ? 'Live' : 'Ahead') : 'Final'}</b><small>{g.ahead && g.stakes >= 0.05 ? `${Math.round(g.stakes * 100)} points of playoff odds on it` : `Week ${g.week}`}</small><span className="adm-tick" aria-hidden="true">{on ? <Check /> : null}</span></span>
+            {side(g.a, g.ptsA, g.projA, g.winA)}
+            {side(g.b, g.ptsB, g.projB, 1 - g.winA)}
+            {g.ahead ? <span className="adm-odds" style={{ '--p': g.winA }} aria-label={`Win odds ${pct0(g.winA)} to ${pct0(1 - g.winA)}`}><i /></span> : null}
+          </button>
+        </li>
+      );
+    })}</ul> : <p className="adm-note glass">No games for this week.</p>}
+  </>;
+}
+const pct0 = (x) => `${Math.round((x || 0) * 100)}%`;
+
 // a field's character count, shown once it gets close to the limit
 const Count = ({ v, max }) => (v.length > max * 0.7 ? <small className={`adm-count${v.length >= max ? ' full' : ''}`}>{`${v.length} of ${max}`}</small> : null);
 
-export function AdminPage({ D, h, draft, preview, site, groups, week, now, date }) {
+const SOURCES = [['moves', 'Moves'], ['players', 'Players'], ['games', 'Matchups']];
+const tog = (set, k) => set((x) => (x.includes(k) ? x.filter((y) => y !== k) : [...x, k]));
+
+export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, weekGames, weeks, preview, order, groups, groupOf, week, now, date }) {
   const P = usePosts();
+  const [source, setSource] = useState('moves');
   const [range, setRange] = useState('week'), [kind, setKind] = useState('all');
   const [picked, setPicked] = useState([]);
+  // players: a week's box score; matchups: a week's games (the week ahead, or one already played)
+  const [pw, setPw] = useState(weeks.live ?? weeks.scored[0] ?? null), [pkind, setPkind] = useState('all'), [pPicked, setPPicked] = useState([]);
+  const [gw, setGw] = useState(weeks.ahead ?? weeks.scored[0] ?? null), [gPicked, setGPicked] = useState([]);
   const [form, setForm] = useState(null), [editing, setEditing] = useState(null);
   const [toast, setToast] = useState(null), [err, setErr] = useState(''), [busy, setBusy] = useState(false);
   const [fresh, setFresh] = useState(null); // the post just made, lit up in the running order
@@ -140,9 +211,10 @@ export function AdminPage({ D, h, draft, preview, site, groups, week, now, date 
     const ids = new Map();
     const tx = (form?.tx?.length ? form.tx : picked).map(String);
     for (const f of D.feed.filter((x) => tx.includes(String(x.id)))) for (const s of f.sides) for (const a of s.adds) ids.set(a.id, s.rid);
-    if (form?.player && !ids.has(form.player)) ids.set(form.player, null);
+    for (const id of pPicked) { const r = D.teams.find((t) => t.players.includes(id)); ids.set(id, r?.rid ?? null); }
+    if (form?.player && !ids.has(form.player)) ids.set(form.player, form.pinRid ?? null);
     return [...ids].map(([id, rid]) => ({ id, rid, v: D.helpers.valueOf(id) })).sort((a, b) => b.v - a.v);
-  }, [form?.tx, form?.player, picked, D]);
+  }, [form?.tx, form?.player, form?.pinRid, picked, pPicked, D]);
 
   if (P.enabled === null) return <Head />;
   if (!P.enabled) return <><Head /><p className="adm-note glass">Posting needs the headline store, which isn't connected here. It works on the live site.</p></>;
@@ -152,7 +224,8 @@ export function AdminPage({ D, h, draft, preview, site, groups, week, now, date 
   const story = () => {
     const pl = form.player && people.find((x) => x.id === form.player), info = (pl && D.helpers.player(pl.id)) || {};
     const to = pl?.rid && D.byRid[pl.rid];
-    const card = pl ? { id: pl.id, name: h.nameOf(pl.id), short: h.shortName(pl.id), line: `${info.pos || h.posOf(pl.id)}, ${h.nfl(info.team)}`, pin: to ? { rid: to.rid, label: `To ${h.first(to)}` } : null } : null;
+    const label = pl && pl.id === form.player0 && to?.rid === form.pinRid && form.pinLabel ? form.pinLabel : to && `To ${h.first(to)}`;
+    const card = pl ? { id: pl.id, name: h.nameOf(pl.id), short: h.shortName(pl.id), line: `${info.pos || h.posOf(pl.id)}, ${h.nfl(info.team)}`, pin: to ? { rid: to.rid, label } : null } : null;
     return {
       kicker: form.kicker, stamp: form.stamp, tone: form.tone, group: form.group || null, breaking: form.breaking,
       headline: form.headline, deck: form.deck, tick: form.hook && form.line ? { hook: form.hook, line: form.line } : null,
@@ -160,7 +233,9 @@ export function AdminPage({ D, h, draft, preview, site, groups, week, now, date 
       until: form.run === 'keep' ? editing.until : untilFor(form.run, now),
     };
   };
-  const shown = form && form.headline.trim() ? preview([{ ...story(), id: 'draft', until: null }]) : [];
+  // a site headline being rewritten keeps what the form doesn't cover (its scoreboard, its clip)
+  const shown = form && form.headline.trim() ? preview([{ ...story(), id: 'draft', until: null }]).map((st) => (editing?.site ? { ...editing.site, ...st, type: editing.site.type } : st)) : [];
+  const siteEdit = !!editing?.site;
 
   const open = (f, p = null) => { setForm(f); setEditing(p); setErr(''); scrollTo('.adm-work'); };
   const call = async (body, done) => {
@@ -173,10 +248,12 @@ export function AdminPage({ D, h, draft, preview, site, groups, week, now, date 
   const submit = async (e) => {
     e.preventDefault();
     if (!form.headline.trim()) { setErr('Write a headline first.'); return; }
-    const r = await call(editing ? { action: 'edit', id: editing.id, story: story() } : { action: 'post', story: story() }, editing ? 'Saved' : 'Posted. It leads the carousel now.');
+    const body = siteEdit ? { action: 'site-edit', key: editing.site.key, story: story() }
+      : editing ? { action: 'edit', id: editing.id, story: story() } : { action: 'post', story: story() };
+    const r = await call(body, editing ? 'Saved' : 'Posted. It leads the carousel now.');
     if (!r) return;
-    setFresh(editing ? editing.id : r.id);
-    setForm(null); setEditing(null); setPicked([]);
+    setFresh(siteEdit ? editing.site.key : editing ? editing.id : r.id);
+    setForm(null); setEditing(null); setPicked([]); setPPicked([]); setGPicked([]);
     scrollTo('.adm-order-sec');
   };
   const move = (i, d) => {
@@ -196,33 +273,49 @@ export function AdminPage({ D, h, draft, preview, site, groups, week, now, date 
       <section className="adm-order-sec" aria-labelledby="adm-order-t">
         <h2 className="sec-title" id="adm-order-t">Running order<small>What the carousel shows, first to last</small></h2>
         <ol className="adm-order">
-          {P.list.map((p, i) => (
-            <li key={p.id} className={`adm-slot${fresh === p.id ? ' fresh' : ''}${editing?.id === p.id ? ' editing' : ''}`}>
-              <span className="adm-num" aria-hidden="true">{i + 1}</span>
-              <div className="adm-slot-card glass">
-                <div className="adm-slot-text">
-                  <span className="adm-slot-meta"><span className={`adm-kick t-${p.tone}`}>{p.kicker}</span>{p.breaking ? <span className="adm-brk">Breaking</span> : null}{editing?.id === p.id ? <span className="adm-brk editing">Editing</span> : null}</span>
-                  <b>{p.headline}</b>
-                  <small>{`${p.until ? `Runs until ${when(p.until)}` : 'Runs until you take it down'}. Posted ${ago(p.ts, now)}.`}</small>
-                </div>
-                <div className="adm-slot-acts">
-                  <span className="adm-updown">
-                    <button type="button" className="adm-icon" onClick={() => move(i, -1)} disabled={busy || i === 0} aria-label={`Move "${p.headline}" up`}><Arrow up /></button>
-                    <button type="button" className="adm-icon" onClick={() => move(i, 1)} disabled={busy || i === P.list.length - 1} aria-label={`Move "${p.headline}" down`}><Arrow /></button>
-                  </span>
-                  <button type="button" className="talk-btn" onClick={() => open(formOf(p, p.until ? 'keep' : 'forever'), p)} disabled={busy}>Edit</button>
-                  <button type="button" className="talk-btn adm-down" onClick={() => call({ action: 'remove', id: p.id }, 'Taken down')} disabled={busy}>Take down</button>
-                </div>
-              </div>
-            </li>
-          ))}
-          {!P.list.length ? <li className="adm-slot adm-none"><span className="adm-num" aria-hidden="true">1</span><p className="adm-slot-card">Nothing of yours is up. The site's own headlines are running.</p></li> : null}
-          {site.map((st, i) => (
-            <li key={`s${i}`} className="adm-slot site">
-              <span className="adm-num" aria-hidden="true">{P.list.length + i + 1}</span>
-              <div className="adm-slot-card"><div className="adm-slot-text"><span className="adm-slot-meta"><span className="adm-kick">{st.kicker}</span><span className="adm-by">Written by the site</span></span><b>{st.headline}</b></div></div>
-            </li>
-          ))}
+          {!P.list.length ? <li className="adm-slot adm-none"><p className="adm-slot-card">Nothing of yours is up. The site's own headlines are running.</p></li> : null}
+          {(() => {
+            let n = 0;
+            return order().map((st, i, all) => {
+              const own = st.type.startsWith('p-'), p = own && P.list.find((x) => `p-${x.id}` === st.type);
+              const at = p ? P.list.indexOf(p) : -1, id = own ? p?.id : st.key;
+              const head = st.group !== all[i - 1]?.group ? <li key={`g-${st.group}`} className={`adm-group g-${st.group}`} aria-hidden="true"><span>{groups[st.group]}</span></li> : null;
+              const num = st.hidden ? null : ++n;
+              return [head, (
+                <li key={own ? st.type : st.key} className={`adm-slot${own ? '' : ' site'}${st.hidden ? ' hidden' : ''}${fresh === id ? ' fresh' : ''}${(editing?.id ?? editing?.site?.key) === id ? ' editing' : ''}`}>
+                  <span className="adm-num" aria-hidden="true">{num ?? ''}</span>
+                  <div className={`adm-slot-card${own ? ' glass' : ''}`}>
+                    <div className="adm-slot-text">
+                      <span className="adm-slot-meta">
+                        <span className={`adm-kick t-${st.tone || 'neutral'}`}>{st.kicker}</span>
+                        {st.breaking ? <span className="adm-brk">Breaking</span> : null}
+                        {(editing?.id ?? editing?.site?.key) === id ? <span className="adm-brk editing">Editing</span> : null}
+                        {own ? null : <span className="adm-by">{st.hidden ? 'Hidden from the carousel' : st.edited ? 'Written by the site, edited by you' : 'Written by the site'}</span>}
+                      </span>
+                      <b>{st.headline}</b>
+                      {p ? <small>{`${p.until ? `Runs until ${when(p.until)}` : 'Runs until you take it down'}. Posted ${ago(p.ts, now)}.`}</small> : null}
+                    </div>
+                    <div className="adm-slot-acts">
+                      {p ? <>
+                        <span className="adm-updown">
+                          <button type="button" className="adm-icon" onClick={() => move(at, -1)} disabled={busy || at === 0} aria-label={`Move "${p.headline}" up`}><Arrow up /></button>
+                          <button type="button" className="adm-icon" onClick={() => move(at, 1)} disabled={busy || at === P.list.length - 1} aria-label={`Move "${p.headline}" down`}><Arrow /></button>
+                        </span>
+                        <button type="button" className="talk-btn" onClick={() => open(formOf(p, p.until ? 'keep' : 'forever'), p)} disabled={busy}>Edit</button>
+                        <button type="button" className="talk-btn adm-down" onClick={() => call({ action: 'remove', id: p.id }, 'Taken down')} disabled={busy}>Take down</button>
+                      </> : st.hidden ? (
+                        <button type="button" className="talk-btn" onClick={() => call({ action: 'site-reset', key: st.key }, 'Back on the carousel')} disabled={busy}>Show again</button>
+                      ) : <>
+                        <button type="button" className="talk-btn" onClick={() => open(formOf(st), { site: st })} disabled={busy}>Edit</button>
+                        {st.edited ? <button type="button" className="talk-btn" onClick={() => call({ action: 'site-reset', key: st.key }, 'Back to the site\'s words')} disabled={busy}>Undo edit</button> : null}
+                        <button type="button" className="talk-btn adm-down" onClick={() => call({ action: 'site-hide', key: st.key }, 'Hidden')} disabled={busy}>Hide</button>
+                      </>}
+                    </div>
+                  </div>
+                </li>
+              )];
+            });
+          })()}
         </ol>
         {P.old.length ? (
           <details className="adm-old">
@@ -239,7 +332,11 @@ export function AdminPage({ D, h, draft, preview, site, groups, week, now, date 
 
       <section className="adm-work" aria-labelledby="adm-work-t">
         {!form ? <>
-          <h2 className="sec-title" id="adm-work-t">Pick the moves<small>Tick one or more, then draft a headline</small></h2>
+          <h2 className="sec-title" id="adm-work-t">Write about<small>Tick one or more, then draft a headline</small></h2>
+          <div className="adm-sources" role="group" aria-label="What to write about">
+            {SOURCES.map(([k, l]) => <button key={k} type="button" aria-pressed={source === k} onClick={() => setSource(k)}>{l}</button>)}
+          </div>
+          {source === 'moves' ? <>
           <div className="filters adm-filters" role="group" aria-label="Which moves">
             {[['week', `Week ${lastWeek}`], ['two', 'Last two weeks'], ['all', 'All season']].map(([k, l]) => <button key={k} type="button" aria-pressed={range === k} onClick={() => setRange(k)}>{l}</button>)}
             <span className="adm-gap" />
@@ -248,14 +345,26 @@ export function AdminPage({ D, h, draft, preview, site, groups, week, now, date 
           {feed.length
             ? <ul className="adm-moves">{feed.map((f) => <Move key={f.id} f={f} D={D} h={h} on={picked.includes(f.id)} toggle={() => setPicked((x) => (x.includes(f.id) ? x.filter((y) => y !== f.id) : [...x, f.id]))} />)}</ul>
             : <p className="adm-note glass">No moves in this stretch. Try a longer one.</p>}
-          <div className="adm-dock glass">
-            <span className="adm-dock-say">{picked.length ? `${picked.length} ${picked.length === 1 ? 'move' : 'moves'} picked` : 'Nothing picked yet'}</span>
-            {picked.length ? <button type="button" className="talk-btn" onClick={() => setPicked([])}>Clear</button> : null}
-            <button type="button" className="talk-btn" onClick={() => open({ ...EMPTY })}>Write from scratch</button>
-            <button type="button" className="talk-btn primary" disabled={!picked.length} onClick={() => open(formOf(draft(chosen)))}>Draft a headline</button>
-          </div>
+          </> : source === 'players' ? <Players D={D} h={h} weeks={weeks} w={pw} setW={(w) => { setPw(w); setPPicked([]); }} kind={pkind} setKind={setPkind} rows={pw ? weekPlayers(pw) : []} picked={pPicked} toggle={(id) => tog(setPPicked, id)} />
+            : <Games D={D} h={h} weeks={weeks} w={gw} setW={(w) => { setGw(w); setGPicked([]); }} games={gw ? weekGames(gw) : []} picked={gPicked} toggle={(k) => tog(setGPicked, k)} />}
+          {(() => {
+            const n = { moves: picked.length, players: pPicked.length, games: gPicked.length }[source];
+            const word = { moves: ['move', 'moves'], players: ['player', 'players'], games: ['matchup', 'matchups'] }[source][n === 1 ? 0 : 1];
+            const clear = { moves: setPicked, players: setPPicked, games: setGPicked }[source];
+            const make = () => (source === 'moves' ? draft(chosen)
+              : source === 'players' ? draftPlayers(pPicked.map((id) => ({ id, week: pw })))
+              : draftGames(gPicked.map((k) => { const [a, b] = k.split('-').map(Number); return { week: gw, a, b }; })));
+            return (
+              <div className="adm-dock glass">
+                <span className="adm-dock-say">{n ? `${n} ${word} picked` : 'Nothing picked yet'}</span>
+                {n ? <button type="button" className="talk-btn" onClick={() => clear([])}>Clear</button> : null}
+                <button type="button" className="talk-btn" onClick={() => open({ ...EMPTY })}>Write from scratch</button>
+                <button type="button" className="talk-btn primary" disabled={!n} onClick={() => { const d = make(); if (d) open(formOf(d)); }}>Draft a headline</button>
+              </div>
+            );
+          })()}
         </> : <>
-          <h2 className="sec-title" id="adm-work-t">{editing ? 'Edit the headline' : 'Write the headline'}<small>The slide is exactly what goes up</small></h2>
+          <h2 className="sec-title" id="adm-work-t">{siteEdit ? "Edit the site's headline" : editing ? 'Edit the headline' : 'Write the headline'}<small>The slide is exactly what goes up</small></h2>
           <div className="adm-compose">
             <div className="adm-preview" ref={pinPreview}>
               {shown.length
@@ -285,7 +394,7 @@ export function AdminPage({ D, h, draft, preview, site, groups, week, now, date 
                 </div>
                 <div className="adm-field" role="group" aria-labelledby="adm-group"><span id="adm-group">Section in the dots</span>
                   <div className="adm-pills">
-                    <button type="button" className="adm-pill" aria-pressed={!form.group} onClick={() => set({ group: '' })}>None</button>
+                    <button type="button" className="adm-pill" aria-pressed={!form.group} onClick={() => set({ group: '' })}>{`Automatic${form.group ? '' : `: ${groups[groupOf({ type: editing?.site?.type || '', kicker: form.kicker })]}`}`}</button>
                     {Object.entries(groups).map(([k, l]) => <button key={k} type="button" className={`adm-pill g-${k}`} aria-pressed={form.group === k} onClick={() => set({ group: k })}><i aria-hidden="true" />{l}</button>)}
                   </div>
                 </div>
@@ -316,12 +425,12 @@ export function AdminPage({ D, h, draft, preview, site, groups, week, now, date 
               </fieldset>
 
               <div className="adm-send">
-                <div className="adm-field" role="group" aria-labelledby="adm-run"><span id="adm-run">{form.run === 'week' ? `Runs until ${when(weekTurns(now))}` : 'How long it runs'}</span>
+                {siteEdit ? <p className="adm-hint">{`Your words replace the site's on this headline for week ${week}. Undo edit puts the site's back.`}</p> : <div className="adm-field" role="group" aria-labelledby="adm-run"><span id="adm-run">{form.run === 'week' ? `Runs until ${when(weekTurns(now))}` : 'How long it runs'}</span>
                   <div className="adm-pills">
                     {editing?.until ? <button type="button" className="adm-pill" aria-pressed={form.run === 'keep'} onClick={() => set({ run: 'keep' })}>{`As is, until ${when(editing.until)}`}</button> : null}
                     {RUNS.map(([k, l]) => <button key={k} type="button" className="adm-pill" aria-pressed={form.run === k} onClick={() => set({ run: k })}>{l}</button>)}
                   </div>
-                </div>
+                </div>}
                 {err ? <p className="adm-err" role="alert">{err}</p> : null}
                 <div className="adm-send-row">
                   <button type="button" className="talk-btn" onClick={() => { setForm(null); setEditing(null); setErr(''); }} disabled={busy}>{editing ? 'Cancel' : 'Discard'}</button>

@@ -2650,6 +2650,59 @@ html.locked { overflow: hidden; }
   padding: 8px 8px 8px 20px; border-radius: 999px; }
 .adm-dock-say { margin-right: 8px; font-weight: 700; color: var(--ink); }
 
+/* sections in the running order: a label on the grass where each section starts, with its colour pip */
+.adm-group { list-style: none; padding: 8px 0 0 64px; }
+.adm-group:first-child { padding-top: 0; }
+.adm-group span { display: inline-flex; align-items: center; gap: 7px; padding: 5px 13px 5px 11px; border-radius: 999px; font: 800 15px/1 var(--display); letter-spacing: 0.02em; color: var(--chalk);
+  background-color: var(--board); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px #000; }
+.adm-group span::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--g); }
+.adm-slot.hidden .adm-slot-card { background-color: var(--tile); box-shadow: none; outline: 2px dashed var(--ink-3); outline-offset: -2px; }
+.adm-slot.hidden .adm-slot-text b { color: var(--ink-3); text-decoration: line-through; text-decoration-thickness: 2px; }
+.adm-slot.site .adm-slot-acts .talk-btn { padding: 6px 13px; font-size: 13px; }
+.g-players { --g: #FFD54A; }
+.g-league { --g: #B3C1C9; }
+
+/* what to write about: moves, players or matchups */
+.adm-sources { display: inline-flex; gap: 4px; padding: 5px; margin: 0 0 16px; border-radius: 999px; background-color: var(--tile); box-shadow: var(--tray-edge); }
+.adm-sources button { cursor: pointer; padding: 9px 20px; border: 0; border-radius: 999px; font: 800 19px/1 var(--display); letter-spacing: 0.01em; color: var(--ink-2); background: transparent; }
+.adm-sources button:hover { color: var(--ink); background-color: var(--paper); }
+.adm-sources button[aria-pressed='true'] { color: var(--ink); background-color: var(--amber); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge-gold); }
+.adm-sources button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+/* the box score: points big on the left, the player and his team beside them */
+.adm-players { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 12px; }
+.adm-player, .adm-game { all: unset; box-sizing: border-box; cursor: pointer; position: relative; width: 100%; border-radius: var(--r-md); font: 400 14px/1.3 var(--body); color: var(--ink);
+  background-color: var(--face); background-image: var(--sheen); background-repeat: no-repeat;
+  box-shadow: 0 0 0 var(--ring-w, 0px) var(--amber), 0 0 0 calc(var(--ring-w, 0px) + 1px) var(--outline), 0 4px 0 calc(var(--ring-w, 0px) + 1px) var(--ledge-c, var(--ledge)), 0 10px 18px -10px var(--cast);
+  transition: transform 0.15s; }
+.adm-player { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; padding: 10px 44px 10px 12px; }
+:is(.adm-player, .adm-game):hover { transform: translateY(-2px); }
+:is(.adm-player, .adm-game):active { transform: translateY(2px); }
+:is(.adm-player, .adm-game):focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
+:is(.adm-player, .adm-game).on { --ring-w: 4px; --ledge-c: var(--ledge-gold); }
+:is(.adm-player, .adm-game).on .adm-tick { background-color: var(--amber); box-shadow: inset 0 0 0 2px var(--outline); }
+.adm-player .adm-tick { top: 50%; transform: translateY(-50%); }
+.adm-pts { min-width: 62px; padding: 8px 6px 6px; border-radius: 18px; text-align: center; font: 900 28px/1 var(--display); color: var(--chalk); background-color: var(--board); }
+.adm-pl-text { display: grid; gap: 4px; min-width: 0; }
+.adm-pl-text b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-pl-text small { display: flex; align-items: center; gap: 6px; color: var(--ink-3); font-size: 12.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-pl-text .avatar { width: 20px; height: 20px; flex: none; }
+
+/* a game: both sides, the score or the odds, and for games ahead the odds bar along the bottom */
+.adm-games { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.adm-game { display: grid; gap: 8px; padding: 14px 16px 16px; border-radius: var(--r-lg); }
+.adm-gside { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: auto auto; column-gap: 10px; align-items: center; padding: 8px 12px; border-radius: 20px;
+  background-color: var(--tile); box-shadow: var(--tray-edge); }
+.adm-gside .avatar { grid-row: 1 / span 2; width: 34px; height: 34px; }
+.adm-gside b { font-weight: 800; }
+.adm-gside small { grid-column: 2; color: var(--ink-3); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-gside em { grid-column: 3; grid-row: 1; font: 800 24px/1 var(--display); font-style: normal; color: var(--ink-2); text-align: right; }
+.adm-gside .adm-gsub { grid-column: 3; grid-row: 2; text-align: right; }
+.adm-gside.won { background-color: var(--paper); box-shadow: inset 0 0 0 2px var(--outline); }
+.adm-gside.won em { color: var(--ink); }
+.adm-odds { display: block; height: 10px; border-radius: 999px; background-color: var(--b); box-shadow: inset 0 0 0 1.5px var(--outline); overflow: hidden; }
+.adm-odds i { display: block; height: 100%; width: calc(var(--p) * 100%); background-color: var(--a); box-shadow: 1.5px 0 0 var(--outline); }
+
 /* the writing: the slide, sticky, beside the form */
 .adm-compose { display: grid; grid-template-columns: minmax(0, 520px) minmax(0, 1fr); gap: 28px; align-items: start; }
 .adm-preview { position: sticky; top: 96px; }
@@ -2725,6 +2778,9 @@ html.locked { overflow: hidden; }
   .adm-slot-text b { font-size: 21px; }
   .adm-slot-acts { width: 100%; }
   .adm-old { margin-left: 44px; }
+  .adm-group { padding-left: 44px; }
+  .adm-sources { display: flex; }
+  .adm-sources button { flex: 1; padding: 9px 8px; font-size: 17px; }
   .adm-order-sec, .adm-work { scroll-margin-top: 150px; }
   .adm-dock { display: grid; grid-template-columns: 1fr 1fr; width: auto; margin-left: 0; border-radius: 30px; padding: 8px; }
   .adm-dock-say { margin: 0; padding: 0 8px; font-size: 14px; }
@@ -2992,7 +3048,7 @@ main::after { border-radius: 56px 56px 0 0; }
   .drive-field .endzone, .gotw-more, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
   :is(.lead-face, .mgr-face, .fo-face, .stat-face, .deal-face, .pitch-face).ph, .lf .cap, .mu .vs, .day > h3, .clip-frame .clip-sound, .fo-side, .fo-vs i,
   .desk-note, .you-face.ph, .st-chip.won, .sup.champ, .bull-tag.lead, .chip:is(.to-again, .rank-pdf), .lo-tag, .pp-img.ph, .cta, .verdict-face.ph,
-  .strip-face.ph, .pos, .champ, .ball-pct, .pp-card, .fo-fav.dog, .adm-pill[aria-pressed='true'], .adm-brk.editing, .adm-move.on .adm-tick) {
+  .strip-face.ph, .pos, .champ, .ball-pct, .pp-card, .fo-fav.dog, .adm-pill[aria-pressed='true'], .adm-brk.editing, .adm-move.on .adm-tick, .adm-sources button[aria-pressed='true'], :is(.adm-player, .adm-game).on .adm-tick) {
   --ink: #0B2412; --ink-2: #2E4B35; --ink-3: #47604C; --good: #28702C; --bad: #C62828; --a-ink: #0266A3; --b-ink: #985700;
   --paper: #FFFFFF; --line: #BFD2AE; --tile: #D9E6CC;
   color: var(--ink);

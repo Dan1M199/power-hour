@@ -26,4 +26,5 @@ export async function loadTalk() {
 }
 
 // a headline's thread key: the week and its story type (a second story of the same type gets a number)
-export const storyKeys = (stories) => { const seen = {}; return stories.map((st) => { const n = (seen[st.type] = (seen[st.type] || 0) + 1); return `w${talk.week}:${st.type}${n > 1 ? `-${n}` : ''}`; }); };
+// (carouselProps gives each story its key before sorting it into sections, st.key, so a key never moves to another headline)
+export const storyKeys = (stories) => { const seen = {}; return stories.map((st) => { if (st.key) return st.key; const n = (seen[st.type] = (seen[st.type] || 0) + 1); return `w${talk.week}:${st.type}${n > 1 ? `-${n}` : ''}`; }); };

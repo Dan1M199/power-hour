@@ -14,7 +14,7 @@ import { GamesPage } from './src/games/GamesPage.jsx';
 import { loadVotes } from './src/games/votes.js';
 import { RankingsPage } from './src/rankings/RankingsPage.jsx';
 import { LivePage } from './src/live/LivePage.jsx';
-import { talk, setTalk, talkCall, loadTalk } from './src/hero/talk.js';
+import { talk, setTalk, talkCall, loadTalk, storyKeys } from './src/hero/talk.js';
 import { posts, loadPosts } from './src/admin/posts.js';
 import { AdminShell } from './src/admin/AdminShell.jsx';
 import { createStore } from './src/store.js';
@@ -856,7 +856,22 @@ const DESK = {
   clobber: { by: '1402120808771391488', on: '964343481231593472' },
 };
 // the carousel's sections, in order: a short label under each cluster of dots and a colour pip, repeated on the kicker
-const GROUPS = { trades: 'Trades', rumors: 'Rumors', wire: 'Wire', week: 'Games' };
+const GROUPS = { trades: 'Trades', rumors: 'Rumors', wire: 'Wire', week: 'Games', players: 'Players', league: 'League' };
+// every headline sits in a section (Dan's request Nov 6): its own group when it has one, else by its type
+const TYPE_GROUP = {
+  trade: 'trades', smash: 'trades', mokhalil: 'trades', blockbuster: 'trades', twist: 'trades', deal: 'trades',
+  leak: 'rumors', ship: 'rumors', rumor: 'rumors',
+  wire: 'wire', cut: 'wire', flurry: 'wire', contest: 'wire',
+  upset: 'week', blowout: 'week', nailbiter: 'week', gotw: 'week', race: 'week', tonight: 'week', clobber: 'week', monday: 'week', locked: 'week',
+  dud: 'players', star: 'players', explosion: 'players', clip: 'players',
+};
+const groupOf = (st) => (GROUPS[st.group] ? st.group : TYPE_GROUP[st.type] || 'league');
+// stories gathered into their sections, the sections in the order they first come up (so the lead stays first)
+function bySection(list) {
+  const order = [];
+  for (const st of list) if (!order.includes(st.group)) order.push(st.group);
+  return order.flatMap((g) => list.filter((st) => st.group === g));
+}
 const deskOn = () => !!DESK && DATA.meta.lastScored === DESK.week - 1;
 const ownerTeam = (owner) => DATA.teams.find((t) => t.ownerId === owner);
 const rosterOf = (id) => DATA.teams.find((t) => t.players.includes(id));
@@ -1455,13 +1470,26 @@ function openReveal() {
 // The headline carousel (src/hero/Carousel.jsx): three headlines in one square card (four on night-edition nights, one
 // per story on the week's desk). The stories are data; the carousel draws them.
 const CAROUSEL_SIZE = 3;
-function carouselProps() {
-  const s = DATA.stories, own = postedStories();
-  if (!s?.lead && !own.length) return null;
+// the site's own headlines as written, each with its desk key (w{week}:{type}), before Dan's edits and hides
+function siteStories() {
+  const s = DATA.stories;
   const base = s?.lead ? [s.lead, ...s.more].slice(0, s.size || CAROUSEL_SIZE + (s.night ? 1 : 0) + (s.extra ? 1 : 0) + (s.pinned || 0)) : [];
+  const keys = storyKeys(base);
+  return base.map((st, i) => ({ ...st, key: keys[i] }));
+}
+function carouselProps({ all = false } = {}) {
+  const s = DATA.stories, own = postedStories();
+  // Dan's edits and hides from the headline desk (api/headlines.js, by desk key); all: keep the hidden ones, marked
+  const site = siteStories().flatMap((st) => {
+    const o = posts.site[st.key];
+    if (o?.hide) return all ? [{ ...st, hidden: true }] : [];
+    return [o?.story ? { ...st, ...hydrate(o.story), edited: true } : st];
+  });
+  if (!site.length && !own.length) return null;
   return {
-    // Dan's own headlines from the admin portal lead, ahead of everything the desk writes
-    stories: [...own, ...base],
+    // Dan's own headlines from the admin portal lead, ahead of everything the desk writes, and every headline sits in
+    // its section (the dots group them)
+    stories: bySection([...own, ...site].map((st) => ({ ...st, group: groupOf(st) }))),
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
     hold: onHold() ? NEWS_CLOCK.holdNote : null, night: !!s?.night, groups: GROUPS,
   };
@@ -1472,14 +1500,17 @@ function carouselProps() {
 // reactions and desk tags are its own.
 function postedStories(list = posts.list) {
   const now = AT ? +AT : Date.now();
-  return list.filter((p) => !p.until || p.until > now).map((p) => {
-    const pin = p.player?.pin && team(p.player.pin.rid);
-    return {
-      ...p, type: `p-${p.id}`, rids: p.rids.filter((r) => team(r)),
-      tick: p.tick || undefined, stamp: p.stamp || undefined, group: p.group || undefined, mark: p.mark?.length ? p.mark : undefined,
-      player: p.player ? { ...p.player, pin: pin ? { team: pin, label: p.player.pin.label || `To ${firstName(pin)}` } : null } : undefined,
-    };
-  });
+  return list.filter((p) => !p.until || p.until > now).map((p) => ({ ...hydrate(p), type: `p-${p.id}` }));
+}
+// a stored story (a post, or Dan's rewrite of a site headline) as the carousel draws it: teams looked up in today's
+// league, the player card's pinned manager as a team, empty fields left out so the slide falls back to its defaults
+function hydrate(p) {
+  const pin = p.player?.pin && team(p.player.pin.rid);
+  return {
+    ...p, rids: (p.rids || []).filter((r) => team(r)),
+    tick: p.tick || undefined, stamp: p.stamp || undefined, group: p.group || undefined, mark: p.mark?.length ? p.mark : undefined,
+    player: p.player ? { ...p.player, pin: pin ? { team: pin, label: p.player.pin.label || `To ${firstName(pin)}` } : null } : undefined,
+  };
 }
 
 // A starting draft for the admin portal from the transactions Dan ticked: the same kind of words the desk's own trade
@@ -1516,6 +1547,102 @@ function draftFor(items) {
     headline: P ? `${who} grabs ${P} off the wire` : `${who} works the wire`,
     deck: [moves.map(moveSaid).join(' '), P && rank ? `${P}${rank}.` : '', `${odds}.`].filter(Boolean).join(' '),
     tick: { hook: 'Pickup', line: P ? `${who} grabs ${P}.` : `${who} works the wire.` },
+  };
+}
+// The headline desk's other sources (Dan's request Nov 6): player performances and matchups, read from the snapshot.
+// A played week's points for every rostered player (players_points; the starters' own where a snapshot keeps only those)
+function weekPlayers(w) {
+  const out = [];
+  for (const m of DATA.raw.matchups?.[w] || []) {
+    const t = team(m.roster_id), st = m.starters || [];
+    if (!t) continue;
+    const pp = m.players_points && Object.keys(m.players_points).length ? m.players_points : Object.fromEntries(st.map((id, i) => [id, (m.starters_points || [])[i]]));
+    for (const [id, pts] of Object.entries(pp)) if (id !== '0' && pts != null) out.push({ id, pts: +pts, rid: t.rid, started: st.includes(id), pos: posOf(id), week: w });
+  }
+  return out.sort((a, b) => b.pts - a.pts);
+}
+// the weeks with points on the board, newest first (the week being played, while it is, then the scored ones)
+const pointWeeks = () => Object.keys(DATA.raw.matchups || {}).map(Number).filter((w) => (DATA.raw.matchups[w] || []).some((m) => m.points > 0)).sort((a, b) => b - a);
+// a week's games: the pairs and their scores; the week ahead (or being played) comes from the previews, with the odds
+function weekGames(w) {
+  const pv = DATA.previews.filter((p) => p.week === w);
+  if (pv.length) return pv.map((p) => ({ week: w, a: p.a, b: p.b, ptsA: p.liveA, ptsB: p.liveB, projA: p.projA, projB: p.projB, winA: p.winA, stakes: p.stakes, ahead: true }));
+  const by = {};
+  for (const m of DATA.raw.matchups?.[w] || []) if (m.matchup_id != null && team(m.roster_id)) (by[m.matchup_id] ||= []).push(m);
+  return Object.values(by).filter((x) => x.length === 2).map(([a, b]) => ({ week: w, a: a.roster_id, b: b.roster_id, ptsA: a.points, ptsB: b.points }));
+}
+const card = (id, t) => {
+  const info = DATA.helpers.player(id) || {}, P = nameOf(id);
+  return { id, name: P, short: shortName(info.name ? info : { name: P }), line: `${info.pos || posOf(id)}, ${nfl(info.team)}`, pin: t ? { rid: t.rid, label: firstName(t) } : null };
+};
+const odds = (ts) => `${ts.map((t) => `${firstName(t)} is ${record(t)} with ${pct(t.playoffPct)} playoff odds`).join('; ')}.`;
+
+// a draft from player performances (one week): the top scorer leads, where his points rank, his team's game, the rest
+function draftPlayers(sel) {
+  const w = sel[0]?.week, all = weekPlayers(w);
+  const rows = sel.map((x) => all.find((p) => p.id === x.id)).filter(Boolean).sort((a, b) => b.pts - a.pts);
+  if (!rows.length) return null;
+  const top = rows[0], t = team(top.rid), P = nameOf(top.id), me = firstName(t), live = w > DATA.meta.lastScored;
+  const rank = all.findIndex((p) => p.id === top.id) + 1, posRank = all.filter((p) => p.pos === top.pos).findIndex((p) => p.id === top.id) + 1;
+  const g = weekGames(w).find((x) => x.a === t.rid || x.b === t.rid);
+  const [mine, theirs, oid] = !g ? [] : g.a === t.rid ? [g.ptsA, g.ptsB, g.b] : [g.ptsB, g.ptsA, g.a];
+  const opp = oid && team(oid), them = opp && firstName(opp);
+  const bench = !top.started, big = top.pts >= 20;
+  const stamp = bench ? 'Benched?' : big ? 'Star turn' : 'Box score';
+  const result = !opp || mine == null ? ''
+    : live ? `${me} has ${f1(mine)} to ${poss(them)} ${f1(theirs)} so far.`
+    : `${me} ${mine > theirs ? 'beat' : mine < theirs ? 'lost to' : 'tied'} ${them} ${f1(mine)} to ${f1(theirs)}${bench && mine < theirs && theirs - mine < top.pts ? `, by less than ${P} scored on the bench` : ''}.`;
+  return {
+    kicker: 'Box score', stamp, tone: bench ? 'bad' : big ? 'good' : 'neutral', group: 'players', breaking: false,
+    rids: [t.rid, ...(opp ? [opp.rid] : [])], player: card(top.id, t), mark: [P], tx: [],
+    headline: bench ? `${P} scores ${f1(top.pts)} on ${poss(me)} bench` : big ? `${P} drops ${f1(top.pts)} for ${me}` : `${P} puts up ${f1(top.pts)} for ${me}`,
+    deck: [
+      `That's ${rank === 1 ? 'the most points' : `the ${ordinal(rank)}-most points`} of any rostered player in week ${w}${live ? ' so far' : ''}, and ${posRank === 1 ? 'the best' : `the ${ordinal(posRank)}-best`} ${SLOT_WORD[top.pos] ? `score by a ${SLOT_WORD[top.pos]}` : `at ${top.pos}`}.`,
+      result,
+      rows.length > 1 ? `Also: ${listOf(rows.slice(1).map((r) => `${nameOf(r.id)} with ${f1(r.pts)} for ${firstName(team(r.rid))}${r.started ? '' : ' (bench)'}`))}.` : '',
+      odds([t]),
+    ].filter(Boolean).join(' '),
+    tick: { hook: stamp, line: `${P} scores ${f1(top.pts)} for ${me}.` },
+  };
+}
+
+// a draft from matchups (one week): the first game picked leads; a played one by its score, one ahead by its odds
+function draftGames(sel) {
+  const games = weekGames(sel[0]?.week).filter((g) => sel.some((x) => x.a === g.a && x.b === g.b));
+  if (!games.length) return null;
+  const g = games[0], A = team(g.a), B = team(g.b), live = g.ahead && (g.ptsA || g.ptsB);
+  const others = games.slice(1).map((x) => {
+    const a = firstName(team(x.a)), b = firstName(team(x.b));
+    return x.ahead ? `${a} against ${b}, ${pct(Math.max(x.winA, 1 - x.winA))} for ${x.winA >= 0.5 ? a : b}` : `${x.ptsA >= x.ptsB ? a : b} beat ${x.ptsA >= x.ptsB ? b : a} ${f1(Math.max(x.ptsA, x.ptsB))} to ${f1(Math.min(x.ptsA, x.ptsB))}`;
+  });
+  const also = others.length ? `Also: ${listOf(others)}.` : '';
+  if (g.ahead) {
+    const [F, D] = g.winA >= 0.5 ? [A, B] : [B, A], p = Math.max(g.winA, 1 - g.winA), close = p < 0.58;
+    const stamp = live ? 'Live' : close ? 'Coin flip' : 'Preview';
+    return {
+      kicker: 'Games', stamp, tone: 'neutral', group: 'week', breaking: false, rids: [F.rid, D.rid], player: null, mark: [], tx: [],
+      headline: close ? `${firstName(A)} against ${firstName(B)} is a coin flip` : `${firstName(F)} goes in as a ${pct(p)} favourite against ${firstName(D)}`,
+      deck: [
+        live ? `${firstName(A)} has ${f1(g.ptsA)} banked to ${poss(firstName(B))} ${f1(g.ptsB)}, and the projections finish it ${f1(g.projA)} to ${f1(g.projB)}.` : `The projections have it ${f1(g.projA)} to ${f1(g.projB)}.`,
+        g.stakes >= 0.05 ? `${Math.round(g.stakes * 100)} points of playoff odds ride on it between them.` : '',
+        also, odds([A, B]),
+      ].filter(Boolean).join(' '),
+      tick: { hook: stamp, line: `${firstName(F)} is a ${pct(p)} favourite against ${firstName(D)}.` },
+    };
+  }
+  const [W, L, ws, ls] = g.ptsA >= g.ptsB ? [A, B, g.ptsA, g.ptsB] : [B, A, g.ptsB, g.ptsA];
+  const m = ws - ls, stamp = m < 5 ? 'Phew' : m >= 30 ? 'Boom' : 'Final';
+  const best = (t) => weekPlayers(g.week).find((p) => p.rid === t.rid && p.started);
+  const bw = best(W), bl = best(L);
+  return {
+    kicker: 'Games', stamp, tone: 'good', group: 'week', breaking: false, rids: [W.rid, L.rid], player: null, mark: [], tx: [],
+    headline: m < 5 ? `${firstName(W)} edges ${firstName(L)} by ${f1(m)}` : m >= 30 ? `${firstName(W)} flattens ${firstName(L)} by ${f1(m)}` : `${firstName(W)} beats ${firstName(L)}, ${f1(ws)} to ${f1(ls)}`,
+    deck: [
+      `Week ${g.week}: ${firstName(W)} ${f1(ws)}, ${firstName(L)} ${f1(ls)}.`,
+      bw && bl ? `${poss(firstName(W))} best was ${nameOf(bw.id)} with ${f1(bw.pts)}; ${poss(firstName(L))} was ${nameOf(bl.id)} with ${f1(bl.pts)}.` : '',
+      also, odds([W, L]),
+    ].filter(Boolean).join(' '),
+    tick: { hook: stamp, line: `${firstName(W)} beats ${firstName(L)} by ${f1(m)}.` },
   };
 }
 // one waiver move in words: who came in, who went out, and the net consensus value
@@ -1557,7 +1684,8 @@ const PAGES = {
   wire: () => [WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x) }],
   matchups: () => [GamesPage, { calm: calm(), lite: lite() }],
   admin: () => [AdminShell, {
-    draft: draftFor, preview: postedStories, site: (carouselProps()?.stories || []).filter((st) => !st.type.startsWith('p-')), groups: GROUPS, week: talkWeek(), now: AT ? +AT : Date.now(),
+    draft: draftFor, draftPlayers, draftGames, weekPlayers, weekGames, preview: postedStories,
+    weeks: { scored: pointWeeks().filter((w) => w <= DATA.meta.lastScored).slice(0, 4), live: DATA.live ? DATA.meta.lastScored + 1 : null, ahead: DATA.previews[0]?.week ?? null }, order: () => carouselProps({ all: true })?.stories || [], groups: GROUPS, groupOf, week: talkWeek(), now: AT ? +AT : Date.now(),
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
   }],
   lab: () => [Lab, {

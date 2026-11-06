@@ -92,6 +92,22 @@ tick(3601e3);
 r = await fan.hl('GET');
 check('a post runs out at its time', r.body.posts.length === 1 && r.body.posts[0].id === first, r.body.posts.map((x) => x.id));
 
+// the site's own headlines: edit one, hide another, put it back
+r = await fan.hl('POST', { action: 'site-hide', key: 'w10:upset' });
+check("a stranger cannot touch the site's headlines", r.code === 403, r);
+r = await dan.hl('POST', { action: 'site-edit', key: 'w10:upset', story: story('Upset city, rewritten') });
+check("Dan rewrites a site headline", r.code === 200 && r.body.site['w10:upset'].story.headline === 'Upset city, rewritten' && !('until' in r.body.site['w10:upset'].story), r.body.site);
+r = await dan.hl('POST', { action: 'site-hide', key: 'w10:dud' });
+r = await fan.hl('GET');
+check('everyone gets the overrides', r.body.site['w10:dud'].hide === true && r.body.site['w10:upset'].story, r.body.site);
+r = await dan.hl('POST', { action: 'site-reset', key: 'w10:dud' });
+check('a hidden site headline comes back', !r.body.site['w10:dud'] && r.body.site['w10:upset'], r.body.site);
+r = await dan.hl('POST', { action: 'site-hide', key: 'not a key' });
+check('a bad key is refused', r.code === 400, r);
+tick(31 * 864e5);
+r = await fan.hl('GET');
+check('overrides run out after 30 days', !Object.keys(r.body.site).length, r.body.site);
+
 r = await dan.hl('POST', { action: 'post', story: story('   ') });
 check('an empty headline is refused', r.code === 400, r);
 const c = cleanStory({ headline: 'Hi\u0007 there\nfriend', tone: 'pink', rids: [1, 1, 'x', 99], player: { id: 'bad id' }, kicker: '' });
