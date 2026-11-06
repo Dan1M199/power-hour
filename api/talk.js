@@ -59,7 +59,7 @@ const validWeek = (w) => Number.isInteger(w) && w >= 1 && w <= 22;
 const same = (a, b) => { const x = Buffer.from(sha(a)), y = Buffer.from(sha(b)); return timingSafeEqual(x, y); };
 
 // the signed-in manager, if the session is still current (a new link for them bumps their generation and ends it)
-async function whoAmI(req) {
+export async function whoAmI(req) {
   const sid = cookieOf(req);
   if (!sid) return null;
   const [v] = await redis([['GET', k('sess', sha(sid))]]);

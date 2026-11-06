@@ -15,6 +15,8 @@ import { loadVotes } from './src/games/votes.js';
 import { RankingsPage } from './src/rankings/RankingsPage.jsx';
 import { LivePage } from './src/live/LivePage.jsx';
 import { talk, setTalk, talkCall, loadTalk } from './src/hero/talk.js';
+import { posts, loadPosts } from './src/admin/posts.js';
+import { AdminShell } from './src/admin/AdminShell.jsx';
 import { createStore } from './src/store.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
 import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
@@ -1454,13 +1456,75 @@ function openReveal() {
 // per story on the week's desk). The stories are data; the carousel draws them.
 const CAROUSEL_SIZE = 3;
 function carouselProps() {
-  const s = DATA.stories;
-  if (!s?.lead) return null;
+  const s = DATA.stories, own = postedStories();
+  if (!s?.lead && !own.length) return null;
+  const base = s?.lead ? [s.lead, ...s.more].slice(0, s.size || CAROUSEL_SIZE + (s.night ? 1 : 0) + (s.extra ? 1 : 0) + (s.pinned || 0)) : [];
   return {
-    stories: [s.lead, ...s.more].slice(0, s.size || CAROUSEL_SIZE + (s.night ? 1 : 0) + (s.extra ? 1 : 0) + (s.pinned || 0)),
+    // Dan's own headlines from the admin portal lead, ahead of everything the desk writes
+    stories: [...own, ...base],
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
-    hold: onHold() ? NEWS_CLOCK.holdNote : null, night: !!s.night, groups: GROUPS,
+    hold: onHold() ? NEWS_CLOCK.holdNote : null, night: !!s?.night, groups: GROUPS,
   };
+}
+
+// Dan's posted headlines (api/headlines.js, written in the admin portal) as carousel stories: the text as he wrote it,
+// the teams and the player card's pinned manager looked up in today's league. A post's type carries its id, so its
+// reactions and desk tags are its own.
+function postedStories(list = posts.list) {
+  const now = AT ? +AT : Date.now();
+  return list.filter((p) => !p.until || p.until > now).map((p) => {
+    const pin = p.player?.pin && team(p.player.pin.rid);
+    return {
+      ...p, type: `p-${p.id}`, rids: p.rids.filter((r) => team(r)),
+      tick: p.tick || undefined, stamp: p.stamp || undefined, group: p.group || undefined, mark: p.mark?.length ? p.mark : undefined,
+      player: p.player ? { ...p.player, pin: pin ? { team: pin, label: p.player.pin.label || `To ${firstName(pin)}` } : null } : undefined,
+    };
+  });
+}
+
+// A starting draft for the admin portal from the transactions Dan ticked: the same kind of words the desk's own trade
+// slides use (who got what, who won it on consensus value, the position groups after, records and odds). He rewrites
+// whatever he likes before posting; once posted the text stays as written.
+function draftFor(items) {
+  if (!items.length) return null;
+  const sides = items.flatMap((f) => f.sides.map((x) => ({ ...x, t: team(x.rid), f })).filter((x) => x.t));
+  const rids = [...new Set(sides.map((x) => x.rid))];
+  const star = sides.flatMap((x) => x.adds.map((a) => ({ ...a, to: x.t }))).sort((a, b) => valueOf(b.id) - valueOf(a.id))[0];
+  const P = star && nameOf(star.id), info = (star && DATA.helpers.player(star.id)) || {}, r = (star && RAW.ros?.values?.[star.id]) || {};
+  const rank = star && r.prk ? `, the ${ordinal(r.prk)}-ranked ${SLOT_WORD[star.pos] || star.pos} in the consensus` : '';
+  const trades = items.filter((f) => f.type === 'trade'), moves = items.filter((f) => f.type !== 'trade');
+  const player = star ? { id: star.id, name: P, short: shortName(info.name ? info : { name: P }), line: `${info.pos || posOf(star.id)}, ${nfl(info.team)}`, pin: { rid: star.to.rid, label: `To ${firstName(star.to)}` } } : null;
+  const odds = rids.map((rid) => team(rid)).map((t) => `${firstName(t)} is ${record(t)} with ${pct(t.playoffPct)} playoff odds`).join('; ');
+  const tx = items.map((f) => String(f.id)).filter((x) => /^\d+$/.test(x));
+  if (trades.length) {
+    const f = trades.find((d) => star && d.sides.some((x) => x.adds.some((a) => a.id === star.id))) || trades[0], names = f.sides.map((x) => firstName(team(x.rid)));
+    return {
+      kicker: 'Trade desk', stamp: 'Done deal', tone: 'trade', group: 'trades', breaking: true, rids, player, mark: P ? [P] : [], tx,
+      headline: P ? `${listOf(names)} shake on it: ${P} heads to ${firstName(star.to)}` : `${listOf(names)} shake on it`,
+      deck: [
+        P && trades.length + moves.length > 1 ? `${P}${rank ? `${rank},` : ''} is the biggest name moving.` : P && rank ? `${P} is${rank.slice(1)}.` : '',
+        ...trades.map((d) => `The full deal: ${dealSaid(d)} ${valueSaid(d)} ${roomsSaid(d)}`.trim()),
+        moves.length ? moves.map(moveSaid).join(' ') : '',
+        `${odds}.`,
+      ].filter(Boolean).join(' '),
+      tick: { hook: 'Done deal', line: P ? `${P} heads to ${firstName(star.to)}.` : `${listOf(names)} make a trade.` },
+    };
+  }
+  const who = firstName(team(moves[0].sides[0].rid));
+  return {
+    kicker: 'Wire', stamp: 'Pickup', tone: 'good', group: 'wire', breaking: false, rids, player, mark: P ? [P] : [], tx,
+    headline: P ? `${who} grabs ${P} off the wire` : `${who} works the wire`,
+    deck: [moves.map(moveSaid).join(' '), P && rank ? `${P}${rank}.` : '', `${odds}.`].filter(Boolean).join(' '),
+    tick: { hook: 'Pickup', line: P ? `${who} grabs ${P}.` : `${who} works the wire.` },
+  };
+}
+// one waiver move in words: who came in, who went out, and the net consensus value
+function moveSaid(f) {
+  const s = f.sides[0], t = team(s.rid);
+  if (!t) return '';
+  const said = (ps) => listOf(ps.map((a) => `${nameOf(a.id)} (${f1(valueOf(a.id))})`));
+  const add = s.adds.length ? `adds ${said(s.adds)}` : '', drop = s.drops.length ? `drops ${said(s.drops)}` : '';
+  return `${firstName(t)} ${[add, drop].filter(Boolean).join(' and ')}, ${s.net >= 0 ? 'up' : 'down'} ${f1(Math.abs(s.net))} in consensus value.`;
 }
 
 // ---------- wire ----------
@@ -1492,6 +1556,10 @@ const PAGES = {
   rankings: () => [RankingsPage, rankingsProps()],
   wire: () => [WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x) }],
   matchups: () => [GamesPage, { calm: calm(), lite: lite() }],
+  admin: () => [AdminShell, {
+    draft: draftFor, preview: postedStories, groups: GROUPS, week: talkWeek(), now: AT ? +AT : Date.now(),
+    date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
+  }],
   lab: () => [Lab, {
     sub: labState.sub, raw: DATA.raw, ros: RAW.ros?.values || {}, calm: calm(), team: dashTeam(), onTeam: (rid) => (labState.team = rid),
     trade: { state: tradeState, onState: (x) => Object.assign(tradeState, x), onTeam: setMyTeam },
@@ -1508,7 +1576,7 @@ const calm = mq('(prefers-reduced-motion: reduce)');
 // phones and touch screens get the light set: no page morphs or scroll reveals, which cost the most on mobile GPUs
 const lite = mq('(max-width: 760px), (pointer: coarse)');
 const morphs = () => !!document.startViewTransition && !calm() && !lite();
-const ORDER = ['live', 'rankings', 'wire', 'matchups', 'lab'];
+const ORDER = ['live', 'rankings', 'wire', 'matchups', 'lab', 'admin'];
 let currentView = null;
 
 // gold pill behind the active tab; with view transitions the browser morphs it, otherwise CSS slides it
@@ -1823,8 +1891,12 @@ async function main() {
   initBall();
   initTooltips();
   const loader = startLoader();
+  // Dan's posted headlines come with the data; a slow answer doesn't hold the page (they're added when they land)
+  const posted = new URLSearchParams(location.search).has('demo') || window.__DEMO__ ? null : loadPosts();
+  let postedLate = false;
   try {
     await load();
+    if (posted) postedLate = !(await Promise.race([posted.then(() => true), new Promise((r) => setTimeout(r, 1200, false))]));
     await loader.done();
   } catch (e) {
     await loader.done();
@@ -1861,6 +1933,7 @@ async function main() {
   }, { passive: true });
   route();
   unrollBall();
+  if (postedLate) posted.then((p) => { if (p.list.length && ['rankings', 'live'].includes(currentView)) route(); });
   // the first route can measure the tabs before the stylesheet or the fonts have applied (fast or cached data)
   const settle = () => placeInk({ settle: true });
   if (document.readyState !== 'complete') window.addEventListener('load', settle, { once: true });

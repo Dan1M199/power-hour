@@ -35,6 +35,12 @@ function SharePdf({ D, h }) {
   return <button type="button" className="chip rank-pdf" onClick={go} disabled={!!busy && busy.endsWith('…')}>{busy || 'Share rankings PDF'}</button>;
 }
 
+// Dan's way into the headline desk (#admin), shown only while the league desk says he's signed in
+function DeskLink() {
+  const t = useTalk();
+  return t.data?.admin ? <a className="chip rank-pdf" href="#admin">Headline desk</a> : null;
+}
+
 // the page head: the week, what the ranks weigh, the ROS sources and when they were refreshed, and the important
 // message's replay chip once its file is known to be there
 function RankHead({ D, h, wk, held, sources, updated, message }) {
@@ -51,6 +57,7 @@ function RankHead({ D, h, wk, held, sources, updated, message }) {
         : <span className="chip off"><span className="dot" />ROS rankings unavailable</span>}
       {updated ? <span className="chip">{updated}</span> : null}
       {!held && D ? <SharePdf D={D} h={h} /> : null}
+      <DeskLink />
       {message ? <button type="button" className="chip to-again" data-message hidden={!again} onClick={message.play}>Watch the important message again</button> : null}
     </div>
   </>;
