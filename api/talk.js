@@ -8,6 +8,7 @@
 //   POST /api/talk { action: 'delete', week, id }         Dan only
 //   POST /api/talk { action: 'invite', uid }              Dan only: a new personal link for a manager or guest (the old one and its
 //                                                         devices stop working)
+//   POST /api/talk { action: 'password', password }  -> signs this device in as Dan with the admin password (the #admin page)
 //   POST /api/talk { action: 'signout' }
 //
 // Nothing here lives in the code or the CDN: comments, links and sessions are all in the store, so deploys, headline
@@ -22,7 +23,7 @@
 // tokens and sessions are stored. Dan gets in the first time with TALK_ADMIN_KEY (an env var only he knows) as his
 // token, then makes everyone else's links from the panel. Storage is the Upstash store (lib/snapstore.js); without it GET
 // answers { enabled: false } and the page hides the panel. Never touches Sleeper.
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHash, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { redis, storeEnabled } from '../lib/snapstore.js';
 import { DESK_PEOPLE } from '../lib/members.js';
 
@@ -35,6 +36,18 @@ const GAP_S = 6; // seconds between posts from one manager
 const MAX_PER_WEEK = 3000;
 const MAX_PER_HOUR = 40; // posts per network
 
+// Dan's admin password (Nov 6, for the headline desk at #admin): only a salted scrypt hash lives here, since the built site
+// is public. ADMIN_PASSWORD_HASH (env) replaces it; `node scripts/admin-password.mjs <new password>` prints a new one.
+// Wrong guesses are held to MAX_FAILS an hour per network, so the password can't be guessed by brute force.
+const PASSWORD_HASH = 'scrypt$YX8rSnWzsAaIkAJcbOFaIQ$opAZz_WizEq3InFQNoz1meJD8oZLsXbT7Tdeed6RdKQ';
+const MAX_FAILS = 8;
+export const SCRYPT = { N: 32768, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+function passwordOk(pw) {
+  const [kind, salt, hash] = String(process.env.ADMIN_PASSWORD_HASH || PASSWORD_HASH).split('$');
+  if (kind !== 'scrypt' || !salt || !hash || !pw) return false;
+  const want = Buffer.from(hash, 'base64url'), got = scryptSync(String(pw), salt, want.length, SCRYPT);
+  return timingSafeEqual(want, got);
+}
 const now = () => Number(process.env.TALK_NOW) || Date.now(); // overridable for tests
 // The NFL season a moment belongs to: September through the following summer. Threads are kept per season so next year's
 // week 8 never opens on this year's. The 2026 threads keep the key they were first stored under (ph:talk:{week}), so
@@ -67,6 +80,14 @@ export async function whoAmI(req) {
   const [uid, gen] = String(v).split(':');
   const [cur] = await redis([['GET', k('gen', uid)]]);
   return String(cur || 0) === gen ? uid : null;
+}
+
+// a new session for this device as that manager (Dan through his link, the admin key or the password)
+async function signIn(res, uid) {
+  const [gen] = await redis([['GET', k('gen', uid)]]);
+  const sid = randomBytes(24).toString('base64url');
+  await redis([['SET', k('sess', sha(sid)), `${uid}:${gen || 0}`, 'EX', String(SESSION_TTL)]]);
+  setSession(res, sid);
 }
 
 // text as posted: no control characters, no runs of blank lines, trimmed
@@ -107,11 +128,20 @@ export default async function handler(req, res) {
       let uid = adminKey && adminKey.length >= 16 && same(token, adminKey) ? ADMIN : null;
       if (!uid) [uid] = await redis([['GET', k('tok', sha(token))]]);
       if (!uid || !DESK_PEOPLE[uid]) return res.status(403).json({ error: 'That link has expired. Ask Dan for a new one.' });
-      const [gen] = await redis([['GET', k('gen', uid)]]);
-      const sid = randomBytes(24).toString('base64url');
-      await redis([['SET', k('sess', sha(sid)), `${uid}:${gen || 0}`, 'EX', String(SESSION_TTL)]]);
-      setSession(res, sid);
+      await signIn(res, uid);
       return res.status(200).json({ me: uid, admin: uid === ADMIN });
+    }
+    if (action === 'password') {
+      const pw = String(body.password || '').slice(0, 200), fails = k('fail', netOf(req));
+      const [n] = await redis([['GET', fails]]);
+      if (Number(n) >= MAX_FAILS) return res.status(429).json({ error: 'Too many wrong passwords from this network. Try again in an hour.' });
+      if (!passwordOk(pw)) {
+        await redis([['INCR', fails], ['EXPIRE', fails, '3600']]);
+        return res.status(403).json({ error: "That's not the password." });
+      }
+      await redis([['DEL', fails]]);
+      await signIn(res, ADMIN);
+      return res.status(200).json({ me: ADMIN, admin: true });
     }
     if (action === 'signout') {
       const sid = cookieOf(req);

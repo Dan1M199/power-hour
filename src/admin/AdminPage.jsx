@@ -63,27 +63,36 @@ const Check = () => (
   <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true"><path d="M3 7.4 5.8 10 11 4.2" stroke="currentColor" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
 );
 
+// the gate on #admin: the admin password (api/talk.js `password`), which signs this device in as Dan for a year. The old
+// admin key still works in the same box, and so does opening his league desk link.
 function SignIn() {
-  const [key, setKey] = useState(''), [msg, setMsg] = useState(''), [busy, setBusy] = useState(false);
+  const [pw, setPw] = useState(''), [msg, setMsg] = useState(''), [busy, setBusy] = useState(false);
   const go = async (e) => {
     e.preventDefault();
-    if (!key.trim()) return;
+    const v = pw.trim();
+    if (!v) return;
     setBusy(true); setMsg('');
     try {
-      const r = await talkCall({ action: 'claim', token: key.trim() });
-      if (!r.admin) setMsg('That key signs in a manager, not the editor. Use the admin key.');
+      try {
+        await talkCall({ action: 'password', password: v });
+      } catch (x) {
+        // not the password: it may be the long admin key
+        if (!/^[A-Za-z0-9_-]{16,128}$/.test(v)) throw x;
+        const r = await talkCall({ action: 'claim', token: v }).catch(() => { throw x; });
+        if (!r.admin) throw new Error("That's not the password.");
+      }
       await Promise.all([loadPosts(), loadTalk()]);
-    } catch (x) { setMsg(x.message); }
-    setBusy(false); setKey('');
+    } catch (x) { setMsg(x.message); setPw(''); }
+    setBusy(false);
   };
   return (
     <form className="adm-signin glass" onSubmit={go}>
-      <h2>Sign in to post</h2>
-      <p>Open your league desk link on this device, or paste the admin key.</p>
-      <label className="adm-field"><span>Admin key</span>
-        <input type="password" autoComplete="current-password" value={key} onChange={(e) => setKey(e.target.value)} />
+      <h2>Editor sign-in</h2>
+      <p>The headline desk is password protected. Sign in once and this device stays signed in.</p>
+      <label className="adm-field"><span>Password</span>
+        <input type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} autoFocus />
       </label>
-      <button type="submit" className="talk-btn primary" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+      <button type="submit" className="talk-btn primary" disabled={busy}>{busy ? 'Checking…' : 'Sign in'}</button>
       {msg ? <p className="adm-err" role="alert">{msg}</p> : null}
     </form>
   );
