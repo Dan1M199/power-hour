@@ -1557,7 +1557,7 @@ const PAGES = {
   wire: () => [WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x) }],
   matchups: () => [GamesPage, { calm: calm(), lite: lite() }],
   admin: () => [AdminShell, {
-    draft: draftFor, preview: postedStories, groups: GROUPS, week: talkWeek(), now: AT ? +AT : Date.now(),
+    draft: draftFor, preview: postedStories, site: (carouselProps()?.stories || []).filter((st) => !st.type.startsWith('p-')), groups: GROUPS, week: talkWeek(), now: AT ? +AT : Date.now(),
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
   }],
   lab: () => [Lab, {
