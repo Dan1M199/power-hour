@@ -866,6 +866,16 @@ const TYPE_GROUP = {
   dud: 'players', star: 'players', explosion: 'players', clip: 'players',
 };
 const groupOf = (st) => (GROUPS[st.group] ? st.group : TYPE_GROUP[st.type] || 'league');
+// The carousel's order: Dan's own running order for this week when he's set one (api/headlines.js `arrange`, by desk key,
+// sections wherever he put them; a post he hasn't placed yet leads, a site headline he hasn't seen yet goes last), else
+// the sections together (bySection)
+function arrangeStories(list) {
+  const keys = posts.arrange?.[`w${talk.week}`];
+  if (!keys?.length) return bySection(list);
+  const at = (st) => keys.indexOf(st.key);
+  const fresh = list.filter((st) => at(st) < 0 && st.type.startsWith('p-')), late = list.filter((st) => at(st) < 0 && !st.type.startsWith('p-'));
+  return [...fresh, ...list.filter((st) => at(st) >= 0).sort((a, b) => at(a) - at(b)), ...late];
+}
 // stories gathered into their sections, the sections in the order they first come up (so the lead stays first)
 function bySection(list) {
   const order = [];
@@ -1489,7 +1499,7 @@ function carouselProps({ all = false } = {}) {
   return {
     // Dan's own headlines from the admin portal lead, ahead of everything the desk writes, and every headline sits in
     // its section (the dots group them)
-    stories: bySection([...own, ...site].map((st) => ({ ...st, group: groupOf(st) }))),
+    stories: arrangeStories([...own, ...site].map((st) => ({ ...st, group: groupOf(st) }))),
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
     hold: onHold() ? NEWS_CLOCK.holdNote : null, night: !!s?.night, groups: GROUPS,
   };
@@ -1500,7 +1510,7 @@ function carouselProps({ all = false } = {}) {
 // reactions and desk tags are its own.
 function postedStories(list = posts.list) {
   const now = AT ? +AT : Date.now();
-  return list.filter((p) => !p.until || p.until > now).map((p) => ({ ...hydrate(p), type: `p-${p.id}` }));
+  return list.filter((p) => !p.until || p.until > now).map((p) => ({ ...hydrate(p), type: `p-${p.id}`, key: `w${talk.week}:p-${p.id}` }));
 }
 // a stored story (a post, or Dan's rewrite of a site headline) as the carousel draws it: teams looked up in today's
 // league, the player card's pinned manager as a team, empty fields left out so the slide falls back to its defaults

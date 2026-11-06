@@ -193,6 +193,10 @@ The same stadium after sunset, under the lights. Every colour is a token on `:ro
 - **Yellow and amber don't change**: they glow on dark. Anything on a bright fill keeps the day's dark ink through one selector list that re-scopes `--ink` on those elements.
 - **The team dashboard** keeps its opposite-of-the-wheel palette, deepened: an aubergine sheet `#1E1724`, plum tiles `#2B2232`, clay `#D27354`, violet `#8E73CC`.
 
+### The headline desk (#admin)
+
+Dan's editor page is deliberately outside the bowl: it's set like a newspaper front (Nov 6), on newsprint `#F1EFE9` with black ink `#141414` and one spot red `#B3141C` (the night edition inverts to `#141311` paper and `#EDE9E0` ink). A blackletter nameplate (UnifrakturMaguntia) between two ears, a folio line under a 4px rule, an index box, lettered sections under thick rules, headlines in Source Serif 4 with italic bylines, labels and controls in Libre Franklin. Flat print: rules instead of shadows, 2 to 3px corners. None of it leaks into the rest of the site; its tokens are `--np-*` on `html.admin-mode`.
+
 ## Typography
 
 **Display Font:** Big Shoulders Display (with Arial Narrow, Impact)

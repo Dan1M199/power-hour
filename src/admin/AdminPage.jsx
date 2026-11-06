@@ -300,9 +300,9 @@ export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPla
     return [...ids].map(([id, rid]) => ({ id, rid, v: D.helpers.valueOf(id) })).sort((a, b) => b.v - a.v);
   }, [form?.tx, form?.player, form?.pinRid, picked, pPicked, D]);
 
-  if (P.enabled === null) return <Head home={home} />;
-  if (!P.enabled) return <><Head home={home} /><p className="adm-note">Posting needs the headline store, which isn't connected here. It works on the live site.</p></>;
-  if (!P.admin) return <><Head home={home} /><SignIn /></>;
+  if (P.enabled === null) return <Head home={home} week={week} date={date} />;
+  if (!P.enabled) return <><Head home={home} week={week} date={date} /><p className="adm-note">Posting needs the headline store, which isn't connected here. It works on the live site.</p></>;
+  if (!P.admin) return <><Head home={home} week={week} date={date} /><SignIn /></>;
 
   // the form as a story: what gets posted, and what the preview draws
   const story = () => {
@@ -340,12 +340,19 @@ export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPla
     setForm(null); setEditing(null); setPicked([]); setPPicked([]); setGPicked([]); setPeek(false);
     scrollTo('.adm-order-sec');
   };
-  const move = (i, d) => {
-    const ids = P.list.map((p) => p.id), j = i + d;
-    if (j < 0 || j >= ids.length) return;
-    [ids[i], ids[j]] = [ids[j], ids[i]];
-    setFresh(ids[j]);
-    call({ action: 'order', ids });
+  // Dan's running order (Nov 6): any headline, his or the site's, moves one place past the next one showing, whatever
+  // section either is in; the whole order is saved for the week (api/headlines.js `arrange`)
+  const lineup = order();
+  const idOf = (st) => (st.type.startsWith('p-') ? st.type.slice(2) : st.key);
+  const custom = !!P.arrange?.[`w${week}`];
+  const nextShown = (i, d) => { let j = i + d; while (j >= 0 && j < lineup.length && lineup[j].hidden) j += d; return j >= 0 && j < lineup.length ? j : -1; };
+  const shift = (i, d) => {
+    const j = nextShown(i, d);
+    if (j < 0) return;
+    const keys = lineup.map((st) => st.key);
+    [keys[i], keys[j]] = [keys[j], keys[i]];
+    setFresh(idOf(lineup[i]));
+    call({ action: 'arrange', week: `w${week}`, keys });
   };
   // how long it runs: in the send bar on wide screens, its own fold on phones
   const runs = form && (
@@ -364,21 +371,30 @@ export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPla
 
   return (
     <>
-      <Head live={P.list.length} home={home} />
+      <Head live={P.list.length} home={home} week={week} date={date} />
+      <Index lineup={lineup} groups={groups} />
 
       <section className="adm-panel adm-order-sec" aria-labelledby="adm-order-t">
-        <h2 className="adm-h" id="adm-order-t">Running order<small>What the carousel shows, first to last</small></h2>
+        <Sec id="A" title="Running order" t="adm-order-t" note={custom ? 'In your order. Use the arrows to move any headline.' : 'Sections together. Use the arrows to move any headline on its own.'}>
+          {custom ? <button type="button" className="adm-btn adm-auto" onClick={() => call({ action: 'arrange-reset', week: `w${week}` }, 'Back to the automatic order')} disabled={busy}>Automatic order</button> : null}
+        </Sec>
         <ol className="adm-order">
           {!P.list.length ? <li className="adm-slot adm-none"><p className="adm-slot-card">Nothing of yours is up. The site's own headlines are running.</p></li> : null}
           {(() => {
             let n = 0;
-            return order().map((st, i, all) => {
+            return lineup.map((st, i, all) => {
               const own = st.type.startsWith('p-'), p = own && P.list.find((x) => `p-${x.id}` === st.type);
-              const at = p ? P.list.indexOf(p) : -1, id = own ? p?.id : st.key;
-              const head = st.group !== all[i - 1]?.group ? <li key={`g-${st.group}`} className={`adm-group g-${st.group}`} aria-hidden="true"><span>{groups[st.group]}</span></li> : null;
+              const id = idOf(st);
+              const head = st.group !== all[i - 1]?.group ? <li key={`g-${i}-${st.group}`} className={`adm-group g-${st.group}`} aria-hidden="true"><span>{groups[st.group]}</span></li> : null;
               const num = st.hidden ? null : ++n;
+              const updown = st.hidden ? null : (
+                <span className="adm-updown">
+                  <button type="button" className="adm-icon" onClick={() => shift(i, -1)} disabled={busy || nextShown(i, -1) < 0} aria-label={`Move "${st.headline}" up`}><Arrow up /></button>
+                  <button type="button" className="adm-icon" onClick={() => shift(i, 1)} disabled={busy || nextShown(i, 1) < 0} aria-label={`Move "${st.headline}" down`}><Arrow /></button>
+                </span>
+              );
               return [head, (
-                <li key={own ? st.type : st.key} className={`adm-slot${own ? '' : ' site'}${st.hidden ? ' hidden' : ''}${fresh === id ? ' fresh' : ''}${(editing?.id ?? editing?.site?.key) === id ? ' editing' : ''}`}>
+                <li key={st.key} className={`adm-slot${own ? '' : ' site'}${num === 1 ? ' lead' : ''}${st.hidden ? ' hidden' : ''}${fresh === id ? ' fresh' : ''}${(editing?.id ?? editing?.site?.key) === id ? ' editing' : ''}`}>
                   <span className="adm-num" aria-hidden="true">{num ?? ''}</span>
                   <div className="adm-slot-card">
                     {phone ? <button type="button" className="adm-more" aria-expanded={openRow === id} aria-label={`Actions for "${st.headline}"`} onClick={() => setOpenRow(openRow === id ? null : id)}><Dots /></button> : null}
@@ -387,17 +403,13 @@ export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPla
                         <span className={`adm-kick t-${st.tone || 'neutral'}`}>{st.kicker}</span>
                         {st.breaking ? <span className="adm-brk">Breaking</span> : null}
                         {(editing?.id ?? editing?.site?.key) === id ? <span className="adm-brk editing">Editing</span> : null}
-                        {own ? null : <span className="adm-by">{st.hidden ? 'Hidden from the carousel' : st.edited ? 'Written by the site, edited by you' : 'Written by the site'}</span>}
                       </span>
                       <b>{st.headline}</b>
-                      {p ? <small>{`${p.until ? `Runs until ${when(p.until)}` : 'Runs until you take it down'}. Posted ${ago(p.ts, now)}.`}</small> : null}
+                      <small className="adm-byline">{p ? `By Dan. Posted ${ago(p.ts, now)}, ${p.until ? `runs until ${when(p.until)}` : 'runs until you take it down'}.` : st.hidden ? 'By the site. Hidden from the carousel.' : st.edited ? 'By the site, rewritten by Dan.' : 'By the site.'}</small>
                     </div>
                     {phone && openRow !== id ? null : <div className="adm-slot-acts">
+                      {updown}
                       {p ? <>
-                        <span className="adm-updown">
-                          <button type="button" className="adm-icon" onClick={() => move(at, -1)} disabled={busy || at === 0} aria-label={`Move "${p.headline}" up`}><Arrow up /></button>
-                          <button type="button" className="adm-icon" onClick={() => move(at, 1)} disabled={busy || at === P.list.length - 1} aria-label={`Move "${p.headline}" down`}><Arrow /></button>
-                        </span>
                         <button type="button" className="adm-btn" onClick={() => open(formOf(p, p.until ? 'keep' : 'forever'), p)} disabled={busy}>Edit</button>
                         <button type="button" className="adm-btn adm-down" onClick={() => call({ action: 'remove', id: p.id }, 'Taken down')} disabled={busy}>Take down</button>
                       </> : st.hidden ? (
@@ -429,7 +441,7 @@ export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPla
 
       <section className="adm-panel adm-work" aria-labelledby="adm-work-t">
         {!form ? <>
-          <h2 className="adm-h" id="adm-work-t">Write about<small>Tick one or more, then draft a headline</small></h2>
+          <Sec id="B" title="Write about" t="adm-work-t" note="Tick one or more, then draft a headline." />
           <div className="adm-sources" role="group" aria-label="What to write about">
             {SOURCES.map(([k, l]) => <button key={k} type="button" aria-pressed={source === k} onClick={() => setSource(k)}>{l}</button>)}
           </div>
@@ -461,7 +473,7 @@ export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPla
             );
           })()}
         </> : <>
-          <h2 className="adm-h" id="adm-work-t">{siteEdit ? "Edit the site's headline" : editing ? 'Edit the headline' : 'Write the headline'}<small>The slide is exactly what goes up</small></h2>
+          <Sec id="B" title={siteEdit ? "Edit the site's headline" : editing ? 'Edit the headline' : 'Write the headline'} t="adm-work-t" note="The slide is exactly what goes up." />
           <div className="adm-compose">
             {phone ? null : (
               <div className="adm-preview" ref={pinPreview}>
@@ -555,18 +567,52 @@ export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPla
   );
 }
 
-// the top of the desk: the way home in place of the site's header, then the title and how many of Dan's headlines are up
-function Head({ live, home }) {
+// The top of the desk, set like a newspaper front (Nov 6): the way home above the masthead, then the nameplate in
+// blackletter between its two ears (what this copy is, and how many of Dan's headlines run), then the folio line
+function Head({ live, home, week, date }) {
   return <>
     <nav className="adm-top" aria-label="Site">
       <a className="adm-home" href={home}><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M7.5 2 3.5 6l4 4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>Home</a>
-      <span className="adm-top-name">The Power Hour</span>
+      <span className="adm-top-name">Headline desk</span>
     </nav>
-    <header className="adm-intro">
-      <h1>Headline desk</h1>
-      <p className="adm-tally">{live == null ? 'Editor only' : live ? `${live} of your headlines ${live === 1 ? 'is' : 'are'} up now` : 'None of your headlines are up'}</p>
-      <p className="adm-lede">Pick the moves worth a headline, write it and post it. Your headlines lead the carousel on the rankings and Live pages.</p>
-      {live != null ? <button type="button" className="adm-btn primary adm-jump" onClick={() => scrollTo('.adm-work')}>Write a headline</button> : null}
+    <header className="np-mast">
+      <p className="np-ear l"><b>Headline desk</b><span>{"The editor's copy"}</span></p>
+      <h1 className="np-name" aria-label="The Power Hour headline desk">The Power Hour</h1>
+      <p className="np-ear r">{live == null ? <><b>Editor only</b><span>Sign in to post</span></> : <><b className="np-tally">{live}</b><span>{`of your headlines ${live === 1 ? 'runs' : 'run'} today`}</span></>}</p>
     </header>
+    <p className="np-folio">
+      {week ? <span>{`Week ${week}`}</span> : null}
+      {date ? <span>{date}</span> : null}
+      <span>NFL Fantasy Championship</span>
+      {live != null ? <button type="button" className="np-jump" onClick={() => scrollTo('.adm-work')}>Write a headline</button> : null}
+    </p>
   </>;
+}
+
+// a section of the paper: its letter, its name, a line on what's in it, and any controls on the right
+function Sec({ id, title, t, note, children }) {
+  return (
+    <header className="np-sec">
+      <span className="np-sec-id" aria-hidden="true">{id}</span>
+      <div className="np-sec-text"><h2 id={t}>{title}</h2>{note ? <p>{note}</p> : null}</div>
+      {children ? <div className="np-sec-acts">{children}</div> : null}
+    </header>
+  );
+}
+
+// the index box: what's in today's carousel by section, and what's hidden or rewritten
+function Index({ lineup, groups }) {
+  const shown = lineup.filter((st) => !st.hidden);
+  const by = Object.keys(groups).map((g) => [groups[g], shown.filter((st) => st.group === g).length]).filter(([, n]) => n);
+  const hidden = lineup.length - shown.length, edited = lineup.filter((st) => st.edited && !st.hidden).length;
+  return (
+    <aside className="np-index" aria-label="In this edition">
+      <h2>Inside</h2>
+      <ul>
+        {by.map(([l, n]) => <li key={l}><span>{l}</span><b>{n}</b></li>)}
+        {edited ? <li><span>Rewritten</span><b>{edited}</b></li> : null}
+        {hidden ? <li><span>Hidden</span><b>{hidden}</b></li> : null}
+      </ul>
+    </aside>
+  );
 }

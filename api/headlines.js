@@ -12,6 +12,10 @@
 //   POST /api/headlines { action: 'site-edit', key, story } -> rewrite one of the site's own headlines
 //   POST /api/headlines { action: 'site-hide', key }     -> take one of the site's own headlines off the carousel
 //   POST /api/headlines { action: 'site-reset', key }    -> the site's own headline back as the site wrote it
+//   POST /api/headlines { action: 'arrange', week, keys } -> Dan's own running order for a week: every headline on the
+//                                                           carousel (his and the site's) by desk key, first to last,
+//                                                           whatever section each is in (Dan's request Nov 6)
+//   POST /api/headlines { action: 'arrange-reset', week } -> back to the automatic order (sections together)
 //
 // The site's own headlines are known by their desk key (`w{week}:{type}`, storyKeys in src/hero/talk.js), so an edit or
 // a hide covers that headline for that week only. Overrides live in ph:hl:site (key -> { hide, story, ts }) and come
@@ -29,6 +33,9 @@ const KEY = 'ph:hl:posts';
 const SITE = 'ph:hl:site';
 const SITE_DAYS = 30;
 const STORY_KEY = /^w\d{1,2}:[a-z0-9-]{1,40}$/;
+const ARRANGE = 'ph:hl:arrange';
+const WEEK = /^w\d{1,2}$/;
+const MAX_KEYS = 40;
 const TTL = 60 * 60 * 24 * 300;
 const KEEP_OLD_MS = 14 * 864e5; // taken-down and run-out posts stay in Dan's list this long
 const MAX_POSTS = 60;
@@ -77,6 +84,12 @@ async function rows(key) {
 }
 const all = () => rows(KEY);
 // the site headline overrides still in force, by key
+// Dan's running orders, by week (w9 -> [keys]); dropped with the overrides, after SITE_DAYS
+async function arranged() {
+  const out = {};
+  for (const o of await rows(ARRANGE)) if (now() - o.ts <= SITE_DAYS * 864e5) out[o.week] = o.keys;
+  return out;
+}
 async function siteMap() {
   const t = now(), out = {}, stale = [];
   for (const o of await rows(SITE)) {
@@ -90,7 +103,7 @@ const live = (p, t) => !p.down && (!p.until || p.until > t);
 const byOrder = (a, b) => a.order - b.order || b.ts - a.ts;
 async function state(admin) {
   const t = now(), posts = await all();
-  const out = { enabled: true, admin, now: t, posts: posts.filter((p) => live(p, t)).sort(byOrder), site: await siteMap() };
+  const out = { enabled: true, admin, now: t, posts: posts.filter((p) => live(p, t)).sort(byOrder), site: await siteMap(), arrange: await arranged() };
   if (admin) out.old = posts.filter((p) => !live(p, t) && t - (p.down || p.until || p.ts) < KEEP_OLD_MS).sort((a, b) => b.ts - a.ts);
   return out;
 }
@@ -153,6 +166,17 @@ export default async function handler(req, res) {
         if (!st) return res.status(400).json({ error: 'A headline needs some words' });
         const { until, tx, week, ...story } = st;
         await redis([['HSET', SITE, key, JSON.stringify({ key, story, ts: now() })], ['EXPIRE', SITE, String(SITE_DAYS * 86400)]]);
+      }
+      return res.status(200).json(await state(true));
+    }
+    if (body.action === 'arrange' || body.action === 'arrange-reset') {
+      const week = String(body.week || '');
+      if (!WEEK.test(week)) return res.status(400).json({ error: 'Not a week' });
+      if (body.action === 'arrange-reset') await redis([['HDEL', ARRANGE, week]]);
+      else {
+        const keys = [...new Set((Array.isArray(body.keys) ? body.keys : []).map(String))];
+        if (!keys.length || keys.length > MAX_KEYS || !keys.every((k) => STORY_KEY.test(k) && k.startsWith(`${week}:`))) return res.status(400).json({ error: 'Not a running order' });
+        await redis([['HSET', ARRANGE, week, JSON.stringify({ week, keys, ts: now() })], ['EXPIRE', ARRANGE, String(SITE_DAYS * 86400)]]);
       }
       return res.status(200).json(await state(true));
     }

@@ -124,6 +124,17 @@ r = await fan.hl('GET');
 check('everyone gets the overrides', r.body.site['w10:dud'].hide === true && r.body.site['w10:upset'].story, r.body.site);
 r = await dan.hl('POST', { action: 'site-reset', key: 'w10:dud' });
 check('a hidden site headline comes back', !r.body.site['w10:dud'] && r.body.site['w10:upset'], r.body.site);
+// Dan's own running order for a week, across sections
+r = await fan.hl('POST', { action: 'arrange', week: 'w10', keys: ['w10:dud', 'w10:upset'] });
+check('a stranger cannot reorder', r.code === 403, r);
+r = await dan.hl('POST', { action: 'arrange', week: 'w10', keys: ['w10:dud', 'w10:p-abc123', 'w10:upset', 'w10:dud'] });
+check('Dan sets a running order (duplicates dropped)', r.code === 200 && r.body.arrange.w10.join() === 'w10:dud,w10:p-abc123,w10:upset', r.body.arrange);
+r = await fan.hl('GET');
+check('everyone gets the running order', r.body.arrange.w10?.length === 3, r.body.arrange);
+r = await dan.hl('POST', { action: 'arrange', week: 'w10', keys: ['w9:dud'] });
+check("another week's key is refused", r.code === 400, r);
+r = await dan.hl('POST', { action: 'arrange-reset', week: 'w10' });
+check('the automatic order comes back', !r.body.arrange.w10, r.body.arrange);
 r = await dan.hl('POST', { action: 'site-hide', key: 'not a key' });
 check('a bad key is refused', r.code === 400, r);
 tick(31 * 864e5);
