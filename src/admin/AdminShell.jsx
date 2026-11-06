@@ -2,4 +2,5 @@
 import { lazy, Suspense } from 'react';
 
 const AdminPage = lazy(() => import('./AdminPage.jsx').then((m) => ({ default: m.AdminPage })));
-export const AdminShell = (props) => <Suspense fallback={null}><AdminPage {...props} /></Suspense>;
+// .adm-page scopes the desk's own flat look (styles.css)
+export const AdminShell = (props) => <div className="adm-page"><Suspense fallback={null}><AdminPage {...props} /></Suspense></div>;

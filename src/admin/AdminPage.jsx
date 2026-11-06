@@ -112,13 +112,13 @@ function SignIn() {
     setBusy(false);
   };
   return (
-    <form className="adm-signin glass" onSubmit={go}>
+    <form className="adm-signin adm-panel" onSubmit={go}>
       <h2>Editor sign-in</h2>
       <p>The headline desk is password protected. Sign in once and this device stays signed in.</p>
       <label className="adm-field"><span>Password</span>
         <input type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} autoFocus />
       </label>
-      <button type="submit" className="talk-btn primary" disabled={busy}>{busy ? 'Checking…' : 'Sign in'}</button>
+      <button type="submit" className="adm-btn primary" disabled={busy}>{busy ? 'Checking…' : 'Sign in'}</button>
       {msg ? <p className="adm-err" role="alert">{msg}</p> : null}
     </form>
   );
@@ -154,23 +154,55 @@ function Move({ f, D, h, on, toggle }) {
   );
 }
 
+// A row of filter chips that slides sideways when it doesn't fit: on a tinted tray, with the edges fading where more
+// chips are hidden and a round arrow on each side that can still scroll (it pages by most of the visible width). The
+// chips snap into place; keyboard users tab through them and each one scrolls itself into view.
+function Scroller({ label, children }) {
+  const track = useRef(null);
+  const [edge, setEdge] = useState({ l: false, r: false });
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return undefined;
+    const look = () => setEdge({ l: el.scrollLeft > 4, r: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 });
+    look();
+    const ro = new ResizeObserver(look);
+    ro.observe(el);
+    el.addEventListener('scroll', look, { passive: true });
+    return () => { ro.disconnect(); el.removeEventListener('scroll', look); };
+  }, []);
+  // the picked chip stays in view when the row is re-rendered (a week changes, the page opens on a later week)
+  // (moves the row only, never the page)
+  useEffect(() => {
+    const el = track.current, on = el?.querySelector('[aria-pressed="true"]');
+    if (on && on.offsetLeft + on.offsetWidth > el.clientWidth) el.scrollLeft = on.offsetLeft - 12;
+  }, []);
+  const page = (d) => { const el = track.current; el?.scrollBy({ left: d * el.clientWidth * 0.75, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
+  return (
+    <div className={`adm-scroller${edge.l ? ' more-l' : ''}${edge.r ? ' more-r' : ''}`} role="group" aria-label={label}>
+      <button type="button" className="adm-scroll-btn l" tabIndex={-1} aria-hidden="true" onClick={() => page(-1)}><Chevron /></button>
+      <div className="adm-scroll-track" ref={track}>{children}</div>
+      <button type="button" className="adm-scroll-btn r" tabIndex={-1} aria-hidden="true" onClick={() => page(1)}><Chevron /></button>
+    </div>
+  );
+}
+
 // the week pills over the players and the matchups: the week being played (or ahead), then the scored ones
 function WeekPills({ weeks, w, setW, ahead }) {
   const first = ahead ? weeks.ahead : weeks.live;
   const list = [...(first != null ? [[first, ahead ? `Week ${first}${weeks.live === first ? ', live' : ', ahead'}` : `Week ${first} so far`]] : []),
     ...weeks.scored.filter((x) => x !== first).map((x) => [x, `Week ${x}`])];
-  return list.map(([k, l]) => <button key={k} type="button" aria-pressed={w === k} onClick={() => setW(k)}>{l}</button>);
+  return list.map(([k, l]) => <button key={k} type="button" className="adm-chip" aria-pressed={w === k} onClick={() => setW(k)}>{l}</button>);
 }
 const SHOWN = 40;
 // a week's box score: every rostered player by points, tickable
 function Players({ D, h, weeks, w, setW, kind, setKind, rows, picked, toggle }) {
   const list = rows.filter((r) => kind === 'all' || (kind === 'started') === r.started).slice(0, SHOWN);
   return <>
-    <div className="filters adm-filters" role="group" aria-label="Which players">
+    <Scroller label="Which players">
       <WeekPills weeks={weeks} w={w} setW={setW} />
-      <span className="adm-gap" />
-      {[['all', 'Everyone'], ['started', 'Started'], ['bench', 'Bench']].map(([k, l]) => <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)}>{l}</button>)}
-    </div>
+      <span className="adm-scroll-gap" aria-hidden="true" />
+      {[['all', 'Everyone'], ['started', 'Started'], ['bench', 'Bench']].map(([k, l]) => <button key={k} type="button" className="adm-chip" aria-pressed={kind === k} onClick={() => setKind(k)}>{l}</button>)}
+    </Scroller>
     {list.length ? <ul className="adm-players">{list.map((r) => {
       const t = D.byRid[r.rid], on = picked.includes(r.id);
       return (
@@ -182,13 +214,13 @@ function Players({ D, h, weeks, w, setW, kind, setKind, rows, picked, toggle }) 
           </button>
         </li>
       );
-    })}</ul> : <p className="adm-note glass">No points on the board for this week yet.</p>}
+    })}</ul> : <p className="adm-note">No points on the board for this week yet.</p>}
   </>;
 }
 // a week's games: scores once played, projections and win odds while ahead or live
 function Games({ D, h, weeks, w, setW, games, picked, toggle }) {
   return <>
-    <div className="filters adm-filters" role="group" aria-label="Which week"><WeekPills weeks={weeks} w={w} setW={setW} ahead /></div>
+    <Scroller label="Which week"><WeekPills weeks={weeks} w={w} setW={setW} ahead /></Scroller>
     {games.length ? <ul className="adm-games">{games.map((g) => {
       const k = `${g.a}-${g.b}`, on = picked.includes(k), live = g.ahead && (g.ptsA || g.ptsB);
       const side = (rid, pts, proj, p) => {
@@ -211,7 +243,7 @@ function Games({ D, h, weeks, w, setW, games, picked, toggle }) {
           </button>
         </li>
       );
-    })}</ul> : <p className="adm-note glass">No games for this week.</p>}
+    })}</ul> : <p className="adm-note">No games for this week.</p>}
   </>;
 }
 const pct0 = (x) => `${Math.round((x || 0) * 100)}%`;
@@ -225,7 +257,7 @@ const Count = ({ v, max }) => (v.length > max * 0.7 ? <small className={`adm-cou
 const SOURCES = [['moves', 'Moves'], ['players', 'Players'], ['games', 'Matchups']];
 const tog = (set, k) => set((x) => (x.includes(k) ? x.filter((y) => y !== k) : [...x, k]));
 
-export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, weekGames, weeks, preview, order, groups, groupOf, week, now, date }) {
+export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPlayers, weekGames, weeks, preview, order, groups, groupOf, week, now, date }) {
   const P = usePosts();
   const [source, setSource] = useState('moves');
   const [range, setRange] = useState('week'), [kind, setKind] = useState('all');
@@ -268,9 +300,9 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
     return [...ids].map(([id, rid]) => ({ id, rid, v: D.helpers.valueOf(id) })).sort((a, b) => b.v - a.v);
   }, [form?.tx, form?.player, form?.pinRid, picked, pPicked, D]);
 
-  if (P.enabled === null) return <Head />;
-  if (!P.enabled) return <><Head /><p className="adm-note glass">Posting needs the headline store, which isn't connected here. It works on the live site.</p></>;
-  if (!P.admin) return <><Head /><SignIn /></>;
+  if (P.enabled === null) return <Head home={home} />;
+  if (!P.enabled) return <><Head home={home} /><p className="adm-note">Posting needs the headline store, which isn't connected here. It works on the live site.</p></>;
+  if (!P.admin) return <><Head home={home} /><SignIn /></>;
 
   // the form as a story: what gets posted, and what the preview draws
   const story = () => {
@@ -332,10 +364,10 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
 
   return (
     <>
-      <Head live={P.list.length} />
+      <Head live={P.list.length} home={home} />
 
-      <section className="adm-order-sec" aria-labelledby="adm-order-t">
-        <h2 className="sec-title" id="adm-order-t">Running order<small>What the carousel shows, first to last</small></h2>
+      <section className="adm-panel adm-order-sec" aria-labelledby="adm-order-t">
+        <h2 className="adm-h" id="adm-order-t">Running order<small>What the carousel shows, first to last</small></h2>
         <ol className="adm-order">
           {!P.list.length ? <li className="adm-slot adm-none"><p className="adm-slot-card">Nothing of yours is up. The site's own headlines are running.</p></li> : null}
           {(() => {
@@ -348,7 +380,7 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
               return [head, (
                 <li key={own ? st.type : st.key} className={`adm-slot${own ? '' : ' site'}${st.hidden ? ' hidden' : ''}${fresh === id ? ' fresh' : ''}${(editing?.id ?? editing?.site?.key) === id ? ' editing' : ''}`}>
                   <span className="adm-num" aria-hidden="true">{num ?? ''}</span>
-                  <div className={`adm-slot-card${own ? ' glass' : ''}`}>
+                  <div className="adm-slot-card">
                     {phone ? <button type="button" className="adm-more" aria-expanded={openRow === id} aria-label={`Actions for "${st.headline}"`} onClick={() => setOpenRow(openRow === id ? null : id)}><Dots /></button> : null}
                     <div className="adm-slot-text">
                       <span className="adm-slot-meta">
@@ -366,14 +398,14 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
                           <button type="button" className="adm-icon" onClick={() => move(at, -1)} disabled={busy || at === 0} aria-label={`Move "${p.headline}" up`}><Arrow up /></button>
                           <button type="button" className="adm-icon" onClick={() => move(at, 1)} disabled={busy || at === P.list.length - 1} aria-label={`Move "${p.headline}" down`}><Arrow /></button>
                         </span>
-                        <button type="button" className="talk-btn" onClick={() => open(formOf(p, p.until ? 'keep' : 'forever'), p)} disabled={busy}>Edit</button>
-                        <button type="button" className="talk-btn adm-down" onClick={() => call({ action: 'remove', id: p.id }, 'Taken down')} disabled={busy}>Take down</button>
+                        <button type="button" className="adm-btn" onClick={() => open(formOf(p, p.until ? 'keep' : 'forever'), p)} disabled={busy}>Edit</button>
+                        <button type="button" className="adm-btn adm-down" onClick={() => call({ action: 'remove', id: p.id }, 'Taken down')} disabled={busy}>Take down</button>
                       </> : st.hidden ? (
-                        <button type="button" className="talk-btn" onClick={() => call({ action: 'site-reset', key: st.key }, 'Back on the carousel')} disabled={busy}>Show again</button>
+                        <button type="button" className="adm-btn" onClick={() => call({ action: 'site-reset', key: st.key }, 'Back on the carousel')} disabled={busy}>Show again</button>
                       ) : <>
-                        <button type="button" className="talk-btn" onClick={() => open(formOf(st), { site: st })} disabled={busy}>Edit</button>
-                        {st.edited ? <button type="button" className="talk-btn" onClick={() => call({ action: 'site-reset', key: st.key }, 'Back to the site\'s words')} disabled={busy}>Undo edit</button> : null}
-                        <button type="button" className="talk-btn adm-down" onClick={() => call({ action: 'site-hide', key: st.key }, 'Hidden')} disabled={busy}>Hide</button>
+                        <button type="button" className="adm-btn" onClick={() => open(formOf(st), { site: st })} disabled={busy}>Edit</button>
+                        {st.edited ? <button type="button" className="adm-btn" onClick={() => call({ action: 'site-reset', key: st.key }, 'Back to the site\'s words')} disabled={busy}>Undo edit</button> : null}
+                        <button type="button" className="adm-btn adm-down" onClick={() => call({ action: 'site-hide', key: st.key }, 'Hidden')} disabled={busy}>Hide</button>
                       </>}
                     </div>}
                   </div>
@@ -388,28 +420,28 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
             <ul>{P.old.map((p) => (
               <li key={p.id}>
                 <span><b>{p.headline}</b><small>{p.down ? `Taken down ${ago(p.down, now)}` : `Ran out ${ago(p.until, now)}`}</small></span>
-                <button type="button" className="talk-btn" onClick={() => call({ action: 'restore', id: p.id }, 'Back up')} disabled={busy}>Put back up</button>
+                <button type="button" className="adm-btn" onClick={() => call({ action: 'restore', id: p.id }, 'Back up')} disabled={busy}>Put back up</button>
               </li>
             ))}</ul>
           </details>
         ) : null}
       </section>
 
-      <section className="adm-work" aria-labelledby="adm-work-t">
+      <section className="adm-panel adm-work" aria-labelledby="adm-work-t">
         {!form ? <>
-          <h2 className="sec-title" id="adm-work-t">Write about<small>Tick one or more, then draft a headline</small></h2>
+          <h2 className="adm-h" id="adm-work-t">Write about<small>Tick one or more, then draft a headline</small></h2>
           <div className="adm-sources" role="group" aria-label="What to write about">
             {SOURCES.map(([k, l]) => <button key={k} type="button" aria-pressed={source === k} onClick={() => setSource(k)}>{l}</button>)}
           </div>
           {source === 'moves' ? <>
-          <div className="filters adm-filters" role="group" aria-label="Which moves">
-            {[['week', `Week ${lastWeek}`], ['two', 'Last two weeks'], ['all', 'All season']].map(([k, l]) => <button key={k} type="button" aria-pressed={range === k} onClick={() => setRange(k)}>{l}</button>)}
-            <span className="adm-gap" />
-            {[['all', 'Everything'], ['trade', 'Trades'], ['wire', 'Wire']].map(([k, l]) => <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)}>{l}</button>)}
-          </div>
+          <Scroller label="Which moves">
+            {[['week', `Week ${lastWeek}`], ['two', 'Last two weeks'], ['all', 'All season']].map(([k, l]) => <button key={k} type="button" className="adm-chip" aria-pressed={range === k} onClick={() => setRange(k)}>{l}</button>)}
+            <span className="adm-scroll-gap" aria-hidden="true" />
+            {[['all', 'Everything'], ['trade', 'Trades'], ['wire', 'Wire']].map(([k, l]) => <button key={k} type="button" className="adm-chip" aria-pressed={kind === k} onClick={() => setKind(k)}>{l}</button>)}
+          </Scroller>
           {feed.length
             ? <ul className="adm-moves">{feed.map((f) => <Move key={f.id} f={f} D={D} h={h} on={picked.includes(f.id)} toggle={() => setPicked((x) => (x.includes(f.id) ? x.filter((y) => y !== f.id) : [...x, f.id]))} />)}</ul>
-            : <p className="adm-note glass">No moves in this stretch. Try a longer one.</p>}
+            : <p className="adm-note">No moves in this stretch. Try a longer one.</p>}
           </> : source === 'players' ? <Players D={D} h={h} weeks={weeks} w={pw} setW={(w) => { setPw(w); setPPicked([]); }} kind={pkind} setKind={setPkind} rows={pw ? weekPlayers(pw) : []} picked={pPicked} toggle={(id) => tog(setPPicked, id)} />
             : <Games D={D} h={h} weeks={weeks} w={gw} setW={(w) => { setGw(w); setGPicked([]); }} games={gw ? weekGames(gw) : []} picked={gPicked} toggle={(k) => tog(setGPicked, k)} />}
           {(() => {
@@ -420,16 +452,16 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
               : source === 'players' ? draftPlayers(pPicked.map((id) => ({ id, week: pw })))
               : draftGames(gPicked.map((k) => { const [a, b] = k.split('-').map(Number); return { week: gw, a, b }; })));
             return (
-              <div className="adm-dock glass">
+              <div className="adm-dock">
                 <span className="adm-dock-say">{n ? `${n} ${word} picked` : 'Nothing picked yet'}</span>
-                {n ? <button type="button" className="talk-btn" onClick={() => clear([])}>Clear</button> : null}
-                <button type="button" className="talk-btn" onClick={() => open({ ...EMPTY })}>Write from scratch</button>
-                <button type="button" className="talk-btn primary" disabled={!n} onClick={() => { const d = make(); if (d) open(formOf(d)); }}>Draft a headline</button>
+                {n ? <button type="button" className="adm-btn" onClick={() => clear([])}>Clear</button> : null}
+                <button type="button" className="adm-btn" onClick={() => open({ ...EMPTY })}>Write from scratch</button>
+                <button type="button" className="adm-btn primary" disabled={!n} onClick={() => { const d = make(); if (d) open(formOf(d)); }}>Draft a headline</button>
               </div>
             );
           })()}
         </> : <>
-          <h2 className="sec-title" id="adm-work-t">{siteEdit ? "Edit the site's headline" : editing ? 'Edit the headline' : 'Write the headline'}<small>The slide is exactly what goes up</small></h2>
+          <h2 className="adm-h" id="adm-work-t">{siteEdit ? "Edit the site's headline" : editing ? 'Edit the headline' : 'Write the headline'}<small>The slide is exactly what goes up</small></h2>
           <div className="adm-compose">
             {phone ? null : (
               <div className="adm-preview" ref={pinPreview}>
@@ -442,11 +474,11 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
               <div className="adm-sheet" role="dialog" aria-modal="true" aria-label="Preview of the slide">
                 {slide}
                 <div className="adm-sheet-bar">
-                  <button type="button" ref={back} className="talk-btn" onClick={() => setPeek(false)}>Back to editing</button>
-                  <button type="submit" form="adm-form" className="cta adm-post" disabled={busy}>{busy ? (editing ? 'Saving…' : 'Posting…') : <PostLabel editing={editing} />}</button>
+                  <button type="button" ref={back} className="adm-btn" onClick={() => setPeek(false)}>Back to editing</button>
+                  <button type="submit" form="adm-form" className="adm-btn primary adm-post" disabled={busy}>{busy ? (editing ? 'Saving…' : 'Posting…') : <PostLabel editing={editing} />}</button>
                 </div>
               </div>, document.body) : null}
-            <form id="adm-form" className="adm-form glass" onSubmit={submit}>
+            <form id="adm-form" className="adm-form" onSubmit={submit}>
               <fieldset>
                 <legend>Words</legend>
                 <label className="adm-field adm-hed"><span>Headline<Count v={form.headline} max={220} /></span>
@@ -509,9 +541,9 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
                 {phone ? null : runs}
                 {err ? <p className="adm-err" role="alert">{err}</p> : null}
                 <div className="adm-send-row">
-                  <button type="button" className="talk-btn" onClick={() => { setForm(null); setEditing(null); setErr(''); }} disabled={busy}>{editing ? 'Cancel' : 'Discard'}</button>
-                  {phone ? <button type="button" className="talk-btn adm-peek" onClick={() => setPeek(true)} disabled={!shown.length}>Preview</button> : null}
-                  <button type="submit" className="cta adm-post" disabled={busy}>{busy ? (editing ? 'Saving…' : 'Posting…') : <PostLabel editing={editing} />}</button>
+                  <button type="button" className="adm-btn" onClick={() => { setForm(null); setEditing(null); setErr(''); }} disabled={busy}>{editing ? 'Cancel' : 'Discard'}</button>
+                  {phone ? <button type="button" className="adm-btn adm-peek" onClick={() => setPeek(true)} disabled={!shown.length}>Preview</button> : null}
+                  <button type="submit" className="adm-btn primary adm-post" disabled={busy}>{busy ? (editing ? 'Saving…' : 'Posting…') : <PostLabel editing={editing} />}</button>
                 </div>
               </div>
             </form>
@@ -523,14 +555,18 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
   );
 }
 
-function Head({ live }) {
-  return (
-    <section className="view-head adm-head">
-      <div>
-        <h1><span className="wk">{live == null ? 'Editor' : live ? `${live} of yours up now` : 'Nothing of yours up'}</span>Headline desk</h1>
-        <p>Pick the moves worth a headline, write it and post it. Your headlines lead the carousel on the rankings and Live pages.</p>
-        {live != null ? <button type="button" className="talk-btn primary adm-jump" onClick={() => scrollTo('.adm-work')}>Write a headline</button> : null}
-      </div>
-    </section>
-  );
+// the top of the desk: the way home in place of the site's header, then the title and how many of Dan's headlines are up
+function Head({ live, home }) {
+  return <>
+    <nav className="adm-top" aria-label="Site">
+      <a className="adm-home" href={home}><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M7.5 2 3.5 6l4 4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>Home</a>
+      <span className="adm-top-name">The Power Hour</span>
+    </nav>
+    <header className="adm-intro">
+      <h1>Headline desk</h1>
+      <p className="adm-tally">{live == null ? 'Editor only' : live ? `${live} of your headlines ${live === 1 ? 'is' : 'are'} up now` : 'None of your headlines are up'}</p>
+      <p className="adm-lede">Pick the moves worth a headline, write it and post it. Your headlines lead the carousel on the rankings and Live pages.</p>
+      {live != null ? <button type="button" className="adm-btn primary adm-jump" onClick={() => scrollTo('.adm-work')}>Write a headline</button> : null}
+    </header>
+  </>;
 }

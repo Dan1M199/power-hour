@@ -1684,6 +1684,7 @@ const PAGES = {
   wire: () => [WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x) }],
   matchups: () => [GamesPage, { calm: calm(), lite: lite() }],
   admin: () => [AdminShell, {
+    home: DATA.liveMode ? '#live' : '#rankings',
     draft: draftFor, draftPlayers, draftGames, weekPlayers, weekGames, preview: postedStories,
     weeks: { scored: pointWeeks().filter((w) => w <= DATA.meta.lastScored).slice(0, 4), live: DATA.live ? DATA.meta.lastScored + 1 : null, ahead: DATA.previews[0]?.week ?? null }, order: () => carouselProps({ all: true })?.stories || [], groups: GROUPS, groupOf, week: talkWeek(), now: AT ? +AT : Date.now(),
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
@@ -1885,6 +1886,8 @@ function route({ fresh = false } = {}) {
   }
   const dir = !currentView || key === currentView ? 'same' : ORDER.indexOf(key) > ORDER.indexOf(currentView) ? 'fwd' : 'back';
   const render = () => {
+    // the headline desk is its own flat workspace: no site header, sky, field or footer (styles.css, html.admin-mode)
+    document.documentElement.classList.toggle('admin-mode', key === 'admin');
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.view === key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
     placeInk();
     paintMe();
