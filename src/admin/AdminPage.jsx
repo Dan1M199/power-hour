@@ -8,7 +8,8 @@
 // like yard numbers, then the site's own, greyed), then the work. The work is either the moves to pick from, or, once a
 // draft is open, the writing: the real slide on the left (sticky), the form on the right, the post button docked at
 // the bottom of the form.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { TZ } from '../../lib/newsclock.js';
 import { Carousel } from '../hero/Carousel.jsx';
 import { talkCall, loadTalk } from '../hero/talk.js';
@@ -55,6 +56,31 @@ function pinPreview(el) {
   place();
 }
 const scrollTo = (sel) => requestAnimationFrame(() => document.querySelector(sel)?.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'start' }));
+
+// phones get their own arrangement of the same desk (Dan's request Nov 6): compact rows with their actions one tap away,
+// the form first with the slide as a full-screen preview, and the less-used parts of the form folded to a summary line
+const PHONE = '(max-width: 760px)';
+const usePhone = () => useSyncExternalStore((f) => { const m = matchMedia(PHONE); m.addEventListener('change', f); return () => m.removeEventListener('change', f); }, () => matchMedia(PHONE).matches);
+const Dots = () => (
+  <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><circle cx="4.5" cy="10" r="2" fill="currentColor" /><circle cx="10" cy="10" r="2" fill="currentColor" /><circle cx="15.5" cy="10" r="2" fill="currentColor" /></svg>
+);
+const Chevron = () => (
+  <svg viewBox="0 0 12 8" width="12" height="8" aria-hidden="true"><path d="M1 1.5l5 5 5-5" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+);
+// a part of the form: always open on a wide screen; on a phone it folds to its title and a line saying what's set
+function Fold({ title, summary, phone, open, toggle, children }) {
+  if (!phone) return <fieldset><legend>{title}</legend>{children}</fieldset>;
+  return (
+    <fieldset className={open ? 'open' : 'folded'}>
+      <legend>
+        <button type="button" className="adm-fold" aria-expanded={open} onClick={toggle}>
+          <span>{title}</span>{open ? null : <small>{summary}</small>}<Chevron />
+        </button>
+      </legend>
+      {open ? children : null}
+    </fieldset>
+  );
+}
 
 const Arrow = ({ up }) => (
   <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true"><path d={up ? 'M3 8.5 7 4.5l4 4' : 'M3 5.5l4 4 4-4'} stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -190,6 +216,9 @@ function Games({ D, h, weeks, w, setW, games, picked, toggle }) {
 }
 const pct0 = (x) => `${Math.round((x || 0) * 100)}%`;
 
+// the post button's words; the narrowest phones drop the second word so the button never clips
+const PostLabel = ({ editing }) => (editing ? <>Save<span className="adm-long"> changes</span></> : <>Post<span className="adm-long"> headline</span></>);
+
 // a field's character count, shown once it gets close to the limit
 const Count = ({ v, max }) => (v.length > max * 0.7 ? <small className={`adm-count${v.length >= max ? ' full' : ''}`}>{`${v.length} of ${max}`}</small> : null);
 
@@ -207,6 +236,20 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
   const [form, setForm] = useState(null), [editing, setEditing] = useState(null);
   const [toast, setToast] = useState(null), [err, setErr] = useState(''), [busy, setBusy] = useState(false);
   const [fresh, setFresh] = useState(null); // the post just made, lit up in the running order
+  const phone = usePhone();
+  const [openRow, setOpenRow] = useState(null); // phones: the running order row showing its actions
+  const [peek, setPeek] = useState(false); // phones: the slide preview over the form
+  const [folds, setFolds] = useState([]); // phones: the parts of the form opened up
+  const fold = (k) => setFolds((x) => (x.includes(k) ? x.filter((y) => y !== k) : [...x, k]));
+  const back = useRef(null);
+  useEffect(() => {
+    if (!peek) return undefined;
+    document.documentElement.classList.add('adm-peeking');
+    back.current?.focus();
+    const esc = (e) => { if (e.key === 'Escape') setPeek(false); };
+    addEventListener('keydown', esc);
+    return () => { document.documentElement.classList.remove('adm-peeking'); removeEventListener('keydown', esc); };
+  }, [peek]);
   const nav = useRef(null);
   const set = (patch) => setForm((x) => ({ ...x, ...patch }));
   useEffect(() => { if (!toast) return undefined; const t = setTimeout(() => setToast(null), 3500); return () => clearTimeout(t); }, [toast]);
@@ -246,7 +289,7 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
   const shown = form && form.headline.trim() ? preview([{ ...story(), id: 'draft', until: null }]).map((st) => (editing?.site ? { ...editing.site, ...st, type: editing.site.type } : st)) : [];
   const siteEdit = !!editing?.site;
 
-  const open = (f, p = null) => { setForm(f); setEditing(p); setErr(''); scrollTo('.adm-work'); };
+  const open = (f, p = null) => { setForm(f); setEditing(p); setErr(''); setOpenRow(null); setPeek(false); setFolds([]); scrollTo('.adm-work'); };
   const call = async (body, done) => {
     setBusy(true); setErr('');
     let r = null;
@@ -262,7 +305,7 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
     const r = await call(body, editing ? 'Saved' : 'Posted. It leads the carousel now.');
     if (!r) return;
     setFresh(siteEdit ? editing.site.key : editing ? editing.id : r.id);
-    setForm(null); setEditing(null); setPicked([]); setPPicked([]); setGPicked([]);
+    setForm(null); setEditing(null); setPicked([]); setPPicked([]); setGPicked([]); setPeek(false);
     scrollTo('.adm-order-sec');
   };
   const move = (i, d) => {
@@ -272,6 +315,18 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
     setFresh(ids[j]);
     call({ action: 'order', ids });
   };
+  // how long it runs: in the send bar on wide screens, its own fold on phones
+  const runs = form && (
+    siteEdit ? <p className="adm-hint">{`Your words replace the site's on this headline for week ${week}. Undo edit puts the site's back.`}</p> : <div className="adm-field" role="group" aria-labelledby="adm-run"><span id="adm-run">{form.run === 'week' ? `Runs until ${when(weekTurns(now))}` : 'How long it runs'}</span>
+                  <div className="adm-pills">
+                    {editing?.until ? <button type="button" className="adm-pill" aria-pressed={form.run === 'keep'} onClick={() => set({ run: 'keep' })}>{`As is, until ${when(editing.until)}`}</button> : null}
+                    {RUNS.map(([k, l]) => <button key={k} type="button" className="adm-pill" aria-pressed={form.run === k} onClick={() => set({ run: k })}>{l}</button>)}
+                  </div>
+                </div>
+  );
+  const slide = shown.length
+    ? <div className="hero adm-hero"><Carousel D={D} h={h} stories={shown} date={date} hold={null} night={false} groups={groups} nav={nav} /></div>
+    : <div className="adm-blank"><p>Start typing a headline and the slide shows up here.</p></div>;
   const toggleRid = (rid) => set({ rids: form.rids.includes(rid) ? form.rids.filter((r) => r !== rid) : [...form.rids, rid] });
   const teams = [...D.teams].sort((a, b) => h.first(a).localeCompare(h.first(b)));
 
@@ -294,6 +349,7 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
                 <li key={own ? st.type : st.key} className={`adm-slot${own ? '' : ' site'}${st.hidden ? ' hidden' : ''}${fresh === id ? ' fresh' : ''}${(editing?.id ?? editing?.site?.key) === id ? ' editing' : ''}`}>
                   <span className="adm-num" aria-hidden="true">{num ?? ''}</span>
                   <div className={`adm-slot-card${own ? ' glass' : ''}`}>
+                    {phone ? <button type="button" className="adm-more" aria-expanded={openRow === id} aria-label={`Actions for "${st.headline}"`} onClick={() => setOpenRow(openRow === id ? null : id)}><Dots /></button> : null}
                     <div className="adm-slot-text">
                       <span className="adm-slot-meta">
                         <span className={`adm-kick t-${st.tone || 'neutral'}`}>{st.kicker}</span>
@@ -304,7 +360,7 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
                       <b>{st.headline}</b>
                       {p ? <small>{`${p.until ? `Runs until ${when(p.until)}` : 'Runs until you take it down'}. Posted ${ago(p.ts, now)}.`}</small> : null}
                     </div>
-                    <div className="adm-slot-acts">
+                    {phone && openRow !== id ? null : <div className="adm-slot-acts">
                       {p ? <>
                         <span className="adm-updown">
                           <button type="button" className="adm-icon" onClick={() => move(at, -1)} disabled={busy || at === 0} aria-label={`Move "${p.headline}" up`}><Arrow up /></button>
@@ -319,7 +375,7 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
                         {st.edited ? <button type="button" className="talk-btn" onClick={() => call({ action: 'site-reset', key: st.key }, 'Back to the site\'s words')} disabled={busy}>Undo edit</button> : null}
                         <button type="button" className="talk-btn adm-down" onClick={() => call({ action: 'site-hide', key: st.key }, 'Hidden')} disabled={busy}>Hide</button>
                       </>}
-                    </div>
+                    </div>}
                   </div>
                 </li>
               )];
@@ -375,12 +431,22 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
         </> : <>
           <h2 className="sec-title" id="adm-work-t">{siteEdit ? "Edit the site's headline" : editing ? 'Edit the headline' : 'Write the headline'}<small>The slide is exactly what goes up</small></h2>
           <div className="adm-compose">
-            <div className="adm-preview" ref={pinPreview}>
-              {shown.length
-                ? <div className="hero adm-hero"><Carousel D={D} h={h} stories={shown} date={date} hold={null} night={false} groups={groups} nav={nav} /></div>
-                : <div className="adm-blank"><p>Start typing a headline and the slide shows up here.</p></div>}
-            </div>
-            <form className="adm-form glass" onSubmit={submit}>
+            {phone ? null : (
+              <div className="adm-preview" ref={pinPreview}>
+                {slide}
+              </div>
+            )}
+            {phone && peek ? createPortal(
+              // phones: the slide over everything, on the end zone's green, with the way back and the post button at the
+              // bottom (portaled to body, so nothing on the page can trap its fixed position)
+              <div className="adm-sheet" role="dialog" aria-modal="true" aria-label="Preview of the slide">
+                {slide}
+                <div className="adm-sheet-bar">
+                  <button type="button" ref={back} className="talk-btn" onClick={() => setPeek(false)}>Back to editing</button>
+                  <button type="submit" form="adm-form" className="cta adm-post" disabled={busy}>{busy ? (editing ? 'Saving…' : 'Posting…') : <PostLabel editing={editing} />}</button>
+                </div>
+              </div>, document.body) : null}
+            <form id="adm-form" className="adm-form glass" onSubmit={submit}>
               <fieldset>
                 <legend>Words</legend>
                 <label className="adm-field adm-hed"><span>Headline<Count v={form.headline} max={220} /></span>
@@ -392,8 +458,8 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
                 <label className="adm-field"><span>Names in yellow, with commas between</span><input value={form.marks} onChange={(e) => set({ marks: e.target.value })} placeholder="Jonathan Taylor" /></label>
               </fieldset>
 
-              <fieldset>
-                <legend>Look</legend>
+              <Fold title="Look" phone={phone} open={folds.includes('look')} toggle={() => fold('look')}
+                summary={[form.kicker, form.stamp && `stamped ${form.stamp}`, TONES.find(([k]) => k === form.tone)?.[1], form.group ? groups[form.group] : 'automatic section', form.breaking && 'breaking'].filter(Boolean).join(', ')}>
                 <div className="adm-pair">
                   <label className="adm-field"><span>Label beside the date</span><input value={form.kicker} onChange={(e) => set({ kicker: e.target.value })} maxLength={40} /></label>
                   <label className="adm-field"><span>Stamp on the photo</span><input value={form.stamp} onChange={(e) => set({ stamp: e.target.value })} maxLength={24} placeholder="Done deal" /></label>
@@ -408,10 +474,10 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
                   </div>
                 </div>
                 <button type="button" className="adm-pill adm-breaking" aria-pressed={form.breaking} onClick={() => set({ breaking: !form.breaking })}><i aria-hidden="true" />Breaking news</button>
-              </fieldset>
+              </Fold>
 
-              <fieldset>
-                <legend>Who's pictured</legend>
+              <Fold title="Who's pictured" phone={phone} open={folds.includes('who')} toggle={() => fold('who')}
+                summary={[form.player ? `${h.nameOf(form.player)} on the card` : 'No player card', form.rids.length ? form.rids.map((r) => D.byRid[r] && h.first(D.byRid[r])).filter(Boolean).join(', ') : 'no managers'].join(', ')}>
                 <label className="adm-field"><span>Player card</span><select value={form.player} onChange={(e) => set({ player: e.target.value })}>
                   <option value="">No card, show the managers</option>
                   {people.map((x) => <option key={x.id} value={x.id}>{`${h.nameOf(x.id)}, value ${h.f1(x.v)}`}</option>)}
@@ -422,28 +488,30 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
                     return <button key={t.rid} type="button" className="adm-pill" aria-pressed={at >= 0} onClick={() => toggleRid(t.rid)}>{at >= 0 ? <b aria-hidden="true">{at + 1}</b> : null}{h.first(t)}</button>;
                   })}</div>
                 </div>
-              </fieldset>
+              </Fold>
 
-              <fieldset>
-                <legend>Ticker</legend>
+              <Fold title="Ticker" phone={phone} open={folds.includes('ticker')} toggle={() => fold('ticker')}
+                summary={form.hook && form.line ? `${form.hook}: ${form.line}` : 'From the stamp and the headline'}>
                 <p className="adm-hint">The strip that runs across the top once the carousel scrolls away. Left empty, it uses the stamp and the headline's first sentence.</p>
                 <div className="adm-pair adm-tick-pair">
                   <label className="adm-field"><span>Hook</span><input value={form.hook} onChange={(e) => set({ hook: e.target.value })} maxLength={24} placeholder="Done deal" /></label>
                   <label className="adm-field"><span>Line<Count v={form.line} max={160} /></span><input value={form.line} onChange={(e) => set({ line: e.target.value })} maxLength={160} /></label>
                 </div>
-              </fieldset>
+              </Fold>
+
+              {phone ? (
+                siteEdit ? <p className="adm-hint adm-site-note">{`Your words replace the site's on this headline for week ${week}. Undo edit puts the site's back.`}</p>
+                  : <Fold title="When it runs" phone open={folds.includes('run')} toggle={() => fold('run')}
+                    summary={form.run === 'keep' ? `As is, until ${when(editing.until)}` : form.run === 'forever' ? 'Until you take it down' : `Until ${when(untilFor(form.run, now))}`}>{runs}</Fold>
+              ) : null}
 
               <div className="adm-send">
-                {siteEdit ? <p className="adm-hint">{`Your words replace the site's on this headline for week ${week}. Undo edit puts the site's back.`}</p> : <div className="adm-field" role="group" aria-labelledby="adm-run"><span id="adm-run">{form.run === 'week' ? `Runs until ${when(weekTurns(now))}` : 'How long it runs'}</span>
-                  <div className="adm-pills">
-                    {editing?.until ? <button type="button" className="adm-pill" aria-pressed={form.run === 'keep'} onClick={() => set({ run: 'keep' })}>{`As is, until ${when(editing.until)}`}</button> : null}
-                    {RUNS.map(([k, l]) => <button key={k} type="button" className="adm-pill" aria-pressed={form.run === k} onClick={() => set({ run: k })}>{l}</button>)}
-                  </div>
-                </div>}
+                {phone ? null : runs}
                 {err ? <p className="adm-err" role="alert">{err}</p> : null}
                 <div className="adm-send-row">
                   <button type="button" className="talk-btn" onClick={() => { setForm(null); setEditing(null); setErr(''); }} disabled={busy}>{editing ? 'Cancel' : 'Discard'}</button>
-                  <button type="submit" className="cta adm-post" disabled={busy}>{busy ? (editing ? 'Saving…' : 'Posting…') : editing ? 'Save changes' : 'Post headline'}</button>
+                  {phone ? <button type="button" className="talk-btn adm-peek" onClick={() => setPeek(true)} disabled={!shown.length}>Preview</button> : null}
+                  <button type="submit" className="cta adm-post" disabled={busy}>{busy ? (editing ? 'Saving…' : 'Posting…') : <PostLabel editing={editing} />}</button>
                 </div>
               </div>
             </form>
@@ -457,10 +525,11 @@ export function AdminPage({ D, h, draft, draftPlayers, draftGames, weekPlayers, 
 
 function Head({ live }) {
   return (
-    <section className="view-head">
+    <section className="view-head adm-head">
       <div>
         <h1><span className="wk">{live == null ? 'Editor' : live ? `${live} of yours up now` : 'Nothing of yours up'}</span>Headline desk</h1>
         <p>Pick the moves worth a headline, write it and post it. Your headlines lead the carousel on the rankings and Live pages.</p>
+        {live != null ? <button type="button" className="talk-btn primary adm-jump" onClick={() => scrollTo('.adm-work')}>Write a headline</button> : null}
       </div>
     </section>
   );
