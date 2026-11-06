@@ -2811,7 +2811,7 @@ main::after { border-radius: 56px 56px 0 0; }
   .kicker > span:first-child, .tc-face.ph, .talk-btn.primary, .car-pause[aria-pressed='true'], .drive-pick button[aria-pressed='true'],
   .drive-field .endzone, .gotw-more, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
   :is(.lead-face, .mgr-face, .fo-face, .stat-face, .deal-face, .pitch-face).ph, .lf .cap, .mu .vs, .day > h3, .clip-frame .clip-sound, .fo-side, .fo-vs i,
-  .desk-note, .you-face.ph, .st-chip.won, .sup.champ, .bull-tag.lead, .chip:is(.to-again, .rank-pdf), .pp-img.ph, .cta, .verdict-face.ph,
+  .desk-note, .you-face.ph, .st-chip.won, .sup.champ, .bull-tag.lead, .chip:is(.to-again, .rank-pdf), .lo-tag, .pp-img.ph, .cta, .verdict-face.ph,
   .strip-face.ph, .pos, .champ, .ball-pct, .pp-card, .fo-fav.dog) {
   --ink: #0B2412; --ink-2: #2E4B35; --ink-3: #47604C; --good: #28702C; --bad: #C62828; --a-ink: #0266A3; --b-ink: #985700;
   --paper: #FFFFFF; --line: #BFD2AE; --tile: #D9E6CC;
@@ -2927,3 +2927,48 @@ main::after { border-radius: 56px 56px 0 0; }
   box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge); }
 .share-go button:disabled { opacity: 0.5; cursor: default; }
 .share-note { margin: 0; font-size: 13px; color: var(--ink-3); text-align: center; text-wrap: pretty; }
+
+/* ---------- the rankings lockout (a week being played) ---------- */
+/* under the header (z-index 20) and the ticker (19), so the tabs stay usable; nothing behind it is rendered anyway */
+.lockout { position: fixed; inset: 0; z-index: 18; display: grid; place-items: center; padding: 96px 16px 20px; overflow-y: auto;
+  background: rgba(19, 48, 28, 0.86); animation: unveil-in 0.3s ease-out; }
+.lo-card { position: relative; width: min(560px, 100%); padding: 26px 26px 22px; border-radius: var(--r-xl); text-align: center; }
+.lo-tag { display: inline-block; margin-top: 10px; padding: 5px 12px; border-radius: 999px; font: 700 12.5px/1.2 var(--body); color: var(--ink); background-color: var(--yellow); box-shadow: 0 0 0 2px var(--outline, #12301A); }
+.lo-card h2 { margin: 8px 0 6px; font: 900 clamp(28px, 4vw, 38px)/1 var(--display); color: var(--ink); }
+.lo-sub { margin: 0 auto 16px; max-width: 44ch; color: var(--ink-2); font-size: 15px; line-height: 1.45; }
+/* the wait symbol: a football spinning end over end */
+.lo-ball { width: 74px; height: 44px; margin: 0 auto; animation: lo-spin 1.4s linear infinite; }
+.lo-ball span { display: block; width: 100%; height: 100%; border-radius: 50%; background-color: #8B4A22; box-shadow: 0 0 0 2.5px var(--outline, #12301A);
+  background-image: linear-gradient(90deg, transparent 17%, #fff 17% 23%, transparent 23% 77%, #fff 77% 83%, transparent 83%),
+    linear-gradient(#fff, #fff), repeating-linear-gradient(90deg, transparent 0 6px, #fff 6px 9px);
+  background-size: 100% 100%, 34% 3px, 30% 10px; background-position: 0 0, center, center; background-repeat: no-repeat; }
+@keyframes lo-spin { to { transform: rotate(360deg); } }
+/* the play clock */
+.lo-clock { display: grid; gap: 2px; margin: 0 auto 18px; padding: 12px 18px; width: fit-content; min-width: 240px; border-radius: 18px; background-color: var(--board); color: var(--chalk); }
+.lo-clock small { font: 600 12px/1.3 var(--body); color: rgba(255, 255, 255, 0.82); }
+.lo-clock b { font: 900 40px/1.05 var(--display); color: var(--yellow); letter-spacing: 0.02em; }
+/* the challenge flag */
+.lo-play { position: relative; display: grid; justify-items: center; gap: 12px; margin-bottom: 16px; }
+.lo-flag-btn.bribe { background-color: var(--paper); }
+.lo-flag-btn:disabled { opacity: 0.6; cursor: default; }
+.lo-ruling { min-height: 3em; margin: 0; padding: 10px 14px; border-radius: 14px; max-width: 42ch; font: 600 14.5px/1.4 var(--body); color: var(--ink-2);
+  background-color: var(--tile); box-shadow: inset 0 3px 0 rgba(0, 0, 0, 0.06), 0 0 0 1.5px var(--outline, #12301A); }
+.lo-ruling.on { color: var(--ink); animation: lo-ruling 0.35s ease-out; }
+@keyframes lo-ruling { from { transform: scale(0.94); opacity: 0; } }
+/* the flag arcs up out of the button and lands to the side, spinning */
+.lo-flag { position: absolute; left: 50%; top: 4px; width: 26px; height: 26px; margin-left: -13px; pointer-events: none; border-radius: 4px;
+  background-color: #D32F2F; box-shadow: 0 0 0 2px var(--outline, #12301A); animation: lo-toss 0.9s cubic-bezier(0.3, 0.7, 0.4, 1) forwards; }
+.lo-flag::after { content: ''; position: absolute; left: 50%; top: -6px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background-color: #D32F2F; box-shadow: 0 0 0 2px var(--outline, #12301A); }
+@keyframes lo-toss {
+  0% { transform: translate(0, 0) rotate(0) scale(0.6); opacity: 0; }
+  15% { opacity: 1; }
+  55% { transform: translate(90px, -120px) rotate(420deg) scale(1.1); }
+  100% { transform: translate(150px, -10px) rotate(720deg) scale(1); opacity: 0; }
+}
+.lo-live { display: inline-block; font: 700 14px/1 var(--body); color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 760px) {
+  .lockout { padding-top: 156px; align-items: start; }
+  .lo-card { padding: 22px 16px 18px; }
+  .lo-clock b { font-size: 34px; }
+}
+@media (prefers-reduced-motion: reduce) { .lo-ball, .lo-flag { animation: none; } .lo-flag { display: none; } }

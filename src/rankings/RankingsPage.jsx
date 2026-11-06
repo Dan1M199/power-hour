@@ -10,6 +10,7 @@ import { Futures } from './Futures.jsx';
 import { Poll } from './Poll.jsx';
 import { Report } from './Report.jsx';
 import { useTalk } from '../hero/talk.js';
+import { Lockout } from './Lockout.jsx';
 
 // Dan's share button: the rankings as a one-page PDF for the group chat. Shown only while the league desk says he's
 // signed in (the desk's admin session), so leaguemates never see it; the module loads on the first tap.
@@ -156,6 +157,12 @@ export function RankingsPage({ D, me, h, held, car, desk, sources, updated, mess
     li.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
     toggle(mine.rid, true);
   };
+
+  // a week being played: the ranks stay out of sight behind the lockout popup until every game is final
+  if (held) return <>
+    <section className="view-head"><RankHead wk={wk} held sources={sources} updated={updated} /></section>
+    <Lockout wk={wk} />
+  </>;
 
   return <>
     {held

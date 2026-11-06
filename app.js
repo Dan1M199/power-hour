@@ -198,11 +198,15 @@ function headlines() {
     const all = [...leaks, ...keep];
     stories = { ...stories, lead: all[0], more: all.slice(1), size: Math.min(all.length, CAROUSEL_SIZE + leaks.length) };
   }
-  // week 9 being played: Mo and Khalil's trade stays on top, in place of the generic trade slides
-  const mk = MO_KHALIL && DATA.meta.lastScored === 8 && moKhalilStory();
-  if (mk) {
-    const keep = [stories.lead, ...stories.more].filter((st) => st && st.type !== 'trade');
-    stories = { ...stories, lead: mk, more: keep, ...(stories.size ? { size: stories.size + 1 } : { pinned: true }) };
+  // week 9 being played: the new trades lead (TRADE_WAVE), then Mo and Khalil's, in place of the generic trade slides
+  if (DATA.meta.lastScored === 8) {
+    const pins = [...(TRADE_WAVE ? tradeWaveStories() : []), MO_KHALIL && moKhalilStory()].filter(Boolean);
+    if (pins.length) {
+      const told = new Set(pins.map((st) => st.player?.id));
+      const keep = [stories.lead, ...stories.more].filter((st) => st && st.type !== 'trade' && !told.has(st.pid));
+      const all = [...pins, ...keep];
+      stories = { ...stories, lead: all[0], more: all.slice(1), ...(stories.size ? { size: stories.size + pins.length } : { pinned: pins.length }) };
+    }
   }
   // after Sunday night football the night desk takes over the headlines
   if (nightDesk() && DATA.live) {
@@ -727,6 +731,91 @@ function moKhalilStory() {
       `${sides.map((x) => `${firstName(x.t)} is ${record(x.t)} with ${pct(x.t.playoffPct)} playoff odds`).join('; ')}.`,
     ].filter(Boolean).join(' '),
   };
+}
+
+// Dan's leads for Nov 6, with week 9 being played: the new trades since Mo and Khalil's (pulled in with an 11:10am
+// extra snapshot, EXTRA_PULLS in lib/newsclock.js). Up to three, newest first, each read from the snapshot and each told
+// from a different angle the numbers pick: a heist when one side wins by 8+ on consensus value, a blockbuster for the
+// most value moved, a panic move when a side under 35% playoff odds buys, an arms race when a 70%+ side does, else a
+// plain swap. Live points this week go in the deck when a moved player has played. Null drops them.
+const TRADE_WAVE = { since: Date.parse('2026-11-04T20:00:00-06:00'), max: 3 };
+function tradeWaveStories() {
+  const wk = DATA.meta.lastScored + 1, rows = DATA.raw.matchups?.[wk] || [];
+  const livePts = (id) => { const r = rows.find((m) => m.players?.includes(id)); const v = r?.players_points?.[id]; return v ? v : null; };
+  const isMoKhalil = (f) => { const M = ownerTeam(MO_KHALIL?.mo), K = ownerTeam(MO_KHALIL?.khalil); return M && K && [M.rid, K.rid].every((r) => f.sides.some((x) => x.rid === r)); };
+  const deals = DATA.feed.filter((f) => f.type === 'trade' && f.ts >= TRADE_WAVE.since && !isMoKhalil(f)).sort((a, b) => b.ts - a.ts).slice(0, TRADE_WAVE.max);
+  if (!deals.length) return [];
+  const moved = (f) => f.sides.reduce((a, x) => a + x.adds.reduce((b, p) => b + valueOf(p.id), 0), 0);
+  const biggest = deals.reduce((b, f) => (moved(f) > moved(b) ? f : b), deals[0]);
+  const used = new Set();
+  return deals.map((deal) => {
+    const sides = deal.sides.map((x) => ({ ...x, t: team(x.rid) })).filter((x) => x.t);
+    if (sides.length < 2) return null;
+    const star = sides.flatMap((x) => x.adds.map((p) => ({ ...p, to: x.t }))).sort((a, b) => valueOf(b.id) - valueOf(a.id))[0];
+    if (!star) return null;
+    const P = nameOf(star.id), info = DATA.helpers.player(star.id) || {}, r = RAW.ros?.values?.[star.id] || {};
+    const to = star.to, from = sides.find((x) => x.t !== to)?.t, T = firstName(to), F = from ? firstName(from) : 'the other side';
+    const [w, l] = [...sides].sort((a, b) => b.net - a.net), gap = l ? w.net - l.net : 0;
+    const buyer = sides.find((x) => x.t === to);
+    // the angle: the first that fits and hasn't been used on another slide
+    const angles = [
+      gap >= 8 && 'heist',
+      deal === biggest && 'blockbuster',
+      to.playoffPct < 0.35 && 'panic',
+      to.playoffPct >= 0.7 && 'arms',
+      'swap',
+    ].filter(Boolean);
+    const angle = angles.find((a) => a === 'swap' || !used.has(a));
+    used.add(angle);
+    const others = sides.filter((x) => x.t !== to).map((x) => firstName(x.t));
+    const pos = SLOT_WORD[star.pos] || star.pos || 'player';
+    const lp = livePts(star.id);
+    const W = firstName(w.t), L = l ? firstName(l.t) : '';
+    const words = {
+      heist: {
+        stamp: 'Robbery', hook: 'Daylight robbery',
+        headline: `Daylight robbery: ${W} walks off with ${f1(gap)} points of value from ${L}${w.t === to ? `, and ${P} with it` : ` in the ${P} deal`}`,
+        line: `${W} won the ${P} deal by ${f1(gap)} on consensus value.`,
+      },
+      blockbuster: {
+        stamp: 'Blockbuster', hook: 'Stop the presses',
+        headline: `Stop the presses: ${P} is headed to ${T}, and the league just shifted`,
+        line: `${P} heads to ${T} in the biggest deal of the wave.`,
+      },
+      panic: {
+        stamp: 'Hail Mary', hook: 'Panic button',
+        headline: `Panic button pressed: ${T} sits at ${record(to)} and goes all in for ${P}`,
+        line: `${T}, ${record(to)} with ${pct(to.playoffPct)} playoff odds, buys ${P}.`,
+      },
+      arms: {
+        stamp: 'Arms race', hook: 'Arms race',
+        headline: `The rich get richer: ${T} is already ${record(to)} and just added ${P}`,
+        line: `${T}, ${pct(to.playoffPct)} to make the playoffs, loads up with ${P}.`,
+      },
+      swap: {
+        stamp: 'Done deal', hook: 'Hands shaken',
+        headline: `Mid-game shakeup: ${listOf([T, ...others])} shake on a deal for ${P}`,
+        line: `${P} moves to ${T} while week ${wk} is being played.`,
+      },
+    }[angle];
+    return {
+      type: `wave-${angle}`, kicker: 'Trade desk', tone: 'trade', stamp: words.stamp, breaking: true, rids: sides.map((x) => x.rid),
+      drain: angle === 'heist' && l ? l.rid : undefined,
+      player: { id: star.id, name: P, short: shortName(info.name ? info : { name: P }), line: `${info.pos || posOf(star.id)}, ${nfl(info.team)}`, pin: { team: to, label: `To ${T}` } },
+      mark: [P],
+      tick: { hook: words.hook, line: words.line },
+      headline: words.headline,
+      deck: [
+        `${F} lets ${P}${r.prk ? `, the ${ordinal(r.prk)}-ranked ${pos} in the consensus,` : ''} go${lp != null ? ` with ${f1(lp)} already on the board this week` : ''}.`,
+        `The full deal: ${dealSaid(deal)}`,
+        valueSaid(deal),
+        roomsSaid(deal),
+        angle === 'panic' || angle === 'arms' ? `${T} was ${pct(to.playoffPct)} to make the playoffs before this one counts for anything.` : '',
+        `${sides.map((x) => `${firstName(x.t)} is ${record(x.t)} with ${pct(x.t.playoffPct)} playoff odds`).join('; ')}.`,
+      ].filter(Boolean).join(' '),
+      pid: star.id, buyer: buyer?.rid,
+    };
+  }).filter(Boolean);
 }
 
 function finalsStories() {
@@ -1368,7 +1457,7 @@ function carouselProps() {
   const s = DATA.stories;
   if (!s?.lead) return null;
   return {
-    stories: [s.lead, ...s.more].slice(0, s.size || CAROUSEL_SIZE + (s.night ? 1 : 0) + (s.extra ? 1 : 0) + (s.pinned ? 1 : 0)),
+    stories: [s.lead, ...s.more].slice(0, s.size || CAROUSEL_SIZE + (s.night ? 1 : 0) + (s.extra ? 1 : 0) + (s.pinned || 0)),
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
     hold: onHold() ? NEWS_CLOCK.holdNote : null, night: !!s.night, groups: GROUPS,
   };
