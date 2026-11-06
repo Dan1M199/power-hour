@@ -55,16 +55,23 @@ function Faces({ st, D, h }) {
 
 // the player a story is about, printed like a trading card where the headline photos go: his Sleeper headshot, name and
 // position, the stamp, and the face of the manager he's headed to pinned on the corner
+// a player headline's picture as a trading card: a white border around a framed portrait (his Sleeper headshot on a
+// two-tone field with a hard gloss stripe), his position on a badge in the corner, and a name plate along the bottom.
+// The name wraps instead of stretching the card (a long one once pushed the photo out past the frame and the slide).
 function PlayerPrint({ st, h }) {
   const P = st.player, to = P.pin?.team;
   const [failed, setFailed] = useState(false);
   const initials = P.name.split(' ').map((w) => w[0]).slice(0, 2).join('');
+  const [pos, team] = String(P.line || '').split(/,\s*/);
   return (
     <figure className={`player-print ${st.tone || ''}`} aria-hidden="true">
       <div className="pp-card">
-        {failed ? <span className="pp-img ph">{initials}</span>
-          : <img className="pp-img" src={`https://sleepercdn.com/content/nfl/players/${P.id}.jpg`} alt="" decoding="async" onError={() => setFailed(true)} />}
-        <figcaption><b>{P.short}</b><small>{P.line}</small></figcaption>
+        <div className="pp-photo">
+          {failed ? <span className="pp-img ph">{initials}</span>
+            : <img className="pp-img" src={`https://sleepercdn.com/content/nfl/players/${P.id}.jpg`} alt="" decoding="async" onError={() => setFailed(true)} />}
+          {pos ? <span className="pp-pos">{pos}</span> : null}
+        </div>
+        <figcaption><b>{P.short}</b>{team ? <small>{team}</small> : null}</figcaption>
       </div>
       {st.stamp ? <em className="stamp">{st.stamp}</em> : null}
       {to && h.faceSrc(to) ? <span className="lf pp-who"><Headshot t={to} cls="lead-face" h={h} /><span className="cap">{P.pin.label}</span></span> : null}
@@ -97,10 +104,15 @@ function ClipPrint({ st, D, h, clip }) {
 }
 
 // a story's key name in yellow, in the headline and the deck (st.mark)
+// a headline or deck with its marked names in yellow; records and scores ("2-4", "120.4-98.1") never break at the hyphen
+const PAIR = /(\d+(?:\.\d+)?-\d+(?:\.\d+)?)/;
+const keepPairs = (part, k) => (PAIR.test(part)
+  ? part.split(PAIR).filter(Boolean).map((x, j) => (PAIR.test(x) ? <span className="nw" key={`${k}-${j}`}>{x}</span> : x))
+  : part);
 function Marked({ text, marks }) {
-  if (!marks?.length) return text;
+  if (!marks?.length) return keepPairs(text, 0);
   const re = new RegExp(`(${marks.map((m) => m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`);
-  return text.split(re).filter(Boolean).map((part, i) => (marks.includes(part) ? <mark className="hl" key={i}>{part}</mark> : part));
+  return text.split(re).filter(Boolean).map((part, i) => (marks.includes(part) ? <mark className="hl" key={i}>{part}</mark> : keepPairs(part, i)));
 }
 
 function RankSpark({ t, D, w = 84, h: ht = 30 }) {

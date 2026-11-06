@@ -1512,12 +1512,23 @@ mark.hl { background: none; color: var(--yellow); }
 .lead-deck mark.hl { font-weight: 700; }
 /* the player card: a tilted print of the Sleeper headshot, like the headline photos */
 .player-print { position: relative; flex: none; width: 156px; margin: 2px 6px 26px 0; transform: rotate(4deg); }
-.pp-card { display: grid; padding: 6px 6px 8px; border-radius: 28px; background: var(--chalk); box-shadow: 6px 7px 0 rgba(0, 0, 0, 0.35); }
-.pp-img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: center top; border-radius: 20px; background: var(--tile); }
-.pp-img.ph { display: grid; place-items: center; font: 900 34px var(--display); color: var(--ink); background: var(--lime); }
-.pp-card figcaption { display: grid; gap: 1px; padding: 6px 4px 0; line-height: 1; }
-.pp-card b { font: 900 21px/1 var(--display); color: var(--ink); letter-spacing: 0.01em; white-space: nowrap; }
-.pp-card small { font: 700 11.5px/1.2 var(--body); color: var(--ink-2); }
+/* the trading card: white border, inked edge and hard ledge; one column that never grows past the card */
+.pp-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 6px; border-radius: 14px; background-color: #FFFFFF;
+  box-shadow: 0 0 0 2.5px #12301A, 6px 7px 0 rgba(0, 0, 0, 0.4); }
+/* the portrait: a two-tone field behind the headshot, an inked frame and a hard gloss stripe across it */
+.pp-photo { position: relative; overflow: hidden; aspect-ratio: 4 / 5; border-radius: 9px; isolation: isolate;
+  background: linear-gradient(150deg, #FFC107 0 52%, #FFE082 52%); box-shadow: inset 0 0 0 2px #12301A; }
+.player-print.trade .pp-photo { background: linear-gradient(150deg, #E57373 0 52%, #FFCDD2 52%); }
+.pp-photo::after { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; border-radius: inherit; box-shadow: inset 0 0 0 2px #12301A;
+  background: linear-gradient(118deg, transparent 0 58%, rgba(255, 255, 255, 0.28) 58% 66%, transparent 66% 70%, rgba(255, 255, 255, 0.18) 70% 73%, transparent 73%); }
+.pp-pos { position: absolute; z-index: 3; top: 6px; left: 6px; display: grid; place-items: center; min-width: 30px; height: 22px; padding: 0 6px; border-radius: 999px;
+  font: 900 13px/1 var(--display); letter-spacing: 0.03em; color: #12301A; background-color: #FFFFFF; box-shadow: 0 0 0 2px #12301A; }
+.pp-img { position: absolute; inset: 0; z-index: 1; display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; }
+.pp-img.ph { display: grid; place-items: center; font: 900 34px var(--display); color: #12301A; }
+/* the name plate: the scoreboard's green, the name allowed to wrap onto a second line */
+.pp-card figcaption { container-type: inline-size; display: grid; gap: 2px; padding: 6px 8px 7px; border-radius: 8px; line-height: 1; background-color: #13301C; }
+.pp-card b { font: 900 clamp(13px, 17cqi, 19px)/1 var(--display); color: #FFFFFF; letter-spacing: 0.01em; overflow-wrap: break-word; }
+.pp-card small { font: 700 11.5px/1.2 var(--body); color: #FFEB3B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .player-print .stamp { z-index: 2; top: -10px; left: -18px; }
 .pp-who { position: absolute; z-index: 2; right: -14px; bottom: -24px; }
 .pp-who .lead-face { width: 54px; height: 54px; border-radius: 22px; border-width: 3px; box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.35); transform: rotate(-8deg); }
@@ -1720,12 +1731,14 @@ html.locked { overflow: hidden; }
   .clip-frame { border-width: 3px; border-radius: 26px; box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.35); }
   .clip-who { left: -12px; bottom: -12px; }
   .clip-who .lead-face { width: 46px; height: 46px; border-radius: 20px; }
-  .player-print { width: 112px; margin: 0 4px 22px 0; }
-  .pp-card { padding: 4px 4px 6px; border-radius: 22px; }
-  .pp-img { border-radius: 16px; }
-  .pp-card b { font-size: 17px; }
+  .player-print { width: 112px; margin: 0 4px 46px 0; }
+  .pp-card { gap: 4px; padding: 4px; border-radius: 11px; }
+  .pp-photo { border-radius: 7px; }
+  .pp-pos { top: 4px; left: 4px; min-width: 26px; height: 19px; font-size: 11.5px; }
+  .pp-card figcaption { padding: 5px 6px 6px; border-radius: 6px; }
+  .pp-card b { font-size: clamp(12px, 18cqi, 15px); }
   .pp-card small { font-size: 11.5px; }
-  .pp-who { right: 4px; bottom: -22px; }
+  .pp-who { right: 4px; bottom: -30px; }
   .pp-who .lead-face { width: 40px; height: 40px; border-radius: 18px; }
   .clip-frame .clip-sound { right: 7px; bottom: 7px; padding: 6px 9px 5px 7px; font-size: 11.5px; }
   .mgr { grid-template-columns: 64px minmax(0, 1fr); padding: 12px; gap: 10px 12px; }
@@ -2972,3 +2985,4 @@ main::after { border-radius: 56px 56px 0 0; }
   .lo-clock b { font-size: 34px; }
 }
 @media (prefers-reduced-motion: reduce) { .lo-ball, .lo-flag { animation: none; } .lo-flag { display: none; } }
+.nw { white-space: nowrap; }
