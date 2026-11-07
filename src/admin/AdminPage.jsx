@@ -1,7 +1,7 @@
 // The admin portal (#admin), Dan's own headline desk: tick the transactions to write about, start from a draft worked
 // out of the numbers (draftFor in app.js), rewrite it with the real carousel slide as the preview, and post it. Posted
 // headlines lead the carousel on the rankings and Live pages (carouselProps in app.js) until they run out or he takes
-// them down. Signing in is the league desk's: his #join= link or TALK_ADMIN_KEY, through api/talk.js. Everyone else
+// them down. Dan signs in with the headline desk password or admin key. Everyone else
 // who opens #admin only gets the sign-in box, and api/headlines.js refuses any write that isn't his.
 //
 // The page is one desk, top to bottom: the running order (what the carousel shows, in order: his headlines, numbered
@@ -12,9 +12,8 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'reac
 import { createPortal } from 'react-dom';
 import { TZ } from '../../lib/newsclock.js';
 import { Carousel } from '../hero/Carousel.jsx';
-import { talkCall, loadTalk } from '../hero/talk.js';
 import { PosTag, TeamAvatar } from '../shared.jsx';
-import { usePosts, loadPosts, postCall } from './posts.js';
+import { usePosts, loadPosts, postCall, adminAuthCall } from './posts.js';
 
 const TONES = [['trade', 'Trade'], ['good', 'Good news'], ['bad', 'Bad news'], ['neutral', 'Plain']];
 const when = (ts) => new Date(ts).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -89,8 +88,7 @@ const Check = () => (
   <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true"><path d="M3 7.4 5.8 10 11 4.2" stroke="currentColor" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
 );
 
-// the gate on #admin: the admin password (api/talk.js `password`), which signs this device in as Dan for a year. The old
-// admin key still works in the same box, and so does opening his league desk link.
+// the gate on #admin: the admin password or key signs this device in as Dan for a year.
 function SignIn() {
   const [pw, setPw] = useState(''), [msg, setMsg] = useState(''), [busy, setBusy] = useState(false);
   const go = async (e) => {
@@ -99,15 +97,8 @@ function SignIn() {
     if (!v) return;
     setBusy(true); setMsg('');
     try {
-      try {
-        await talkCall({ action: 'password', password: v });
-      } catch (x) {
-        // not the password: it may be the long admin key
-        if (!/^[A-Za-z0-9_-]{16,128}$/.test(v)) throw x;
-        const r = await talkCall({ action: 'claim', token: v }).catch(() => { throw x; });
-        if (!r.admin) throw new Error("That's not the password.");
-      }
-      await Promise.all([loadPosts(), loadTalk()]);
+      await adminAuthCall({ password: v });
+      await loadPosts();
     } catch (x) { setMsg(x.message); setPw(''); }
     setBusy(false);
   };

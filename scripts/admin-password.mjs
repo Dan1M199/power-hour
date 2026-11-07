@@ -1,8 +1,8 @@
-// Prints the hash for a new admin password (the #admin page's sign-in, api/talk.js). Put the line it prints in
-// PASSWORD_HASH in api/talk.js, or in the ADMIN_PASSWORD_HASH env var on Vercel. The password itself is never stored.
+// Prints the hash for a new admin password (the #admin page's sign-in, api/admin-auth.js). Put it in
+// ADMIN_PASSWORD_HASH on Vercel. The password itself is never stored.
 //   node scripts/admin-password.mjs 'new password'
 import { randomBytes, scryptSync } from 'node:crypto';
-import { SCRYPT } from '../api/talk.js';
+import { SCRYPT } from '../api/admin-auth.js';
 
 const pw = process.argv[2];
 if (!pw || pw.length < 8) { console.error('Give a password of 8 characters or more.'); process.exit(1); }

@@ -4,7 +4,7 @@
 // them and runs the card. A video story's clip plays muted on a loop while its slide shows (useClip).
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { shortName } from '../../lib/matchup.js';
-import { storyKeys } from './talk.js';
+import { storyKeys } from './storyKeys.js';
 import { useReactions, loadReactions, react } from './reactions.js';
 import { TeamAvatar, Headshot, ChampTag, ChampBadge } from '../shared.jsx';
 import { TradeGraphic } from './TradeGraphic.jsx';
@@ -213,7 +213,7 @@ const PauseIcon = ({ paused }) => (
 
 /**
  * stories: the headlines, in order; date: today, for the first kicker; hold: the "games in progress" note, or null;
- * night: the night edition is on; groups: section labels by story group (the week's desk); nav: a ref the league desk
+ * night: the night edition is on; groups: section labels by story group; nav: a ref for the ticker
  * shares, set here to { at, go } (which slide is showing, and turning to one).
  */
 export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
@@ -227,7 +227,7 @@ export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
   const clipSync = useRef(null);
   // the league's reactions to these headlines, by their desk keys
   const rx = useReactions();
-  const keys = storyKeys(stories);
+  const keys = storyKeys(stories, D.meta.lastScored + 1);
   useEffect(() => { loadReactions(keys); }, [keys.join()]);
 
   // sections: runs of slides sharing a group, when every slide has one
@@ -264,7 +264,7 @@ export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
 
   useEffect(() => {
     const el = car.current, tr = track.current;
-    if (nav) nav.current = { at: () => at.current, go: (i) => goRef.current(i) }; // for the league desk's headline chips
+    if (nav) nav.current = { at: () => at.current, go: (i) => goRef.current(i) }; // for the ticker
     // Only rotate (or play a clip) while the card is mostly on screen. A rotation changes the card's height on phones,
     // and iPhone Safari doesn't anchor scrolling, so rotating while someone reads further down would jolt the page.
     const seen = new IntersectionObserver(([e]) => { el.classList.toggle('away', e.intersectionRatio < 0.6); clipSync.current?.(); }, { threshold: [0, 0.6] });

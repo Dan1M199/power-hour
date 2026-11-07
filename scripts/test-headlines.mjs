@@ -1,16 +1,16 @@
-// Runs api/headlines.js against an in-memory stand-in for Upstash Redis: only Dan's desk session (claimed through
-// api/talk.js with the admin key) can post, edit, take down, restore and reorder; everyone reads what's up; bad stories
+// Runs the headline and admin-auth APIs against an in-memory stand-in for Upstash Redis: only Dan's session can post,
+// edit, take down, restore and reorder; everyone reads what's up; bad stories
 // are cleaned or refused; posts run out at `until`; the store being off.
 process.env.KV_REST_API_URL = 'https://example.upstash.io';
 process.env.KV_REST_API_TOKEN = 'test';
-process.env.TALK_ADMIN_KEY = 'dan-only-secret-key-123';
+process.env.ADMIN_KEY = 'dan-only-secret-key-123';
 // a stand-in admin password for the test, hashed the same way as the real one
 process.env.ADMIN_TEST_PASSWORD = 'test-password-1';
 {
   const { scryptSync } = await import('node:crypto');
   process.env.ADMIN_PASSWORD_HASH = `scrypt$testsalt$${scryptSync('test-password-1', 'testsalt', 32, { N: 32768, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }).toString('base64url')}`;
 }
-const { default: talk } = await import('../api/talk.js');
+const { default: auth } = await import('../api/admin-auth.js');
 const { default: headlines, cleanStory } = await import('../api/headlines.js');
 
 const db = new Map();
@@ -33,7 +33,7 @@ globalThis.fetch = async (u, opts = {}) => {
   throw new Error('unexpected ' + u);
 };
 let clock = Date.parse('2026-11-06T12:00:00-06:00');
-const tick = (ms) => { clock += ms; process.env.HEADLINES_NOW = process.env.TALK_NOW = String(clock); };
+const tick = (ms) => { clock += ms; process.env.HEADLINES_NOW = String(clock); };
 tick(0);
 
 const device = (ip = `10.0.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`) => {
@@ -46,7 +46,7 @@ const device = (ip = `10.0.${Math.floor(Math.random() * 250)}.${Math.floor(Math.
     for (const c of [res.headers['Set-Cookie'] || []].flat()) { const m = /^(ph_\w+)=([^;]*)/.exec(c); if (m) jar[m[1]] = m[2]; }
     return out;
   };
-  return { hl: call(headlines), talk: call(talk) };
+  return { hl: call(headlines), auth: call(auth) };
 };
 const check = (label, cond, detail) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${label}${cond ? '' : ` -> ${JSON.stringify(detail)}`}`); if (!cond) process.exitCode = 1; };
 
@@ -62,27 +62,27 @@ let r = await fan.hl('GET');
 check('anyone reads, nothing is up yet', r.code === 200 && r.body.enabled && r.body.posts.length === 0 && r.body.admin === false && !r.body.old, r.body);
 r = await fan.hl('POST', { action: 'post', story: story('Not Dan') });
 check('a stranger cannot post', r.code === 403, r);
-r = await fan.talk('POST', { action: 'claim', token: 'wrong-key-wrong-key-1' });
+r = await fan.auth('POST', { password: 'wrong-key-wrong-key-1' });
 r = await fan.hl('POST', { action: 'post', story: story('Still not Dan') });
 check('a wrong key does not sign anyone in', r.code === 403, r);
 
 // the #admin password: the right one signs a device in as Dan, wrong ones are capped per network
 const pwDevice = device();
-r = await pwDevice.talk('POST', { action: 'password', password: 'wrong' });
+r = await pwDevice.auth('POST', { password: 'wrong' });
 check('a wrong password is refused', r.code === 403, r);
 r = await pwDevice.hl('POST', { action: 'post', story: story('Not yet') });
 check('and that device still cannot post', r.code === 403, r);
-r = await pwDevice.talk('POST', { action: 'password', password: process.env.ADMIN_TEST_PASSWORD });
+r = await pwDevice.auth('POST', { password: process.env.ADMIN_TEST_PASSWORD });
 check('the admin password signs in as Dan', r.code === 200 && r.body.admin, r.body);
 r = await pwDevice.hl('GET');
 check('the headline desk knows it is Dan', r.body.admin === true, r.body);
 const guesser = device();
 const codes = [];
-for (let i = 0; i < 9; i++) codes.push((await guesser.talk('POST', { action: 'password', password: `guess${i}` })).code);
-r = await guesser.talk('POST', { action: 'password', password: process.env.ADMIN_TEST_PASSWORD });
+for (let i = 0; i < 9; i++) codes.push((await guesser.auth('POST', { password: `guess${i}` })).code);
+r = await guesser.auth('POST', { password: process.env.ADMIN_TEST_PASSWORD });
 check('after 8 wrong guesses a network is locked out for the hour, right password or not', codes.slice(0, 8).every((c) => c === 403) && codes[8] === 429 && r.code === 429, { codes, last: r.code });
 
-r = await dan.talk('POST', { action: 'claim', token: 'dan-only-secret-key-123' });
+r = await dan.auth('POST', { password: 'dan-only-secret-key-123' });
 check('Dan signs in with the admin key', r.code === 200 && r.body.admin, r.body);
 r = await dan.hl('GET');
 check('Dan is the admin', r.body.admin === true && Array.isArray(r.body.old), r.body);

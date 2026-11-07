@@ -29,16 +29,6 @@ The site is built with Vite and is moving to React a page at a time (the Team da
 
 The Games tab projects each matchup from this week's player projections: FantasyPros' and Sleeper's, averaged. Sleeper needs no setup. For FantasyPros, add an environment variable `FANTASYPROS_API_KEY` (your key from https://secure.fantasypros.com/api-keys/request/) in the Vercel project's **Settings → Environment Variables**, then redeploy. Without it the Games tab runs on Sleeper's projections alone.
 
-## Turn on the league desk (one-time)
-
-The league desk is the discussion panel beside the headlines. Anyone can read it; only managers who have opened their personal link can post, and only Dan can delete. It uses the same Upstash store as fan picks, so set that up first.
-
-1. In Vercel, add an environment variable `TALK_ADMIN_KEY`: any random string of 16 or more letters, numbers, `-` or `_` that only you know. Redeploy.
-2. Open `https://<your site>/#join=<that key>` once on each of your devices. That signs you in as Dan.
-3. In the panel, press **Invite links**, then **New link** for each manager, and DM each one their link. Opening it once signs that device in as them, and their comments show their first name and current team name.
-
-A new link for someone replaces their old one and signs out every device that used it, so a leaked link is one click to fix. Authors can edit a comment for a minute after posting.
-
 ## Turn on fan picks (one-time)
 
 Fan votes on the Games page need somewhere shared to live. Everything else works without it; until it's connected the voting box just doesn't appear.
@@ -48,6 +38,10 @@ Fan votes on the Games page need somewhere shared to live. Everything else works
 3. Redeploy (Deployments, then the three dots on the latest one, then **Redeploy**) so the function picks up the new `KV_REST_API_URL` and `KV_REST_API_TOKEN` variables.
 
 Optional: add an environment variable `VOTE_SALT` with any random string; it's mixed into the hashed IP addresses used for the per-network vote cap.
+
+## Headline editor sign-in
+
+The private headline editor uses the Upstash store for its session. To set an editor password, run `node scripts/admin-password.mjs 'your password'` and save the printed hash as `ADMIN_PASSWORD_HASH` in Vercel. Alternatively, set `ADMIN_KEY` to a private random string of at least 16 characters. Open `#admin` and sign in with either one.
 
 How it works: each phone keeps a random voter id, so voting again from the same phone switches the pick instead of adding one. One network can cast at most 3 votes per matchup (so a few friends on the same Wi-Fi still can), voting closes as soon as the week's first points are scored, and tallies stay visible to everyone. It's built for fun among friends, not to stop a determined cheater.
 
@@ -73,7 +67,7 @@ lib/engine.js                    power score, explanations, playoff simulation, 
 lib/consensus.js                 matches ranking rows to Sleeper IDs and blends the three sources
 lib/sources.js                   parsers for each ranking site
 lib/weekly.js                    this week's projections: FantasyPros + Sleeper, averaged
-api/talk.js                      the league desk: one discussion thread a week, personal sign-in links
+api/admin-auth.js                private sign-in for the headline editor
 api/ros.js                       daily rankings endpoint (Vercel function)
 demo/demo.json                   saved Week 7 snapshot for ?demo=1
 fixtures/, scripts/              saved source data and tests (node scripts/test-engine.mjs)

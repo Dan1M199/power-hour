@@ -1,4 +1,4 @@
-// The power rankings as a one-page PDF for the group chat (Dan only: the button shows while the league desk says he's
+// The power rankings as a one-page PDF for the group chat (Dan only: the button shows while the editor session is
 // signed in). Drawn straight onto a canvas in the site's type and colours (no DOM capture, so none of Safari's
 // html-to-image quirks), then wrapped by pdfOf from the dashboard's share module. The look is the site's field: a board
 // header with the week's leaders on chips, mowed stripes with chalk yard lines behind everything, the movers with their

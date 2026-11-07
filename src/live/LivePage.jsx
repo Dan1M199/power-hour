@@ -1,6 +1,6 @@
 // The Live tab (#live) while a week is played: the desk's note on your week, every team's week best to worst (banked
 // plus the rest projected) and the projected standings. Once every game is final it becomes Final Scores, with the
-// button to the new power rankings. The hero (headline carousel, page head, league desk) is the one the power rankings
+// button to the new power rankings. The hero (headline carousel and page head) is the one the power rankings
 // use.
 import { ChampTag, Headshot, TeamAvatar } from '../shared.jsx';
 import { Hero } from '../hero/Hero.jsx';
@@ -72,7 +72,7 @@ function LiveHead({ fin, wk, played, fetched }) {
   </>;
 }
 
-export function LivePage({ D, me, h, fin, wk, rows, standings, car, desk, played, fetched, bull, onReveal }) {
+export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetched, bull, onReveal }) {
   const { f1, pct, ordinal } = h, pt = D.meta.playoffTeams, n = rows.length;
   const max = Math.max(1, ...rows.map((r) => r.proj)) * 1.04;
   const status = (r) => {
@@ -84,7 +84,7 @@ export function LivePage({ D, me, h, fin, wk, rows, standings, car, desk, played
   return <>
     {fin
       ? <section className="view-head"><LiveHead fin wk={wk} played={played} fetched={fetched} /></section>
-      : <Hero D={D} h={h} car={car} desk={desk} head={<LiveHead wk={wk} played={played} fetched={fetched} />} />}
+      : <Hero D={D} h={h} car={car} head={<LiveHead wk={wk} played={played} fetched={fetched} />} />}
     {fin
       ? <div className="unveil-cta"><button type="button" className="cta" data-reveal onClick={(e) => onReveal(e.currentTarget)}>Done with Live Ranks, Show me the Power Ranking</button></div>
       : <YourWeek rows={rows} standings={standings} me={me} h={h} bull={bull} />}

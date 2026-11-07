@@ -1,5 +1,5 @@
 // /api/headlines — Dan's own headlines, written in the admin portal (#admin, src/admin) and posted straight onto the
-// carousel ahead of the generated ones. Only Dan's league desk session (api/talk.js: his #join= link or TALK_ADMIN_KEY)
+// carousel ahead of the generated ones. Only Dan's admin session (api/admin-auth.js)
 // can write; everyone reads.
 //
 //   GET  /api/headlines                                  -> { enabled, admin, now, posts: [post] } (Dan also gets the
@@ -17,7 +17,7 @@
 //                                                           whatever section each is in (Dan's request Nov 6)
 //   POST /api/headlines { action: 'arrange-reset', week } -> back to the automatic order (sections together)
 //
-// The site's own headlines are known by their desk key (`w{week}:{type}`, storyKeys in src/hero/talk.js), so an edit or
+// The site's own headlines are known by their desk key (`w{week}:{type}`, storyKeys in src/hero/storyKeys.js), so an edit or
 // a hide covers that headline for that week only. Overrides live in ph:hl:site (key -> { hide, story, ts }) and come
 // back to everyone with GET as `site`, since every visitor's carousel applies them. They're dropped after SITE_DAYS.
 //
@@ -27,7 +27,7 @@
 // Upstash hash (ph:hl:posts), outside the code and the CDN, so deploys leave it alone. Never touches Sleeper.
 import { randomBytes } from 'node:crypto';
 import { redis, storeEnabled } from '../lib/snapstore.js';
-import { whoAmI, ADMIN } from './talk.js';
+import { whoAmI, ADMIN } from './admin-auth.js';
 
 const KEY = 'ph:hl:posts';
 const SITE = 'ph:hl:site';
@@ -40,7 +40,7 @@ const TTL = 60 * 60 * 24 * 300;
 const KEEP_OLD_MS = 14 * 864e5; // taken-down and run-out posts stay in Dan's list this long
 const MAX_POSTS = 60;
 const TONES = new Set(['trade', 'good', 'bad', 'neutral']);
-const TRADE_STYLE = new Set(['handoff', 'seesaw', 'receipt', 'none']);
+const TRADE_STYLE = new Set(['handoff', 'seesaw', 'receipt', 'playbook', 'lockers', 'none']);
 const GROUPS = new Set(['trades', 'rumors', 'wire', 'week', 'players', 'league']);
 const now = () => Number(process.env.HEADLINES_NOW) || Date.now(); // overridable for tests
 

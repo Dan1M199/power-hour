@@ -1,4 +1,4 @@
-// The headline reactions' state, outside React so it outlives a page change (like the league desk's, talk.js): whether
+// The headline reactions' state, outside React so it outlives a page change: whether
 // the store is on, the emoji set, and each headline's counts and this device's own (api/reactions.js). Changes are
 // shown at once and the server's answer replaces them; a failed change goes back to what the server last said.
 import { useSyncExternalStore } from 'react';

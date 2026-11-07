@@ -1,6 +1,6 @@
 // The power rankings (#rankings): a row per team that opens into its scouting report, with your rank in a strip up
-// top, the fan poll, championship futures and how the score works. The hero (headline carousel, page head and league
-// desk) is the Hero it shares with the Live page.
+// top, the fan poll, championship futures and how the score works. The hero (headline carousel and page head) is
+// shared with the Live page.
 import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { closeDrawer, openDrawer, slides, sliding } from './drawer.js';
@@ -9,17 +9,17 @@ import { Hero } from '../hero/Hero.jsx';
 import { Futures } from './Futures.jsx';
 import { Poll } from './Poll.jsx';
 import { Report } from './Report.jsx';
-import { useTalk } from '../hero/talk.js';
+import { usePosts } from '../admin/posts.js';
 import { Lockout } from './Lockout.jsx';
 
-// Dan's share button: the rankings as a one-page PDF for the group chat. Shown only while the league desk says he's
-// signed in (the desk's admin session), so leaguemates never see it; the module loads on the first tap.
+// Dan's share button: the rankings as a one-page PDF for the group chat. Shown only while Dan is signed in, so
+// leaguemates never see it; the module loads on the first tap.
 // Nov 4: Dan lost his desk key, so the button was open to everyone until 8:15pm Central that night. Past now, so inert.
 const PDF_OPEN_UNTIL = Date.parse('2026-11-05T02:15:00Z');
 function SharePdf({ D, h }) {
-  const t = useTalk();
+  const t = usePosts();
   const [busy, setBusy] = useState('');
-  if (!t.data?.admin && Date.now() > PDF_OPEN_UNTIL) return null;
+  if (!t.admin && Date.now() > PDF_OPEN_UNTIL) return null;
   const go = async () => {
     setBusy('Making the PDF…');
     try {
@@ -35,10 +35,10 @@ function SharePdf({ D, h }) {
   return <button type="button" className="chip rank-pdf" onClick={go} disabled={!!busy && busy.endsWith('…')}>{busy || 'Share rankings PDF'}</button>;
 }
 
-// Dan's way into the headline desk (#admin), shown only while the league desk says he's signed in
+// Dan's way into the headline desk (#admin), shown only while he's signed in
 function DeskLink() {
-  const t = useTalk();
-  return t.data?.admin ? <a className="chip rank-pdf" href="#admin">Headline desk</a> : null;
+  const p = usePosts();
+  return p.admin ? <a className="chip rank-pdf" href="#admin">Headline desk</a> : null;
 }
 
 // the page head: the week, what the ranks weigh, the ROS sources and when they were refreshed, and the important
@@ -118,12 +118,12 @@ const METHOD = (pctW) => <>
 </>;
 
 /**
- * held: a week is being played, so the ranks are on hold (no hero); car: the headline carousel's props, or null; desk:
- * show the league desk; sources: the ROS sources' chips ({ name, ok, title }), or null when they're all down; updated:
+ * held: a week is being played, so the ranks are on hold (no hero); car: the headline carousel's props, or null;
+ * sources: the ROS sources' chips ({ name, ok, title }), or null when they're all down; updated:
  * when they were refreshed; message: { ready, play } for the important message's replay chip, or null; rosError: why the
  * ROS rankings are missing; calm: reduced motion; poll: { on, question, store, onPick }.
  */
-export function RankingsPage({ D, me, h, held, car, desk, sources, updated, message, rosError, calm, poll }) {
+export function RankingsPage({ D, me, h, held, car, sources, updated, message, rosError, calm, poll }) {
   const [open, setOpen] = useState(() => new Set());
   const [nudged, setNudged] = useState(() => !seen());
   const rows = useRef(new Map()), btns = useRef(new Map()), unpin = useRef(new Map());
@@ -174,7 +174,7 @@ export function RankingsPage({ D, me, h, held, car, desk, sources, updated, mess
   return <>
     {held
       ? <section className="view-head"><RankHead wk={wk} held sources={sources} updated={updated} /></section>
-      : <Hero D={D} h={h} car={car} desk={desk} head={<RankHead D={D} h={h} wk={wk} sources={sources} updated={updated} message={message} />} />}
+      : <Hero D={D} h={h} car={car} head={<RankHead D={D} h={h} wk={wk} sources={sources} updated={updated} message={message} />} />}
     {held ? <div className="notice glass hold"><span><strong>Power rankings are on hold.</strong>{` Week ${wk} is being played, so these are the ranks going into the week. They update as soon as every game is final. For how this week is going, see the `}<a href="#live">Live</a> tab.</span></div> : null}
     {rosError ? <div className="notice glass"><strong>Results-only mode.</strong>{` The rest-of-season rankings couldn't be loaded (${rosError}), so these ranks use this season's results alone until they come back.`}</div> : null}
     {mine ? <button type="button" className="you-strip glass" aria-label={`Jump to your team, ${mine.name}, ranked ${mine.powerRank}`} onClick={jump}>

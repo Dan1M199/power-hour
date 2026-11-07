@@ -1,4 +1,4 @@
-// Dan's posted headlines (api/headlines.js), kept outside React like the league desk's state: what's up now, and for Dan
+// Dan's posted headlines (api/headlines.js), kept outside React: what's up now, and for Dan
 // the ones taken down or run out. app.js puts the live ones on top of the carousel (carouselProps); the admin portal
 // (AdminPage.jsx) writes them. `site` is Dan's edits and hides of the site's own headlines, by desk key; `arrange` his running order by week.
 import { useSyncExternalStore } from 'react';
@@ -27,5 +27,12 @@ export async function postCall(body) {
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || `Something went wrong (${r.status})`);
   keep(j);
+  return j;
+}
+
+export async function adminAuthCall(body) {
+  const r = await fetch('/api/admin-auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `Something went wrong (${r.status})`);
   return j;
 }

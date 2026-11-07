@@ -3,7 +3,7 @@ import { TEAM_COLORS } from './src/charts.jsx';
 import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
 import { breakdown, shortName, fits, nfl } from './lib/matchup.js';
-import { MEMBERS, DESK_PEOPLE, photoUrl } from './lib/members.js';
+import { MEMBERS, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
 import { pageRoot } from './src/mount.jsx';
 import { LoadError } from './src/shared.jsx';
@@ -14,7 +14,7 @@ import { GamesPage } from './src/games/GamesPage.jsx';
 import { loadVotes } from './src/games/votes.js';
 import { RankingsPage } from './src/rankings/RankingsPage.jsx';
 import { LivePage } from './src/live/LivePage.jsx';
-import { talk, setTalk, talkCall, loadTalk, storyKeys } from './src/hero/talk.js';
+import { storyKeys } from './src/hero/storyKeys.js';
 import { posts, loadPosts } from './src/admin/posts.js';
 import { AdminShell } from './src/admin/AdminShell.jsx';
 import { createStore } from './src/store.js';
@@ -339,13 +339,13 @@ const updatedText = () => {
 };
 
 // ---------- views ----------
-// Every page is React (src/), put up by route() below with the props worked out here; the hero (headline carousel,
-// page head and league desk, src/hero) is shared by the power rankings and the Live page.
+// Every page is React (src/), put up by route() below with the props worked out here; the hero (headline carousel and
+// page head, src/hero) is shared by the power rankings and the Live page.
 function rankingsProps() {
   // while a week is being played the headlines move to the Live tab and these ranks hold until the week is final
   const held = !!DATA.liveMode;
   return {
-    held, car: held ? null : carouselProps(), desk: deskShown(), rosError: DATA.rosError || null, calm: calm(),
+    held, car: held ? null : carouselProps(), rosError: DATA.rosError || null, calm: calm(),
     sources: DATA.rosMeta ? Object.entries(DATA.rosMeta.sources).map(([k, s]) => ({ name: SOURCE_NAMES[k] || k, ok: s.ok, title: s.ok ? `${s.matched} of ${s.rows} players matched` : s.error })) : null,
     updated: updatedText() || null,
     message: !held && MESSAGE_VIDEO && !window.__DEMO__
@@ -870,7 +870,7 @@ const groupOf = (st) => (GROUPS[st.group] ? st.group : TYPE_GROUP[st.type] || 'l
 // sections wherever he put them; a post he hasn't placed yet leads, a site headline he hasn't seen yet goes last), else
 // the sections together (bySection)
 function arrangeStories(list) {
-  const keys = posts.arrange?.[`w${talk.week}`];
+  const keys = posts.arrange?.[`w${headlineWeek()}`];
   if (!keys?.length) return bySection(list);
   const at = (st) => keys.indexOf(st.key);
   const fresh = list.filter((st) => at(st) < 0 && st.type.startsWith('p-')), late = list.filter((st) => at(st) < 0 && !st.type.startsWith('p-'));
@@ -1322,7 +1322,7 @@ function liveProps() {
   const wk = DATA.previews[0]?.week, { rows, standings } = liveWeek();
   const bull = DATA.bull && DATA.bull.state !== 'final' && DATA.bull.rows.find((x) => x.rid === myTeam);
   return {
-    D: DATA, fin, wk, rows, standings, car: fin ? null : carouselProps(), desk: !fin && deskShown(),
+    D: DATA, fin, wk, rows, standings, car: fin ? null : carouselProps(),
     played: DATA.live?.teams.length || 0, fetched: DATA.fetched || null,
     bull: bull ? awayText(bull) : null, onReveal: passThenReveal, h: { ...reactHelpers(), today: chicagoDate() },
   };
@@ -1484,7 +1484,7 @@ const CAROUSEL_SIZE = 3;
 function siteStories() {
   const s = DATA.stories;
   const base = s?.lead ? [s.lead, ...s.more].slice(0, s.size || CAROUSEL_SIZE + (s.night ? 1 : 0) + (s.extra ? 1 : 0) + (s.pinned || 0)) : [];
-  const keys = storyKeys(base);
+  const keys = storyKeys(base, headlineWeek());
   return base.map((st, i) => ({ ...st, key: keys[i] }));
 }
 function carouselProps({ all = false } = {}) {
@@ -1507,10 +1507,10 @@ function carouselProps({ all = false } = {}) {
 
 // Dan's posted headlines (api/headlines.js, written in the admin portal) as carousel stories: the text as he wrote it,
 // the teams and the player card's pinned manager looked up in today's league. A post's type carries its id, so its
-// reactions and desk tags are its own.
+// reactions are its own.
 function postedStories(list = posts.list) {
   const now = AT ? +AT : Date.now();
-  return list.filter((p) => !p.until || p.until > now).map((p) => ({ ...hydrate(p), type: `p-${p.id}`, key: `w${talk.week}:p-${p.id}` }));
+  return list.filter((p) => !p.until || p.until > now).map((p) => ({ ...hydrate(p), type: `p-${p.id}`, key: `w${headlineWeek()}:p-${p.id}` }));
 }
 // The trade graphic under a trade headline (Dan's request Nov 6, src/hero/TradeGraphic.jsx): the deal the headline is
 // about (its tx ids, read from the snapshot's feed), each side's incoming players with their consensus values, the
@@ -1719,7 +1719,7 @@ const PAGES = {
   admin: () => [AdminShell, {
     home: DATA.liveMode ? '#live' : '#rankings',
     draft: draftFor, draftPlayers, draftGames, weekPlayers, weekGames, preview: (list) => postedStories(list).map(withTrade), tradeStyles: TRADE_STYLES,
-    weeks: { scored: pointWeeks().filter((w) => w <= DATA.meta.lastScored).slice(0, 4), live: DATA.live ? DATA.meta.lastScored + 1 : null, ahead: DATA.previews[0]?.week ?? null }, order: () => carouselProps({ all: true })?.stories || [], groups: GROUPS, groupOf, week: talkWeek(), now: AT ? +AT : Date.now(),
+    weeks: { scored: pointWeeks().filter((w) => w <= DATA.meta.lastScored).slice(0, 4), live: DATA.live ? DATA.meta.lastScored + 1 : null, ahead: DATA.previews[0]?.week ?? null }, order: () => carouselProps({ all: true })?.stories || [], groups: GROUPS, groupOf, week: headlineWeek(), now: AT ? +AT : Date.now(),
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
   }],
   lab: () => [Lab, {
@@ -1924,7 +1924,6 @@ function route({ fresh = false } = {}) {
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.view === key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
     placeInk();
     paintMe();
-    talk.week = talkWeek();
     const app = $('#app'), [Page, props] = PAGES[key]();
     showPage ||= pageRoot(app);
     showPage(Page, { D: DATA, me: myTeam, h: reactHelpers(), ...props });
@@ -2025,31 +2024,10 @@ function startLoader() {
   };
 }
 
-// ---------- the league desk: one discussion thread a week, beside the headlines ----------
-// The desk itself is React (src/hero/Talk.jsx, its state in src/hero/talk.js). The demo and the preview bundle skip it.
-const deskShown = () => !(RAW.isDemo || window.__DEMO__);
-// the week being played, from the snapshot as Sleeper has it: it turns over Tuesday morning with the new headlines,
-// not Monday night when the final call counts the week early (asFinal moves DATA's last scored week)
-const talkWeek = () => (RAW.league.settings?.last_scored_leg ?? DATA.meta.lastScored) + 1;
-
-// a personal link (#join=<token>) opened on this device: trade it for a session, and make their team "yours"
-async function claimTalk(token) {
-  try {
-    const r = await talkCall({ action: 'claim', token });
-    const t = DATA.teams.find((x) => x.ownerId === r.me);
-    // the desk is anonymous now (Nov 3): a link only matters for Dan, whose session can delete
-    setTalk({ flash: r.admin ? `You're signed in, ${DESK_PEOPLE[r.me]?.first || 'Dan'}. You can delete comments; your own posts stay anonymous.` : 'No link needed any more: anyone can post on the league desk, anonymously.' });
-    if (t && !myTeam) { myTeam = t.rid; store.set('ph-my-team', String(t.rid)); $('#my-team').value = String(t.rid); paintMe(); }
-  } catch (e) {
-    setTalk({ flash: e.message });
-  }
-  await loadTalk();
-}
+// The week used for headline overrides, reactions and the editor's running order.
+const headlineWeek = () => (RAW.league.settings?.last_scored_leg ?? DATA.meta.lastScored) + 1;
 
 async function main() {
-  // a personal link for the league desk: take the token off the address bar before anything routes or gets shared
-  const join = /^#join=([A-Za-z0-9_-]{16,128})$/.exec(location.hash);
-  if (join) history.replaceState(null, '', location.pathname + location.search);
   initAvatarFallback();
   initTheme();
   initBall();
@@ -2087,8 +2065,6 @@ async function main() {
   window.addEventListener('hashchange', () => route({ fresh: true }));
   loadVotes({ week: DATA.previews[0]?.week, demo: RAW.isDemo });
   loadPoll();
-  talk.week = talkWeek();
-  if (join && deskShown()) claimTalk(join[1]);
   let lastWidth = innerWidth;
   window.addEventListener('resize', () => {
     if (innerWidth === lastWidth) return; // height-only resizes are the browser toolbar, ignore them

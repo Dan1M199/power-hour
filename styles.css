@@ -166,9 +166,9 @@ button, select { font: inherit; color: inherit; }
 /* ---------- buttons: glossy cartoon pills ---------- */
 /* a hard-edged gloss over the top half of every button (under the label, over the fill), and on a mouse, a glint that
    sweeps across on hover */
-:is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip:is(.to-again, .rank-pdf), .car-arrow, .to-skip, .xp, .clip-sound, .talk-btn, .car-pause) {
+:is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip:is(.to-again, .rank-pdf), .car-arrow, .to-skip, .xp, .clip-sound, .car-pause) {
   position: relative; isolation: isolate; overflow: hidden; }
-:is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip:is(.to-again, .rank-pdf), .car-arrow, .to-skip, .xp, .clip-sound, .talk-btn, .car-pause)::before {
+:is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip:is(.to-again, .rank-pdf), .car-arrow, .to-skip, .xp, .clip-sound, .car-pause)::before {
   content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--gloss); pointer-events: none; }
 /* buttons on light surfaces carry the inked edge too, thinner than a card's, with their ledge as wide as the outline */
 
@@ -567,99 +567,6 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .hero { display: grid; grid-template-columns: minmax(0, 580px) minmax(0, 1fr); gap: 20px 40px; align-items: end; margin: 4px 0 44px; }
 .hero .view-head { grid-template-columns: 1fr; margin: 0; }
 .hero .sources { justify-content: flex-start; max-width: none; }
-/* ---------- the league desk: the discussion beside the headlines ---------- */
-/* desktop: the carousel spans both rows on the left; the page head sits top right and the desk fills the rest, scrolling
-   inside itself so it never makes the hero taller than the carousel */
-.hero.with-talk { grid-template-rows: auto minmax(340px, 1fr); align-items: stretch; }
-.hero.with-talk > .lead-car { grid-row: 1 / span 2; align-self: start; } /* its height follows its width (it's square), never the rows */
-.hero.with-talk > .view-head { align-self: end; }
-.talk { position: relative; grid-column: 2; grid-row: 2; min-height: 0; padding: 0; border-radius: var(--r-lg); background-color: var(--face); }
-.talk-in { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 10px; padding: 16px; }
-.talk-head { display: grid; gap: 8px; }
-.talk-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.talk-head h2 { margin: 0; font-size: 26px; }
-.talk-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
-.talk-meta { display: flex; align-items: center; gap: 10px; }
-.talk-n { font-size: 13px; font-weight: 700; color: var(--ink-3); }
-.talk-wk { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-2); }
-.talk-wk select { padding: 4px 26px 4px 10px; border: 0; border-radius: 999px; font: 700 13px var(--body); color: var(--ink); background-color: var(--tile);
-  box-shadow: inset 0 0 0 1.5px var(--line); appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--ink-2) 50%), linear-gradient(135deg, var(--ink-2) 50%, transparent 50%);
-  background-position: right 13px center, right 8px center; background-size: 5px 5px; background-repeat: no-repeat; cursor: pointer; }
-.talk-me { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
-.talk-me b { color: var(--ink); }
-/* small quiet pills for the desk's minor actions (sign out, edit, delete): tray-coloured, no underline */
-.tc-pill, .tc-act { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px;
-  font: 700 12px/1.2 var(--body); color: var(--ink-2); background-color: var(--tile); box-shadow: inset 0 0 0 1.5px var(--line); }
-.tc-pill:hover, .tc-act:hover { color: var(--ink); background-color: var(--tile-2); }
-.tc-pill:focus-visible, .tc-act:focus-visible, .tc-tag:focus-visible, .tc-ref:focus-visible, .tc-x:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
-.tc-link { all: unset; cursor: pointer; font-size: 13px; font-weight: 700; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
-.talk-flash { margin: 0; padding: 8px 12px; border-radius: var(--r-md); font-size: 13.5px; font-weight: 600; background-color: var(--mine-bg); box-shadow: inset 0 0 0 2px var(--mine-edge); }
-.talk-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; list-style: none; margin: 0; padding: 10px; display: grid; align-content: start; gap: 8px;
-  border-radius: var(--r-md); background-color: var(--tile); box-shadow: var(--tray-edge); }
-.tc { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; padding: 9px 11px; border-radius: 22px; background-color: var(--paper); box-shadow: 0 0 0 1.5px var(--line), 0 3px 0 1.5px var(--line); }
-.tc.mine { background-color: var(--mine-bg); box-shadow: inset 0 0 0 2px var(--mine-edge), 0 3px 0 0 var(--mine-edge); }
-.tc-face { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--outline); }
-.tc-face.icon { object-fit: contain; background: var(--sky-2); }
-.tc-face.ph { display: grid; place-items: center; font: 800 16px var(--display); color: var(--ink); background: var(--lime); }
-.tc-body { min-width: 0; display: grid; gap: 5px; }
-.tc-who { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 13px; line-height: 1.2; }
-.tc-who b { font: 800 16px/1 var(--display); letter-spacing: 0.01em; }
-.tc-who span { color: var(--ink-2); font-weight: 600; }
-.tc-who time { color: var(--ink-3); font-size: 12px; }
-.tc-text { margin: 0; font-size: 15px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
-.tc-ref { all: unset; box-sizing: border-box; cursor: pointer; justify-self: start; max-width: 100%; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--ink-2);
-  background-color: var(--tile); box-shadow: 0 0 0 1.5px var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tc-ref:hover:not(:disabled) { background-color: var(--tile-2); color: var(--ink); }
-.tc-ref:disabled { cursor: default; color: var(--ink-3); }
-.tc-acts { display: flex; gap: 6px; }
-.tc-act small { font-size: 11.5px; font-weight: 600; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.tc-act.bad { color: var(--bad); background-color: var(--bad-bg); box-shadow: inset 0 0 0 1.5px #F6C9C9; }
-.tc-act.bad:hover { color: var(--bad); background-color: #FBD5D5; }
-.tc.mine .tc-act:not(.bad) { background-color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--mine-edge); }
-/* Dan's delete on every comment would be a wall of red: on a mouse it shows on the comment under the pointer */
-@media (hover: hover) {
-  .tc { position: relative; }
-  .tc .tc-act.bad { position: absolute; top: 8px; right: 8px; opacity: 0; transition: opacity 0.15s; }
-  .tc:hover .tc-act.bad, .tc .tc-act.bad:focus-visible { opacity: 1; }
-  .tc-acts:not(:has(.tc-act:not(.bad))) { display: contents; } /* nothing but the corner delete: no empty row, the delete still drawn */
-}
-.tc-empty { padding: 18px 8px; text-align: center; font-size: 14px; color: var(--ink-3); }
-.talk-form, .tc-edit { display: grid; gap: 8px; }
-.talk-form textarea, .tc-edit textarea { width: 100%; box-sizing: border-box; resize: none; min-height: 68px; padding: 10px 12px; border: 0; border-radius: 22px;
-  font: 400 15px/1.45 var(--body); color: var(--ink); background-color: var(--paper); box-shadow: inset 0 0 0 2px var(--line), inset 0 3px 0 0 rgba(18, 48, 26, 0.06); transition: box-shadow 0.15s; }
-.talk-form textarea::placeholder, .tc-edit textarea::placeholder { color: var(--ink-3); }
-.talk-form textarea:hover, .tc-edit textarea:hover { box-shadow: inset 0 0 0 2px var(--tile-2), inset 0 3px 0 0 rgba(18, 48, 26, 0.06); }
-.talk-form textarea:focus, .tc-edit textarea:focus { outline: none; box-shadow: inset 0 0 0 2px var(--ink-2), inset 0 3px 0 0 rgba(18, 48, 26, 0.06); }
-.talk-about { min-height: 26px; display: flex; align-items: center; }
-.talk-about-on { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 3px 4px 3px 10px; border-radius: 999px; font-size: 12.5px; color: var(--ink-2); background-color: var(--tile); box-shadow: 0 0 0 1.5px var(--line); }
-.talk-about-on > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.talk-about-on b { color: var(--ink); }
-.tc-x { all: unset; cursor: pointer; flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--ink-2); background-color: var(--paper); }
-.tc-x:hover { color: var(--ink); background-color: var(--tile-2); }
-/* untagged: a dashed pill inviting a tag; tagged: the solid chip above */
-.tc-tag { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border: 1.5px dashed var(--ink-3); border-radius: 999px;
-  font: 700 12.5px/1.2 var(--body); color: var(--ink-2); }
-.tc-tag:hover { color: var(--ink); background-color: var(--tile); }
-.talk-row { display: flex; align-items: center; gap: 10px; }
-.talk-count { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.talk-err { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: var(--bad); }
-.talk-row .talk-btn:first-child { margin-left: auto; }
-.talk-btn { cursor: pointer; flex: none; padding: 7px 15px; border: 0; border-radius: 999px; font: 700 13.5px/1.2 var(--body); color: var(--ink-2); background-color: var(--paper);
-  box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge); }
-.talk-btn:hover { background-color: var(--hover); }
-.talk-btn:active { transform: translateY(2px); box-shadow: 0 0 0 2px var(--outline), 0 1px 0 2px var(--ledge); }
-.talk-btn.primary { color: var(--ink); background-color: var(--amber); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge-gold); }
-.talk-btn.primary:hover { background-color: var(--yellow); }
-.talk-btn:disabled { cursor: progress; opacity: 0.6; }
-.talk-note { margin: 0; padding: 10px 12px; border-radius: var(--r-md); font-size: 13.5px; color: var(--ink-2); background-color: var(--tile); box-shadow: inset 0 0 0 1.5px var(--line); }
-.talk-note .tc-link { margin-left: 4px; }
-.talk-invites .talk-note { padding: 0; background-color: transparent; box-shadow: none; }
-.talk-invites { display: grid; gap: 8px; max-height: 45%; overflow-y: auto; padding: 10px; border-radius: var(--r-md); background-color: var(--tile); box-shadow: var(--tray-edge); }
-.talk-invites ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.talk-invites li { display: flex; align-items: center; gap: 8px; }
-.talk-invites li > span { flex: 1; min-width: 0; display: grid; font-size: 13px; }
-.talk-invites li small { font-size: 11.5px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.talk-invites input { flex: 2; min-width: 0; padding: 6px 8px; border: 0; border-radius: 14px; font: 12px var(--body); color: var(--ink-2); background-color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--line); }
 /* square by default; overflow stays visible so a long story grows the card instead of being clipped */
 .lead-car { display: flex; flex-direction: column; aspect-ratio: 1; border-radius: var(--r-xl); color: var(--chalk); background-color: var(--board); }
 .car-track { flex: 1 0 auto; display: grid; border-radius: var(--r-xl) var(--r-xl) 0 0; grid-auto-flow: column; grid-auto-columns: 100%; overflow-x: auto; overscroll-behavior-x: contain;
@@ -1615,11 +1522,6 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .detail-inner { grid-template-columns: 1fr; }
   .gotw { grid-template-columns: 1fr; }
   .hero { grid-template-columns: minmax(0, 1fr); }
-  .hero.with-talk { grid-template-rows: none; }
-  .hero.with-talk > .lead-car { grid-row: auto; }
-  .hero > .talk { grid-column: auto; grid-row: 2; max-width: 640px; }
-  .talk-in { position: static; max-height: 560px; }
-  .talk-list { max-height: 380px; }
   .lead-car { max-width: 640px; }
 }
 /* ---------- the important message: a full-screen takeover that plays Dan's video ---------- */
@@ -3086,17 +2988,17 @@ html.admin-mode[data-theme='dark'] .adm-side-head em.up { color: #8BD48E; }
 
 /* --- controls keep the site's colours: amber for what's on or primary, white pills with ink words for the rest. Only
    their shape and shading come from the bowl --- */
-:is(.tab-ink, .lab-tabs a[aria-current='page'], .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .cta, .gotw-more, .talk-btn.primary,
+:is(.tab-ink, .lab-tabs a[aria-current='page'], .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .cta, .gotw-more,
   .drive-pick button[aria-pressed='true'], .clip-frame .clip-sound:not([aria-pressed='true']), .chip:is(.to-again, .rank-pdf)) {
   color: var(--ink); background: var(--gloss), var(--amber); box-shadow: var(--press); }
-:is(.filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .cta, .gotw-more, .talk-btn.primary, .drive-pick button[aria-pressed='true'], .clip-frame .clip-sound:not([aria-pressed='true']), .chip:is(.to-again, .rank-pdf)):active {
+:is(.filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .cta, .gotw-more, .drive-pick button[aria-pressed='true'], .clip-frame .clip-sound:not([aria-pressed='true']), .chip:is(.to-again, .rank-pdf)):active {
   box-shadow: var(--press-down); }
-@media (hover: hover) { :is(.cta, .gotw-more, .talk-btn.primary, .chip:is(.to-again, .rank-pdf)):hover { color: var(--ink); background: var(--gloss), #FFC21A; } }
-:is(.filters :is(button, a):not([aria-pressed='true'], [aria-current='page'], :disabled), .pick:not(.on), .odds-more, .talk-btn:not(.primary), .poll-pick, .unveil-team, .unveil-x, .to-skip,
+@media (hover: hover) { :is(.cta, .gotw-more, .chip:is(.to-again, .rank-pdf)):hover { color: var(--ink); background: var(--gloss), #FFC21A; } }
+:is(.filters :is(button, a):not([aria-pressed='true'], [aria-current='page'], :disabled), .pick:not(.on), .odds-more, .poll-pick, .unveil-team, .unveil-x, .to-skip,
   .team-pick select, .trade-pick select) {
   background-color: var(--paper); box-shadow: var(--soft); border-color: transparent; }
 .odds-more { background: var(--paper); }
-:is(.filters :is(button, a):not([aria-pressed='true'], [aria-current='page'], :disabled), .pick:not(.on), .odds-more, .talk-btn:not(.primary), .poll-pick, .unveil-team):active { box-shadow: var(--soft-down); }
+:is(.filters :is(button, a):not([aria-pressed='true'], [aria-current='page'], :disabled), .pick:not(.on), .odds-more, .poll-pick, .unveil-team):active { box-shadow: var(--soft-down); }
 .pick:first-child.on, .pick:last-child.on { box-shadow: var(--chip-shade); }
 .odds-more:hover { background: var(--hover); }
 .theme-btn { box-shadow: var(--soft); }
@@ -3127,11 +3029,6 @@ html.admin-mode[data-theme='dark'] .adm-side-head em.up { color: #8BD48E; }
 .heat td { border-radius: 999px; }
 .heat tbody th { border-radius: 999px; }
 .h2h-row .slot { box-shadow: var(--tray-edge); }
-:is(.talk-form, .tc-edit) textarea { border-radius: 26px; box-shadow: var(--tray-edge); }
-:is(.talk-form, .tc-edit) textarea:hover { box-shadow: var(--tray-edge); }
-:is(.talk-form, .tc-edit) textarea:focus { box-shadow: var(--tray-edge), inset 0 0 0 2px var(--ink-2); }
-.tc { box-shadow: 0 0 0 1px rgba(11, 36, 18, 0.1), 0 6px 9px -5px var(--cast); }
-.tc.mine { box-shadow: inset 0 0 0 1.5px var(--mine-edge), 0 6px 9px -5px var(--cast); }
 .sec-title { background-image: var(--sheen); background-size: 100% 60px; background-repeat: no-repeat; }
 
 /* --- the sky and the field get volume too: soft cloud bellies, and the field's edge shaded where the sky meets it --- */
@@ -3159,15 +3056,6 @@ main::after { border-radius: 56px 56px 0 0; }
 .lead-car { position: relative; --deck-1: #1E5230; --deck-2: #357A49;
   box-shadow: var(--rim), 0 0 0 1px rgba(0, 0, 0, 0.5), 0 12px 0 -7px var(--deck-1), 0 24px 0 -15px var(--deck-2), 0 40px 30px -18px var(--cast); }
 .hero { margin-bottom: 60px; }
-/* the desk slides out from behind the carousel */
-@media (min-width: 981px) {
-  .hero.with-talk { column-gap: 8px; }
-  .hero.with-talk > .lead-car { z-index: 2; }
-  .hero.with-talk > .talk { z-index: 1; margin-left: -44px; }
-  .hero.with-talk > .talk .talk-in { padding-left: 64px; }
-  .hero.with-talk > .view-head { padding-left: 32px; }
-}
-
 /* --- drawers: a card's face droops over a darker sheet, and the report slides out from under it. Rank rows and
    matchup cards are built the same way: the handle's ::before is a lip of the card's own face --- */
 :root { --lip: 20px; }
@@ -3328,7 +3216,7 @@ main::after { border-radius: 56px 56px 0 0; }
    day's dark ink, so its words stay readable */
 :root[data-theme='dark'] :is(.view-head .wk, .avatar.ph, .tier:not(.low, .stinks), .you, .rank.nudge:not(.open) .pull,
   .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .tabs a[aria-current='page'], .lab-tabs a[aria-current='page'], .key-tag,
-  .kicker > span:first-child, .tc-face.ph, .talk-btn.primary, .car-pause[aria-pressed='true'], .drive-pick button[aria-pressed='true'],
+  .kicker > span:first-child, .car-pause[aria-pressed='true'], .drive-pick button[aria-pressed='true'],
   .drive-field .endzone, .gotw-more, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
   :is(.lead-face, .mgr-face, .fo-face, .stat-face, .deal-face, .pitch-face).ph, .lf .cap, .mu .vs, .day > h3, .clip-frame .clip-sound, .fo-side, .fo-vs i,
   .desk-note, .you-face.ph, .st-chip.won, .sup.champ, .bull-tag.lead, .chip:is(.to-again, .rank-pdf), .lo-tag, .pp-img.ph, .cta, .verdict-face.ph,
@@ -3377,14 +3265,11 @@ main::after { border-radius: 56px 56px 0 0; }
   box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.35), inset 0 -3px 0 rgba(0, 0, 0, 0.25); }
 /* the day sky's blues fill a few chips and pips; at night they keep the day's colour, not the night sky's */
 :root[data-theme='dark'] .tier.mid { background: #B3E5FC; }
-:root[data-theme='dark'] .tc-face.icon { background: #9EDDFB; }
 :root[data-theme='dark'] .g-week { --g: #81D4FA; }
 :root[data-theme='dark'] .tl-verdict.under { background: #81D4FA; }
 :root[data-theme='dark'] .balance .scale { background: linear-gradient(90deg, #FFE082 0 35%, var(--tile-2) 35% 65%, #81D4FA 65%); }
 :root[data-theme='dark'] .tier.low { background: #26352B; }
 :root[data-theme='dark'] .tier.good { background: #B9DC8F; }
-:root[data-theme='dark'] .tc-act.bad { box-shadow: inset 0 0 0 1.5px #6E3330; }
-:root[data-theme='dark'] .tc-act.bad:hover { background-color: #5A2826; }
 :root[data-theme='dark'] .h2h-bar i { background: #3D5A44; }
 :root[data-theme='dark'] .chart .radar-band { fill: #1A2C20; }
 :root[data-theme='dark'] .chart.weekly .bar:not(.win, .loss) { fill: #4F6E55; }

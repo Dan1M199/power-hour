@@ -1,12 +1,12 @@
 // /api/reactions — emoji reactions under the headlines, shared by everyone. A headline is known by its desk key
-// (`w{week}:{type}`, storyKeys in src/hero/talk.js, the same key a league desk comment tags it with), so a rewritten
+// (`w{week}:{type}`, storyKeys in src/hero/storyKeys.js), so a rewritten
 // headline keeps its reactions and a new week starts clean.
 //
 //   GET  /api/reactions?keys=w8:smash,w8:wallahi   -> { enabled, set, counts: { key: { emoji: n } }, mine: { key: [emoji] } }
 //   POST /api/reactions { key, emoji, on }        -> the same, for that one key
 //
 // A device is one voice per emoji per headline: each (key, emoji) is a set of device hashes, so reacting twice is the
-// same as reacting once and the count can't be pumped. The device is the league desk's anonymous id (HttpOnly cookie
+// same as reacting once and the count can't be pumped. The device is an anonymous id (HttpOnly cookie
 // ph_anon, made on first visit; only its hash is stored), and each network is held to MAX_PER_HOUR changes. Storage is
 // the Upstash store; without it GET answers { enabled: false } and the page leaves the bar out. Never touches Sleeper.
 import { createHash, randomBytes } from 'node:crypto';
@@ -26,7 +26,7 @@ const KEY = /^w\d{1,2}:[a-z0-9-]{1,40}$/;
 const sha = (s) => createHash('sha256').update(String(s)).digest('hex');
 const k = (key, e) => `ph:rx:${key}:${e}`;
 const addCookie = (res, c) => { const was = res.headers?.['Set-Cookie'] ?? res.getHeader?.('Set-Cookie'); res.setHeader('Set-Cookie', [...[was ?? []].flat(), c]); };
-// the same anonymous device id as the league desk (api/talk.js)
+// the device id used for headline reactions
 const deviceOf = (req, res) => {
   const have = (/(?:^|;\s*)ph_anon=([A-Za-z0-9_-]{20,80})/.exec(req.headers.cookie || '') || [])[1];
   if (have) return have;
