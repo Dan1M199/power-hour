@@ -268,6 +268,8 @@ const TRADE_LOOKS = [
   ['handoff', 'Handoff', 'A lane per team, arrows across'],
   ['seesaw', 'Seesaw', 'Trading cards that tip toward the winner'],
   ['receipt', 'Receipt', 'An itemized slip with a verdict stamp'],
+  ['playbook', 'Playbook', 'Chalk routes send each player to a new team'],
+  ['lockers', 'Locker room', 'Fresh jersey tags for every arrival'],
   ['none', 'None', 'The team rows, no graphic'],
 ];
 const SOURCES = [['moves', 'Moves'], ['players', 'Players'], ['games', 'Matchups']];

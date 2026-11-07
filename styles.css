@@ -760,6 +760,50 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .tg-stamp { position: absolute; left: 50%; bottom: -16px; padding: 2px 8px; border: 2.5px solid #C62828; border-radius: 4px; transform: translateX(-50%) rotate(-8deg); white-space: nowrap;
   font: 800 17px/1.1 var(--display); font-style: normal; letter-spacing: 0.02em; color: #C62828; background: rgba(244, 241, 232, 0.8); }
 .tg-stamp.even { border-color: #2E7D32; color: #2E7D32; }
+
+/* the playbook: chalk routes crossing midfield into each new team's incoming list */
+.tg-playbook { position: relative; overflow: hidden; padding: 10px 14px 12px; border: 1px solid rgba(255,255,255,.22); border-radius: 9px;
+  background: repeating-linear-gradient(0deg, transparent 0 27px, rgba(255,255,255,.07) 28px 29px), linear-gradient(135deg,#173f2a,#102d20); }
+.tg-play-head { display:flex; justify-content:space-between; align-items:center; padding-bottom:8px; border-bottom:1px dashed rgba(255,255,255,.35); font:800 10px/1 var(--body); letter-spacing:.12em; }
+.tg-play-head i { color:rgba(255,255,255,.58); font:600 9px/1 var(--body); letter-spacing:.08em; }
+.tg-play-grid { display:grid; grid-template-columns:repeat(var(--n),minmax(0,1fr)); gap:28px; padding-top:11px; }
+.tg-play-side { min-width:0; }
+.tg-play-side header,.tg-locker header { display:flex; align-items:center; gap:8px; min-width:0; margin-bottom:8px; }
+.tg-play-side header b,.tg-locker header b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:800 15px/1 var(--display); }
+.tg-play-side header small { margin-left:auto; color:var(--yellow); font:700 9px/1 var(--body); letter-spacing:.08em; }
+.tg-play-list { display:grid; gap:5px; }
+.tg-route { position:relative; display:flex; align-items:center; gap:6px; min-width:0; min-height:26px; padding:3px 8px; border:1px solid rgba(255,255,255,.18); border-radius:5px; background:rgba(0,0,0,.2); }
+.tg-route::before { content:''; position:absolute; z-index:0; top:50%; left:-12px; width:12px; border-top:1px dashed rgba(255,255,255,.62); }
+.tg-route-dot { width:6px; height:6px; flex:none; border-radius:50%; background:var(--yellow); box-shadow:0 0 0 3px rgba(255,212,74,.15); }
+.tg-route b { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:700 12px/1 var(--body); }
+.tg-route em { margin-left:auto; color:var(--yellow); font:800 12px/1 var(--display); font-style:normal; }
+.tg-route .pos { font-size:10px; padding:2px 4px; }
+.tg-route.pick { border-style:dashed; }
+.tg-route.pick em { font:700 9px/1 var(--body); letter-spacing:.05em; }
+.tg-route-empty { padding:4px 8px; color:rgba(255,255,255,.6); font-size:11px; }
+.tg-midline { position:absolute; top:42px; bottom:12px; left:50%; border-left:1px dashed rgba(255,255,255,.38); }
+.tg-midline span { position:absolute; top:50%; left:50%; display:grid; place-items:center; width:24px; height:24px; border:1px solid rgba(255,255,255,.45); border-radius:50%; transform:translate(-50%,-50%); color:var(--yellow); background:#173f2a; }
+
+/* the locker room: numbered jersey tiles make each player's landing spot feel like a new arrival */
+.tg-lockers { padding:10px 12px 12px; border:1px solid rgba(255,255,255,.18); border-radius:9px; background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(0,0,0,.12)); }
+.tg-locker-title { display:flex; align-items:baseline; gap:9px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,.2); }
+.tg-locker-title span { color:var(--yellow); font:800 9px/1 var(--body); letter-spacing:.14em; }
+.tg-locker-title b { font:700 14px/1 var(--display); }
+.tg-locker-row { display:grid; grid-template-columns:repeat(var(--n),minmax(0,1fr)); gap:10px; padding-top:9px; }
+.tg-locker { min-width:0; padding:8px; border-radius:7px; background:rgba(0,0,0,.2); box-shadow:inset 0 0 0 1px rgba(255,255,255,.12); }
+.tg-locker.away { background:rgba(255,255,255,.06); }
+.tg-locker header small { display:block; margin-top:3px; color:rgba(255,255,255,.62); font:600 8px/1 var(--body); letter-spacing:.08em; }
+.tg-jerseys { display:flex; flex-wrap:wrap; gap:6px; }
+.tg-jersey { position:relative; display:grid; justify-items:center; align-content:center; gap:2px; width:76px; min-height:67px; padding:5px 4px; overflow:hidden; border-radius:9px 9px 5px 5px;
+  color:#102d20; background:linear-gradient(150deg,#f7f1df,#d5c9a5); clip-path:polygon(14% 0,30% 8%,70% 8%,86% 0,100% 15%,87% 31%,87% 100%,13% 100%,13% 31%,0 15%); }
+.tg-jersey:nth-child(3n+2) { color:#182e50; background:linear-gradient(150deg,#dce9f4,#9db6cc); }
+.tg-jersey-num { font:900 20px/.9 var(--display); opacity:.62; }
+.tg-jersey-pos { position:absolute; top:8px; font:800 8px/1 var(--body); }
+.tg-jersey b { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:800 10px/1 var(--display); }
+.tg-jersey small { font:700 8px/1 var(--body); opacity:.75; }
+.tg-jersey.pick { background:linear-gradient(150deg,#ffe59a,#e2ad34); }
+.tg-jersey.empty { clip-path:none; border:1px dashed rgba(255,255,255,.4); color:rgba(255,255,255,.7); background:transparent; }
+.tg-jersey-extra { align-self:center; color:var(--yellow); font:700 11px/1.2 var(--body); }
 @media (max-width: 760px) {
   .tg-lane li { font-size: 12.5px; padding: 5px 8px; }
   .tg-handoff.two { grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr); gap: 6px; }
@@ -772,6 +816,11 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .tg-cols { gap: 10px; }
   .tg-cols > div + div { padding-left: 10px; }
   .tg-slip { font-size: 11.5px; padding: 10px 10px 12px; }
+  .tg-play-grid { gap:18px; }
+  .tg-play-side header b { font-size:13px; }
+  .tg-route { gap:4px; padding-inline:5px; }
+  .tg-route b { font-size:11px; }
+  .tg-jersey { width:65px; min-height:61px; }
 }
 @media (prefers-reduced-motion: reduce) { .tg-plank i, .tg-cards { transition: none; } }
 

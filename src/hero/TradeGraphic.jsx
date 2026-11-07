@@ -110,13 +110,65 @@ function Receipt({ trade }) {
   );
 }
 
+// a chalkboard play: the players cross the center stripe into their new locker rooms
+function Playbook({ trade, D, h }) {
+  const sides = trade.sides;
+  return (
+    <div className="tg tg-playbook" style={{ '--n': sides.length }}>
+      <div className="tg-play-head"><span>TRADE ROUTES</span><i>NEW TEAM · NEW PLAYBOOK</i></div>
+      <div className="tg-play-grid">
+        {sides.map((s, i) => {
+          const t = D.byRid[s.rid];
+          return <section className="tg-play-side" key={s.rid}>
+            <header>{t ? <Headshot t={t} cls="tg-face" h={h} /> : null}<b>{s.first}</b><small>INCOMING</small></header>
+            <div className="tg-play-list">
+              {s.gets.slice(0, 5).map((p) => <div className="tg-route" key={p.id}>
+                <span className="tg-route-dot" /><Pos pos={p.pos} /><b>{p.short}</b><em>{f1(p.v)}</em>
+              </div>)}
+              {s.picks.map((p) => <div className="tg-route pick" key={p}><span className="tg-route-dot" /><b>{p}</b><em>PICK</em></div>)}
+              {!s.gets.length && !s.picks.length ? <small className="tg-route-empty">No players received</small> : null}
+              {s.gets.length > 5 && <small className="tg-route-empty">+{s.gets.length - 5} more players</small>}
+            </div>
+          </section>;
+        })}
+      </div>
+      <div className="tg-midline" aria-hidden="true"><span>✦</span></div>
+    </div>
+  );
+}
+
+// jersey tags on hooks: each incoming player gets a locker and a fresh number plate
+function LockerRoom({ trade, D, h }) {
+  return (
+    <div className="tg tg-lockers" style={{ '--n': trade.sides.length }}>
+      <div className="tg-locker-title"><span>THE NEW ROOM</span><b>Fresh jerseys on the rack</b></div>
+      <div className="tg-locker-row">
+        {trade.sides.map((s, i) => {
+          const t = D.byRid[s.rid];
+          return <section className={`tg-locker ${i % 2 ? 'away' : ''}`} key={s.rid}>
+            <header>{t ? <Headshot t={t} cls="tg-face" h={h} /> : null}<span><b>{s.first}</b><small>WELCOME TO THE ROSTER</small></span></header>
+            <div className="tg-jerseys">
+              {s.gets.slice(0, 4).map((p, j) => <div className="tg-jersey" key={p.id}>
+                <span className="tg-jersey-num">{String(j + 1).padStart(2, '0')}</span><span className="tg-jersey-pos">{p.pos || 'NFL'}</span><b>{p.short}</b><small>{f1(p.v)} ROS</small>
+              </div>)}
+              {s.picks.map((p, j) => <div className="tg-jersey pick" key={p}><span className="tg-jersey-num">{String(j + 1).padStart(2, '0')}</span><span className="tg-jersey-pos">PICK</span><b>{p}</b></div>)}
+              {!s.gets.length && !s.picks.length && <div className="tg-jersey empty"><b>Roster spot cleared</b></div>}
+              {s.gets.length > 4 && <div className="tg-jersey-extra">+{s.gets.length - 4} more arrivals</div>}
+            </div>
+          </section>;
+        })}
+      </div>
+    </div>
+  );
+}
+
 /** trade: st.trade from app.js ({ style, sides }); D, h: the league and the helpers, for the managers' faces */
 export function TradeGraphic({ trade, D, h }) {
   const style = trade.style === 'seesaw' && trade.sides.length !== 2 ? 'handoff' : trade.style;
   const said = trade.sides.map((s) => `${s.first} gets ${s.gets.map((p) => p.name).join(', ') || 'nothing'}`).join('; ');
   return (
     <figure className="tg-fig" aria-label={`The trade: ${said}`}>
-      {style === 'seesaw' ? <Seesaw trade={trade} D={D} h={h} /> : style === 'receipt' ? <Receipt trade={trade} /> : <Handoff trade={trade} D={D} h={h} />}
+      {style === 'seesaw' ? <Seesaw trade={trade} D={D} h={h} /> : style === 'receipt' ? <Receipt trade={trade} /> : style === 'playbook' ? <Playbook trade={trade} D={D} h={h} /> : style === 'lockers' ? <LockerRoom trade={trade} D={D} h={h} /> : <Handoff trade={trade} D={D} h={h} />}
     </figure>
   );
 }

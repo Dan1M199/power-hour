@@ -1515,9 +1515,9 @@ function postedStories(list = posts.list) {
 // The trade graphic under a trade headline (Dan's request Nov 6, src/hero/TradeGraphic.jsx): the deal the headline is
 // about (its tx ids, read from the snapshot's feed), each side's incoming players with their consensus values, the
 // roster spots it costs the side taking more bodies (at replacement value, like the trade ledger) and each side's net.
-// The style is picked per headline at the headline desk (tradeStyle: handoff, seesaw or receipt; 'none' keeps the team
+// The style is picked per headline at the headline desk (tradeStyle: handoff, seesaw, receipt, playbook or lockers; 'none' keeps the team
 // rows); a trade headline nobody has set yet gets the handoff.
-const TRADE_STYLES = ['handoff', 'seesaw', 'receipt'];
+const TRADE_STYLES = ['handoff', 'seesaw', 'receipt', 'playbook', 'lockers'];
 function withTrade(st) {
   const style = st.tradeStyle === 'none' ? null : TRADE_STYLES.includes(st.tradeStyle) ? st.tradeStyle : 'handoff';
   const f = style && (st.tx || []).map((id) => DATA.feed.find((x) => String(x.id) === String(id) && x.type === 'trade')).find(Boolean);
