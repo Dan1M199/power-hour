@@ -186,6 +186,18 @@ function Scroller({ label, children }) {
   );
 }
 
+// Two-step filters (Dan's request Nov 6): what kind first; the second row (the time span) slides in once a kind is
+// picked, and the list shows from then on. Each row is a labelled sliding tray.
+function Step({ label, children, reveal }) {
+  return (
+    <div className={`adm-step${reveal ? ' late' : ''}`}>
+      <span className="adm-step-label">{label}</span>
+      <Scroller label={label}>{children}</Scroller>
+    </div>
+  );
+}
+const chips = (opts, value, pick) => opts.map(([k, l]) => <button key={k} type="button" className="adm-chip" aria-pressed={value === k} onClick={() => pick(k)}>{l}</button>);
+
 // the week pills over the players and the matchups: the week being played (or ahead), then the scored ones
 function WeekPills({ weeks, w, setW, ahead }) {
   const first = ahead ? weeks.ahead : weeks.live;
@@ -196,14 +208,11 @@ function WeekPills({ weeks, w, setW, ahead }) {
 const SHOWN = 40;
 // a week's box score: every rostered player by points, tickable
 function Players({ D, h, weeks, w, setW, kind, setKind, rows, picked, toggle }) {
-  const list = rows.filter((r) => kind === 'all' || (kind === 'started') === r.started).slice(0, SHOWN);
+  const list = kind ? rows.filter((r) => kind === 'all' || (kind === 'started') === r.started).slice(0, SHOWN) : [];
   return <>
-    <Scroller label="Which players">
-      <WeekPills weeks={weeks} w={w} setW={setW} />
-      <span className="adm-scroll-gap" aria-hidden="true" />
-      {[['all', 'Everyone'], ['started', 'Started'], ['bench', 'Bench']].map(([k, l]) => <button key={k} type="button" className="adm-chip" aria-pressed={kind === k} onClick={() => setKind(k)}>{l}</button>)}
-    </Scroller>
-    {list.length ? <ul className="adm-players">{list.map((r) => {
+    <Step label="Which players">{chips([['all', 'Everyone'], ['started', 'Started'], ['bench', 'Bench']], kind, setKind)}</Step>
+    {kind ? <Step label="Which week" reveal><WeekPills weeks={weeks} w={w} setW={setW} /></Step> : null}
+    {!kind ? <p className="adm-note">Pick which players to see.</p> : list.length ? <ul className="adm-players">{list.map((r) => {
       const t = D.byRid[r.rid], on = picked.includes(r.id);
       return (
         <li key={r.id}>
@@ -220,7 +229,7 @@ function Players({ D, h, weeks, w, setW, kind, setKind, rows, picked, toggle }) 
 // a week's games: scores once played, projections and win odds while ahead or live
 function Games({ D, h, weeks, w, setW, games, picked, toggle }) {
   return <>
-    <Scroller label="Which week"><WeekPills weeks={weeks} w={w} setW={setW} ahead /></Scroller>
+    <Step label="Which week"><WeekPills weeks={weeks} w={w} setW={setW} ahead /></Step>
     {games.length ? <ul className="adm-games">{games.map((g) => {
       const k = `${g.a}-${g.b}`, on = picked.includes(k), live = g.ahead && (g.ptsA || g.ptsB);
       const side = (rid, pts, proj, p) => {
@@ -260,10 +269,10 @@ const tog = (set, k) => set((x) => (x.includes(k) ? x.filter((y) => y !== k) : [
 export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPlayers, weekGames, weeks, preview, order, groups, groupOf, week, now, date }) {
   const P = usePosts();
   const [source, setSource] = useState('moves');
-  const [range, setRange] = useState('week'), [kind, setKind] = useState('all');
+  const [range, setRange] = useState('week'), [kind, setKind] = useState(null);
   const [picked, setPicked] = useState([]);
   // players: a week's box score; matchups: a week's games (the week ahead, or one already played)
-  const [pw, setPw] = useState(weeks.live ?? weeks.scored[0] ?? null), [pkind, setPkind] = useState('all'), [pPicked, setPPicked] = useState([]);
+  const [pw, setPw] = useState(weeks.live ?? weeks.scored[0] ?? null), [pkind, setPkind] = useState(null), [pPicked, setPPicked] = useState([]);
   const [gw, setGw] = useState(weeks.ahead ?? weeks.scored[0] ?? null), [gPicked, setGPicked] = useState([]);
   const [form, setForm] = useState(null), [editing, setEditing] = useState(null);
   const [toast, setToast] = useState(null), [err, setErr] = useState(''), [busy, setBusy] = useState(false);
@@ -287,7 +296,7 @@ export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPla
   useEffect(() => { if (!toast) return undefined; const t = setTimeout(() => setToast(null), 3500); return () => clearTimeout(t); }, [toast]);
 
   const lastWeek = Math.max(1, ...D.feed.map((f) => f.week || 0));
-  const feed = D.feed.filter((f) => (kind === 'all' || (kind === 'trade') === (f.type === 'trade'))
+  const feed = !kind ? [] : D.feed.filter((f) => (kind === 'all' || (kind === 'trade') === (f.type === 'trade'))
     && (range === 'all' || f.week >= (range === 'week' ? lastWeek : lastWeek - 1))).slice(0, 80);
   const chosen = D.feed.filter((f) => picked.includes(f.id));
   // the players the card can show: everyone who moved in the ticked transactions, biggest value first
@@ -405,7 +414,7 @@ export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPla
                         {(editing?.id ?? editing?.site?.key) === id ? <span className="adm-brk editing">Editing</span> : null}
                       </span>
                       <b>{st.headline}</b>
-                      <small className="adm-byline">{p ? `By Dan. Posted ${ago(p.ts, now)}, ${p.until ? `runs until ${when(p.until)}` : 'runs until you take it down'}.` : st.hidden ? 'By the site. Hidden from the carousel.' : st.edited ? 'By the site, rewritten by Dan.' : 'By the site.'}</small>
+                      <small className="adm-byline">{p ? `Posted ${ago(p.ts, now)}, ${p.until ? `runs until ${when(p.until)}` : 'runs until you take it down'}.` : st.hidden ? 'By the site. Hidden from the carousel.' : st.edited ? 'By the site, rewritten at the desk.' : 'By the site.'}</small>
                     </div>
                     {phone && openRow !== id ? null : <div className="adm-slot-acts">
                       {updown}
@@ -446,12 +455,9 @@ export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPla
             {SOURCES.map(([k, l]) => <button key={k} type="button" aria-pressed={source === k} onClick={() => setSource(k)}>{l}</button>)}
           </div>
           {source === 'moves' ? <>
-          <Scroller label="Which moves">
-            {[['week', `Week ${lastWeek}`], ['two', 'Last two weeks'], ['all', 'All season']].map(([k, l]) => <button key={k} type="button" className="adm-chip" aria-pressed={range === k} onClick={() => setRange(k)}>{l}</button>)}
-            <span className="adm-scroll-gap" aria-hidden="true" />
-            {[['all', 'Everything'], ['trade', 'Trades'], ['wire', 'Wire']].map(([k, l]) => <button key={k} type="button" className="adm-chip" aria-pressed={kind === k} onClick={() => setKind(k)}>{l}</button>)}
-          </Scroller>
-          {feed.length
+          <Step label="Which moves">{chips([['all', 'Everything'], ['trade', 'Trades'], ['wire', 'Wire']], kind, setKind)}</Step>
+          {kind ? <Step label="From when" reveal>{chips([['week', `Week ${lastWeek}`], ['two', 'Last two weeks'], ['all', 'All season']], range, setRange)}</Step> : null}
+          {!kind ? <p className="adm-note">Pick which moves to see.</p> : feed.length
             ? <ul className="adm-moves">{feed.map((f) => <Move key={f.id} f={f} D={D} h={h} on={picked.includes(f.id)} toggle={() => setPicked((x) => (x.includes(f.id) ? x.filter((y) => y !== f.id) : [...x, f.id]))} />)}</ul>
             : <p className="adm-note">No moves in this stretch. Try a longer one.</p>}
           </> : source === 'players' ? <Players D={D} h={h} weeks={weeks} w={pw} setW={(w) => { setPw(w); setPPicked([]); }} kind={pkind} setKind={setPkind} rows={pw ? weekPlayers(pw) : []} picked={pPicked} toggle={(id) => tog(setPPicked, id)} />
@@ -573,12 +579,14 @@ function Head({ live, home, week, date }) {
   return <>
     <nav className="adm-top" aria-label="Site">
       <a className="adm-home" href={home}><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M7.5 2 3.5 6l4 4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>Home</a>
-      <span className="adm-top-name">Headline desk</span>
     </nav>
     <header className="np-mast">
-      <p className="np-ear l"><b>Headline desk</b><span>{"The editor's copy"}</span></p>
-      <h1 className="np-name" aria-label="The Power Hour headline desk">The Power Hour</h1>
-      <p className="np-ear r">{live == null ? <><b>Editor only</b><span>Sign in to post</span></> : <><b className="np-tally">{live}</b><span>{`of your headlines ${live === 1 ? 'runs' : 'run'} today`}</span></>}</p>
+      <p className="np-ear l"><b>{"The editor's copy"}</b><span>Only editors see this page</span></p>
+      <div className="np-title">
+        <h1 className="np-name" aria-label="The Power Hour headline desk">The Power Hour</h1>
+        <p className="np-sub" aria-hidden="true">Headline desk</p>
+      </div>
+      <p className="np-ear r">{live == null ? <><b>Editor only</b><span>Sign in to post</span></> : <><b className="np-tally">{live}</b><span>{`desk ${live === 1 ? 'headline runs' : 'headlines run'} today`}</span></>}</p>
     </header>
     <p className="np-folio">
       {week ? <span>{`Week ${week}`}</span> : null}

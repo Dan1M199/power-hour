@@ -2613,11 +2613,14 @@ html.admin-mode main::before, html.admin-mode main::after { display: none; }
 .adm-top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 14px; margin: 0 -16px; padding: 8px 16px; background-color: var(--np-paper); border-bottom: 1px solid var(--np-hair); }
 .adm-home { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px 0 10px; border-radius: 3px; font: 600 14px/1 var(--np-sans); text-decoration: none; color: var(--np-ink); box-shadow: inset 0 0 0 1.5px var(--np-ink); }
 .adm-home:hover { color: var(--np-paper); background-color: var(--np-ink); }
-.adm-top-name { margin-left: auto; font: italic 400 15px/1 var(--np-serif); color: var(--np-ink-2); }
 
 /* the masthead: the nameplate between its ears */
 .np-mast { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 20px; padding: 22px 0 14px; }
+.np-title { display: grid; justify-items: center; gap: 6px; }
 .np-name { margin: 0; font: 400 clamp(52px, 9.4vw, 116px)/0.95 var(--np-black); letter-spacing: 0; color: var(--np-ink); text-align: center; white-space: nowrap; }
+/* the desk's name: a large subtitle under the nameplate, set between two short rules */
+.np-sub { display: flex; align-items: center; gap: 14px; margin: 0; font: italic 600 clamp(26px, 3.4vw, 40px)/1.05 var(--np-serif); letter-spacing: -0.01em; color: var(--np-ink); }
+.np-sub::before, .np-sub::after { content: ''; width: clamp(24px, 4vw, 56px); height: 2px; background-color: var(--np-ink); }
 .np-ear { display: grid; gap: 2px; align-self: center; max-width: 190px; margin: 0; padding: 8px 10px; font: 400 12.5px/1.3 var(--np-sans); color: var(--np-ink-2); box-shadow: inset 0 0 0 1px var(--np-ink); }
 .np-ear b { font: 700 14px/1.2 var(--np-sans); color: var(--np-ink); }
 .np-ear.r { justify-self: end; text-align: right; }
@@ -2706,6 +2709,13 @@ html.admin-mode main::before, html.admin-mode main::after { display: none; }
 .adm-sources button:hover:not([aria-pressed='true']) { background-color: var(--np-tray); }
 .adm-sources button[aria-pressed='true'] { color: var(--np-paper); background-color: var(--np-ink); }
 
+/* two-step filters: what kind first, then the time span slides in once a kind is picked */
+.adm-step { display: grid; gap: 6px; min-width: 0; }
+.adm-step-label { font: 700 13px/1.2 var(--np-sans); color: var(--np-ink); }
+@media (prefers-reduced-motion: no-preference) {
+  .adm-step.late { animation: adm-step 0.28s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  @keyframes adm-step { from { opacity: 0; transform: translateY(-8px); } }
+}
 /* the filters: a tray that slides sideways, fading where more chips are hidden, an arrow on each side that can scroll */
 .adm-scroller { position: relative; min-width: 0; border-radius: 3px; background-color: var(--np-tray); }
 .adm-scroll-track { display: flex; align-items: center; gap: 6px; padding: 6px; overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: 6px; scrollbar-width: none;
@@ -2856,7 +2866,9 @@ html.admin-mode[data-theme='dark'] .adm-side-head em.up { color: #8BD48E; }
   html.admin-mode main { width: calc(100% - 24px); }
   .adm-top { margin: 0 -12px; padding: 6px 12px; }
   .np-mast { grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 0 10px; }
-  .np-name { grid-column: 1 / -1; grid-row: 1; font-size: clamp(40px, 13.4vw, 60px); }
+  .np-title { grid-column: 1 / -1; grid-row: 1; gap: 4px; }
+  .np-name { font-size: clamp(40px, 13.4vw, 60px); }
+  .np-sub { font-size: clamp(24px, 7.6vw, 32px); gap: 10px; }
   .np-ear { max-width: none; padding: 6px 8px; font-size: 12px; }
   .np-ear.r { justify-self: stretch; }
   .np-ear .np-tally { font-size: 26px; }
