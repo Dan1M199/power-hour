@@ -144,6 +144,7 @@ check('overrides run out after 30 days', !Object.keys(r.body.site).length, r.bod
 r = await dan.hl('POST', { action: 'post', story: story('   ') });
 check('an empty headline is refused', r.code === 400, r);
 const c = cleanStory({ headline: 'Hi\u0007 there\nfriend', tone: 'pink', rids: [1, 1, 'x', 99], player: { id: 'bad id' }, kicker: '' });
+check('a trade graphic style is kept, a made-up one dropped', cleanStory({ headline: 'x', tradeStyle: 'receipt' }).tradeStyle === 'receipt' && cleanStory({ headline: 'x', tradeStyle: 'confetti' }).tradeStyle === null, null);
 check('stories are cleaned', c.headline === 'Hi there friend' && c.tone === 'neutral' && c.rids.join() === '1' && c.player === null && c.kicker === 'From the desk', c);
 
 delete process.env.KV_REST_API_URL; delete process.env.KV_REST_API_TOKEN;

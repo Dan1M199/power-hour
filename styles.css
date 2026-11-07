@@ -700,6 +700,81 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .bug-key li small { display: none; }
   .bug-key li.proj b { color: rgba(255, 255, 255, 0.7); }
 }
+/* ---------- the trade graphic: who got which players, under a trade headline (src/hero/TradeGraphic.jsx) ----------
+   On the scoreboard in place of the team rows, in the style picked at the headline desk: the handoff (a lane per side,
+   arrows across), the seesaw (trading cards on a plank that tips toward the winner) or the receipt (a stapled slip with
+   a verdict stamp). Chalk on the board, yellow for the numbers that matter. */
+.tg-fig { margin: 0; }
+.tg { --tg-chip: rgba(255, 255, 255, 0.08); color: var(--chalk); }
+.tg .pos { margin: 0; flex: none; }
+.tg-face { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex: none; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85); }
+.tg-who { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tg-who > span { display: grid; min-width: 0; }
+.tg-who b { font: 800 16px/1.05 var(--display); letter-spacing: 0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tg-who small { font-size: 11.5px; color: rgba(255, 255, 255, 0.7); }
+
+/* the handoff */
+.tg-handoff { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 10px; align-items: start; }
+.tg-handoff.two { grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr); }
+.tg-handoff.two .tg-lane:last-child .tg-who { flex-direction: row-reverse; text-align: right; }
+.tg-lane { display: grid; gap: 6px; min-width: 0; }
+.tg-lane ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.tg-lane li { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 5px 9px; border-radius: 999px; font-size: 13px; background: var(--tg-chip); }
+.tg-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tg-lane li em { margin-left: auto; font: 800 14px/1 var(--display); font-style: normal; color: var(--yellow); }
+.tg-lane li.tg-more, .tg-lane li.tg-pick { color: rgba(255, 255, 255, 0.75); font-size: 12px; }
+.tg-arrows { display: grid; place-items: center; align-self: center; padding-top: 30px; color: var(--yellow); }
+
+/* the seesaw: card stacks riding each end of a plank that tips toward the winner, the managers underneath */
+.tg-seesaw { display: grid; gap: 0; }
+.tg-ends { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 4%; }
+.tg-cards { position: relative; height: 96px; transition: transform 0.6s cubic-bezier(0.3, 1.4, 0.5, 1); }
+.tg-card { position: absolute; bottom: 0; left: 50%; display: grid; justify-items: center; align-content: start; gap: 2px; width: 64px; height: 90px; margin-left: -32px; padding: 4px 3px;
+  border-radius: 8px; color: var(--ink); background: #FFFFFF; box-shadow: 0 0 0 2px var(--board), 0 6px 10px -4px rgba(0, 0, 0, 0.6);
+  transform-origin: 50% 100%; transform: translateX(calc(var(--i) * 34px)) rotate(calc(var(--i) * 8deg)); }
+.tg-card .tg-mug { width: 46px; height: 46px; border-radius: 6px; object-fit: cover; background: var(--tile); }
+.tg-card .tg-mug.ph { display: grid; place-items: center; font: 800 16px/1 var(--display); color: var(--ink-2); }
+.tg-card .pos { font-size: 11.5px; padding: 1px 5px; }
+.tg-card b { max-width: 100%; font: 800 12px/1.05 var(--display); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tg-plus { position: absolute; right: 0; bottom: 4px; font: 800 14px/1 var(--display); color: var(--yellow); }
+.tg-none { position: absolute; inset: auto 0 6px; text-align: center; font-size: 12px; color: rgba(255, 255, 255, 0.75); }
+.tg-plank { position: relative; height: 24px; }
+.tg-plank i { position: absolute; left: 2%; right: 2%; top: 2px; height: 7px; border-radius: 999px; background: var(--amber); box-shadow: 0 2px 0 #B07B00; transition: transform 0.6s cubic-bezier(0.3, 1.4, 0.5, 1); }
+.tg-plank b { position: absolute; left: 50%; top: 7px; width: 0; height: 0; margin-left: -10px; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 17px solid rgba(255, 255, 255, 0.8); }
+.tg-names { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; }
+.tg-names .tg-who.r { flex-direction: row-reverse; text-align: right; }
+.tg-says { margin: 0; text-align: center; font-size: 12.5px; color: rgba(255, 255, 255, 0.85); }
+
+/* the receipt: a slip of till paper stapled to the board, a column per side, the verdict stamped across it */
+.tg-receipt { display: flex; justify-content: center; padding: 4px 0 18px; }
+.tg-slip { position: relative; width: min(100%, 420px); padding: 10px 14px 12px; border-radius: 3px; color: #2B2A26; background: #F4F1E8; transform: rotate(-1.5deg);
+  font: 400 12px/1.4 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; box-shadow: 0 8px 14px -8px rgba(0, 0, 0, 0.7); }
+.tg-slip::before { content: ''; position: absolute; top: -5px; left: 50%; width: 26px; height: 8px; margin-left: -13px; border-radius: 2px; background: #B9BEC4; box-shadow: inset 0 -2px 0 #8C9197; }
+.tg-slip p { margin: 0; display: flex; justify-content: space-between; gap: 8px; }
+.tg-slip p span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tg-slip-head { justify-content: center !important; font-weight: 700; padding-bottom: 6px; margin-bottom: 6px !important; border-bottom: 1px dashed #8A877E; }
+.tg-cols { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 14px; }
+.tg-cols > div + div { padding-left: 14px; border-left: 1px dashed #8A877E; }
+.tg-slip-who { font-weight: 700; }
+.tg-net { margin-top: 4px !important; padding-top: 4px; border-top: 1px dashed #8A877E; font-weight: 700; }
+.tg-stamp { position: absolute; left: 50%; bottom: -16px; padding: 2px 8px; border: 2.5px solid #C62828; border-radius: 4px; transform: translateX(-50%) rotate(-8deg); white-space: nowrap;
+  font: 800 17px/1.1 var(--display); font-style: normal; letter-spacing: 0.02em; color: #C62828; background: rgba(244, 241, 232, 0.8); }
+.tg-stamp.even { border-color: #2E7D32; color: #2E7D32; }
+@media (max-width: 760px) {
+  .tg-lane li { font-size: 12.5px; padding: 5px 8px; }
+  .tg-handoff.two { grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr); gap: 6px; }
+  .tg-arrows svg { width: 22px; }
+  .tg-cards { height: 84px; }
+  .tg-card { width: 54px; height: 78px; margin-left: -27px; transform: translateX(calc(var(--i) * 26px)) rotate(calc(var(--i) * 8deg)); }
+  .tg-card .tg-mug { width: 38px; height: 38px; }
+  .tg-names { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .tg-names .tg-says { grid-column: 1 / -1; grid-row: 2; }
+  .tg-cols { gap: 10px; }
+  .tg-cols > div + div { padding-left: 10px; }
+  .tg-slip { font-size: 11.5px; padding: 10px 10px 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .tg-plank i, .tg-cards { transition: none; } }
+
 .cast { display: grid; gap: 8px; }
 .cast-team { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 8px 12px; border-radius: var(--r-md); background: rgba(255, 255, 255, 0.08); }
 .cast-team .avatar { width: 38px; height: 38px; box-shadow: none; }
@@ -2692,7 +2767,7 @@ html.admin-mode main::before, html.admin-mode main::after { display: none; }
 .adm-icon:hover:not(:disabled) { color: var(--np-paper); background-color: var(--np-ink); }
 .adm-icon:disabled { cursor: default; opacity: 0.25; }
 .adm-more { display: none; }
-.adm-none { padding: 12px 14px; font: italic 400 15px/1.4 var(--np-serif); color: var(--np-ink-2); background-color: var(--np-tint); }
+.adm-none { grid-template-columns: minmax(0, 1fr); padding: 12px 14px; font: italic 400 15px/1.4 var(--np-serif); color: var(--np-ink-2); background-color: var(--np-tint); }
 .adm-none .adm-slot-card { display: block; }
 .np-sec-acts .adm-auto { min-height: 40px; }
 .adm-old summary { cursor: pointer; display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 3px; font: 600 14px/1 var(--np-sans); box-shadow: inset 0 0 0 1.5px var(--np-ink); list-style: none; }
@@ -2709,6 +2784,16 @@ html.admin-mode main::before, html.admin-mode main::after { display: none; }
 .adm-sources button:hover:not([aria-pressed='true']) { background-color: var(--np-tray); }
 .adm-sources button[aria-pressed='true'] { color: var(--np-paper); background-color: var(--np-ink); }
 
+/* the trade graphic choice: four cards, the picked one in ink */
+.adm-looks { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 8px; }
+.adm-look { display: grid; gap: 3px; align-content: start; min-height: 64px; padding: 10px 12px; border: 0; border-radius: 2px; cursor: pointer; text-align: left;
+  color: var(--np-ink); background-color: var(--np-paper); box-shadow: inset 0 0 0 1px var(--np-hair); }
+.adm-look b { font: 700 17px/1.1 var(--np-serif); }
+.adm-look small { font: 400 12.5px/1.3 var(--np-sans); color: var(--np-ink-2); }
+.adm-look:hover:not(:disabled):not([aria-pressed='true']) { box-shadow: inset 0 0 0 1.5px var(--np-ink); }
+.adm-look[aria-pressed='true'] { color: var(--np-paper); background-color: var(--np-ink); box-shadow: none; }
+.adm-look[aria-pressed='true'] small { color: var(--np-paper); opacity: 0.85; }
+.adm-look:disabled { cursor: default; opacity: 0.45; }
 /* two-step filters: what kind first, then the time span slides in once a kind is picked */
 .adm-step { display: grid; gap: 6px; min-width: 0; }
 .adm-step-label { font: 700 13px/1.2 var(--np-sans); color: var(--np-ink); }

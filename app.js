@@ -609,7 +609,7 @@ function blockbusterStory() {
   const others = sides.filter((x) => x.t !== star.to).map((x) => firstName(x.t));
   const r = RAW.ros?.values?.[star.id] || {};
   return {
-    type: 'blockbuster', kicker: 'Trade desk', tone: 'trade', stamp: 'Blockbuster', breaking: true, rids: sides.map((x) => x.rid),
+    type: 'blockbuster', tx: [deal.id], kicker: 'Trade desk', tone: 'trade', stamp: 'Blockbuster', breaking: true, rids: sides.map((x) => x.rid),
     player: { id: star.id, name: P, short: shortName(info.name ? info : { name: P }), line: `${info.pos || posOf(star.id)}, ${nfl(info.team)}`, pin: { team: star.to, label: `To ${firstName(star.to)}` } },
     mark: [P],
     tick: { hook: 'Blockbuster', line: `${P} heads to ${firstName(star.to)} in ${n === 8 || n === 11 ? 'an' : 'a'} ${count(n)}-player deal with ${listOf(others)}.` },
@@ -662,7 +662,7 @@ function smashStory() {
   if (done) {
     const rooms = deal ? roomsSaid(deal) : '';
     return {
-      type: 'smash', kicker: 'Trade desk', tone: 'trade', stamp: 'Official', breaking: true, rids: [H.rid, K.rid],
+      type: 'smash', tx: deal ? [deal.id] : [], kicker: 'Trade desk', tone: 'trade', stamp: 'Official', breaking: true, rids: [H.rid, K.rid],
       player: { ...card, pin: { team: H, label: 'To Hamza' } },
       mark: [JT],
       tick: { hook: 'Official', line: `JT is Hamza's after the three-for-one cleared review, and ROS values say ${kWins ? 'Khalil' : 'Hamza'} won it, ${f1(Math.max(kGets, hGets))} to ${f1(Math.min(kGets, hGets))}.` },
@@ -718,7 +718,7 @@ function moKhalilStory() {
   const [w, l] = [...sides].sort((a, b) => b.net - a.net);
   const winner = l && w.net - l.net >= 4 ? firstName(w.t) : null;
   return {
-    type: 'mokhalil', kicker: 'Trade desk', tone: 'trade', stamp: 'Done deal', breaking: true, rids: sides.map((x) => x.rid),
+    type: 'mokhalil', tx: [deal.id], kicker: 'Trade desk', tone: 'trade', stamp: 'Done deal', breaking: true, rids: sides.map((x) => x.rid),
     player: { id: star.id, name: P, short: shortName(info.name ? info : { name: P }), line: `${info.pos || posOf(star.id)}, ${nfl(info.team)}`, pin: { team: star.to, label: `To ${firstName(star.to)}` } },
     mark: [P],
     tick: { hook: busy ? 'Khalil again' : 'Done deal', line: `${P} heads to ${firstName(star.to)} as Mo and Khalil swap${winner ? `, and ${winner} wins it on value` : ', close to even on value'}.` },
@@ -937,7 +937,7 @@ function twistStory() {
   if (!to || to === expected) return null;
   const P = nameOf(L.player), info = DATA.helpers.player(L.player), rooms = roomsSaid(deal);
   return {
-    type: 'twist', group: 'trades', breaking: true, kicker: 'Trade desk', tone: 'trade', stamp: 'Plot twist', rids: deal.sides.map((s) => s.rid),
+    type: 'twist', tx: [deal.id], group: 'trades', breaking: true, kicker: 'Trade desk', tone: 'trade', stamp: 'Plot twist', rids: deal.sides.map((s) => s.rid),
     player: { id: L.player, name: P, short: shortName(info), line: `${info.pos}, ${nfl(info.team)}`, pin: { team: to, label: `To ${firstName(to)}` } },
     mark: [P],
     headline: `Plot twist: ${P} lands with ${to.name}, not ${expected ? expected.name : 'the team the desk expected'}`,
@@ -959,7 +959,7 @@ function businessStory() {
   if (!sent?.length) return null;
   const names = sent.map((a) => nameOf(a.id)), rooms = roomsSaid(deal), F = firstName(from), T = firstName(to);
   return {
-    type: 'deal', group: 'trades', kicker: 'Trade desk', tone: 'trade', stamp: 'Deal', rids: [from.rid, to.rid],
+    type: 'deal', tx: [deal.id], group: 'trades', kicker: 'Trade desk', tone: 'trade', stamp: 'Deal', rids: [from.rid, to.rid],
     mark: names,
     headline: `No bad business here: ${F} follows through and sends ${listOf(names)} to ${T}`,
     deck: [
@@ -1499,7 +1499,7 @@ function carouselProps({ all = false } = {}) {
   return {
     // Dan's own headlines from the admin portal lead, ahead of everything the desk writes, and every headline sits in
     // its section (the dots group them)
-    stories: arrangeStories([...own, ...site].map((st) => ({ ...st, group: groupOf(st) }))),
+    stories: arrangeStories([...own, ...site].map((st) => withTrade({ ...st, group: groupOf(st) }))),
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
     hold: onHold() ? NEWS_CLOCK.holdNote : null, night: !!s?.night, groups: GROUPS,
   };
@@ -1512,6 +1512,29 @@ function postedStories(list = posts.list) {
   const now = AT ? +AT : Date.now();
   return list.filter((p) => !p.until || p.until > now).map((p) => ({ ...hydrate(p), type: `p-${p.id}`, key: `w${talk.week}:p-${p.id}` }));
 }
+// The trade graphic under a trade headline (Dan's request Nov 6, src/hero/TradeGraphic.jsx): the deal the headline is
+// about (its tx ids, read from the snapshot's feed), each side's incoming players with their consensus values, the
+// roster spots it costs the side taking more bodies (at replacement value, like the trade ledger) and each side's net.
+// The style is picked per headline at the headline desk (tradeStyle: handoff, seesaw or receipt; 'none' keeps the team
+// rows); a trade headline nobody has set yet gets the handoff.
+const TRADE_STYLES = ['handoff', 'seesaw', 'receipt'];
+function withTrade(st) {
+  const style = st.tradeStyle === 'none' ? null : TRADE_STYLES.includes(st.tradeStyle) ? st.tradeStyle : 'handoff';
+  const f = style && (st.tx || []).map((id) => DATA.feed.find((x) => String(x.id) === String(id) && x.type === 'trade')).find(Boolean);
+  if (!f) return st;
+  const rep = DATA.meta.replacement || 0;
+  const sides = f.sides.filter((x) => team(x.rid)).map((x) => ({
+    rid: x.rid, first: firstName(team(x.rid)),
+    gets: x.adds.map((a) => {
+      const info = DATA.helpers.player(a.id) || {}, n = nameOf(a.id);
+      return { id: a.id, name: n, short: shortName(info.name ? info : { name: n }), pos: a.pos || posOf(a.id), v: a.v };
+    }).sort((a, b) => b.v - a.v),
+    picks: x.picks.filter((p) => p.dir === 'in').map((p) => `${p.season} round ${p.round} pick`),
+    cost: Math.max(0, x.spots) * rep, spots: Math.max(0, x.spots), net: x.net,
+  }));
+  return sides.length < 2 ? st : { ...st, trade: { style, sides } };
+}
+
 // a stored story (a post, or Dan's rewrite of a site headline) as the carousel draws it: teams looked up in today's
 // league, the player card's pinned manager as a team, empty fields left out so the slide falls back to its defaults
 function hydrate(p) {
@@ -1695,7 +1718,7 @@ const PAGES = {
   matchups: () => [GamesPage, { calm: calm(), lite: lite() }],
   admin: () => [AdminShell, {
     home: DATA.liveMode ? '#live' : '#rankings',
-    draft: draftFor, draftPlayers, draftGames, weekPlayers, weekGames, preview: postedStories,
+    draft: draftFor, draftPlayers, draftGames, weekPlayers, weekGames, preview: (list) => postedStories(list).map(withTrade), tradeStyles: TRADE_STYLES,
     weeks: { scored: pointWeeks().filter((w) => w <= DATA.meta.lastScored).slice(0, 4), live: DATA.live ? DATA.meta.lastScored + 1 : null, ahead: DATA.previews[0]?.week ?? null }, order: () => carouselProps({ all: true })?.stories || [], groups: GROUPS, groupOf, week: talkWeek(), now: AT ? +AT : Date.now(),
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
   }],

@@ -40,6 +40,7 @@ const TTL = 60 * 60 * 24 * 300;
 const KEEP_OLD_MS = 14 * 864e5; // taken-down and run-out posts stay in Dan's list this long
 const MAX_POSTS = 60;
 const TONES = new Set(['trade', 'good', 'bad', 'neutral']);
+const TRADE_STYLE = new Set(['handoff', 'seesaw', 'receipt', 'none']);
 const GROUPS = new Set(['trades', 'rumors', 'wire', 'week', 'players', 'league']);
 const now = () => Number(process.env.HEADLINES_NOW) || Date.now(); // overridable for tests
 
@@ -61,6 +62,8 @@ export function cleanStory(s) {
     tone: TONES.has(s.tone) ? s.tone : 'neutral',
     group: GROUPS.has(s.group) ? s.group : null,
     breaking: !!s.breaking,
+    // the trade graphic under a trade headline (src/hero/TradeGraphic.jsx); null lets the site pick
+    tradeStyle: TRADE_STYLE.has(s.tradeStyle) ? s.tradeStyle : null,
     headline, deck,
     tick: hook && line ? { hook, line } : null,
     rids: [...new Set((Array.isArray(s.rids) ? s.rids : []).map(rid).filter(Boolean))].slice(0, 4),

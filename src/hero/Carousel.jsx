@@ -7,6 +7,7 @@ import { shortName } from '../../lib/matchup.js';
 import { storyKeys } from './talk.js';
 import { useReactions, loadReactions, react } from './reactions.js';
 import { TeamAvatar, Headshot, ChampTag, ChampBadge } from '../shared.jsx';
+import { TradeGraphic } from './TradeGraphic.jsx';
 
 const asset = (p) => window.__ASSETS__?.[p] || p;
 // the reaction bar under each headline (EmojiReactions.jsx), in its own chunk: framer-motion only downloads once the
@@ -194,7 +195,7 @@ function Slide({ st, i, n, D, h, groups, runs, date, night, clip, slideRef, hk, 
       {st.clip ? <><div className="clip-head">{top}{hed}</div><ClipPrint st={st} D={D} h={h} clip={clip} /></> : <>{top}{hed}</>}
       <p className="lead-deck"><Marked text={st.deck} marks={st.mark} /></p>
       {rx.enabled ? <Suspense fallback={<div className="rxn-hold" />}><Reactions hk={hk} label={tickOf(st).hook} rx={rx} react={react} /></Suspense> : null}
-      {st.bug ? <ScoreBug bug={st.bug} h={h} /> : <Cast st={st} D={D} h={h} />}
+      {st.bug ? <ScoreBug bug={st.bug} h={h} /> : st.trade ? <TradeGraphic trade={st.trade} D={D} h={h} /> : <Cast st={st} D={D} h={h} />}
     </article>
   );
 }

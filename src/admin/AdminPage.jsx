@@ -35,11 +35,11 @@ function weekTurns(now) {
 const RUNS = [['week', 'Until Tuesday'], ['day', '24 hours'], ['3days', '3 days'], ['forever', 'Until I take it down']];
 const untilFor = (run, now) => ({ week: weekTurns(now), day: now + 864e5, '3days': now + 3 * 864e5 }[run] ?? null);
 
-const EMPTY = { kicker: 'From the desk', stamp: '', tone: 'neutral', group: '', breaking: false, headline: '', deck: '', hook: '', line: '', rids: [], player: '', marks: '', tx: [], run: 'week' };
+const EMPTY = { kicker: 'From the desk', stamp: '', tone: 'neutral', group: '', tradeStyle: '', breaking: false, headline: '', deck: '', hook: '', line: '', rids: [], player: '', marks: '', tx: [], run: 'week' };
 // the portal's form from a story (a draft or a post), and back
 const formOf = (s, run = 'week') => ({
   ...EMPTY, ...s, stamp: s.stamp || '', group: s.group || '', hook: s.tick?.hook || '', line: s.tick?.line || '',
-  player: s.player?.id || '', marks: (s.mark || []).join(', '), tx: s.tx || [], run,
+  player: s.player?.id || '', marks: (s.mark || []).join(', '), tx: s.tx || [], run, tradeStyle: s.tradeStyle || '',
   // the card's pinned manager and its words, kept while the same player stays on the card
   player0: s.player?.id || '', pinRid: s.player?.pin?.team?.rid ?? s.player?.pin?.rid ?? null, pinLabel: s.player?.pin?.label || '',
 });
@@ -263,10 +263,17 @@ const PostLabel = ({ editing }) => (editing ? <>Save<span className="adm-long"> 
 // a field's character count, shown once it gets close to the limit
 const Count = ({ v, max }) => (v.length > max * 0.7 ? <small className={`adm-count${v.length >= max ? ' full' : ''}`}>{`${v.length} of ${max}`}</small> : null);
 
+// the trade graphics to pick from: what each one is
+const TRADE_LOOKS = [
+  ['handoff', 'Handoff', 'A lane per team, arrows across'],
+  ['seesaw', 'Seesaw', 'Trading cards that tip toward the winner'],
+  ['receipt', 'Receipt', 'An itemized slip with a verdict stamp'],
+  ['none', 'None', 'The team rows, no graphic'],
+];
 const SOURCES = [['moves', 'Moves'], ['players', 'Players'], ['games', 'Matchups']];
 const tog = (set, k) => set((x) => (x.includes(k) ? x.filter((y) => y !== k) : [...x, k]));
 
-export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPlayers, weekGames, weeks, preview, order, groups, groupOf, week, now, date }) {
+export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPlayers, weekGames, weeks, preview, order, groups, groupOf, week, now, date, tradeStyles }) {
   const P = usePosts();
   const [source, setSource] = useState('moves');
   const [range, setRange] = useState('week'), [kind, setKind] = useState(null);
@@ -320,14 +327,14 @@ export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPla
     const label = pl && pl.id === form.player0 && to?.rid === form.pinRid && form.pinLabel ? form.pinLabel : to && `To ${h.first(to)}`;
     const card = pl ? { id: pl.id, name: h.nameOf(pl.id), short: h.shortName(pl.id), line: `${info.pos || h.posOf(pl.id)}, ${h.nfl(info.team)}`, pin: to ? { rid: to.rid, label } : null } : null;
     return {
-      kicker: form.kicker, stamp: form.stamp, tone: form.tone, group: form.group || null, breaking: form.breaking,
+      kicker: form.kicker, stamp: form.stamp, tone: form.tone, group: form.group || null, breaking: form.breaking, tradeStyle: form.tradeStyle || null,
       headline: form.headline, deck: form.deck, tick: form.hook && form.line ? { hook: form.hook, line: form.line } : null,
       rids: form.rids, player: card, mark: form.marks.split(',').map((x) => x.trim()).filter(Boolean), tx: form.tx, week,
       until: form.run === 'keep' ? editing.until : untilFor(form.run, now),
     };
   };
   // a site headline being rewritten keeps what the form doesn't cover (its scoreboard, its clip)
-  const shown = form && form.headline.trim() ? preview([{ ...story(), id: 'draft', until: null }]).map((st) => (editing?.site ? { ...editing.site, ...st, type: editing.site.type } : st)) : [];
+  const shown = form && form.headline.trim() ? preview([{ ...story(), id: 'draft', until: null }]).map((st) => (editing?.site ? { ...editing.site, ...st, type: editing.site.type, trade: st.trade } : st)) : [];
   const siteEdit = !!editing?.site;
 
   const open = (f, p = null) => { setForm(f); setEditing(p); setErr(''); setOpenRow(null); setPeek(false); setFolds([]); scrollTo('.adm-work'); };
@@ -507,6 +514,26 @@ export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPla
                 </label>
                 <label className="adm-field"><span>Names in yellow, with commas between</span><input value={form.marks} onChange={(e) => set({ marks: e.target.value })} placeholder="Jonathan Taylor" /></label>
               </fieldset>
+
+              {(() => {
+                // the trade graphic under the headline, when it's about a trade (src/hero/TradeGraphic.jsx)
+                const deal = (form.tx || []).map((id) => D.feed.find((f) => String(f.id) === String(id) && f.type === 'trade')).find(Boolean);
+                if (!deal) return null;
+                const pick = form.tradeStyle || 'handoff', two = deal.sides.length === 2;
+                return (
+                  <Fold title="Trade graphic" phone={phone} open={folds.includes('trade')} toggle={() => fold('trade')}
+                    summary={TRADE_LOOKS.find(([k]) => k === pick)?.[1] || 'Handoff'}>
+                    <p className="adm-hint">Who got which players, drawn under the headline in place of the team rows. The slide shows the one picked.</p>
+                    <div className="adm-looks" role="group" aria-label="Trade graphic">
+                      {TRADE_LOOKS.filter(([k]) => k === 'none' || tradeStyles.includes(k)).map(([k, l, d]) => (
+                        <button key={k} type="button" className="adm-look" aria-pressed={pick === k} disabled={k === 'seesaw' && !two} onClick={() => set({ tradeStyle: k })}>
+                          <b>{l}</b><small>{k === 'seesaw' && !two ? 'Two-team deals only' : d}</small>
+                        </button>
+                      ))}
+                    </div>
+                  </Fold>
+                );
+              })()}
 
               <Fold title="Look" phone={phone} open={folds.includes('look')} toggle={() => fold('look')}
                 summary={[form.kicker, form.stamp && `stamped ${form.stamp}`, TONES.find(([k]) => k === form.tone)?.[1], form.group ? groups[form.group] : 'automatic section', form.breaking && 'breaking'].filter(Boolean).join(', ')}>
