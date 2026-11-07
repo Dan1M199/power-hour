@@ -171,18 +171,21 @@ export function RankingsPage({ D, me, h, held, car, sources, updated, message, r
     <Lockout wk={wk} />
   </>;
 
+  // your rank, a button that jumps to your row: beside the carousel on a wide screen, under the hero otherwise
+  const youStrip = mine ? <button type="button" className="you-strip glass" aria-label={`Jump to your team, ${mine.name}, ranked ${mine.powerRank}`} onClick={jump}>
+    <Headshot t={mine} cls="strip-face" h={h} />
+    <span className="ys-rank"><small>You're</small><b>{`No. ${mine.powerRank}`}</b></span>
+    <span className="ys-body"><b>{mine.name}</b><span className="ys-tags"><span className={`tier ${mine.tier.key}`}>{mine.tier.label}</span><MoveTag t={mine} /></span></span>
+    <span className="ys-odds"><b>{h.pct(mine.playoffPct)}</b><small>playoffs</small></span><Xp />
+  </button> : null;
+
   return <>
     {held
       ? <section className="view-head"><RankHead wk={wk} held sources={sources} updated={updated} /></section>
-      : <Hero D={D} h={h} car={car} head={<RankHead D={D} h={h} wk={wk} sources={sources} updated={updated} message={message} />} />}
+      : <Hero D={D} h={h} car={car} head={<RankHead D={D} h={h} wk={wk} sources={sources} updated={updated} message={message} />}
+        side={youStrip} hint={<p className="you-card glass empty">Pick your team in the top right and this spot shows your rank, your tier and your playoff odds.</p>} />}
     {held ? <div className="notice glass hold"><span><strong>Power rankings are on hold.</strong>{` Week ${wk} is being played, so these are the ranks going into the week. They update as soon as every game is final. For how this week is going, see the `}<a href="#live">Live</a> tab.</span></div> : null}
     {rosError ? <div className="notice glass"><strong>Results-only mode.</strong>{` The rest-of-season rankings couldn't be loaded (${rosError}), so these ranks use this season's results alone until they come back.`}</div> : null}
-    {mine ? <button type="button" className="you-strip glass" aria-label={`Jump to your team, ${mine.name}, ranked ${mine.powerRank}`} onClick={jump}>
-      <Headshot t={mine} cls="strip-face" h={h} />
-      <span className="ys-rank"><small>You're</small><b>{`No. ${mine.powerRank}`}</b></span>
-      <span className="ys-body"><b>{mine.name}</b><span className="ys-tags"><span className={`tier ${mine.tier.key}`}>{mine.tier.label}</span><MoveTag t={mine} /></span></span>
-      <span className="ys-odds"><b>{h.pct(mine.playoffPct)}</b><small>playoffs</small></span><Xp />
-    </button> : null}
     <div id="poll-slot"><Poll D={D} h={h} poll={poll} /></div>
     <ol className="ranks">{D.teams.map((t) => (
       <RankRow key={t.rid} D={D} t={t} me={me} h={h} open={open.has(t.rid)} nudge={t.powerRank === 1 && nudged}

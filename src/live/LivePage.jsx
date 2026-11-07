@@ -84,10 +84,9 @@ export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetc
   return <>
     {fin
       ? <section className="view-head"><LiveHead fin wk={wk} played={played} fetched={fetched} /></section>
-      : <Hero D={D} h={h} car={car} head={<LiveHead wk={wk} played={played} fetched={fetched} />} />}
-    {fin
-      ? <div className="unveil-cta"><button type="button" className="cta" data-reveal onClick={(e) => onReveal(e.currentTarget)}>Done with Live Ranks, Show me the Power Ranking</button></div>
-      : <YourWeek rows={rows} standings={standings} me={me} h={h} bull={bull} />}
+      : <Hero D={D} h={h} car={car} head={<LiveHead wk={wk} played={played} fetched={fetched} />}
+        side={<YourWeek rows={rows} standings={standings} me={me} h={h} bull={bull} />} />}
+    {fin ? <div className="unveil-cta"><button type="button" className="cta" data-reveal onClick={(e) => onReveal(e.currentTarget)}>Done with Live Ranks, Show me the Power Ranking</button></div> : null}
     <div className="live-grid">
       <section className="panel glass live-panel wk-rank">
         <h2>{`Week ${wk}, top to bottom`}</h2>

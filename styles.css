@@ -567,6 +567,13 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .hero { display: grid; grid-template-columns: minmax(0, 580px) minmax(0, 1fr); gap: 20px 40px; align-items: end; margin: 4px 0 44px; }
 .hero .view-head { grid-template-columns: 1fr; margin: 0; }
 .hero .sources { justify-content: flex-start; max-width: none; }
+/* wide screens: the page head and your card stack beside the carousel, the card's foot on the carousel's foot */
+.hero-side { display: grid; gap: 30px; align-content: end; }
+.hero-side > :is(.you-strip, .you-card) { margin: 0; }
+.hero-side > .you-card { gap: 16px; padding: 16px 20px; }
+.hero-side .you-face { width: 72px; height: 72px; border-radius: 30px; }
+.hero-side .you-msg { font-size: clamp(21px, 1.9vw, 25px); }
+.hero-side .ys-body > b { white-space: normal; text-wrap: balance; } /* the column is narrower than the page: a long name wraps, never cut */
 /* square by default; overflow stays visible so a long story grows the card instead of being clipped */
 .lead-car { display: flex; flex-direction: column; aspect-ratio: 1; border-radius: var(--r-xl); color: var(--chalk); background-color: var(--board); }
 .car-track { flex: 1 0 auto; display: grid; border-radius: var(--r-xl) var(--r-xl) 0 0; grid-auto-flow: column; grid-auto-columns: 100%; overflow-x: auto; overscroll-behavior-x: contain;
