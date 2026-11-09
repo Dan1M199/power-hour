@@ -18,6 +18,7 @@ import { storyKeys } from './src/hero/storyKeys.js';
 import { posts, loadPosts } from './src/admin/posts.js';
 import { AdminShell } from './src/admin/AdminShell.jsx';
 import { createStore } from './src/store.js';
+import { initTouch, shine } from './src/touch.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
 import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
 
@@ -1929,6 +1930,7 @@ function route({ fresh = false } = {}) {
     showPage(Page, { D: DATA, me: myTeam, h: reactHelpers(), ...props });
     if (fresh) { app.focus({ preventScroll: true }); window.scrollTo({ top: 0 }); }
     reveal(app);
+    shine(app); // 2.0: light crosses each glass card once as it comes on screen (src/touch.js)
     currentView = key;
     if (key === 'rankings') maybeMessage();
   };
@@ -1941,7 +1943,7 @@ function route({ fresh = false } = {}) {
 function paintTabs() {
   const a = $('.tabs a[data-view="live"]'), fin = DATA.finalCall || DATA.after;
   a.hidden = !DATA.liveMode && !DATA.after;
-  a.textContent = fin ? 'Final' : 'Live';
+  a.querySelector('.tn').textContent = fin ? 'Final' : 'Live';
   $('.brand').setAttribute('href', DATA.liveMode ? '#live' : '#rankings');
   placeInk({ settle: true });
 }
@@ -2032,6 +2034,7 @@ async function main() {
   initTheme();
   initBall();
   initTooltips();
+  const touch = initTouch({ placeInk }); // 2.0: press, the dock's slide, the top pill (src/touch.js)
   const loader = startLoader();
   // Dan's posted headlines come with the data; a slow answer doesn't hold the page (they're added when they land)
   const posted = new URLSearchParams(location.search).has('demo') || window.__DEMO__ ? null : loadPosts();
@@ -2073,6 +2076,7 @@ async function main() {
   }, { passive: true });
   route();
   unrollBall();
+  setTimeout(touch.hello, 2400); // once per device, after the page has settled
   if (postedLate) posted.then((p) => { if (p.list.length && ['rankings', 'live'].includes(currentView)) route(); });
   // the first route can measure the tabs before the stylesheet or the fonts have applied (fast or cached data)
   const settle = () => placeInk({ settle: true });

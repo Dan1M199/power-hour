@@ -3447,3 +3447,144 @@ main::after { border-radius: 56px 56px 0 0; }
   .pbar { min-width: 62px; padding-inline: 7px; }
 }
 @media (max-width: 360px) { .wire-stats > div { padding-inline: 14px; } .wire-stats > div.has-face { column-gap: 8px; } }
+
+/* ---------- 2.0: wet glass, and a phone you can feel ----------
+   The same bowl, cartoon ink and football colours, with real glass where the page moves under something and light
+   that answers a finger. Kept last so it reads as one layer over everything above; its night values sit beside the day
+   ones here. Four parts:
+   1. Frosted chrome. The things that float over the page (the header, the phone dock, the ticker, the tooltip, the
+      chips standing on the grass) are translucent and blur what passes under them (--frost). Cards stay solid: a
+      blurred backdrop on a dozen cards costs a phone its scrolling, and words on a card must not swim.
+   2. The dock (phones). The tabs leave the header and float at the foot of the screen, under the thumb, icon over
+      label. It is the same <nav class="tabs"> and the same amber pill (placeInk), only placed by CSS, so desktop is
+      untouched. Slide a finger along it and the pill follows (initDock in src/touch.js). The header keeps the logo,
+      the theme switch and the team picker on one row, and still folds into the football.
+   3. Light. A press sends a bubble of light out from under the finger (.tx-lens), and a band of light crosses each
+      glass card once as it comes on screen (.tx-shine). Both are drawn on their own boxes on <body> by src/touch.js,
+      transform and opacity only.
+   4. The top pill (.tx-top): how far down the page you are, and the way back up.
+   Everything animated is off under reduced motion, and without backdrop-filter the chrome falls back to solid. */
+:root {
+  --frost: blur(22px) saturate(1.8);
+  --frost-s: blur(10px) saturate(1.6);
+  --chrome: rgba(224, 241, 251, 0.8);        /* the header and the dock: sky-tinted glass */
+  --chrome-rim: inset 0 1.5px 0 rgba(255, 255, 255, 0.95), inset 0 0 0 1px rgba(255, 255, 255, 0.4), inset 0 -12px 16px -12px rgba(11, 36, 18, 0.22);
+  --frost-paper: rgba(255, 255, 255, 0.74);  /* white chips standing on the grass */
+  --smoke: rgba(9, 28, 16, 0.76);            /* the dark boards that float: the tooltip, the 2.0 note */
+  --smoke-2: rgba(9, 28, 16, 0.9);           /* the ticker: words run across it, so less shows through */
+  /* a card's sheen picks up the sky, and its upper edge is wet */
+  --sheen: linear-gradient(180deg, rgba(206, 236, 253, 0.95) 0, rgba(255, 255, 255, 0) 100%);
+  --rim: inset 0 2px 0 #FFFFFF, inset 0 0 0 1.5px rgba(255, 255, 255, 0.7), inset 0 -16px 20px -16px rgba(11, 36, 18, 0.22);
+  --shine: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(140, 212, 255, 0.2) 30%, rgba(255, 255, 255, 0.9) 50%, rgba(140, 212, 255, 0.2) 70%, rgba(255, 255, 255, 0) 100%);
+  --lens: radial-gradient(circle closest-side, rgba(255, 255, 255, 0.7) 0, rgba(255, 255, 255, 0.28) 52%, rgba(11, 36, 18, 0.13) 86%, rgba(11, 36, 18, 0) 100%);
+  --dock-h: 62px;
+  --dock-gap: calc(10px + env(safe-area-inset-bottom, 0px));
+}
+:root[data-theme='dark'] {
+  --chrome: rgba(10, 22, 16, 0.78);
+  --chrome-rim: inset 0 1.5px 0 rgba(255, 255, 255, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.07), inset 0 -12px 16px -12px rgba(0, 0, 0, 0.6);
+  --frost-paper: rgba(30, 50, 38, 0.72);
+  --smoke: rgba(4, 12, 7, 0.74);
+  --smoke-2: rgba(4, 12, 7, 0.9);
+  --sheen: linear-gradient(180deg, rgba(150, 200, 255, 0.13) 0, rgba(255, 255, 255, 0) 100%);
+  --rim: inset 0 1.5px 0 rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -16px 20px -16px rgba(0, 0, 0, 0.6);
+  --shine: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(140, 200, 255, 0.1) 30%, rgba(255, 255, 255, 0.3) 50%, rgba(140, 200, 255, 0.1) 70%, rgba(255, 255, 255, 0) 100%);
+  --lens: radial-gradient(circle closest-side, rgba(255, 255, 255, 0.34) 0, rgba(255, 255, 255, 0.12) 52%, rgba(255, 255, 255, 0.2) 88%, rgba(255, 255, 255, 0) 100%);
+}
+/* no blur, no see-through: the chrome goes back to solid */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --chrome: var(--header); --frost-paper: var(--paper); --smoke: var(--board); --smoke-2: var(--board); }
+}
+
+/* --- 1. frosted chrome --- */
+.topbar { background-color: var(--chrome); box-shadow: var(--chrome-rim), 0 0 0 var(--edge) var(--outline), 0 var(--lift) 0 var(--edge) var(--ledge-c), 0 calc(var(--lift) + 12px) 20px -8px var(--cast);
+  -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost); }
+.ticker { background-color: var(--smoke-2); -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost); }
+.tip { background: var(--smoke); -webkit-backdrop-filter: var(--frost-s); backdrop-filter: var(--frost-s); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 4px 0 var(--ledge); }
+:root[data-theme='dark'] .tip { background: rgba(234, 244, 230, 0.86); }
+:is(.unveil, .share-sheet) { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+/* chips that stand straight on the grass let the mowing stripes through */
+.sec-title, .filters :is(button, a):not([aria-pressed='true'], [aria-current='page'], :disabled) {
+  background-color: var(--frost-paper); -webkit-backdrop-filter: var(--frost-s); backdrop-filter: var(--frost-s); }
+:root:not([data-theme='dark']) .day > h3 { background: var(--smoke); -webkit-backdrop-filter: var(--frost-s); backdrop-filter: var(--frost-s); }
+/* the tabs' tray is a groove in glass now, not in a solid bar */
+.tabs { background: rgba(11, 36, 18, 0.1); }
+:root[data-theme='dark'] .tabs { background: rgba(0, 0, 0, 0.34); }
+.tabs .ti { display: none; }
+
+/* --- 3. light: the press bubble and the card shine (src/touch.js) --- */
+.tx-lens { position: fixed; z-index: 80; overflow: hidden; pointer-events: none; contain: strict; }
+.tx-lens i { position: absolute; border-radius: 50%; background: var(--lens); opacity: 0; will-change: transform, opacity; }
+.tx-shine { position: absolute; z-index: 15; overflow: hidden; pointer-events: none; contain: strict; }
+.tx-shine i { position: absolute; top: -20%; bottom: -20%; left: 0; width: 120px; background: var(--shine); transform: translateX(-200px); will-change: transform; }
+.tx-haptic { position: fixed; left: -99px; top: 0; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
+/* a touch has the bubble; the grey flash iOS paints on a tapped link would sit on top of it */
+@media (pointer: coarse) { a, button, summary, select, label { -webkit-tap-highlight-color: transparent; } }
+
+/* --- 4. the top pill --- */
+.tx-top { position: fixed; z-index: 17; right: max(14px, calc((100vw - 1180px) / 2 - 64px)); bottom: 24px; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  color: var(--ink); background: var(--chrome); -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost);
+  box-shadow: var(--chrome-rim), 0 0 0 var(--edge) var(--outline), 0 4px 0 var(--edge) var(--ledge), 0 12px 16px -6px var(--cast);
+  opacity: 0; visibility: hidden; transform: translateY(18px) scale(0.6);
+  transition: transform 0.3s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.2s, visibility 0s 0.3s; }
+.tx-top.on { opacity: 1; visibility: visible; transform: none; transition: transform 0.5s cubic-bezier(0.3, 1.5, 0.5, 1), opacity 0.2s, visibility 0s; }
+.tx-top svg { display: block; width: 48px; height: 48px; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.tx-top path { stroke: currentColor; stroke-width: 2.6; }
+.tx-top-track { stroke: rgba(11, 36, 18, 0.14); stroke-width: 3; }
+.tx-top-ring { stroke: var(--amber); stroke-width: 3; transform: rotate(-90deg); transform-origin: 50% 50%; }
+:root[data-theme='dark'] .tx-top-track { stroke: rgba(255, 255, 255, 0.14); }
+html:is(.admin-mode, .locked) .tx-top { display: none; }
+
+/* --- the 2.0 note: once per device (hello in src/touch.js) --- */
+.tx-hello { position: fixed; z-index: 21; left: 50%; bottom: 24px; display: flex; align-items: center; gap: 12px; width: max-content; max-width: min(440px, calc(100vw - 24px));
+  padding: 9px 18px 9px 9px; border-radius: 999px; cursor: pointer; color: #FFFFFF; font-size: 13.5px; line-height: 1.3;
+  background: var(--smoke); -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 0 var(--edge) var(--outline), 0 4px 0 var(--edge) var(--ledge-gold), 0 14px 20px -8px rgba(0, 0, 0, 0.6);
+  opacity: 0; transform: translate(-50%, 24px) scale(0.9); transition: transform 0.5s cubic-bezier(0.3, 1.4, 0.5, 1), opacity 0.25s; }
+.tx-hello.on { opacity: 1; transform: translate(-50%, 0); }
+.tx-hello b { flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; font: 900 20px/1 var(--display); color: #0B2412;
+  background: var(--gloss), var(--yellow); box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.6), 0 0 0 2px rgba(0, 0, 0, 0.35); }
+.tx-hello strong { color: var(--yellow); }
+@media (prefers-reduced-motion: reduce) { .tx-hello, .tx-top, .tx-top.on { transition: opacity 0.2s, visibility 0s; transform: none; } .tx-hello { transform: translateX(-50%); } }
+
+/* --- 2. the dock (phones) --- */
+@media (max-width: 760px) {
+  html { scroll-padding-top: 88px; } /* the phone header is one row now */
+  /* the header's glass is its skin (the football's ::before), so the blur lives there: on the bar itself it would
+     trap the dock, which is fixed to the screen, inside the bar */
+  .topbar { background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; border-radius: 999px; padding: 8px 10px; }
+  .topbar::before { background-color: var(--chrome); background-image: none; -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost);
+    box-shadow: var(--chrome-rim), 0 0 0 var(--edge) var(--outline), 0 var(--lift) 0 var(--edge) var(--ledge-c); }
+  .navball { top: 7px; }
+  :is(.topbar.folded, .navball-intro .topbar)::before { top: 9.5px; }
+
+  .tabs { position: fixed; z-index: 1; left: 0; right: 0; bottom: var(--dock-gap); order: 0; width: min(460px, calc(100vw - 24px)); height: var(--dock-h); margin: 0 auto; padding: 5px; gap: 2px;
+    align-items: stretch; background: var(--chrome); -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost);
+    box-shadow: var(--chrome-rim), 0 0 0 1.5px var(--outline), 0 4px 0 1.5px var(--ledge), 0 16px 22px -8px rgba(0, 20, 8, 0.7);
+    touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  :root[data-theme='dark'] .tabs { background: var(--chrome); }
+  .tabs a { flex: 1 1 0; min-width: 0; display: grid; align-content: center; justify-items: center; gap: 3px; padding: 0 2px; font-size: 11.5px; line-height: 1; letter-spacing: 0.01em; }
+  .tabs a[hidden] { display: none; }
+  .tabs .ti { display: block; width: 22px; height: 22px; transition: transform 0.3s cubic-bezier(0.3, 1.5, 0.5, 1); }
+  .tabs a[aria-current='page'] .ti { transform: translateY(-1px) scale(1.08); }
+  .tab-ink { top: 5px; bottom: 8px; }
+  /* a finger sliding along the dock: the pill swells into a lens and keeps up with it */
+  .tabs.dragging .tab-ink { transition: transform 0.22s cubic-bezier(0.3, 1.3, 0.5, 1), width 0.22s; scale: 1.06 1.1; }
+  .tabs.dragging a { color: var(--ink-2); }
+  .tabs.dragging a.hot { color: #0B2412; }
+  .tabs.dragging a.hot .ti { transform: translateY(-2px) scale(1.18); }
+  /* the dock outlasts the fold: while the header is a football the tabs stay put, a touch smaller */
+  .topbar > .tabs { transition: transform 0.5s cubic-bezier(0.3, 1.3, 0.5, 1), opacity 0.25s; transform-origin: 50% 100%; }
+  :is(.topbar.folded, .navball-intro .topbar) > .tabs { opacity: 1; visibility: visible; pointer-events: auto; transition: transform 0.5s cubic-bezier(0.3, 1.3, 0.5, 1), opacity 0.25s; }
+  .topbar.folded > .tabs { transform: scale(0.94); }
+  /* the opening: the dock rises once the football unrolls */
+  .navball-intro .topbar > .tabs { transform: translateY(calc(100% + 40px)); opacity: 0; }
+
+  /* room for the dock at the foot of the page and of anything that covers it */
+  .footer { padding-bottom: calc(48px + var(--dock-h) + var(--dock-gap)); }
+  .lockout { padding-top: 92px; padding-bottom: calc(24px + var(--dock-h) + var(--dock-gap)); }
+  .tx-top { right: 14px; bottom: calc(var(--dock-h) + var(--dock-gap) + 16px); }
+  .tx-hello { bottom: calc(var(--dock-h) + var(--dock-gap) + 16px); }
+  .ticker { top: 19px; } /* the football's row, two pixels up with the slimmer header */
+}
+@media (max-width: 760px) and (prefers-reduced-motion: reduce) { .topbar > .tabs, .tabs .ti { transition: none; } }

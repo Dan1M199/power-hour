@@ -141,7 +141,7 @@ The energy comes from a single bold move, the power rank painted on the grass li
 
 **Key Characteristics:**
 - Two kickoffs: the day game (light, the default) and the night game (dark), the same stadium after sunset. The device's setting picks one; the sun and moon button in the header overrides it on that device.
-- Hard edges everywhere: inked outlines, solid ledges, no blur, no `backdrop-filter`, no ambient shadows.
+- Hard edges everywhere: inked outlines and solid ledges. Since 2.0 the floating chrome (header, phone dock, ticker, tooltip, chips on the grass) is frosted glass with `backdrop-filter`; cards stay solid.
 - Glossy and pressable: cards and buttons look like glass toys and press down when touched.
 - Condensed display numerals for everything that's a score, rank or name; a warm geometric sans for reading.
 - Data first: charts are hand-drawn SVG, labels wear ink, never the series colour.
@@ -170,7 +170,7 @@ A sunny sports palette: field greens and sky blues for the setting, one yellow a
 - **Chalk** (chalk): white type on scoreboards and yard numbers, chip and sign faces.
 - **Tray / Tray 2 / Line** (tile, tile-2, line): the recessed panels inside a card, bar tracks and hover fills a step darker again, and dividers.
 - **Scoreboard** (board) and **End Zone** (turf): the dark panels and the footer.
-- **Header Sky** (header): the solid sticky header, opaque because the page scrolls beneath it.
+- **Header Sky** (header): the sticky header's tint. Since 2.0 it is frosted glass (`--chrome` with `--frost`), so the page shows through as it scrolls beneath.
 
 ### Named Rules
 **The First-Down Rule.** Yellow means "this is you". It never decorates, never marks an action, never highlights someone else's team. Leaders and winners wear Goalpost Amber (the money-week leader, for one). "You" takes one of two forms: the 4px yellow ring on a card (`--ring-w`), or Your Row (mine-bg) with a 2px `#F2C200` inset on a row, cell or table line. Yellow type on a dark scoreboard is an accent, not a "you" mark.
@@ -246,7 +246,7 @@ Bar tracks inside a tray use Tray 2 so they still read.
 ### Named Rules
 **The Three-Step Rule.** A panel inside a card is always pressed in (Tray plus tray edge), never another raised card and never the same tone as the card face. If two neighbouring surfaces look alike, one of them is on the wrong step.
 
-**The Hard-Ledge Rule.** No blur, no `backdrop-filter`, no soft drop shadows. If something needs to stand up, give it an ink outline and a solid ledge.
+**The Hard-Ledge Rule.** No blur or `backdrop-filter` on cards, no soft drop shadows; only the floating chrome is frosted (2.0). If something needs to stand up, give it an ink outline and a solid ledge.
 
 **The One-Soft-Edge Rule.** The kicker loader's feathered mask is the only soft edge on the site, by request. Don't add another.
 
@@ -277,7 +277,7 @@ Glossy and pressable cartoon pills.
 - **Internal Padding:** 18px (14–28px by size).
 
 ### Navigation
-A solid pill-shaped sticky header in Header Sky holding the logo, the wordmark (hidden on phones), the tab strip and the team picker. Tabs sit in a Tray groove; the active tab is an amber glossy pill (`.tab-ink`) that slides between tabs. Phones get short labels (Live, Power, Wire, Games, Trades, Lab).
+A frosted pill-shaped sticky header (on phones the tabs leave it for a glass dock at the foot of the screen, 2.0) in Header Sky holding the logo, the wordmark (hidden on phones), the tab strip and the team picker. Tabs sit in a Tray groove; the active tab is an amber glossy pill (`.tab-ink`) that slides between tabs. Phones get short labels (Live, Power, Wire, Games, Trades, Lab).
 
 ### Charts (cartoon glass)
 Charts follow the cards. Every plot stands on a plate: a Tray with chalk-white gridlines on a card, or a white plate inside a tray. Lines carry an ink casing under the team colour and a thin white gloss along the top; the focus team's line is heavier. Dots have a 2px ink ring and a white glint; photo marks get an ink ring around their colour ring. Bars have a 2px ink edge, a hard ledge 3px underneath and a gloss strip (at most 12px) over the top. Chart labels wear a white halo. The scatter's quadrants are tinted by how good a place they are (green bottom right, red top left). Heat cells are glossy tiles with a shaded foot. The position-group radar is a white dartboard on a ledge. Playoff odds read as a filled glossy pill.
@@ -315,7 +315,7 @@ Dark Scoreboard cards with white type and yellow accents: smoked-glass sheen, a 
 
 ### Don't:
 - **Don't** use emoji or ALL-CAPS labels anywhere.
-- **Don't** add blur, `backdrop-filter` or soft drop shadows; depth is outline plus ledge.
+- **Don't** add blur or `backdrop-filter` to cards, or soft drop shadows; depth is outline plus ledge. Frost is for floating chrome only.
 - **Don't** use the `background` shorthand on a glass card; it wipes the sheen.
 - **Don't** colour chart labels with their series colour; labels wear ink, and they never fade with their dimmed line.
 - **Don't** mark a list item or callout with a coloured `border-left`; use a reason pip.
