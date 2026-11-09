@@ -32,8 +32,8 @@ export function haptic() {
 
 // ---------- press ----------
 const PRESSABLE = 'a[href], button:not(:disabled), summary, [role="button"], .team-pick';
-// these run their own gestures or are too small a world to dress up: the dock, the football, the emoji picker, the desk
-const HANDS_OFF = '.tabs, .navball, .rxn, .adm-page, .paper input, .tx-top';
+// these run their own gestures or are too small a world to dress up: the dock, the emoji picker, the desk
+const HANDS_OFF = '.tabs, .rxn, .adm-page, .paper input, .tx-top, .me-panel select';
 const SPRING = 'cubic-bezier(0.3, 1.5, 0.5, 1)';
 
 function initPress() {
@@ -205,7 +205,7 @@ function hello() {
   const KEY = 'ph-hello-2';
   if (root.classList.contains('admin-mode') || root.classList.contains('locked')) return;
   try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, '1'); } catch { return; }
-  const note = el('div', 'tx-hello', `<b>2.0</b><span><strong>The Power Hour 2.0.</strong> ${phone() ? 'The tabs moved down to your thumb. Slide a finger along them.' : 'New glass all round, and built for your phone.'}</span>`);
+  const note = el('div', 'tx-hello', `<b>2.0</b><span><strong>The Power Hour 2.0.</strong> ${phone() ? 'The tabs moved down to your thumb: slide a finger along them. Your team and the night game are in the circle.' : 'New glass all round, and built for your phone.'}</span>`);
   note.setAttribute('role', 'status');
   document.body.append(note);
   const close = () => { note.classList.remove('on'); setTimeout(() => note.remove(), 500); };

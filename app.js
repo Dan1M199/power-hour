@@ -1754,54 +1754,33 @@ function placeInk({ settle = false } = {}) {
   requestAnimationFrame(() => ink.classList.toggle('live', !morphs()));
 }
 
-// The football (phones): the header folds into a ball in its top-left corner once you scroll down past it, and unrolls
-// when you scroll back up or tap the ball. Only the .folded class changes here; the morph is CSS ("the football" in
-// styles.css). Scroll distance decides, never resize (iPhone resizes as its toolbar hides), and overscroll past either
-// end is ignored, so the rubber band at the bottom of a page can't read as scrolling back up.
+// You (phones): the bar is gone, so the team picker and the theme switch live in a glass circle beside the tab dock,
+// your face in it. A tap opens the panel out of the circle (so does a tap on an empty you card, [data-open-me]); a tap outside, Escape, picking a team or scrolling away
+// closes it. On desktop .me and its panel are display: contents, so none of this shows and the bar is as it was.
 const phone = mq('(max-width: 760px)');
-function initBall() {
-  const bar = $('.topbar'), ball = $('#navball'), root = document.documentElement;
-  if (!bar || !ball) return;
-  const FOLD_AFTER = 120, DOWN = 32, UP = 12; // px: below the bar's own height, then a short flick down or a nudge up
-  let folded = false, lastY = 0, turnY = 0, dir = 0, queued = false;
-  // the bottom of the page, kept up to date as the page grows instead of measured on every scroll
-  let maxY = Infinity;
-  const measure = () => (maxY = Math.max(0, root.scrollHeight - innerHeight));
-  new ResizeObserver(measure).observe(document.body);
-  const at = () => Math.min(Math.max(scrollY, 0), maxY);
-  const fold = (on) => {
-    on &&= phone();
-    if (on === folded) return;
-    folded = on;
-    bar.classList.toggle('folded', on); // folded, the bar's parts are visibility: hidden, so they can't take focus or taps
-    ball.setAttribute('aria-expanded', String(!on));
+function initMe() {
+  const me = $('#me'), btn = $('#me-btn'), panel = $('#me-panel');
+  if (!me || !btn || !panel) return;
+  let y0 = 0;
+  const set = (on) => {
+    if (on === me.classList.contains('open')) return;
+    me.classList.toggle('open', on);
+    btn.setAttribute('aria-expanded', String(on));
+    if (on) y0 = scrollY;
   };
-  const check = () => {
-    queued = false;
-    const y = at(), dy = y - lastY;
-    lastY = y;
-    if (y < FOLD_AFTER) { fold(false); dir = 0; return; }
-    if (!dy || root.classList.contains('locked')) return;
-    if (Math.sign(dy) !== dir) { dir = Math.sign(dy); turnY = y - dy; } // where this stretch of scrolling started
-    if (dir > 0 && y - turnY > DOWN) fold(true);
-    else if (dir < 0 && turnY - y > UP) fold(false);
-  };
-  lastY = at();
-  addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(check); } }, { passive: true });
-  ball.addEventListener('click', () => {
-    root.classList.remove('navball-intro');
-    fold(false);
-    dir = 0; // the next scroll down measures from here
+  btn.addEventListener('click', () => {
+    const on = !me.classList.contains('open');
+    set(on);
+    if (on && !lite()) $('#my-team')?.focus({ preventScroll: true });
   });
-  matchMedia('(max-width: 760px)').addEventListener?.('change', () => phone() || fold(false));
-}
-
-// The opening on phones: the page starts folded into the ball (index.html adds html.navball-intro before the first paint)
-// and unrolls once the first page is up, after the ball has landed (its toss is 0.7 s).
-function unrollBall() {
-  const root = document.documentElement;
-  if (!root.classList.contains('navball-intro')) return;
-  setTimeout(() => root.classList.remove('navball-intro'), Math.max(0, (window.__ballAt || 0) + 900 - Date.now()));
+  document.addEventListener('pointerdown', (e) => { if (me.classList.contains('open') && !me.contains(e.target)) set(false); }, { passive: true });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && me.classList.contains('open')) { set(false); btn.focus(); } });
+  addEventListener('scroll', () => { if (me.classList.contains('open') && Math.abs(scrollY - y0) > 80) set(false); }, { passive: true });
+  $('#my-team')?.addEventListener('change', () => setTimeout(() => set(false), 250));
+  addEventListener('hashchange', () => set(false));
+  // the empty you cards point at the circle; on a phone a tap on one opens it
+  document.addEventListener('click', (e) => { if (phone() && e.target.closest?.('[data-open-me]')) set(true); });
+  matchMedia('(max-width: 760px)').addEventListener?.('change', () => phone() || set(false));
 }
 
 // count big numbers up from zero, keeping their format (decimals, sign, %)
@@ -1948,12 +1927,17 @@ function paintTabs() {
   placeInk({ settle: true });
 }
 
-// your own face next to the team picker once you have chosen a team
+// your own face next to the team picker once you have chosen a team, and in the phone's circle (a figure until then)
 function paintMe() {
-  const img = $('#my-face'), src = myTeam ? faceSrc(team(myTeam)) : null;
-  if (!img) return;
-  img.hidden = !src;
-  if (src && img.getAttribute('src') !== src) img.src = src;
+  const src = myTeam ? faceSrc(team(myTeam)) : null;
+  for (const img of [$('#my-face'), $('.me-btn-face')]) {
+    if (!img) continue;
+    img.hidden = !src;
+    if (src && img.getAttribute('src') !== src) img.src = src;
+  }
+  $('#me')?.classList.toggle('has-face', !!src);
+  const t = myTeam && team(myTeam);
+  $('#me-btn')?.setAttribute('aria-label', t ? `${t.name}: your team and the theme` : 'Pick your team, and the theme');
 }
 
 function initTeamPicker() {
@@ -2032,7 +2016,7 @@ const headlineWeek = () => (RAW.league.settings?.last_scored_leg ?? DATA.meta.la
 async function main() {
   initAvatarFallback();
   initTheme();
-  initBall();
+  initMe();
   initTooltips();
   const touch = initTouch({ placeInk }); // 2.0: press, the dock's slide, the top pill (src/touch.js)
   const loader = startLoader();
@@ -2046,7 +2030,6 @@ async function main() {
   } catch (e) {
     await loader.done();
     (showPage ||= pageRoot($('#app')))(LoadError, { message: String(e.message || e) });
-    unrollBall();
     return;
   }
   $('#league-name').textContent = `${RAW.league.name} ${RAW.league.season}`;
@@ -2075,7 +2058,6 @@ async function main() {
     placeInk({ settle: true });
   }, { passive: true });
   route();
-  unrollBall();
   setTimeout(touch.hello, 2400); // once per device, after the page has settled
   if (postedLate) posted.then((p) => { if (p.list.length && ['rankings', 'live'].includes(currentView)) route(); });
   // the first route can measure the tabs before the stylesheet or the fonts have applied (fast or cached data)

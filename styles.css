@@ -218,57 +218,6 @@ button, select { font: inherit; color: inherit; }
 .theme-btn .to-light, :root[data-theme='dark'] .theme-btn .to-dark { display: none; }
 :root[data-theme='dark'] .theme-btn .to-light { display: block; }
 
-/* ---------- the football (phones) ----------
-   Scrolling down folds the header into a football in its top-left corner; scrolling up or tapping the ball unrolls it
-   (initBall in app.js toggles .folded), and on first load the page opens folded and unrolls (html.navball-intro, set by the
-   inline script in index.html, taken off by unrollBall). The header keeps its size the whole time, so nothing below it
-   moves: its glass is drawn by ::before (the skin) instead of the header itself, and only the skin's box shrinks. The
-   skin has no content, so animating its size costs no more than a transform would; everything else is opacity and
-   transform. Folding: the contents fade, the skin shrinks onto the ball, the ball spins in over it. Unrolling runs it
-   backwards: the ball spins away, the skin grows back, the contents fade in. Desktop keeps the plain bar. */
-.navball { display: none; }
-@media (max-width: 760px) {
-  .topbar { background: none; box-shadow: none; }
-  .topbar::before { content: ''; position: absolute; z-index: -1; left: 0; top: 0; width: 100%; height: 100%; border-radius: inherit;
-    background-color: var(--header); background-image: var(--sheen); background-size: 100% 150px; background-repeat: no-repeat;
-    box-shadow: var(--rim), 0 0 0 var(--ring-w) var(--yellow), 0 0 0 calc(var(--ring-w) + var(--edge)) var(--outline),
-      0 var(--lift) 0 calc(var(--ring-w) + var(--edge)) var(--ledge-c);
-    transition: left 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s, top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s,
-      width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s, height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s, opacity 0s; }
-  .topbar > :not(.navball) { transition: opacity 0.28s ease 0.36s, visibility 0s 0.36s; }
-  .topbar > .theme-btn { transition: opacity 0.28s ease 0.36s, visibility 0s 0.36s, background-color 0.15s, transform 0.15s; }
-
-  /* the ball: its body lines up with where the logo sits, top left */
-  .navball { display: block; position: absolute; left: 2px; top: 9px; width: 62px; height: 44px; padding: 0; border: 0; border-radius: 34px;
-    background: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
-    opacity: 0; visibility: hidden; pointer-events: none; transform: rotate(160deg) scale(0.45);
-    transition: transform 0.34s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.18s ease 0.14s, visibility 0s 0.34s; }
-  .navball svg { display: block; width: 62px; height: 44px; overflow: visible; transition: transform 0.15s; }
-  .navball:active svg { transform: scale(0.9); }
-  .nb-ledge { fill: var(--ledge); }
-  .nb-hide { fill: #9A4E24; }
-  .nb-edge { fill: none; stroke: var(--outline); stroke-width: 2.5; stroke-linejoin: round; }
-  .nb-band, .nb-lace { fill: none; stroke: #FFFFFF; stroke-linecap: round; }
-  .nb-band { stroke-width: 2.6; }
-  .nb-lace { stroke-width: 3; }
-
-  /* folded (and the opening, before it unrolls) */
-  :is(.topbar.folded, .navball-intro .topbar) { pointer-events: none; }
-  :is(.topbar.folded, .navball-intro .topbar)::before { left: 5px; top: 11.5px; width: 56px; height: 35px; opacity: 0;
-    transition: left 0.42s cubic-bezier(0.5, 0, 0.2, 1) 0.06s, top 0.42s cubic-bezier(0.5, 0, 0.2, 1) 0.06s,
-      width 0.42s cubic-bezier(0.5, 0, 0.2, 1) 0.06s, height 0.42s cubic-bezier(0.5, 0, 0.2, 1) 0.06s, opacity 0.1s linear 0.5s; }
-  :is(.topbar.folded, .navball-intro .topbar) > :not(.navball) { opacity: 0; visibility: hidden; transition: opacity 0.16s, visibility 0s 0.16s; }
-  :is(.topbar.folded, .navball-intro .topbar) > .navball { opacity: 1; visibility: visible; pointer-events: auto; transform: none;
-    transition: transform 0.54s cubic-bezier(0.3, 1.45, 0.5, 1) 0.28s, opacity 0.16s ease 0.3s, visibility 0s 0.28s; }
-
-  /* the opening: the ball is tossed in from above the corner, then rocks on the spot until the page is ready */
-  @media (prefers-reduced-motion: no-preference) {
-    .navball-intro .navball { animation: nb-toss 0.7s cubic-bezier(0.25, 1.25, 0.5, 1) both, nb-rock 1.4s ease-in-out 0.7s infinite; }
-    @keyframes nb-toss { from { opacity: 0; transform: translate(-30px, -70px) rotate(-320deg) scale(0.5); } 30% { opacity: 1; } }
-    @keyframes nb-rock { 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
-  }
-}
-
 /* ---------- the field ---------- */
 /* main is a one-column grid so its first row is always the page heading. The field is an absolutely placed layer from
    grid line 2 (right under the heading) to the bottom of the page, bleeding to both window edges: mowing stripes, a
@@ -2592,7 +2541,7 @@ html.locked { overflow: hidden; }
 
 /* ---------- the news ticker ----------
    Scrolled past the headline card, its headlines run on as a scoreboard strip (src/hero/Ticker.jsx, portaled to body):
-   under the nav bar on desktop, beside the folded football on phones (only while folded). It drops in from its top edge,
+   under the nav bar on desktop, along the top of the screen on phones. It drops in from its top edge,
    transform and opacity only, and the loop is one transform animation that only runs while the strip shows. */
 .ticker { position: fixed; z-index: 19; top: var(--tk-top, 84px); left: 0; right: 0; width: var(--page); margin: 0 auto; height: 42px;
   display: flex; align-items: center; gap: 10px; padding: 0 6px; border-radius: 999px; color: var(--chalk); background-color: var(--board);
@@ -2624,8 +2573,8 @@ html.locked { overflow: hidden; }
   .tk-window::-webkit-scrollbar { display: none; }
 }
 @media (max-width: 760px) {
-  /* in the header's place: the row of the folded football, beside the ball */
-  .ticker { top: 21px; left: calc((100vw - var(--page)) / 2 + 72px); right: calc((100vw - var(--page)) / 2); width: auto; margin: 0; height: 44px; gap: 8px; padding: 0 5px; }
+  /* along the top of the screen: phones have no bar (the tabs are the dock at the foot) */
+  .ticker { top: calc(env(safe-area-inset-top, 0px) + 10px); height: 44px; gap: 8px; padding: 0 5px; }
   .tk-badge { padding: 9px; } /* just the blinking dot: the strip needs the room */
   .tk-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .tk-item { font-size: 13.5px; }
@@ -3549,16 +3498,16 @@ html:is(.admin-mode, .locked) .tx-top { display: none; }
 
 /* --- 2. the dock (phones) --- */
 @media (max-width: 760px) {
-  html { scroll-padding-top: 88px; } /* the phone header is one row now */
-  /* the header's glass is its skin (the football's ::before), so the blur lives there: on the bar itself it would
-     trap the dock, which is fixed to the screen, inside the bar */
-  .topbar { background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; border-radius: 999px; padding: 8px 10px; }
-  .topbar::before { background-color: var(--chrome); background-image: none; -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost);
-    box-shadow: var(--chrome-rim), 0 0 0 var(--edge) var(--outline), 0 var(--lift) 0 var(--edge) var(--ledge-c); }
-  .navball { top: 7px; }
-  :is(.topbar.folded, .navball-intro .topbar)::before { top: 9.5px; }
-
-  .tabs { position: fixed; z-index: 1; left: 0; right: 0; bottom: var(--dock-gap); order: 0; width: min(460px, calc(100vw - 24px)); height: var(--dock-h); margin: 0 auto; padding: 5px; gap: 2px;
+  html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 66px); } /* no bar on phones; room for the ticker */
+  /* no bar on phones (Nov 9): the tabs are the dock and you are the circle beside it, both fixed to the foot of the
+     screen. The header keeps no box of its own (a box here, or a backdrop-filter or transform on it, would trap the
+     fixed dock inside it), and the logo stays in the end zone. */
+  .topbar { display: contents; }
+  .topbar > .brand { display: none; }
+  main { padding-top: calc(env(safe-area-inset-top, 0px) + 18px); }
+  /* the dock and the circle are one group, centred: the circle sits at the dock's right, 10px apart, the way an
+     accessory button sits beside a Liquid Glass tab bar */
+  .tabs { position: fixed; z-index: 20; left: var(--bar-x); right: auto; bottom: var(--dock-gap); order: 0; width: calc(var(--bar-w) - var(--dock-h) - 10px); height: var(--dock-h); margin: 0; padding: 5px; gap: 2px;
     align-items: stretch; background: var(--chrome); -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost);
     box-shadow: var(--chrome-rim), 0 0 0 1.5px var(--outline), 0 4px 0 1.5px var(--ledge), 0 16px 22px -8px rgba(0, 20, 8, 0.7);
     touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
@@ -3573,18 +3522,54 @@ html:is(.admin-mode, .locked) .tx-top { display: none; }
   .tabs.dragging a { color: var(--ink-2); }
   .tabs.dragging a.hot { color: #0B2412; }
   .tabs.dragging a.hot .ti { transform: translateY(-2px) scale(1.18); }
-  /* the dock outlasts the fold: while the header is a football the tabs stay put, a touch smaller */
-  .topbar > .tabs { transition: transform 0.5s cubic-bezier(0.3, 1.3, 0.5, 1), opacity 0.25s; transform-origin: 50% 100%; }
-  :is(.topbar.folded, .navball-intro .topbar) > .tabs { opacity: 1; visibility: visible; pointer-events: auto; transition: transform 0.5s cubic-bezier(0.3, 1.3, 0.5, 1), opacity 0.25s; }
-  .topbar.folded > .tabs { transform: scale(0.94); }
-  /* the opening: the dock rises once the football unrolls */
-  .navball-intro .topbar > .tabs { transform: translateY(calc(100% + 40px)); opacity: 0; }
-
   /* room for the dock at the foot of the page and of anything that covers it */
   .footer { padding-bottom: calc(48px + var(--dock-h) + var(--dock-gap)); }
-  .lockout { padding-top: 92px; padding-bottom: calc(24px + var(--dock-h) + var(--dock-gap)); }
-  .tx-top { right: 14px; bottom: calc(var(--dock-h) + var(--dock-gap) + 16px); }
+  .lockout { padding-top: calc(env(safe-area-inset-top, 0px) + 20px); padding-bottom: calc(24px + var(--dock-h) + var(--dock-gap)); }
+  .tx-top { right: calc(var(--bar-x) + (var(--dock-h) - 48px) / 2); bottom: calc(var(--dock-h) + var(--dock-gap) + 16px); }
   .tx-hello { bottom: calc(var(--dock-h) + var(--dock-gap) + 16px); }
-  .ticker { top: 19px; } /* the football's row, two pixels up with the slimmer header */
 }
-@media (max-width: 760px) and (prefers-reduced-motion: reduce) { .topbar > .tabs, .tabs .ti { transition: none; } }
+
+/* --- you: the circle beside the dock (phones; initMe in app.js). On desktop the circle and the panel's heading don't
+   exist and the panel is display: contents, so the theme switch and the team picker sit in the bar as they always did --- */
+.me, .me-panel { display: contents; }
+.me-btn, .me-head, .where-p { display: none; }
+@media (max-width: 760px) { .where-d { display: none; } .where-p { display: inline; } }
+@media (max-width: 760px) {
+  :root { --bar-w: min(540px, calc(100vw - 24px)); --bar-x: calc((100vw - var(--bar-w)) / 2); }
+  .me { display: block; position: fixed; z-index: 20; right: var(--bar-x); bottom: var(--dock-gap); width: var(--dock-h); height: var(--dock-h); }
+  .me.open { z-index: 22; }
+  .me-btn { display: grid; place-items: center; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 50%; cursor: pointer; color: var(--ink);
+    background: var(--chrome); -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost); -webkit-tap-highlight-color: transparent;
+    box-shadow: var(--chrome-rim), 0 0 0 1.5px var(--outline), 0 4px 0 1.5px var(--ledge), 0 16px 22px -8px rgba(0, 20, 8, 0.7);
+    transition: transform 0.4s cubic-bezier(0.3, 1.5, 0.5, 1), box-shadow 0.2s; }
+  /* yellow means you: your face wears the ring; open, the ring turns to the amber of what's on */
+  .me-btn-face { width: calc(var(--dock-h) - 14px); height: calc(var(--dock-h) - 14px); border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 3px var(--yellow), 0 0 0 4.5px var(--outline);
+    transition: box-shadow 0.2s, transform 0.4s cubic-bezier(0.3, 1.5, 0.5, 1); }
+  .me-btn-face[hidden], .me.has-face .me-btn-icon { display: none; }
+  .me-btn-icon { width: 26px; height: 26px; }
+  .me.open .me-btn-face { box-shadow: 0 0 0 3px var(--amber), 0 0 0 4.5px var(--outline); transform: scale(0.9); }
+  .me.open .me-btn { box-shadow: var(--chrome-rim), 0 0 0 1.5px var(--outline), 0 2px 0 1.5px var(--ledge), 0 8px 14px -8px rgba(0, 20, 8, 0.6); }
+  /* the panel grows out of the circle: its origin is the circle's centre, it springs open and drops away quicker */
+  .me-panel { display: grid; gap: 10px; position: absolute; right: 0; bottom: calc(100% + 12px); width: min(320px, calc(100vw - 24px)); padding: 14px 14px 14px;
+    border-radius: 32px; background: var(--chrome); -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost);
+    box-shadow: var(--chrome-rim), 0 0 0 1.5px var(--outline), 0 4px 0 1.5px var(--ledge), 0 22px 30px -10px rgba(0, 20, 8, 0.65);
+    transform-origin: calc(100% - var(--dock-h) / 2) calc(100% + 12px + var(--dock-h) / 2);
+    opacity: 0; visibility: hidden; transform: scale(0.2); pointer-events: none;
+    transition: transform 0.24s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.18s ease 0.04s, visibility 0s 0.24s; }
+  .me.open .me-panel { opacity: 1; visibility: visible; transform: none; pointer-events: auto;
+    transition: transform 0.5s cubic-bezier(0.3, 1.35, 0.5, 1), opacity 0.16s, visibility 0s; }
+  .me-head { display: block; margin: 2px 6px 0; font: 800 20px/1 var(--display); letter-spacing: 0.01em; color: var(--ink); }
+  .me-panel .team-pick { display: flex; gap: 10px; margin: 0; order: 1; }
+  .me-panel .theme-btn { order: 2; }
+  .me-panel .me-face { width: 44px; height: 44px; box-shadow: 0 0 0 3px var(--yellow); }
+  /* 16px so iPhone Safari doesn't zoom in on the picker; 44px tall, a thumb's target */
+  .me-panel .team-pick select { flex: 1; min-width: 0; max-width: none; min-height: 44px; padding-block: 8px; font-size: 16px; }
+  .me-panel .theme-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 44px; border-radius: 999px; font: 700 15px/1 var(--body); }
+  .me-panel .theme-btn::after { content: 'Night game'; }
+  :root[data-theme='dark'] .me-panel .theme-btn::after { content: 'Day game'; }
+  .me-panel .theme-btn svg { width: 19px; height: 19px; }
+  /* the empty you card names the circle and opens it (initMe); the hand-drawn "Start up there" pointed at the bar */
+  .you-card.empty::before, .you-card.empty::after { display: none; }
+  .you-card.empty[data-open-me] { cursor: pointer; }
+}
+@media (max-width: 760px) and (prefers-reduced-motion: reduce) { .tabs .ti, .me-btn, .me-btn-face, .me-panel, .me.open .me-panel { transition: opacity 0.15s, visibility 0s; transform: none; } }

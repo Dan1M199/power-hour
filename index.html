@@ -15,14 +15,6 @@
       if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       document.documentElement.dataset.theme = t;
       if (t === 'dark') document.querySelector('meta[name="theme-color"]').content = '#0A1630';
-      // phones open with the header folded into the football (the .navball in the header), which unrolls into the bar
-      // once the page is ready (unrollBall in app.js); the timer is a backstop in case app.js never gets there
-      if (matchMedia('(max-width: 760px)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        var h = document.documentElement;
-        h.classList.add('navball-intro');
-        window.__ballAt = Date.now();
-        setTimeout(function () { h.classList.remove('navball-intro'); }, 15000);
-      }
     })();
   </script>
   <link rel="icon" type="image/png" href="assets/favicon.png">
@@ -64,32 +56,27 @@
       <a href="#matchups" data-view="matchups"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20c-1.200-5.600.2-10.400 3.200-13.200S14.400 2.800 20 4c1.200 5.600-.2 10.400-3.200 13.200S9.600 21.200 4 20Z"/><path d="M9.300 14.700l5.400-5.400M10.500 11l2.500 2.500"/></svg><span class="tn">Games</span></a>
       <a href="#lab" data-view="lab"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5.500 9.500A1.700 1.700 0 0 0 6 21h12a1.700 1.700 0 0 0 1.500-2.500L14 9V3M7.600 15h8.800"/></svg><span class="tn">Lab</span></a>
     </nav>
-    <button class="theme-btn" id="theme-btn" type="button" aria-label="Switch to the night game (dark mode)">
-      <svg class="to-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
-      <svg class="to-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
-    </button>
-    <label class="team-pick">
-      <span class="sr-only">Highlight your team</span>
-      <img class="me-face" id="my-face" alt="" hidden>
-      <select id="my-team"><option value="">Your team</option></select>
-    </label>
-    <!-- phones: the header folds into this football as you scroll down and unrolls from it (initBall in app.js) -->
-    <button class="navball" id="navball" type="button" aria-label="Open the menu" aria-expanded="true">
-      <svg viewBox="0 0 62 44" width="62" height="44" aria-hidden="true">
-        <defs>
-          <clipPath id="nb-clip"><path d="M3 20C12 2.5 50 2.5 59 20 50 37.5 12 37.5 3 20Z"/></clipPath>
-          <linearGradient id="nb-gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity=".16"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
-        </defs>
-        <path class="nb-ledge" d="M3 24C12 6.5 50 6.5 59 24 50 41.5 12 41.5 3 24Z"/>
-        <path class="nb-hide" d="M3 20C12 2.5 50 2.5 59 20 50 37.5 12 37.5 3 20Z"/>
-        <g clip-path="url(#nb-clip)">
-          <rect y="6" width="62" height="28" fill="url(#nb-gloss)"/>
-          <path class="nb-band" d="M14.5 9Q11.5 20 14.5 31M47.5 9Q50.5 20 47.5 31"/>
-        </g>
-        <path class="nb-edge" d="M3 20C12 2.5 50 2.5 59 20 50 37.5 12 37.5 3 20Z"/>
-        <path class="nb-lace" d="M23.5 13.5H38.5M23.5 20H38.5M23.5 26.5H38.5"/>
-      </svg>
-    </button>
+    <!-- you: on desktop the theme switch and the team picker sit in the bar as before (.me and .me-panel are display:
+         contents there). On phones the bar is gone and this is a glass circle beside the tab dock, your face in it; a tap
+         opens the panel out of the circle (initMe in app.js). -->
+    <div class="me" id="me">
+      <button class="me-btn" id="me-btn" type="button" aria-expanded="false" aria-controls="me-panel" aria-label="Your team and the theme">
+        <img class="me-btn-face" alt="" hidden>
+        <svg class="me-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20.5c1.2-4 4-6 7.5-6s6.3 2 7.5 6"/></svg>
+      </button>
+      <div class="me-panel" id="me-panel">
+        <p class="me-head" aria-hidden="true">Your team</p>
+        <button class="theme-btn" id="theme-btn" type="button" aria-label="Switch to the night game (dark mode)">
+          <svg class="to-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+          <svg class="to-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+        </button>
+        <label class="team-pick">
+          <span class="sr-only">Highlight your team</span>
+          <img class="me-face" id="my-face" alt="" hidden>
+          <select id="my-team"><option value="">Your team</option></select>
+        </label>
+      </div>
+    </div>
   </header>
 
   <main id="app" tabindex="-1">

@@ -8,7 +8,7 @@ import { Hero } from '../hero/Hero.jsx';
 // "Your week": a note from the desk to whoever picked a team. Winning gets congratulated, losing gets roasted, and a
 // coin flip gets a pep talk if they're ahead or a reality check if they're behind. Wording rotates daily.
 function YourWeek({ rows, standings, me, h, bull }) {
-  if (!me) return <section className="you-card glass empty"><p>Pick your team in the top right and the desk will tell you how your week is going. No sugarcoating.</p></section>;
+  if (!me) return <section className="you-card glass empty" data-open-me><p>{'Pick your team '}<span className="where-d">in the top right</span><span className="where-p">in the circle at the bottom right</span>{' and the desk will tell you how your week is going. No sugarcoating.'}</p></section>;
   const k = rows.findIndex((r) => r.t.rid === me), r = rows[k];
   if (!r) return null;
   const { f1, pct, ordinal } = h;

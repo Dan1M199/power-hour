@@ -1,6 +1,6 @@
 // The news ticker: once the headline card has scrolled off the top of the screen, its headlines collapse into a slim
-// scoreboard strip that slides across under the nav bar (desktop) or, on phones, in the header's place beside the folded
-// football (only while the header is folded, so the two never stack). Tapping a headline scrolls back up to the card,
+// scoreboard strip that slides across under the nav bar (desktop) or, on phones, along the top of the screen (phones
+// have no bar since the tab dock moved to the foot of the screen). Tapping a headline scrolls back up to the card,
 // turned to that slide. The strip is portaled to <body> so no transformed ancestor (the page's view transition, the
 // scroll reveal) can pull its fixed position out of the window. Under reduced motion it doesn't scroll by itself: it's a
 // strip you can swipe.
@@ -9,7 +9,6 @@ import { createPortal } from 'react-dom';
 import { tickOf } from './Carousel.jsx';
 
 const SPEED = 70; // px a second
-const phone = () => matchMedia('(max-width: 760px)').matches;
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function Items({ stories, onPick, copy }) {
@@ -26,7 +25,6 @@ function Items({ stories, onPick, copy }) {
 /** stories: the carousel's headlines; nav: the carousel's { at, go }; hero: a ref to the hero holding the card; live: Live page. */
 export function Ticker({ stories, nav, hero, live }) {
   const [past, setPast] = useState(false); // the card is above the screen
-  const [folded, setFolded] = useState(false); // phones: the header is a football
   const [top, setTop] = useState(84);
   const track = useRef(null);
 
@@ -39,7 +37,7 @@ export function Ticker({ stories, nav, hero, live }) {
     return () => io.disconnect();
   }, [hero, stories]);
 
-  // where the nav bar ends (desktop), and whether the phone header is folded
+  // where the nav bar ends (desktop; phones place the strip in CSS)
   useEffect(() => {
     const bar = document.querySelector('.topbar');
     if (!bar) return;
@@ -47,10 +45,7 @@ export function Ticker({ stories, nav, hero, live }) {
     place();
     const ro = new ResizeObserver(place);
     ro.observe(bar);
-    const mo = new MutationObserver(() => setFolded(bar.classList.contains('folded')));
-    mo.observe(bar, { attributes: true, attributeFilter: ['class'] });
-    setFolded(bar.classList.contains('folded'));
-    return () => { ro.disconnect(); mo.disconnect(); };
+    return () => ro.disconnect();
   }, []);
 
   // the loop runs at a steady speed whatever the headlines' length: one copy's width over SPEED
@@ -60,7 +55,7 @@ export function Ticker({ stories, nav, hero, live }) {
   }, [stories]);
 
   if (!stories?.length) return null;
-  const on = past && (!phone() || folded);
+  const on = past;
   const pick = (i) => {
     nav.current?.go(i);
     hero.current?.querySelector('.lead-car')?.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'start' });
