@@ -184,7 +184,10 @@ button, select { font: inherit; color: inherit; }
 /* the league logo (assets/power_hour_logo.png, trimmed and resized to logo-header.webp) */
 .brand-logo { flex: none; display: block; width: auto; height: 48px; }
 .brand-text { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
-.brand-text strong { font: 800 21px/1 var(--display); letter-spacing: 0.01em; }
+.brand-text strong { font: 800 21px/1 var(--display); letter-spacing: 0.01em; white-space: nowrap; }
+/* small tablets: the tabs need the room, so the logo carries the name alone, as on phones (the wordmark used to wrap
+   into three lines under the tabs) */
+@media (min-width: 761px) and (max-width: 959px) { .brand-text { display: none; } }
 .brand-text small { color: var(--ink-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tabs[hidden] { display: none; }
 .tabs { position: relative; display: flex; gap: 4px; margin: 0 auto; padding: 4px; border-radius: 999px; background: var(--tile); box-shadow: var(--tray-edge); }
@@ -3075,6 +3078,24 @@ main::after { border-radius: 56px 56px 0 0; }
 .lead-car { position: relative; --deck-1: #1E5230; --deck-2: #357A49;
   box-shadow: var(--rim), 0 0 0 1px rgba(0, 0, 0, 0.5), 0 12px 0 -7px var(--deck-1), 0 24px 0 -15px var(--deck-2), 0 40px 30px -18px var(--cast); }
 .hero { margin-bottom: 60px; }
+/* the scoreboard's face: a faint LED dot grid lit from the top (it fades out before the deck, so it never sits under
+   reading text) and a floodlight bloom over the top right, behind the headline photos. Flat layers, no blur. */
+.lead-car { isolation: isolate; }
+.lead-car::before { content: ''; position: absolute; z-index: -1; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(70% 46% at 88% -6%, rgba(255, 236, 170, 0.13), rgba(255, 236, 170, 0) 70%),
+    radial-gradient(circle, rgba(255, 255, 255, 0.07) 1px, rgba(255, 255, 255, 0) 1.6px) 0 0 / 7px 7px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0, rgba(0, 0, 0, 0.35) 30%, rgba(0, 0, 0, 0) 52%);
+  mask-image: linear-gradient(180deg, #000 0, rgba(0, 0, 0, 0.35) 30%, rgba(0, 0, 0, 0) 52%); }
+/* the story reads like copy, not a caption: a touch tighter at display size, an easier measure under it */
+.lead-hed { letter-spacing: -0.012em; }
+.lead-deck { margin-top: 16px; line-height: 1.5; text-wrap: pretty; color: rgba(255, 255, 255, 0.82); }
+/* the team rows are trays pressed into the board, like the score bug, not chips laid on it */
+.cast-team { background: rgba(0, 0, 0, 0.26); box-shadow: inset 0 3px 0 rgba(0, 0, 0, 0.22), inset 0 0 0 1.5px rgba(255, 255, 255, 0.08); }
+/* the control rail: a chalk hairline sets the dots and arrows apart from the story above them */
+.car-nav::before { content: ''; position: absolute; top: 0; left: 22px; right: 22px; height: 1.5px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); }
+.car-nav { padding-top: 14px; }
+.car-arrow, .car-pause:not([aria-pressed='true']) { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.14); }
+@media (max-width: 760px) { .car-nav { padding-top: 12px; } .car-nav::before { left: 14px; right: 14px; } }
 /* --- drawers: a card's face droops over a darker sheet, and the report slides out from under it. Rank rows and
    matchup cards are built the same way: the handle's ::before is a lip of the card's own face --- */
 :root { --lip: 20px; }
