@@ -41,6 +41,9 @@
   src: url('assets/fonts/libre-franklin-latin.woff2') format('woff2'); }
 @font-face { font-family: 'UnifrakturMaguntia'; font-style: normal; font-weight: 400; font-display: swap;
   src: url('assets/fonts/unifraktur-maguntia-latin.woff2') format('woff2'); }
+/* the sketch marks' handwriting (Caveat, OFL): a few margin notes only, so it downloads when one is on screen */
+@font-face { font-family: 'Caveat'; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url('assets/fonts/caveat-latin.woff2') format('woff2'); }
 :root {
   /* the palette */
   --grass: #3E9F46;
@@ -111,6 +114,7 @@
   --in-tray: inset 0 1.5px 0 #FFFFFF, 0 0 0 1px rgba(11, 36, 18, 0.1), 0 7px 11px -6px var(--cast);
   --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
   --body: 'Albert Sans', 'Segoe UI', system-ui, sans-serif;
+  --hand: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
   --r-xl: 48px;
   --r-lg: 36px;
   --r-md: 26px;
@@ -3096,6 +3100,23 @@ main::after { border-radius: 56px 56px 0 0; }
 .car-nav { padding-top: 14px; }
 .car-arrow, .car-pause:not([aria-pressed='true']) { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.14); }
 @media (max-width: 760px) { .car-nav { padding-top: 12px; } .car-nav::before { left: 14px; right: 14px; } }
+/* --- sketch marks: a coach's pen on the page. A few hand-drawn touches, never on controls or numbers people read:
+   a scribbled underline under a name the headline marks, a chalk ring around the No. 1 yard number, a margin note on
+   the playoff cut and one on the pick-your-team card. Drawn as inline SVG, Caveat for the words. --- */
+.lead-hed mark.hl, .lead-deck mark.hl { padding-bottom: 0.06em; background-repeat: no-repeat; background-position: 0 100%; background-size: 100% 0.2em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6.5C18 3 34 8.5 52 5.5S88 2.5 104 5.8c5 1 9 .6 14-.8' fill='none' stroke='%23FFE01A' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.lead-deck mark.hl { background-size: 100% 0.32em; }
+.rank:first-child .jersey::after { content: ''; position: absolute; inset: -18px -48px -12px -34px; pointer-events: none; transform: rotate(-8deg);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M58 6C30 3 8 22 7 50s20 45 46 44 41-20 40-46C92 24 76 6 50 8 34 9 22 15 16 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' opacity='.9'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+.stand tr.cut td:last-child { position: relative; }
+.stand tr.cut td:last-child::after { content: 'playoff line'; position: absolute; right: 14px; bottom: -10px; z-index: 1; padding: 0 6px; border-radius: 999px; transform: rotate(-2deg);
+  font: 700 19px/1 var(--hand); letter-spacing: 0; white-space: nowrap; color: var(--ink-2); background-color: var(--face); pointer-events: none; }
+.you-card.empty { position: relative; }
+.you-card.empty::before { content: 'Start up there'; position: absolute; right: 52px; top: -27px; transform: rotate(-4deg);
+  font: 700 22px/1 var(--hand); color: var(--ink); pointer-events: none; }
+.you-card.empty::after { content: ''; position: absolute; right: 18px; top: -40px; width: 34px; height: 36px; pointer-events: none;
+  background-color: var(--ink); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 36'%3E%3Cg fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 32C9 22 16 13 28 5'/%3E%3Cpath d='M17 5.5 28.5 4.5 26 15.5'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 36'%3E%3Cg fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 32C9 22 16 13 28 5'/%3E%3Cpath d='M17 5.5 28.5 4.5 26 15.5'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat; } /* a mask, so the arrow wears the theme's ink */
+@media (max-width: 760px) { .rank:first-child .jersey::after { inset: -12px -30px -8px -10px; } .you-card.empty::before { font-size: 20px; right: 54px; } }
 /* --- drawers: a card's face droops over a darker sheet, and the report slides out from under it. Rank rows and
    matchup cards are built the same way: the handle's ::before is a lip of the card's own face --- */
 :root { --lip: 20px; }
