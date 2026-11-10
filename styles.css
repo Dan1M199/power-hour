@@ -1236,6 +1236,32 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .pth-seeds .in i { background: var(--grass-2); }
 .pth-seeds .top i { box-shadow: 0 0 0 2px var(--outline); }
 .pth-seeds small { font-size: 11.5px; font-weight: 700; color: var(--ink-3); }
+/* the front page's way in: a shiny amber pill (gloss over the top half, an ink edge on a gold ledge, a band of light
+   sweeping across every few seconds, two sparkles twinkling on its corner) with a New tag on the board's green */
+.pth-cta { position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 12px; padding: 6px 18px 6px 6px;
+  border-radius: 999px; overflow: visible; text-decoration: none; color: var(--ink); background: var(--amber); touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 0 0 2px var(--outline), 0 4px 0 2px var(--ledge-gold), 0 10px 22px -8px rgba(249, 176, 0, 0.75); transition: transform 0.12s, box-shadow 0.12s; }
+.pth-cta::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0 46%, rgba(255, 255, 255, 0) 50%); }
+/* the sweep rides in a clipped layer of its own, so the sparkles can sit outside the pill */
+.pth-cta::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.85) 46%, rgba(255, 255, 255, 0.85) 52%, transparent 68%) no-repeat;
+  background-size: 220% 100%; background-position: 160% 0; }
+.pth-cta-new { padding: 6px 10px; border-radius: 999px; font: 800 12px/1 var(--body); color: var(--chalk); background: var(--board); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+.pth-cta-label { font: 800 20px/1 var(--display); letter-spacing: 0.02em; }
+.pth-cta-go { flex: none; transition: transform 0.15s; }
+.pth-cta:active { transform: translateY(3px); box-shadow: 0 0 0 2px var(--outline), 0 1px 0 2px var(--ledge-gold), 0 6px 14px -8px rgba(249, 176, 0, 0.75); }
+.pth-cta .spk { position: absolute; width: 16px; height: 16px; background: var(--yellow); pointer-events: none; filter: drop-shadow(0 0 1.5px rgba(18, 48, 26, 0.6));
+  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); }
+.pth-cta .spk.a { top: -8px; right: 10px; }
+.pth-cta .spk.b { top: 10px; right: -7px; width: 11px; height: 11px; background: #FFFFFF; }
+@media (hover: hover) { .pth-cta:hover { background-color: #FFC21A; } .pth-cta:hover .pth-cta-go { transform: translateX(3px); } }
+@media (prefers-reduced-motion: no-preference) {
+  .pth-cta::after { animation: pth-sweep 3.6s ease-in-out infinite 0.8s; }
+  .pth-cta .spk { animation: pp-twinkle 2.4s ease-in-out infinite; }
+  .pth-cta .spk.b { animation-delay: -1.1s; }
+}
+@keyframes pth-sweep { 0% { background-position: 160% 0; } 40%, 100% { background-position: -60% 0; } }
 /* waiting on the seasons, and the moment between a tap and its new numbers (the buttons answer at once) */
 .pth-wait { min-height: 220px; align-content: start; }
 .pth-spin { justify-self: center; width: 34px; height: 34px; margin-top: 18px; border-radius: 50%; border: 4px solid var(--tile-2); border-top-color: var(--grass); animation: pth-spin 0.8s linear infinite; }
@@ -3537,7 +3563,7 @@ main::after { border-radius: 56px 56px 0 0; }
 :root[data-theme='dark'] :is(.view-head .wk, .avatar.ph, .tier:not(.low, .stinks), .you, .rank.nudge:not(.open) .pull,
   .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .tabs a[aria-current='page'], .lab-tabs a[aria-current='page'], .key-tag,
   .kicker > span:first-child, .car-pause[aria-pressed='true'], .drive-pick button[aria-pressed='true'],
-  .drive-field .endzone, .gotw-more, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .pth-flag, .pth-pick button[aria-pressed='true'], .pth-wkchip[aria-pressed='true'], .pth-strip li.w, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
+  .drive-field .endzone, .gotw-more, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .pth-cta, .pth-flag, .pth-pick button[aria-pressed='true'], .pth-wkchip[aria-pressed='true'], .pth-strip li.w, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
   :is(.lead-face, .mgr-face, .fo-face, .stat-face, .deal-face, .pitch-face).ph, .lf .cap, .mu .vs, .day > h3, .clip-frame .clip-sound, .fo-side, .fo-vs i,
   .desk-note, .you-face.ph, .st-chip.won, .sup.champ, .bull-tag.lead, .chip:is(.to-again, .rank-pdf), .lo-tag, .pp-img.ph, .cta, .verdict-face.ph,
   .strip-face.ph, .pos, .champ, .ball-pct, .pp-card, .fo-fav.dog) {

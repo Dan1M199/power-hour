@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { closeDrawer, openDrawer, slides, sliding } from './drawer.js';
-import { ChampTag, Headshot, TeamAvatar, Xp } from '../shared.jsx';
+import { ChampTag, Headshot, TeamAvatar, Xp, ScenariosLink } from '../shared.jsx';
 import { Hero } from '../hero/Hero.jsx';
 import { Futures } from './Futures.jsx';
 import { Poll } from './Poll.jsx';
@@ -50,6 +50,7 @@ function RankHead({ D, h, wk, held, sources, updated, message }) {
     <div>
       <h2 className="page-title"><span className="wk">{held ? `On hold during week ${wk}` : `Week ${wk}`}</span>Power Rankings</h2>
       <p>Where you sit in the standings, how much you score, who's left on your schedule and how your roster projects, in that order. Tap any team to see why it sits where it does.</p>
+      <ScenariosLink />
     </div>
     <div className="sources">
       {sources

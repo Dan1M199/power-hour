@@ -43,3 +43,16 @@ export const ChampBadge = ({ t, h }) => (h.isChamp(t) ? <span className="champ-b
 export const LoadError = ({ message }) => (
   <section className="loading"><div className="notice glass"><strong>Couldn't reach Sleeper.</strong>{` ${message}. Check your connection and reload the page.`}</div></section>
 );
+
+/**
+ * The front page's way into "What needs to happen" (Lab, League, Playoff race): a shiny amber pill. It leaves a note
+ * for the card (window.__toPaths) so the card scrolls itself into view once the Lab has opened.
+ */
+export const ScenariosLink = () => (
+  <a className="pth-cta" href="#lab/league" onClick={() => { window.__toPaths = true; }}>
+    <span className="pth-cta-new">New</span>
+    <span className="pth-cta-label">Playoff scenarios</span>
+    <svg className="pth-cta-go" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4l4 4-4 4" stroke="currentColor" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    <i className="spk a" aria-hidden="true" /><i className="spk b" aria-hidden="true" />
+  </a>
+);

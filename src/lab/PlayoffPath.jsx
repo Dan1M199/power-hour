@@ -3,7 +3,7 @@
 // you (the critical weeks), the other games to watch and who to root for, who needs to lose and when, the most
 // realistic way in, a long shot and the most common ending. Every game is pickable: pick a winner and everything is
 // read again from only the seasons where that happened, so you can build your own scenario.
-import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { restOfSeason, playoffPath } from '../../lib/labmodels.js';
 import { TeamAvatar } from '../shared.jsx';
 
@@ -22,6 +22,23 @@ export function PlayoffPath({ D, me, h }) {
     later(() => { if (live) setS(D._ros20k ||= restOfSeason(D)); });
     return () => { live = false; };
   }, [D, S]);
+  // arriving from the front page's Playoff scenarios button: bring the card up once it has its numbers (the loading
+  // card is too short for the page to scroll that far) and after the route's own scroll to the top
+  const box = useRef(null), go = useRef(!!window.__toPaths);
+  window.__toPaths = false;
+  useEffect(() => {
+    if (!go.current || !S) return undefined;
+    go.current = false;
+    const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const to = (behavior) => box.current?.scrollIntoView({ behavior, block: 'start' });
+    // the Lab's entrance can still be settling the content above while it glides, so a second look puts it right
+    const ids = [setTimeout(() => to(smooth ? 'smooth' : 'auto'), 60), setTimeout(() => {
+      const el = box.current; if (!el) return;
+      const want = (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0) + (parseFloat(getComputedStyle(el).scrollMarginTop) || 0);
+      if (Math.abs(el.getBoundingClientRect().top - want) > 12) to(smooth ? 'smooth' : 'auto');
+    }, 900)];
+    return () => ids.forEach(clearTimeout);
+  }, [S]);
   const bubble = useMemo(() => [...D.teams].sort((a, b) => Math.abs(a.playoffPct - 0.5) - Math.abs(b.playoffPct - 0.5))[0]?.rid, [D]);
   const [pickRid, setRid] = useState(null);
   const [picks, setPicks] = useState({});
@@ -32,7 +49,7 @@ export function PlayoffPath({ D, me, h }) {
   const base = useMemo(() => S && playoffPath(S, D, dRid), [S, D, dRid]);
   const P = useMemo(() => S && (Object.keys(dPicks).length ? playoffPath(S, D, dRid, { picks: dPicks }) : base), [S, D, dRid, dPicks, base]);
   if (!S || !P) return (
-    <section className="panel glass span-12 pth pth-wait" aria-busy="true">
+    <section ref={box} id="playoff-scenarios" className="panel glass span-12 pth pth-wait" aria-busy="true">
       <h2>What needs to happen</h2>
       <p className="sub">Playing out the rest of the season 20,000 times.</p>
       <span className="pth-spin" aria-hidden="true" />
@@ -108,7 +125,7 @@ export function PlayoffPath({ D, me, h }) {
   const seedMax = Math.max(...P.seeds.map((s) => s.share), 0.01);
 
   return (
-    <section className={`panel glass span-12 pth${stale ? ' stale' : ''}`}>
+    <section ref={box} id="playoff-scenarios" className={`panel glass span-12 pth${stale ? ' stale' : ''}`}>
       <div className="pth-top">
         <div>
           <h2>What needs to happen</h2>

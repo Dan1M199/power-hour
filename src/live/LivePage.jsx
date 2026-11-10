@@ -2,7 +2,7 @@
 // plus the rest projected) and the projected standings. Once every game is final it becomes Final Scores, with the
 // button to the new power rankings. The hero (headline carousel and page head) is the one the power rankings
 // use.
-import { ChampTag, Headshot, TeamAvatar } from '../shared.jsx';
+import { ChampTag, Headshot, TeamAvatar, ScenariosLink } from '../shared.jsx';
 import { Hero } from '../hero/Hero.jsx';
 
 // "Your week": a note from the desk to whoever picked a team. Winning gets congratulated, losing gets roasted, and a
@@ -64,6 +64,7 @@ function LiveHead({ fin, wk, played, fetched }) {
       <p>{fin
         ? "Every game is in. The week, best score to worst, and the standings it leaves behind. Sleeper makes it official Tuesday; the new power rankings are ready now."
         : 'How this week is going, best to worst: everything scored so far plus the projection for everyone still to play. The power rankings are on hold until every game is final.'}</p>
+      <ScenariosLink />
     </div>
     <div className="sources">
       {fin ? <span className="chip"><span className="dot" />All games final</span> : <span className="chip"><span className="dot live" />{`${played} NFL team${played === 1 ? '' : 's'} played so far`}</span>}
