@@ -3,24 +3,43 @@
 // you (the critical weeks), the other games to watch and who to root for, who needs to lose and when, the most
 // realistic way in, a long shot and the most common ending. Every game is pickable: pick a winner and everything is
 // read again from only the seasons where that happened, so you can build your own scenario.
-import { useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { restOfSeason, playoffPath } from '../../lib/labmodels.js';
 import { TeamAvatar } from '../shared.jsx';
 
 const p0 = (x) => (x == null ? '–' : x > 0 && x < 0.005 ? '<1%' : x < 1 && x > 0.995 ? '>99%' : `${Math.round(x * 100)}%`);
 const pts = (x) => `${Math.round(x * 100)}%`;
 
+// the simulation takes a few hundred ms on a phone, so it runs after the tab has painted (idle time where the browser
+// has it; iPhone Safari doesn't, so a timeout), once per league
+const later = (fn) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(fn, { timeout: 300 }) : setTimeout(fn, 60));
+
 export function PlayoffPath({ D, me, h }) {
-  const S = useMemo(() => (D._ros20k ||= restOfSeason(D)), [D]);
+  const [S, setS] = useState(() => D._ros20k || null);
+  useEffect(() => {
+    if (S) return undefined;
+    let live = true;
+    later(() => { if (live) setS(D._ros20k ||= restOfSeason(D)); });
+    return () => { live = false; };
+  }, [D, S]);
   const bubble = useMemo(() => [...D.teams].sort((a, b) => Math.abs(a.playoffPct - 0.5) - Math.abs(b.playoffPct - 0.5))[0]?.rid, [D]);
   const [pickRid, setRid] = useState(null);
   const [picks, setPicks] = useState({});
   const rid = pickRid ?? me ?? bubble;
-  const base = useMemo(() => S && playoffPath(S, D, rid), [S, D, rid]);
-  const P = useMemo(() => S && (Object.keys(picks).length ? playoffPath(S, D, rid, { picks }) : base), [S, D, rid, picks, base]);
-  if (!S || !P) return null;
+  // a tap paints its pressed button at once; the seasons are read again in a render React can drop if another tap comes
+  const dRid = useDeferredValue(rid), dPicks = useDeferredValue(picks);
+  const stale = dRid !== rid || dPicks !== picks;
+  const base = useMemo(() => S && playoffPath(S, D, dRid), [S, D, dRid]);
+  const P = useMemo(() => S && (Object.keys(dPicks).length ? playoffPath(S, D, dRid, { picks: dPicks }) : base), [S, D, dRid, dPicks, base]);
+  if (!S || !P) return (
+    <section className="panel glass span-12 pth pth-wait" aria-busy="true">
+      <h2>What needs to happen</h2>
+      <p className="sub">Playing out the rest of the season 20,000 times.</p>
+      <span className="pth-spin" aria-hidden="true" />
+    </section>
+  );
 
-  const team = (r) => D.byRid[r], t = team(rid), first = h.first(t);
+  const team = (r) => D.byRid[r], t = team(dRid), first = h.first(t);
   const nm = (r, k = 16) => h.short(team(r).name, k);
   const nPicks = Object.keys(picks).length;
   const thin = P.matches < 400;
@@ -59,6 +78,10 @@ export function PlayoffPath({ D, me, h }) {
   // a game you've already decided reads back as a result, with the odds it was worth
   const pickedBadge = (x) => <span className="pth-done">{`${nm(picks[x.i] ? x.ra : x.rb, 14)} win`}</span>;
 
+  // the lists hold still while you pick: which games and rivals show comes from the read without your picks, the
+  // numbers from the current one, so a tapped row stays where it was and turns into its result
+  const watchRows = base.watch.map((x) => ({ x: { ...x, picked: x.i in dPicks }, b: P.games[x.i] }));
+  const shown = new Set([...P.yours.map((x) => x.i), ...base.watch.map((x) => x.i)]);
   const floor = P.floor, ceil = P.ceiling;
   const fcTip = (b, word) => b && `${word} for week ${b.week}: ${b.results.map((r) => `${team(r.winner).name} win`).join(', ')}. Your odds by Tuesday: ${p0(b.odds)}.`;
   const crit = new Set([...P.yours].filter((x) => !x.picked).sort((a, b) => b.swing - a.swing).slice(0, 2).map((x) => x.i));
@@ -70,7 +93,7 @@ export function PlayoffPath({ D, me, h }) {
         <p className="pth-rec"><b>{path.record}</b><span>{`${path.wins} of ${P.left} from here`}</span></p>
         <ol className="pth-strip" style={{ '--n': path.results.length }}>{path.results.map((r) => (
           <li key={r.week} className={r.win ? 'w' : 'l'} data-tip={`Week ${r.week} vs ${team(r.opp).name}: on this path you win it ${p0(r.share)} of the time`}>
-            <b>{r.win ? 'W' : 'L'}</b><small>{`Wk ${r.week}`}</small>
+            <b>{r.win ? 'W' : 'L'}</b><small><span className="pth-wkw">Wk </span>{r.week}</small>
           </li>
         ))}</ol>
         <p className="pth-note">{note(path)}</p>
@@ -85,7 +108,7 @@ export function PlayoffPath({ D, me, h }) {
   const seedMax = Math.max(...P.seeds.map((s) => s.share), 0.01);
 
   return (
-    <section className="panel glass span-12 pth">
+    <section className={`panel glass span-12 pth${stale ? ' stale' : ''}`}>
       <div className="pth-top">
         <div>
           <h2>What needs to happen</h2>
@@ -111,7 +134,7 @@ export function PlayoffPath({ D, me, h }) {
           <small>{floor || ceil ? `Floor and ceiling after week ${(floor || ceil).week}` : 'Floor and ceiling'}</small>
           <span className="pth-fc">
             <span data-tip={fcTip(floor, 'Worst case')}><em>Floor</em><b>{p0(floor?.odds)}</b></span>
-            <Bar lo={floor?.odds ?? P.odds} hi={ceil?.odds ?? P.odds} cls="big" />
+            {Bar({ lo: floor?.odds ?? P.odds, hi: ceil?.odds ?? P.odds, cls: "big" })}
             <span data-tip={fcTip(ceil, 'Best case')}><em>Ceiling</em><b>{p0(ceil?.odds)}</b></span>
           </span>
           <span>Your result plus the week's other games going all wrong, or all right</span>
@@ -128,26 +151,26 @@ export function PlayoffPath({ D, me, h }) {
               <span className="pth-wk">{`Wk ${x.week}`}</span>
               <span className="pth-who"><TeamAvatar t={team(x.opp)} cls="avatar xs" /><span>{`vs ${nm(x.opp)}`}</span>{crit.has(x.i) ? <em className="pth-flag">Critical</em> : null}</span>
               {x.picked ? pickedBadge(x) : <span className="pth-sw" data-tip={`Week ${x.week} vs ${team(x.opp).name}: ${p0(x.ifGood)} if you win, ${p0(x.ifBad)} if you lose. You win it ${p0(x.pGood)} of the time.`}>
-                <Bar lo={x.ifBad ?? 0} hi={x.ifGood ?? 0} /><b>{`+${pts(x.swing)}`}</b>
+                {Bar({ lo: x.ifBad ?? 0, hi: x.ifGood ?? 0 })}<b>{`+${pts(x.swing)}`}</b>
               </span>}
-              <Pick x={x} a={rid} b={x.opp} labelA="W" labelB="L" />
+              {Pick({ x: x, a: dRid, b: x.opp, labelA: "W", labelB: "L" })}
             </li>
           ))}</ul>
         </div>
         <div className="pth-box">
           <h3>Matchups to watch</h3>
           <p className="pth-cap">Other games that move your odds most. Root for the first team.</p>
-          {P.watch.length ? <ul className="pth-list">{P.watch.map((x) => (
-            <li key={x.i}>
+          {watchRows.length ? <ul className="pth-list">{watchRows.map(({ x, b }) => (
+            <li key={x.i} className={x.picked ? 'done' : undefined}>
               <span className="pth-wk">{`Wk ${x.week}`}</span>
               <span className="pth-who"><TeamAvatar t={team(x.root)} cls="avatar xs" /><span><b>{nm(x.root, 13)}</b>{` over ${nm(x.against, 13)}`}</span></span>
-              <span className="pth-sw" data-tip={`Week ${x.week}: ${p0(x.ifGood)} if ${team(x.root).name} win, ${p0(x.ifBad)} if ${team(x.against).name} do. ${team(x.root).name} win it ${p0(x.pGood)} of the time.`}>
-                <Bar lo={x.ifBad} hi={x.ifGood} /><b>{`+${pts(x.swing)}`}</b>
-              </span>
-              <Pick x={x} a={x.root} b={x.against} labelA={h.first(team(x.root))} labelB={h.first(team(x.against))} />
+              {x.picked ? pickedBadge(x) : <span className="pth-sw" data-tip={`Week ${x.week}: ${p0(b.ifGood)} if ${team(x.root).name} win, ${p0(b.ifBad)} if ${team(x.against).name} do. ${team(x.root).name} win it ${p0(b.pGood)} of the time.`}>
+                {Bar({ lo: b.ifBad ?? 0, hi: b.ifGood ?? 0 })}<b>{`+${pts(b.swing)}`}</b>
+              </span>}
+              {Pick({ x: x, a: x.root, b: x.against, labelA: h.first(team(x.root)), labelB: h.first(team(x.against)) })}
             </li>
           ))}</ul> : <p className="pth-cap">Nobody else's games move you by much.</p>}
-          {Object.keys(picks).filter((i) => !P.yours.some((x) => x.i === Number(i)) && !P.watch.some((x) => x.i === Number(i))).map((i) => {
+          {Object.keys(picks).filter((i) => !shown.has(Number(i))).map((i) => {
             const g = game(Number(i));
             return <p key={i} className="pth-picked">{`Picked: week ${g.week}, ${nm(picks[i] ? g.ra : g.rb)} beat ${nm(picks[i] ? g.rb : g.ra)}`}<button type="button" className="chip" onClick={() => pick(Number(i), picks[i])}>Undo</button></p>;
           })}
@@ -157,7 +180,7 @@ export function PlayoffPath({ D, me, h }) {
       <div className="pth-box">
         <h3>Who needs to lose</h3>
         <p className="pth-cap">The rivals whose losses help you most, and the weeks they help. Bigger chips matter more; tap one to pick it.</p>
-        {P.rivals.length ? <div className="pth-rivals">{P.rivals.map((r) => (
+        {base.rivals.length ? <div className="pth-rivals">{base.rivals.map((r) => (
           <div key={r.rid} className="pth-rival">
             <span className="pth-rv"><TeamAvatar t={team(r.rid)} cls="avatar xs" /><b>{nm(r.rid, 18)}</b><small>{`${h.record(team(r.rid))}, ${p0(team(r.rid).playoffPct)} now`}</small></span>
             <span className="pth-wks">{r.weeks.map((w) => (
@@ -171,10 +194,8 @@ export function PlayoffPath({ D, me, h }) {
       </div>
 
       <div className="pth-paths">
-        <Path title="Most realistic way in" cls="real" path={P.realistic}
-          note={(p) => `The likeliest way you get in: ${p0(p.chance)} of seasons go this way. At ${p.record} you're in ${p0(p.oddsIf)} of the time.`} />
-        <Path title="The long shot" cls="long" path={P.longshot}
-          note={(p) => `The fewest wins that still get you in: ${p.record} works ${p0(p.oddsIf)} of the time, about 1 season in ${Math.max(1, Math.round(1 / Math.max(p.chance, 1e-6))).toLocaleString('en-US')}.`} />
+        {Path({ title: "Most realistic way in", cls: "real", path: P.realistic, note: (p) => `The likeliest way you get in: ${p0(p.chance)} of seasons go this way. At ${p.record} you're in ${p0(p.oddsIf)} of the time.` })}
+        {Path({ title: "The long shot", cls: "long", path: P.longshot, note: (p) => `The fewest wins that still get you in: ${p.record} works ${p0(p.oddsIf)} of the time, about 1 season in ${Math.max(1, Math.round(1 / Math.max(p.chance, 1e-6))).toLocaleString('en-US')}.` })}
         <article className="pth-card end">
           <h3>Most common ending</h3>
           {end ? <>
