@@ -1,3 +1,4 @@
+import { FocusNav } from '../lab/FocusNav.jsx';
 import { SeasonPortrait } from './SeasonPortrait.jsx';
 // The team dashboard (the Lab's Your team section, #lab/team): one team's season on eight paper widgets in the Paper Widgets style. The
 // numbers come from dashData (lib/dashboard.js, pure and tested); the look is .paper in styles.css. Picking another
@@ -23,14 +24,22 @@ import { canShareFiles, captureSheet, pdfOf, pngOf, shareFile } from './share.js
  * rid: the team to open on; h: the page's helpers (f1, pct, ordinal, record, first, shortName, nfl, groupSaid,
  * faceSrc, teams); calm: reduced motion; onTeam(rid): told when another team is picked.
  */
+const VIEWS = [
+  ['overview', 'Overview', 'The essentials: playoff outlook, lineup efficiency and position strengths.'],
+  ['roster', 'Roster', 'Who carries your team and where your roster is strongest.'],
+  ['season', 'Season', 'Your scoring, recent form and how much luck has shaped your record.'],
+  ['matchup', 'Matchup', 'Scout a rival, test a player swap and explore the schedule ahead.'],
+];
+
 export function TeamDashboard({ me, D, raw, ros, rid: start, h, calm, onTeam }) {
   const [rid, setRid] = useState(start);
+  const [view, setView] = useState('overview');
   const paper = useRef(null), intro = useRef(null); // intro.current(): jumps the sheet's intro to its end
   const [share, setShare] = useState(null); // the preview: { name, title } while open
   const m = useMemo(() => dashData(D, rid, { raw, ros }), [D, rid, raw, ros]);
   if (!m) return null;
   const t = m.t;
-  const head = { title: `${t.name} on The Power Hour`, line: `${raw?.league?.name || 'Team dashboard'}, through week ${D.meta.lastScored || 0}` };
+  const head = { title: `${t.name} on The Power Hour`, line: `${VIEWS.find(([key]) => key === view)[1]}, through week ${D.meta.lastScored || 0}` };
   return (
     <section className="paper" data-paper ref={paper} aria-label={`Team dashboard for ${t.name}`}>
       <header className="pp-head">
@@ -46,12 +55,13 @@ export function TeamDashboard({ me, D, raw, ros, rid: start, h, calm, onTeam }) 
             {[...h.teams].sort((a, b) => a.name.localeCompare(b.name)).map((x) => <option key={x.rid} value={x.rid}>{x.name}</option>)}
           </select>
         </label>
-        <button type="button" className="pp-share" onClick={() => { intro.current?.(); setShare({ name: fileName(t.name, D.meta.lastScored), title: head.title, head }); }}>
-          <ShareIcon />Share
+        <button type="button" className="pp-share" aria-label="Share current dashboard view" onClick={() => { intro.current?.(); setShare({ name: fileName(t.name, D.meta.lastScored), title: head.title, head }); }}>
+          <ShareIcon /><span>Share view</span>
         </button>
       </header>
-      <SeasonPortrait key={`portrait-${rid}`} D={D} t={t} me={me} h={h} />
-      <Sheet key={rid} m={m} h={h} calm={calm} finish={intro} />
+      <FocusNav items={VIEWS} value={view} onChange={setView} label="Dashboard views" />
+      {view === 'season' ? <SeasonPortrait key={`portrait-${rid}`} D={D} t={t} me={me} h={h} /> : null}
+      <Sheet key={rid} view={view} m={m} h={h} calm={calm} finish={intro} />
       {share ? createPortal(<ShareSheet paper={paper.current} {...share} onClose={() => setShare(null)} />, document.body) : null}
     </section>
   );
@@ -59,7 +69,7 @@ export function TeamDashboard({ me, D, raw, ros, rid: start, h, calm, onTeam }) 
 
 // the eight tiles and the clock that plays their intro (about 3 s, then it stops; reduced motion draws the end at once)
 // finish: a ref that gets a function jumping the intro to its end (Share calls it, so the picture has the final numbers)
-function Sheet({ m, h, calm, finish }) {
+function Sheet({ view, m, h, calm, finish }) {
   const clock = useMemo(createClock, []);
   useLayoutEffect(() => {
     if (calm) { clock.draw(TL.end + 1); return undefined; }
@@ -77,15 +87,15 @@ function Sheet({ m, h, calm, finish }) {
   }, [clock, calm]);
   return (
     <ClockContext.Provider value={clock}>
-      <div className="pp-grid">
-        <OddsTile m={m} h={h} />
-        <PlayersTile m={m} h={h} calm={calm} />
-        <EfficiencyTile m={m} h={h} />
-        <ScoringTile m={m} h={h} />
-        <GroupsTile m={m} h={h} />
-        <ScheduleTile m={m} h={h} calm={calm} />
-        <LuckTile m={m} h={h} calm={calm} />
-        <FaceOffTile m={m} h={h} calm={calm} />
+      <div className={`pp-grid pp-view-${view}`}>
+        {view === 'overview' ? <OddsTile m={m} h={h} /> : null}
+        {view === 'roster' ? <PlayersTile m={m} h={h} calm={calm} /> : null}
+        {view === 'overview' ? <EfficiencyTile m={m} h={h} /> : null}
+        {view === 'season' ? <ScoringTile m={m} h={h} /> : null}
+        {view === 'overview' || view === 'roster' ? <GroupsTile m={m} h={h} /> : null}
+        {view === 'matchup' ? <ScheduleTile m={m} h={h} calm={calm} /> : null}
+        {view === 'season' ? <LuckTile m={m} h={h} calm={calm} /> : null}
+        {view === 'matchup' ? <FaceOffTile m={m} h={h} calm={calm} /> : null}
       </div>
     </ClockContext.Provider>
   );

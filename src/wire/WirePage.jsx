@@ -1,4 +1,3 @@
-import { TeamHub } from '../TeamHub.jsx';
 // The Wire (#wire): trades up top, adds and drops below grouped by day and team, with the consensus rest-of-season value
 // each move gained or gave up; best free agents, busiest managers and the trade ledger on the side. The filters are
 // plain React state, kept in app.js's wireState so they survive leaving the page.
@@ -121,7 +120,6 @@ export function WirePage({ D, me, h, state, onState }) {
         <p>Trades up top, adds and drops below, grouped by day and team. Numbers are the consensus rest-of-season value a move gained or gave up.</p>
       </div>
     </section>
-    <TeamHub D={D} me={me} h={h} view="wire" />
     {targets.length ? <section className="waiver-fit glass panel">
       <div><h2>{`A look at your ${weak} room`}</h2><p>{`Your ${weak} group ranks ${h.ordinal(own.posRanks[weak])}. These are the highest-valued free agents at that position, not guaranteed lineup upgrades.`}</p></div>
       <ol>{targets.map((p) => <li key={p.id}><PosTag pos={weak} /><b>{h.nameOf(p.id)}</b><span>{`${f1(p.wk)} ROS pts/wk`}</span></li>)}</ol>

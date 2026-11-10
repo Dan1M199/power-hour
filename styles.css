@@ -3573,18 +3573,6 @@ html:is(.admin-mode, .locked) .tx-top { display: none; }
   .you-card.empty[data-open-me] { cursor: pointer; }
 }
 @media (max-width: 760px) and (prefers-reduced-motion: reduce) { .tabs .ti, .me-btn, .me-btn-face, .me-panel, .me.open .me-panel { transition: opacity 0.15s, visibility 0s; transform: none; } }
-/* Team identity follows the visitor; yellow keeps its existing meaning: you. */
-.team-hub { padding: 20px 24px; --ring-w: 3px; margin-bottom: 24px; }
-.team-hub-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.team-hub-id > div { min-width: 0; flex: 1; }
-.team-hub-id b { display: block; font-size: 20px; overflow-wrap: anywhere; }
-.team-hub-id span:not(.team-hub-you) { display: block; font-size: 13px; }
-.team-hub-you { background: var(--mine-bg); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 700; white-space: nowrap; }
-.team-hub p { margin: 12px 0; font-size: 14px; }
-.team-hub nav { display: flex; flex-wrap: wrap; gap: 8px; }
-.team-hub nav a { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 15px; background-color: var(--tile); border-radius: 24px; color: var(--ink); font-size: 13px; font-weight: 700; text-decoration: none; }
-.team-hub nav a[aria-current] { background-color: var(--mine-bg); box-shadow: inset 0 0 0 2px #F2C200; }
-.team-hub a:focus-visible, .portrait-tabs button:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
 .waiver-fit { margin-bottom: 24px; }
 .waiver-fit p { max-width: 65ch; font-size: 14px; }
 .waiver-fit ol { padding: 0; list-style: none; margin: 16px 0; }
@@ -3612,11 +3600,6 @@ html:is(.admin-mode, .locked) .tx-top { display: none; }
 .portrait-form b { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #e6e0e8; }
 .portrait-form li[data-result=W] b { background: #c3e2d4; color: #173f30; }
 @media (max-width: 760px) {
-  .team-hub { padding: 16px; border-radius: 26px; }
-  .team-hub-id b { font-size: 18px; }
-  .team-hub-you { display: none; }
-  .team-hub nav { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .team-hub nav a { padding: 8px; }
   .season-portrait { padding: 18px 12px; }
   .season-portrait-head { display: block; }
   .season-portrait-head > span { display: block; margin-top: 6px; }
@@ -3635,7 +3618,6 @@ html:is(.admin-mode, .locked) .tx-top { display: none; }
 .portrait-row.own { color: #302a38; }
 .portrait-form b { background: var(--p-track); }
 @media (hover: hover) {
-  .team-hub nav a:hover { box-shadow: inset 0 0 0 2px var(--ink); }
   .portrait-tabs button:hover { border-color: var(--p-ink); }
 }
 
@@ -3656,4 +3638,31 @@ html:is(.admin-mode, .locked) .tx-top { display: none; }
   .car-dot { height: 32px; background: transparent; border-radius: 0; overflow: visible; }
   .car-dot::before { inset: 11px 0; background: rgba(255,255,255,.24); border-radius: 99px; }
   .car-dot i { top: 11px; bottom: 11px; }
+}
+
+/* The Lab is an index of questions, not an endless wall of charts. */
+.focus-index { margin: 0 auto 22px; max-width: 928px; }
+.focus-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+.focus-nav button { min-height: 44px; padding: 10px 18px; border: 1px solid var(--outline); border-radius: 24px; color: var(--ink); background: var(--tile); font: 700 14px var(--body); cursor: pointer; }
+.focus-nav button[aria-pressed=true] { background: var(--amber); color: #122719; }
+.focus-nav button:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+.focus-caption { font-size: 14px; line-height: 1.5; margin: 12px 0 0; }
+.paper .focus-nav button { color: var(--p-ink); background: var(--p-tile); border-color: var(--p-muted); font-family: var(--p-sans); font-weight: 400; }
+.paper .focus-nav button[aria-pressed=true] { background: var(--p-ink); color: var(--p-tile); }
+.paper .focus-caption { color: var(--p-muted); }
+.league-focus .focus-index { margin: 0; max-width: none; }
+.league-focus { margin-bottom: 22px; }
+.pp-view-season { grid-template-columns: repeat(2, 296px); }
+@media (max-width: 760px) {
+  .focus-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .focus-nav button { padding-inline: 8px; }
+  .league-focus .focus-nav { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .league-focus .focus-nav button { font-size: 12px; }
+  .focus-caption { font-size: 13px; }
+}
+@container (max-width: 611.98px) { .pp-view-season { grid-template-columns: minmax(0, 1fr); } }
+@container (max-width: 611.98px) {
+  .pp-share { width: 44px; height: 44px; padding: 0; justify-content: center; }
+  .pp-share > span { display: none; }
+  .pp-id h2 { font-size: 24px; white-space: normal; overflow-wrap: anywhere; }
 }

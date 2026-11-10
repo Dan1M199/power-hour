@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { FocusNav } from './FocusNav.jsx';
 // The Lab's League section (#lab/league, once the Nerd lab): everything under the hood of the rankings, a panel each.
 import { BumpChart, Scatter, HeatTable, DivergingBars } from '../charts.jsx';
 import { PosTag, TeamAvatar } from '../shared.jsx';
@@ -7,6 +9,7 @@ import { FlukeOrReal } from './FlukeOrReal.jsx';
 const POS = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
 
 export function LabPage({ D, me, h }) {
+  const [view, setView] = useState('race');
   const { f1, pct, ordinal, short } = h;
   const teams = D.teams, n = teams.length, team = (rid) => D.byRid[rid];
   const weeks = D.history.map((x) => x.week);
@@ -65,16 +68,21 @@ export function LabPage({ D, me, h }) {
   const roiRows = Object.values(D.managerMoves).sort((a, b) => b.net - a.net).map((m) => ({ label: short(team(m.rid).name, 20), mine: m.rid === me, value: m.net, tip: `${team(m.rid).name}: ${f1(m.waiverNet)} from adds and drops, ${f1(m.tradeNet)} from trades over ${m.moves} moves` }));
 
   return <>
+    <div className="league-focus glass panel"><FocusNav label="League analysis views" value={view} onChange={setView} items={[
+      ['race', 'Playoff race', 'Who gets in, what it takes and which schedules stand in the way.'],
+      ['form', 'Form', 'Separate scoring strength from good fortune and follow each team’s season.'],
+      ['roster', 'Rosters & moves', 'Position strengths, lineup decisions, standout players and value from moves.'],
+    ]} /></div>
     <div className="lab-grid">
-      <section className="panel glass span-12"><h2>Rank flow</h2><p className="sub">Power rank after each week. The roster half uses today's ROS values throughout, so the movement comes from results.</p><BumpChart {...bump} /></section>
-      <WhatItTakes D={D} me={me} h={h} />
-      <section className="panel glass span-6"><h2>Luck index</h2><p className="sub">Actual wins minus all-play expected wins. Orange teams are winning more than their scores deserve, blue teams less.</p><DivergingBars rows={luckRows} /></section>
-      <section className="panel glass span-6"><h2>Points for vs against</h2><p className="sub">Dashed lines are the league average. Bottom right is where you want to live.</p><Scatter {...sc} /></section>
-      <FlukeOrReal D={D} me={me} h={h} />
-      {schedHeat ? <section className="panel glass span-12"><h2>Schedule strength</h2><p className="sub">{`Each cell is that week's opponent by current power rank; amber is a top team, blue a bottom one. Teams run toughest to easiest, with the schedule's effect in expected wins next to the name. This counts for ${h.pctW('schedule')}% of the power score.`}</p><HeatTable {...schedHeat} /></section> : null}
-      <section className="panel glass span-12"><h2>Weekly finishes</h2><p className="sub">Each cell is that week's score; blue finished near the top of the league, amber near the bottom.</p><HeatTable {...weeklyHeat} /></section>
-      {posHeat ? <section className="panel glass span-7"><h2>Position group ranks</h2><p className="sub">League rank of each team's projected rest-of-season starters by position, flex spots included.</p><HeatTable {...posHeat} /></section> : null}
-      <section className={`panel glass ${posHeat ? 'span-5' : 'span-12'}`}><h2>Playoff odds</h2><p className="sub">{`From 10,000 simulated finishes to the regular season, top ${D.meta.playoffTeams} get in.`}</p>
+      {view === 'form' ? (<section className="panel glass span-12"><h2>Rank flow</h2><p className="sub">Power rank after each week. The roster half uses today's ROS values throughout, so the movement comes from results.</p><BumpChart {...bump} /></section>) : null}
+      {view === 'race' ? <WhatItTakes D={D} me={me} h={h} /> : null}
+      {view === 'form' ? (<section className="panel glass span-6"><h2>Luck index</h2><p className="sub">Actual wins minus all-play expected wins. Orange teams are winning more than their scores deserve, blue teams less.</p><DivergingBars rows={luckRows} /></section>) : null}
+      {view === 'form' ? (<section className="panel glass span-6"><h2>Points for vs against</h2><p className="sub">Dashed lines are the league average. Bottom right is where you want to live.</p><Scatter {...sc} /></section>) : null}
+      {view === 'form' ? <FlukeOrReal D={D} me={me} h={h} /> : null}
+      {view === 'race' ? (schedHeat ? <section className="panel glass span-12"><h2>Schedule strength</h2><p className="sub">{`Each cell is that week's opponent by current power rank; amber is a top team, blue a bottom one. Teams run toughest to easiest, with the schedule's effect in expected wins next to the name. This counts for ${h.pctW('schedule')}% of the power score.`}</p><HeatTable {...schedHeat} /></section> : null) : null}
+      {view === 'form' ? (<section className="panel glass span-12"><h2>Weekly finishes</h2><p className="sub">Each cell is that week's score; blue finished near the top of the league, amber near the bottom.</p><HeatTable {...weeklyHeat} /></section>) : null}
+      {view === 'roster' ? (posHeat ? <section className="panel glass span-7"><h2>Position group ranks</h2><p className="sub">League rank of each team's projected rest-of-season starters by position, flex spots included.</p><HeatTable {...posHeat} /></section> : null) : null}
+      {view === 'race' ? (<section className={`panel glass ${posHeat ? 'span-5' : 'span-12'}`}><h2>Playoff odds</h2><p className="sub">{`From 10,000 simulated finishes to the regular season, top ${D.meta.playoffTeams} get in.`}</p>
         <table className="table"><thead><tr><th>Team</th><th className="num">Playoffs</th><th className="num">Bye</th><th className="num">Proj W</th><th className="num">Last</th></tr></thead><tbody>
           {oddsRows.map((t) => (
             <tr key={t.rid} className={t.rid === me ? 'mine' : undefined}>
@@ -83,22 +91,22 @@ export function LabPage({ D, me, h }) {
               <td className="num">{pct(t.byePct)}</td><td className="num">{f1(t.projWins)}</td><td className="num">{pct(t.lastPct)}</td>
             </tr>
           ))}
-        </tbody></table></section>
-      <section className="panel glass span-6"><h2>Lineup efficiency</h2><p className="sub">{`Share of their best possible lineup each manager actually started, compared with the league average of ${(effAvg * 100).toFixed(1)}%.`}</p><DivergingBars rows={effRows} unit="%" /></section>
-      <section className="panel glass span-6"><h2>Biggest single games</h2><p className="sub">Top individual starter performances this season.</p>
+        </tbody></table></section>) : null}
+      {view === 'roster' ? (<section className="panel glass span-6"><h2>Lineup efficiency</h2><p className="sub">{`Share of their best possible lineup each manager actually started, compared with the league average of ${(effAvg * 100).toFixed(1)}%.`}</p><DivergingBars rows={effRows} unit="%" /></section>) : null}
+      {view === 'roster' ? (<section className="panel glass span-6"><h2>Biggest single games</h2><p className="sub">Top individual starter performances this season.</p>
         <table className="table"><thead><tr><th>Player</th><th>Team</th><th className="num">Wk</th><th className="num">Pts</th></tr></thead><tbody>
           {D.topPerformances.map((p, i) => (
             <tr key={i}><td><PosTag pos={h.posOf(p.id)} />{h.nameOf(p.id)}</td><td>{short(team(p.rid).name, 18)}</td><td className="num">{p.week}</td><td className="num"><b>{f1(p.pts)}</b></td></tr>
           ))}
-        </tbody></table></section>
-      {D.meta.hasRos && D.divisive.length ? <section className="panel glass span-6"><h2>Experts can't agree</h2><p className="sub">Rostered players where the ranking sources disagree the most. Overall rank by source.</p>
+        </tbody></table></section>) : null}
+      {view === 'roster' ? (D.meta.hasRos && D.divisive.length ? <section className="panel glass span-6"><h2>Experts can't agree</h2><p className="sub">Rostered players where the ranking sources disagree the most. Overall rank by source.</p>
         <table className="table"><thead><tr><th>Player</th><th className="num">FP</th><th className="num">DS</th><th className="num">LL</th></tr></thead><tbody>
           {D.divisive.map((d) => (
             <tr key={d.id}><td><PosTag pos={h.posOf(d.id)} />{h.nameOf(d.id)}<br /><small className="when">{team(d.rid)?.name || ''}</small></td><td className="num">{d.r.fp ?? '–'}</td><td className="num">{d.r.ds ?? '–'}</td><td className="num">{d.r.ll ?? '–'}</td></tr>
           ))}
-        </tbody></table></section> : null}
-      {D.meta.hasRos ? <section className="panel glass span-6"><h2>Waiver and trade ROI</h2><p className="sub">Consensus ROS value added through moves, valued at today's rankings. Uneven trades credit each freed roster spot as one top free agent.</p>
-        <DivergingBars rows={roiRows} /></section> : null}
+        </tbody></table></section> : null) : null}
+      {view === 'roster' ? (D.meta.hasRos ? <section className="panel glass span-6"><h2>Waiver and trade ROI</h2><p className="sub">Consensus ROS value added through moves, valued at today's rankings. Uneven trades credit each freed roster spot as one top free agent.</p>
+        <DivergingBars rows={roiRows} /></section> : null) : null}
     </div>
   </>;
 }

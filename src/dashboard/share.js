@@ -22,7 +22,7 @@ export async function captureSheet(paper, head) {
   band.querySelector('small').textContent = head.line;
   const sheet = paper.cloneNode(true);
   // the controls stay behind; every tile is drawn at the end of its intro
-  sheet.querySelectorAll('.pp-pick, .pp-share').forEach((n) => n.remove());
+  sheet.querySelectorAll('.pp-pick, .pp-share, .focus-index, .swipe-hint').forEach((n) => n.remove());
   sheet.querySelectorAll('.pp-tile').forEach((t) => { t.style.opacity = '1'; t.style.transform = 'none'; });
   // a range input's track and thumb are the browser's own drawing, which html-to-image can't see: a still copy instead
   sheet.querySelectorAll('input[type=range]').forEach((r) => {
