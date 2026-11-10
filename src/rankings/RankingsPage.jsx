@@ -12,29 +12,6 @@ import { Report } from './Report.jsx';
 import { usePosts } from '../admin/posts.js';
 import { Lockout } from './Lockout.jsx';
 
-// Dan's share button: the rankings as a one-page PDF for the group chat. Shown only while Dan is signed in, so
-// leaguemates never see it; the module loads on the first tap.
-// Nov 4: Dan lost his desk key, so the button was open to everyone until 8:15pm Central that night. Past now, so inert.
-const PDF_OPEN_UNTIL = Date.parse('2026-11-05T02:15:00Z');
-function SharePdf({ D, h }) {
-  const t = usePosts();
-  const [busy, setBusy] = useState('');
-  if (!t.admin && Date.now() > PDF_OPEN_UNTIL) return null;
-  const go = async () => {
-    setBusy('Making the PDF…');
-    try {
-      const { rankingsPdf, shareFile } = await import('./rankPdf.js');
-      const { blob, name } = await rankingsPdf(D, h);
-      const how = await shareFile(blob, name, `Week ${D.meta.lastScored + 1} Power Rankings`);
-      setBusy(how === 'saved' ? 'Saved' : '');
-    } catch (e) {
-      setBusy(e?.message || 'The PDF could not be made');
-    }
-    setTimeout(() => setBusy(''), 2500);
-  };
-  return <button type="button" className="chip rank-pdf" onClick={go} disabled={!!busy && busy.endsWith('…')}>{busy || 'Share rankings PDF'}</button>;
-}
-
 // Dan's way into the headline desk (#admin), shown only while he's signed in
 function DeskLink() {
   const p = usePosts();
@@ -57,7 +34,6 @@ function RankHead({ D, h, wk, held, sources, updated, message }) {
         ? sources.map((s) => <span key={s.name} className={`chip ${s.ok ? '' : 'off'}`} title={s.title}><span className="dot" />{s.name}</span>)
         : <span className="chip off"><span className="dot" />ROS rankings unavailable</span>}
       {updated ? <span className="chip">{updated}</span> : null}
-      {!held && D ? <SharePdf D={D} h={h} /> : null}
       <DeskLink />
       {message ? <button type="button" className="chip to-again" data-message hidden={!again} onClick={message.play}>Watch the important message again</button> : null}
     </div>
