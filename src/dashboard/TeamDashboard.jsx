@@ -114,7 +114,7 @@ function ShareSheet({ paper, name, title, head, onClose }) {
   useEffect(() => {
     let alive = true, url = null;
     document.documentElement.classList.add('locked');
-    captureSheet(paper, head).then(async (canvas) => {
+    captureSheet(paper).then(async (canvas) => {
       const [png, pdf] = await Promise.all([pngOf(canvas), pdfOf(canvas)]);
       url = URL.createObjectURL(png);
       if (alive) { setShot({ png, pdf, url }); setState('ready'); }

@@ -2275,6 +2275,19 @@ html.locked { overflow: hidden; }
 .pv-px.up b { background: var(--rh-up); color: #10141A; } .pv-px.down b { background: var(--rh-down); color: #10141A; }
 .pv-px small { display: inline-flex; align-items: center; gap: 4px; }
 .pv-px.up small { color: var(--rh-up); } .pv-px.down small { color: var(--rh-down); }
+/* the corner button: full screen, or (in it) close */
+.pv-expand { position: absolute; top: 14px; right: 16px; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  color: var(--p-dark-text); background: rgba(251, 246, 239, 0.1); box-shadow: inset 0 0 0 1.5px var(--rh-line); transition: background-color 0.15s; }
+@media (hover: hover) { .pv-expand:hover { background: rgba(251, 246, 239, 0.2); } }
+/* Focus: the card over everything (the dock included), on its own dark, scaled by JS to fit the screen whole */
+.paper.vf { position: fixed; inset: 0; z-index: 90; padding: 0; border-radius: 0; box-shadow: none; overflow: hidden; background-color: var(--p-dark); animation: unveil-in 0.2s ease-out; }
+.vf-fit { position: absolute; left: 0; top: 0; width: 100%; transform-origin: 0 0; }
+.vf .pp-tile.pp-val { width: 100%; min-height: 0; border-radius: 0; box-shadow: none; opacity: 1;
+  padding: calc(70px + env(safe-area-inset-top)) max(22px, calc((100% - 1120px) / 2)) calc(28px + env(safe-area-inset-bottom)); }
+.vf .pp-val .pp-label { top: calc(26px + env(safe-area-inset-top)); left: max(22px, calc((100% - 1120px) / 2)); }
+.vf .pv-expand { top: calc(16px + env(safe-area-inset-top)); right: max(16px, calc((100% - 1120px) / 2 - 6px)); }
+.vf .pv-big { font-size: 64px; }
+html.focusing :is(.tabs, .me, .tx-top, .ticker) { visibility: hidden; }
 @container (max-width: 927.98px) {
   .pp-tile.pp-val { grid-template-columns: minmax(0, 220px) minmax(0, 1fr); }
   .pv-list { grid-column: 1 / -1; grid-row: auto; }
@@ -3469,10 +3482,10 @@ main::after { border-radius: 56px 56px 0 0; }
 :root[data-theme='dark'] :is(.pf-knot b, .pf-flip) { color: var(--p-bg); }
 
 /* ---------- sharing the team dashboard (src/dashboard/share.js) ----------
-   The stage: the sheet copied off-screen at three columns under a band with the logo, the way the picture comes out.
+   The stage: the sheet copied off-screen at three columns, alone and edge to edge, the way the picture comes out.
    The preview: a glass card over a dimmed page with the picture and two buttons. */
-.share-stage { position: fixed; left: -20000px; top: 0; z-index: -1; display: grid; gap: 18px; padding: 26px 20px 30px; pointer-events: none;
-  background-color: var(--grass); color: var(--ink); }
+.share-stage { position: fixed; left: -20000px; top: 0; z-index: -1; display: grid; padding: 0; pointer-events: none; color: var(--ink); }
+.share-stage > .paper { border-radius: 0; box-shadow: none; }
 .share-stage *, .share-stage *::before, .share-stage *::after { animation: none !important; transition: none !important; }
 /* the rings drawn on pseudo-elements, which share.js can't restyle: outlines on the stage, like everything else there */
 .share-stage .pp-id p:first-child::before { box-shadow: none; outline: 1.5px solid var(--outline); }
@@ -3481,11 +3494,6 @@ main::after { border-radius: 56px 56px 0 0; }
 .share-range::before { content: ''; position: absolute; left: 0; right: 0; top: 9px; height: 8px; border-radius: 99px;
   background: linear-gradient(90deg, var(--p-ink) 0 calc(var(--v) * 100%), var(--p-wash) 0); }
 .share-range::after { content: ''; position: absolute; top: 1px; left: calc(var(--v) * (100% - 24px)); width: 24px; height: 24px; border-radius: 50%; background: var(--p-white); outline: 1.5px solid var(--outline); }
-.share-band { display: flex; align-items: center; gap: 14px; padding: 0 8px; }
-.share-band img { width: auto; height: 60px; }
-.share-band span { display: grid; gap: 4px; }
-.share-band b { font: 900 34px/0.95 var(--display); letter-spacing: 0.005em; }
-.share-band small { font: 700 15px/1.2 var(--body); }
 .share-sheet { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 16px; overflow-y: auto; background: rgba(12, 30, 18, 0.78);
   animation: unveil-in 0.2s ease-out; }
 .share-card { display: grid; gap: 14px; width: min(520px, 100%); padding: 18px; border-radius: var(--r-xl); }

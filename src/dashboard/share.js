@@ -1,28 +1,23 @@
 // Sharing the team dashboard as a picture or a PDF. The sheet is copied into an off-screen stage at the desktop
-// width (three columns, whatever the phone's width), under a band with the league logo, and drawn to a canvas by
-// html-to-image (loaded only when someone shares). The PDF is written here by hand: one page, the picture as a JPEG.
+// width (three columns, whatever the phone's width) and drawn to a canvas by html-to-image (loaded only when someone
+// shares). The picture is the dashboard alone, edge to edge on its own lilac (Dan, Nov 10: no logo band, no grass). The PDF is written here by hand: one page, the picture as a JPEG.
 // navigator.share with files opens the iPhone's share sheet (Messages, Save Image, Save to Files); where files can't
 // be shared, the file downloads instead.
 
-const STAGE_W = 1008; // the sheet at three columns (928 inside 20px gutters) plus the stage's padding
+const STAGE_W = 968; // the sheet at three columns: 928 inside its own 20px gutters
 // a wait that gives up: fonts and pictures that never report back can't hold the picture up for good
 const within = (p, ms) => Promise.race([p, new Promise((ok) => setTimeout(ok, ms))]);
 const lapse = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('The picture took too long')), ms))]);
 
-/** Draws the dashboard (the .paper element) to a canvas. head: the band's two lines, { title, line }. */
-export async function captureSheet(paper, head) {
+/** Draws the dashboard (the .paper element) to a canvas. */
+export async function captureSheet(paper) {
   const { toCanvas } = await import('html-to-image');
   const stage = document.createElement('div');
   stage.className = 'share-stage';
   stage.style.width = `${STAGE_W}px`;
-  const band = document.createElement('div');
-  band.className = 'share-band';
-  band.innerHTML = '<img src="assets/logo-header.webp" alt=""><span><b></b><small></small></span>';
-  band.querySelector('b').textContent = head.title;
-  band.querySelector('small').textContent = head.line;
   const sheet = paper.cloneNode(true);
   // the controls stay behind; every tile is drawn at the end of its intro
-  sheet.querySelectorAll('.pp-pick, .pp-share, .focus-index, .swipe-hint').forEach((n) => n.remove());
+  sheet.querySelectorAll('.pp-pick, .pp-share, .pv-expand, .focus-index, .swipe-hint').forEach((n) => n.remove());
   sheet.querySelectorAll('.pp-tile').forEach((t) => { t.style.opacity = '1'; t.style.transform = 'none'; });
   // a range input's track and thumb are the browser's own drawing, which html-to-image can't see: a still copy instead
   sheet.querySelectorAll('input[type=range]').forEach((r) => {
@@ -31,7 +26,7 @@ export async function captureSheet(paper, head) {
     still.style.setProperty('--v', String((Number(r.value) - Number(r.min)) / (Number(r.max) - Number(r.min) || 1)));
     r.replaceWith(still);
   });
-  stage.append(band, sheet);
+  stage.append(sheet);
   document.body.append(stage);
   // html-to-image drops CSS-only paint on SVG shapes (the odds arc lost its strokes and the sun came out black), so
   // each shape's computed paint is written onto the copy as plain attributes
@@ -59,7 +54,7 @@ export async function captureSheet(paper, head) {
   try {
     await within(Promise.all([document.fonts?.ready, ...[...stage.querySelectorAll('img')].map((img) => img.decode?.().catch(() => {}))]), 2000);
     // the copy that gets drawn sits in place, not off-screen where the stage waits
-    const opts = { pixelRatio: 2, cacheBust: false, backgroundColor: getComputedStyle(stage).backgroundColor, style: { position: 'static', left: '0', top: '0' } };
+    const opts = { pixelRatio: 2, cacheBust: false, backgroundColor: getComputedStyle(sheet).backgroundColor, style: { position: 'static', left: '0', top: '0' } };
     // Safari leaves pictures out of the first drawing (they're still being inlined), so it draws twice
     if (/AppleWebKit/.test(navigator.userAgent) && !/Chrome|Chromium|Android/.test(navigator.userAgent)) await lapse(toCanvas(stage, opts), 20000);
     return await lapse(toCanvas(stage, opts), 20000);
