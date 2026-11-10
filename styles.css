@@ -1202,15 +1202,6 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .pth-pick button { min-width: 34px; max-width: 92px; padding: 5px 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 0; border-radius: 999px; font: 800 12.5px/1.2 var(--body); color: var(--ink-2); background: none; cursor: pointer; }
 .pth-pick button[aria-pressed='true'] { color: var(--ink); background: var(--amber); box-shadow: 0 0 0 1.5px var(--outline), 0 2px 0 0 var(--pop); }
 .pth-picked { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0 0; font-size: 13px; font-weight: 700; color: var(--ink-2); }
-.pth-rivals { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
-.pth-rival { display: grid; align-content: start; gap: 8px; padding: 10px 12px; border-radius: 20px; background: var(--paper); box-shadow: 0 0 0 1.5px rgba(18, 48, 26, 0.12); }
-.pth-rv { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px; }
-.pth-rv b { font: 800 16px/1.2 var(--display); color: var(--ink); }
-.pth-rv small { font-size: 12px; color: var(--ink-3); }
-.pth-wks { display: flex; flex-wrap: wrap; gap: 6px; }
-.pth-wkchip { padding: 4px 10px; border: 0; border-radius: 999px; font: 700 12px/1.2 var(--body); color: var(--ink-2); background: var(--tile-2); cursor: pointer; }
-.pth-wkchip.big { font-weight: 800; color: var(--chalk); background: var(--bad); }
-.pth-wkchip[aria-pressed='true'] { color: var(--ink); background: var(--amber); }
 .pth-paths { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .pth-card { display: grid; align-content: start; gap: 10px; min-width: 0; padding: 14px 16px; border-radius: 26px; background: var(--tile); box-shadow: var(--tray-edge); }
 .pth-card.real { box-shadow: var(--tray-edge), 0 0 0 2px var(--grass); }
@@ -1229,6 +1220,31 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .pth-helps li { position: relative; padding: 6px 10px 6px 26px; border-radius: 14px; font-size: 13.5px; font-weight: 700; color: var(--ink); background: var(--paper); }
 .pth-helps li::before { content: ''; position: absolute; left: 10px; top: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
 .pth-helps small { display: block; font-size: 12px; font-weight: 600; color: var(--ink-3); }
+/* this week's game to watch: a white card on an amber ring and gold ledge, between the numbers and the lists */
+.pth-spot { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px 20px; padding: 14px 16px 14px 20px; border-radius: 26px;
+  background: var(--paper); box-shadow: 0 0 0 3px var(--amber), 0 0 0 4.5px var(--outline), 0 5px 0 4px var(--ledge-gold); }
+.pth-spot-text { display: grid; gap: 4px; min-width: 0; }
+.pth-spot-text small { justify-self: start; padding: 3px 10px; border-radius: 999px; font: 800 12px/1.2 var(--body); color: var(--ink); background: var(--amber); }
+.pth-spot-text b { font: 800 24px/1.1 var(--display); letter-spacing: 0.01em; color: var(--ink); text-wrap: balance; }
+.pth-spot-text span { font-size: 13.5px; color: var(--ink-2); text-wrap: pretty; }
+.pth-spot-odds { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.pth-spot-odds > span:not(.pth-pick, .pth-done) { display: grid; justify-items: center; min-width: 92px; padding: 8px 12px; border-radius: 18px; background: var(--tile); box-shadow: var(--tray-edge); }
+.pth-spot-odds em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--ink-3); white-space: nowrap; }
+.pth-spot-odds b { font: 800 30px/1 var(--display); color: var(--ink); }
+.pth-spot-odds i { font: 800 12.5px/1.2 var(--body); font-style: normal; }
+.pth-spot-odds .up i { color: var(--good); }
+.pth-spot-odds .down i { color: var(--bad); }
+/* who needs to lose: one tappable row per rival loss, in week order, with its boost to your odds on the right */
+.pth-lose { columns: 2 380px; column-gap: 12px; margin: 0; padding: 0; list-style: none; }
+.pth-lose li { break-inside: avoid; padding-bottom: 6px; }
+.pth-lose button { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 5px 6px 5px 12px; border: 0; border-radius: 999px;
+  text-align: left; font: inherit; color: var(--ink); background: var(--paper); box-shadow: 0 0 0 1.5px rgba(18, 48, 26, 0.12); cursor: pointer; }
+.pth-lose button[aria-pressed='true'] { background: var(--amber); box-shadow: 0 0 0 1.5px var(--outline), 0 2px 0 0 var(--pop); }
+.pth-boost { display: grid; justify-items: center; min-width: 74px; padding: 4px 10px; border-radius: 999px; background: var(--good-bg); }
+.pth-boost b { font: 800 15px/1 var(--display); color: var(--good); }
+.pth-boost small { font-size: 11.5px; font-weight: 700; color: var(--ink-3); }
+.pth-boost:not(:has(b)) { font: 800 12.5px/1.2 var(--body); color: var(--ink-2); background: var(--tile-2); }
+.pth-boost.on { background: var(--paper); }
 /* seed odds as a little bar chart, the playoff seeds in grass */
 .pth-seeds { display: grid; grid-template-columns: repeat(auto-fit, minmax(14px, 1fr)); align-items: end; gap: 4px; height: 110px; padding: 8px 8px 4px; border-radius: 16px; background: var(--paper); }
 .pth-seeds span { display: grid; grid-template-rows: 1fr auto; height: 100%; align-items: end; justify-items: center; gap: 3px; cursor: help; }
@@ -1270,7 +1286,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .pth.stale > :not(.pth-top, .pth-scn) { opacity: 0.6; transition-delay: 0.08s; }
 /* taps, not double-tap zoom; no grey flash */
 .pth :is(button, select) { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-.pth-pick button:active, .pth-wkchip:active { transform: scale(0.94); }
+.pth-pick button:active, .pth-lose button:active { transform: scale(0.97); }
 @media (max-width: 1100px) {
   .pth-paths { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pth-paths .end { grid-column: 1 / -1; }
@@ -1287,15 +1303,24 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .pth-list li { grid-template-columns: 40px minmax(0, 1fr) auto; grid-template-areas: 'wk who who' 'sw sw pick'; row-gap: 4px; padding: 8px 8px 8px 12px; border-radius: 20px; }
   .pth-wk { grid-area: wk; } .pth-who { grid-area: who; padding-right: 4px; } .pth-pick { grid-area: pick; } .pth-sw, .pth-done { grid-area: sw; align-self: center; }
   .pth-pick button { min-width: 44px; min-height: 44px; max-width: 84px; font-size: 13px; }
-  .pth-wkchip { min-height: 44px; padding-inline: 14px; font-size: 13px; }
-  .pth-scn { border-radius: 22px; }
+    .pth-scn { border-radius: 22px; }
   .pth-scn .chip, .pth-picked .chip { min-height: 44px; padding-inline: 16px; }
   .pth-team select { min-height: 44px; font-size: 16px; }
   .pth-wkw { display: none; }
   .pth-seeds { height: 96px; }
-  .pth-rivals { grid-template-columns: minmax(0, 1fr); }
-  .pth-paths { grid-template-columns: minmax(0, 1fr); }
+    .pth-paths { grid-template-columns: minmax(0, 1fr); }
   .pth-rec b { font-size: 32px; }
+  .pth-spot { grid-template-columns: minmax(0, 1fr); padding: 14px; }
+  .pth-spot-text b { font-size: 21px; }
+  .pth-spot-odds { justify-content: flex-start; }
+  .pth-spot-odds > span:not(.pth-pick, .pth-done) { flex: 1 1 0; min-width: 0; }
+  .pth-spot-odds .pth-pick { flex: 1 1 100%; }
+  .pth-spot-odds .pth-pick button { flex: 1; max-width: none; }
+  .pth-lose { columns: 1; }
+  .pth-lose button { grid-template-columns: 40px minmax(0, 1fr) auto; grid-template-areas: 'wk who boost'; border-radius: 22px; }
+  .pth-lose .pth-boost { grid-area: boost; min-width: 66px; padding-inline: 8px; }
+  .pth-lose .pth-who .avatar { display: none; }
+  .pth-lose .pth-who > span { white-space: normal; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 }
 
 /* ---------- the Lab, League: "Fluke or for real?" ---------- */
@@ -3563,7 +3588,7 @@ main::after { border-radius: 56px 56px 0 0; }
 :root[data-theme='dark'] :is(.view-head .wk, .avatar.ph, .tier:not(.low, .stinks), .you, .rank.nudge:not(.open) .pull,
   .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .tabs a[aria-current='page'], .lab-tabs a[aria-current='page'], .key-tag,
   .kicker > span:first-child, .car-pause[aria-pressed='true'], .drive-pick button[aria-pressed='true'],
-  .drive-field .endzone, .gotw-more, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .pth-cta, .pth-flag, .pth-pick button[aria-pressed='true'], .pth-wkchip[aria-pressed='true'], .pth-strip li.w, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
+  .drive-field .endzone, .gotw-more, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .pth-cta, .pth-flag, .pth-pick button[aria-pressed='true'], .pth-lose button[aria-pressed='true'], .pth-spot-text small, .pth-strip li.w, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
   :is(.lead-face, .mgr-face, .fo-face, .stat-face, .deal-face, .pitch-face).ph, .lf .cap, .mu .vs, .day > h3, .clip-frame .clip-sound, .fo-side, .fo-vs i,
   .desk-note, .you-face.ph, .st-chip.won, .sup.champ, .bull-tag.lead, .chip:is(.to-again, .rank-pdf), .lo-tag, .pp-img.ph, .cta, .verdict-face.ph,
   .strip-face.ph, .pos, .champ, .ball-pct, .pp-card, .fo-fav.dog) {

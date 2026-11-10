@@ -97,7 +97,18 @@ export function PlayoffPath({ D, me, h }) {
 
   // the lists hold still while you pick: which games and rivals show comes from the read without your picks, the
   // numbers from the current one, so a tapped row stays where it was and turns into its result
-  const watchRows = base.watch.map((x) => ({ x: { ...x, picked: x.i in dPicks }, b: P.games[x.i] }));
+  // in week order (the biggest swing first within a week)
+  const byWeek = (a, b) => a.week - b.week || b.swing - a.swing;
+  const watchRows = [...base.watch].sort(byWeek).map((x) => ({ x: { ...x, picked: x.i in dPicks }, b: P.games[x.i] }));
+  // this week's game to watch: the result outside your own game that moves your odds most
+  const wk0 = S.weeks[0];
+  const spot = base.games.filter((x) => x.week === wk0 && x.ra !== dRid && x.rb !== dRid && x.swing >= 0.005).sort((a, b) => b.swing - a.swing)[0] || null;
+  // your odds if a given team wins game i, read now (so it follows your picks), and the move from where you stand
+  const oddsIf = (i, winner) => { const g = P.games[i]; return g ? (winner === g.ra ? g.oA : g.oB) : null; };
+  const move = (x) => (x == null || P.odds == null ? null : x - P.odds);
+  const signed = (d) => (d == null ? '–' : `${d >= 0 ? '+' : '−'}${Math.abs(d * 100).toFixed(Math.abs(d) < 0.1 ? 1 : 0)}%`);
+  // who needs to lose: every rival loss that helps, the biggest dozen, in week order
+  const losses = base.rivals.flatMap((r) => r.weeks.map((w) => ({ ...w, rid: r.rid }))).sort((a, b) => b.swing - a.swing).slice(0, 12).sort(byWeek);
   const shown = new Set([...P.yours.map((x) => x.i), ...base.watch.map((x) => x.i)]);
   const floor = P.floor, ceil = P.ceiling;
   const fcTip = (b, word) => b && `${word} for week ${b.week}: ${b.results.map((r) => `${team(r.winner).name} win`).join(', ')}. Your odds by Tuesday: ${p0(b.odds)}.`;
@@ -159,6 +170,26 @@ export function PlayoffPath({ D, me, h }) {
         <div className="pth-stat"><small>Wins you need</small><b>{P.need == null ? 'Help' : P.need === 0 ? 'None' : `${P.need} of ${P.left}`}</b><span>{P.need == null ? 'no win total is 90% safe' : 'for 9 in 10 to get in'}</span></div>
       </div>
 
+      {spot ? (() => {
+        const on = spot.i in picks, up = oddsIf(spot.i, spot.root), down = oddsIf(spot.i, spot.against);
+        return (
+          <div className="pth-spot">
+            <div className="pth-spot-text">
+              <small>{`Week ${spot.week}: the game to watch`}</small>
+              <b>{`Root for ${nm(spot.root, 22)} over ${nm(spot.against, 22)}`}</b>
+              <span>{`The result outside your own game that moves your odds most this week. ${team(spot.root).name} win it ${p0(spot.pGood)} of the time.`}</span>
+            </div>
+            <div className="pth-spot-odds">
+              {on ? pickedBadge(spot) : <>
+                <span className="up"><em>{`If ${h.first(team(spot.root))} win`}</em><b>{p0(up)}</b><i>{signed(move(up))}</i></span>
+                <span className="down"><em>{`If ${h.first(team(spot.against))} win`}</em><b>{p0(down)}</b><i>{signed(move(down))}</i></span>
+              </>}
+              {Pick({ x: spot, a: spot.root, b: spot.against, labelA: h.first(team(spot.root)), labelB: h.first(team(spot.against)) })}
+            </div>
+          </div>
+        );
+      })() : null}
+
       <div className="pth-cols">
         <div className="pth-box">
           <h3>Critical weeks to win</h3>
@@ -176,11 +207,11 @@ export function PlayoffPath({ D, me, h }) {
         </div>
         <div className="pth-box">
           <h3>Matchups to watch</h3>
-          <p className="pth-cap">Other games that move your odds most. Root for the first team.</p>
+          <p className="pth-cap">Other games that move your odds most, in week order. Root for the first team.</p>
           {watchRows.length ? <ul className="pth-list">{watchRows.map(({ x, b }) => (
-            <li key={x.i} className={x.picked ? 'done' : undefined}>
+            <li key={x.i} className={`${x.picked ? 'done' : ''}${spot && x.i === spot.i ? ' crit' : ''}`.trim() || undefined}>
               <span className="pth-wk">{`Wk ${x.week}`}</span>
-              <span className="pth-who"><TeamAvatar t={team(x.root)} cls="avatar xs" /><span><b>{nm(x.root, 13)}</b>{` over ${nm(x.against, 13)}`}</span></span>
+              <span className="pth-who"><TeamAvatar t={team(x.root)} cls="avatar xs" /><span><b>{nm(x.root, 13)}</b>{` over ${nm(x.against, 13)}`}</span>{spot && x.i === spot.i ? <em className="pth-flag">This week</em> : null}</span>
               {x.picked ? pickedBadge(x) : <span className="pth-sw" data-tip={`Week ${x.week}: ${p0(b.ifGood)} if ${team(x.root).name} win, ${p0(b.ifBad)} if ${team(x.against).name} do. ${team(x.root).name} win it ${p0(b.pGood)} of the time.`}>
                 {Bar({ lo: b.ifBad ?? 0, hi: b.ifGood ?? 0 })}<b>{`+${pts(b.swing)}`}</b>
               </span>}
@@ -196,18 +227,21 @@ export function PlayoffPath({ D, me, h }) {
 
       <div className="pth-box">
         <h3>Who needs to lose</h3>
-        <p className="pth-cap">The rivals whose losses help you most, and the weeks they help. Bigger chips matter more; tap one to pick it.</p>
-        {base.rivals.length ? <div className="pth-rivals">{base.rivals.map((r) => (
-          <div key={r.rid} className="pth-rival">
-            <span className="pth-rv"><TeamAvatar t={team(r.rid)} cls="avatar xs" /><b>{nm(r.rid, 18)}</b><small>{`${h.record(team(r.rid))}, ${p0(team(r.rid).playoffPct)} now`}</small></span>
-            <span className="pth-wks">{r.weeks.map((w) => (
-              <button key={w.week} type="button" className={`pth-wkchip${w.swing >= 0.04 ? ' big' : ''}`} aria-pressed={picks[w.i] === winnerSide(game(w.i), w.vs)}
-                onClick={() => pick(w.i, winnerSide(game(w.i), w.vs))} data-tip={`A ${team(r.rid).name} loss to ${team(w.vs).name} in week ${w.week} is worth ${pts(w.swing)} on your playoff odds`}>
-                {`Wk ${w.week} vs ${h.first(team(w.vs))}`}
+        <p className="pth-cap">The rival losses that help you most, in week order, with what each one does to your playoff odds. Tap one to pick it.</p>
+        {losses.length ? <ul className="pth-lose">{losses.map((w) => {
+          const side = winnerSide(game(w.i), w.vs), on = picks[w.i] === side, other = w.i in picks && !on;
+          const d = move(oddsIf(w.i, w.vs));
+          return (
+            <li key={w.i}>
+              <button type="button" aria-pressed={on} onClick={() => pick(w.i, side)}
+                data-tip={`If ${team(w.rid).name} lose to ${team(w.vs).name} in week ${w.week}, your playoff odds go to ${p0(oddsIf(w.i, w.vs))}`}>
+                <span className="pth-wk">{`Wk ${w.week}`}</span>
+                <span className="pth-who"><TeamAvatar t={team(w.rid)} cls="avatar xs" /><span><b>{nm(w.rid, 16)}</b>{` lose to ${h.first(team(w.vs))}`}</span></span>
+                <span className={`pth-boost${on ? ' on' : ''}`}>{on ? 'Picked' : other ? 'Other way' : <><b>{signed(d)}</b><small>your odds</small></>}</span>
               </button>
-            ))}</span>
-          </div>
-        ))}</div> : <p className="pth-cap">Nobody: it's all in your hands.</p>}
+            </li>
+          );
+        })}</ul> : <p className="pth-cap">Nobody: it's all in your hands.</p>}
       </div>
 
       <div className="pth-paths">
