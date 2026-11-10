@@ -1,3 +1,4 @@
+import { useSwipe } from '../swipe.js';
 // 2. Key players, as the music player: one star at a time, a cover each (two styles taking turns), his last five weeks
 // as the equaliser, season and per-game points and his weekly projection, and this week's projection against his
 // ceiling (or his final score) as the progress bar. Prev and next slide the next cover in over the old one while the
@@ -116,9 +117,10 @@ function Players({ stars, h, calm }) {
 
   const p = stars[shown], w = p.week, value = w.played ? w.now : w.pre;
   const click = (d) => { step(d); setNudge((n) => n + 1); };
+  const swipe = useSwipe(click);
   return (
     <Tile index={1} className={`pp-player${playing ? ' playing' : ''}`} wide tileRef={tile}>
-      <div className="pp-cover" aria-hidden="true">
+      <div {...swipe} className="pp-cover swipe-surface" aria-hidden="true">
         <div className="pp-cover-in">
           {layers.map((l) => <Cover key={l.id} p={stars[l.i]} i={l.i} coverRef={(el) => { if (el) covers.current.set(l.id, el); else covers.current.delete(l.id); }} />)}
         </div>
@@ -142,7 +144,7 @@ function Players({ stars, h, calm }) {
         {playing ? <Pause /> : <Play />}
       </button>
       <button type="button" className="pp-btn next" aria-label="Next player" onClick={() => click(1)}><Next /></button>
-      <span className="pp-count">{`${shown + 1} of ${stars.length}`}</span>
+      <span className="pp-count">{`${shown + 1} of ${stars.length}`}<span className="player-swipe-hint"> — swipe cover</span></span>
     </Tile>
   );
 }

@@ -1,3 +1,4 @@
+import { TeamHub } from '../TeamHub.jsx';
 // The Live tab (#live) while a week is played: the desk's note on your week, every team's week best to worst (banked
 // plus the rest projected) and the projected standings. Once every game is final it becomes Final Scores, with the
 // button to the new power rankings. The hero (headline carousel and page head) is the one the power rankings
@@ -86,6 +87,7 @@ export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetc
       ? <section className="view-head"><LiveHead fin wk={wk} played={played} fetched={fetched} /></section>
       : <Hero D={D} h={h} car={car} head={<LiveHead wk={wk} played={played} fetched={fetched} />}
         side={<YourWeek rows={rows} standings={standings} me={me} h={h} bull={bull} />} />}
+    <TeamHub D={D} me={me} h={h} view="live" />
     {fin ? <div className="unveil-cta"><button type="button" className="cta" data-reveal onClick={(e) => onReveal(e.currentTarget)}>Done with Live Ranks, Show me the Power Ranking</button></div> : null}
     <div className="live-grid">
       <section className="panel glass live-panel wk-rank">

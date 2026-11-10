@@ -1,3 +1,4 @@
+import { TeamHub } from '../TeamHub.jsx';
 // The Wire (#wire): trades up top, adds and drops below grouped by day and team, with the consensus rest-of-season value
 // each move gained or gave up; best free agents, busiest managers and the trade ledger on the side. The filters are
 // plain React state, kept in app.js's wireState so they survive leaving the page.
@@ -98,6 +99,9 @@ export function WirePage({ D, me, h, state, onState }) {
   };
 
   const btn = (k, label) => <button type="button" aria-pressed={s.type === k} onClick={() => set({ type: k, limit: 50 })}>{label}</button>;
+  const own = team(me);
+  const weak = own && ['QB', 'RB', 'WR', 'TE'].filter((pos) => own.posRanks?.[pos] != null).sort((a, b) => own.posRanks[b] - own.posRanks[a])[0];
+  const targets = weak && hasRos ? D.freeAgents.filter((p) => h.posOf(p.id) === weak).slice(0, 3) : [];
   const fa = D.freeAgents.slice(0, 10);
   const mm = Object.values(D.managerMoves).sort((a, b) => b.moves - a.moves);
   const traders = Object.values(D.managerMoves).filter((m) => m.tradeNet !== 0).sort((a, b) => b.tradeNet - a.tradeNet);
@@ -117,6 +121,12 @@ export function WirePage({ D, me, h, state, onState }) {
         <p>Trades up top, adds and drops below, grouped by day and team. Numbers are the consensus rest-of-season value a move gained or gave up.</p>
       </div>
     </section>
+    <TeamHub D={D} me={me} h={h} view="wire" />
+    {targets.length ? <section className="waiver-fit glass panel">
+      <div><h2>{`A look at your ${weak} room`}</h2><p>{`Your ${weak} group ranks ${h.ordinal(own.posRanks[weak])}. These are the highest-valued free agents at that position, not guaranteed lineup upgrades.`}</p></div>
+      <ol>{targets.map((p) => <li key={p.id}><PosTag pos={weak} /><b>{h.nameOf(p.id)}</b><span>{`${f1(p.wk)} ROS pts/wk`}</span></li>)}</ol>
+      <button type="button" className="chip" aria-pressed={s.mine} onClick={() => set({ mine: !s.mine })}>{s.mine ? 'Show league moves' : 'Show my moves'}</button>
+    </section> : null}
     <div className="wire-stats glass">
       {stat(today, 'moves today')}
       {stat(thisWeek.filter((f) => f.type !== 'trade').length, `adds and drops in week ${wk}`)}

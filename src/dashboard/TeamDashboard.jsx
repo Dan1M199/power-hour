@@ -1,3 +1,4 @@
+import { SeasonPortrait } from './SeasonPortrait.jsx';
 // The team dashboard (the Lab's Your team section, #lab/team): one team's season on eight paper widgets in the Paper Widgets style. The
 // numbers come from dashData (lib/dashboard.js, pure and tested); the look is .paper in styles.css. Picking another
 // team remounts the sheet, so its intro plays again. Share draws the sheet as a picture (share.js) and opens a preview
@@ -22,7 +23,7 @@ import { canShareFiles, captureSheet, pdfOf, pngOf, shareFile } from './share.js
  * rid: the team to open on; h: the page's helpers (f1, pct, ordinal, record, first, shortName, nfl, groupSaid,
  * faceSrc, teams); calm: reduced motion; onTeam(rid): told when another team is picked.
  */
-export function TeamDashboard({ D, raw, ros, rid: start, h, calm, onTeam }) {
+export function TeamDashboard({ me, D, raw, ros, rid: start, h, calm, onTeam }) {
   const [rid, setRid] = useState(start);
   const paper = useRef(null), intro = useRef(null); // intro.current(): jumps the sheet's intro to its end
   const [share, setShare] = useState(null); // the preview: { name, title } while open
@@ -40,7 +41,7 @@ export function TeamDashboard({ D, raw, ros, rid: start, h, calm, onTeam }) {
           <p className="pp-sub">{`${h.first(t)}, ${h.record(t)}, ${h.ordinal(t.seed)} in the standings, No. ${t.powerRank} power`}</p>
         </div>
         <label className="pp-pick">
-          <span>Team</span>
+          <span>Explore a team</span>
           <select id="dash-team" value={rid} onChange={(e) => { const r = Number(e.target.value); setRid(r); onTeam?.(r); }}>
             {[...h.teams].sort((a, b) => a.name.localeCompare(b.name)).map((x) => <option key={x.rid} value={x.rid}>{x.name}</option>)}
           </select>
@@ -49,6 +50,7 @@ export function TeamDashboard({ D, raw, ros, rid: start, h, calm, onTeam }) {
           <ShareIcon />Share
         </button>
       </header>
+      <SeasonPortrait key={`portrait-${rid}`} D={D} t={t} me={me} h={h} />
       <Sheet key={rid} m={m} h={h} calm={calm} finish={intro} />
       {share ? createPortal(<ShareSheet paper={paper.current} {...share} onClose={() => setShare(null)} />, document.body) : null}
     </section>

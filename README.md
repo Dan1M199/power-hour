@@ -78,3 +78,9 @@ fixtures/, scripts/              saved source data and tests (node scripts/test-
 The parsers read specific page structures: FantasyPros' embedded `ecrData`, DraftSharks' `/ros-rankings/load-rows` table rows, and LeagueLogs' rankings table. If a site redesigns, that source shows as offline on the Rankings page and the other two carry the score until the parser in `lib/sources.js` is updated.
 
 Rankings data belongs to FantasyPros, DraftSharks and LeagueLogs; league data comes from the Sleeper API. This is a personal, non-commercial league site.
+
+## Your team experience
+
+Choose your team in the header on desktop or the circle beside the phone dock to keep it across visits. The team hub links your dashboard, matchup, waiver wire and trade ideas throughout the public pages. Games puts your matchup first; the Wire highlights available players at your lowest-ranked skill position (a shortlist to investigate, not an automatic add recommendation). Your dashboard opens on your own team and includes an interactive league comparison for scoring, lineup efficiency and playoff odds, plus recent form. Its separate team picker lets you scout rivals without changing your identity. Everything uses the existing morning snapshot.
+
+On phones, the main sections live in a bottom navigation bar above the home indicator. Slide along the dock to choose a section; use the floating up button to return to the top. Swipe the dashboard comparison sideways to change metrics, or swipe a key player's cover to move between players; the existing buttons remain available. Vertical gestures, multi-touch, cancelled touches and swipes starting within 24px of either screen edge do not change the dashboard. Reduced motion skips press animations. The headlines and filter trays use native horizontal scrolling.

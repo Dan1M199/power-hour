@@ -1694,14 +1694,15 @@ const signed = (x) => `${x > 0 ? '+' : ''}${f1(x)}`;
 // ---------- trade lab ----------
 // the Lab's Trades picker sets your team for the whole site
 function setMyTeam(rid) {
-  myTeam = rid || null;
+  myTeam = team(Number(rid)) ? Number(rid) : null;
+  labState.team = myTeam;
   store.set('ph-my-team', myTeam ? String(myTeam) : null);
   $('#my-team').value = myTeam ? String(myTeam) : '';
   route();
 }
 // ---------- nerd lab ----------
-// The team dashboard opens on your team, or whichever was picked there last (labState.team).
-const dashTeam = () => (team(labState.team) ? labState.team : myTeam && team(myTeam) ? myTeam : DATA.teams[0].rid);
+// Return visits open your own dashboard; browsing rivals never changes your identity.
+const dashTeam = () => (myTeam && team(myTeam) ? myTeam : team(labState.team) ? labState.team : DATA.teams[0].rid);
 // formatting and names for the React pages, so they read exactly like the rest of the site
 const reactHelpers = () => ({
   f1, pct, ordinal, short, record, nfl, groupSaid, pctW, nameOf, posOf, faceSrc, first: firstName, teams: DATA.teams,
@@ -1944,9 +1945,7 @@ function initTeamPicker() {
   const sel = $('#my-team');
   sel.innerHTML = '<option value="">Your team</option>' + [...DATA.teams].sort((a, b) => a.name.localeCompare(b.name)).map((t) => `<option value="${t.rid}" ${t.rid === myTeam ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
   sel.addEventListener('change', () => {
-    myTeam = Number(sel.value) || null;
-    store.set('ph-my-team', myTeam ? String(myTeam) : null);
-    route();
+    setMyTeam(Number(sel.value));
   });
 }
 

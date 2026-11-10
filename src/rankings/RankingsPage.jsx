@@ -1,3 +1,4 @@
+import { TeamHub } from '../TeamHub.jsx';
 // The power rankings (#rankings): a row per team that opens into its scouting report, with your rank in a strip up
 // top, the fan poll, championship futures and how the score works. The hero (headline carousel and page head) is
 // shared with the Live page.
@@ -184,6 +185,7 @@ export function RankingsPage({ D, me, h, held, car, sources, updated, message, r
       ? <section className="view-head"><RankHead wk={wk} held sources={sources} updated={updated} /></section>
       : <Hero D={D} h={h} car={car} head={<RankHead D={D} h={h} wk={wk} sources={sources} updated={updated} message={message} />}
         side={youStrip} hint={<p className="you-card glass empty" data-open-me>{'Pick your team '}<span className="where-d">in the top right</span><span className="where-p">in the circle at the bottom right</span>{' and this spot shows your rank, your tier and your playoff odds.'}</p>} />}
+    <TeamHub D={D} me={me} h={h} view="rankings" />
     {held ? <div className="notice glass hold"><span><strong>Power rankings are on hold.</strong>{` Week ${wk} is being played, so these are the ranks going into the week. They update as soon as every game is final. For how this week is going, see the `}<a href="#live">Live</a> tab.</span></div> : null}
     {rosError ? <div className="notice glass"><strong>Results-only mode.</strong>{` The rest-of-season rankings couldn't be loaded (${rosError}), so these ranks use this season's results alone until they come back.`}</div> : null}
     <div id="poll-slot"><Poll D={D} h={h} poll={poll} /></div>

@@ -1,3 +1,4 @@
+import { TeamHub } from '../TeamHub.jsx';
 // The Games page (#matchups): the game of the week, then a card per game. A card's lineup breakdown opens full width
 // on desktop, and the other cards glide to their new places (FLIP, transform only) instead of jumping.
 import { useLayoutEffect, useRef, useState } from 'react';
@@ -50,10 +51,12 @@ export function GamesPage({ D, me, h, calm, lite }) {
         <p>Every game this week, projected from the lineups as they stand. Open one for the slot-by-slot breakdown, and make your pick before kickoff.</p>
       </div>
     </section>
-    <GameOfTheWeek D={D} h={h} onBreakdown={toBreakdown} />
-    {pv.length ? <div className="matchups" ref={grid}>{pv.map((p, i) => (
+    <TeamHub D={D} me={me} h={h} view="matchups" />
+    {!me ? <GameOfTheWeek D={D} h={h} onBreakdown={toBreakdown} /> : null}
+    {pv.length ? <div className="matchups" ref={grid}>{pv.map((p, i) => ({ p, i })).sort((a, b) => Number(b.p.a === me || b.p.b === me) - Number(a.p.a === me || a.p.b === me)).map(({ p, i }) => (
       <MatchupCard key={`${p.a}-${p.b}`} D={D} p={p} i={i} me={me} h={h} votes={votes} error={error}
         open={open.has(i)} opened={opened.has(i)} onOpen={() => toggle(i)} cardRef={(el) => { cards.current[i] = el; }} />
     ))}</div> : <p className="empty glass panel">No regular-season matchups left to preview.</p>}
+    {me ? <GameOfTheWeek D={D} h={h} onBreakdown={toBreakdown} /> : null}
   </>;
 }
