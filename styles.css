@@ -1198,6 +1198,8 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   box-shadow: 5px 6px 0 rgba(0, 0, 0, 0.35); transform: rotate(2.5deg); }
 .clip { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; cursor: pointer; }
 .clip-print .stamp { z-index: 2; top: -9px; left: -14px; }
+/* a photo headline (Tarek's Ironman finish): the frame sits on the two finishers, not the arch above them */
+.photo-print .clip { object-position: 62% 78%; cursor: default; }
 .clip-who { position: absolute; z-index: 2; left: -18px; bottom: -14px; }
 .clip-who .lead-face { width: 62px; height: 62px; border-radius: 22px; border-width: 3px; box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.35); transform: rotate(-7deg); }
 /* amber while it's asking for a tap (muted, or waiting to play); a white pill once the sound is on */

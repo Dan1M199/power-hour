@@ -82,10 +82,10 @@ export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetc
     return <span className={`st-chip ${r.win >= 0.5 ? 'up' : 'down'}`}>{`${pct(r.win)} to beat ${o}`}</span>;
   };
   return <>
-    {fin
+    {fin && !car
       ? <section className="view-head"><LiveHead fin wk={wk} played={played} fetched={fetched} /></section>
-      : <Hero D={D} h={h} car={car} head={<LiveHead wk={wk} played={played} fetched={fetched} />}
-        side={<YourWeek rows={rows} standings={standings} me={me} h={h} bull={bull} />} />}
+      : <Hero D={D} h={h} car={car} head={<LiveHead fin={fin} wk={wk} played={played} fetched={fetched} />}
+        side={fin ? null : <YourWeek rows={rows} standings={standings} me={me} h={h} bull={bull} />} />}
     {fin ? <div className="unveil-cta"><button type="button" className="cta" data-reveal onClick={(e) => onReveal(e.currentTarget)}>Done with Live Ranks, Show me the Power Ranking</button></div> : null}
     <div className="live-grid">
       <section className="panel glass live-panel wk-rank">

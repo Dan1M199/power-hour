@@ -80,6 +80,18 @@ function PlayerPrint({ st, h }) {
   );
 }
 
+// a photo story's picture, printed like the clip: the same tilted frame and stamp, the face of whoever it's about
+function PhotoPrint({ st, D, h }) {
+  const P = st.photo, who = D.byRid[st.face];
+  return (
+    <figure className={`clip-print photo-print ${st.tone || ''}`}>
+      <div className="clip-frame"><img className="clip" src={asset(P.src)} alt={P.label} decoding="async" /></div>
+      {st.stamp ? <em className="stamp" aria-hidden="true">{st.stamp}</em> : null}
+      {who && h.faceSrc(who) ? <span className="lf clip-who" aria-hidden="true"><Headshot t={who} cls="lead-face" h={h} /><span className="cap">{h.first(who)}</span></span> : null}
+    </figure>
+  );
+}
+
 const CLIP_ICONS = {
   play: <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />,
   muted: <><path d="M3.5 9.5v5h3.8l4.7 4v-13l-4.7 4z" fill="currentColor" /><path d="m15.5 9.5 5 5m0-5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></>,
@@ -185,14 +197,15 @@ function Slide({ st, i, n, D, h, groups, runs, date, night, clip, slideRef, hk, 
         <span>{i ? (TONIGHT.has(st.type) || (st.type === 'sass' && night) ? 'Tonight' : 'Also today') : date}</span>
         <span className={`k${st.group ? ` g-${st.group}` : ''}`}>{st.kicker}{run && run.i.length > 1 ? <small>{`${run.i.indexOf(i) + 1} of ${run.i.length}`}</small> : null}</span>
       </p>
-      {st.clip ? null : st.player ? <PlayerPrint st={st} h={h} /> : <Faces st={st} D={D} h={h} />}
+      {st.clip || st.photo ? null : st.player ? <PlayerPrint st={st} h={h} /> : <Faces st={st} D={D} h={h} />}
     </div>
   );
   const Hed = i ? 'h2' : 'h1';
   const hed = <Hed className={`lead-hed${st.mark ? ' marked' : ''}`}><Marked text={st.headline} marks={st.mark} /></Hed>;
   return (
-    <article ref={slideRef} className={`slide${breaking ? ' breaking' : ''}${st.clip ? ' has-clip' : ''}`} id={`slide-${i}`} role="group" aria-roledescription="slide" aria-label={`Headline ${i + 1} of ${n}`}>
-      {st.clip ? <><div className="clip-head">{top}{hed}</div><ClipPrint st={st} D={D} h={h} clip={clip} /></> : <>{top}{hed}</>}
+    <article ref={slideRef} className={`slide${breaking ? ' breaking' : ''}${st.clip || st.photo ? ' has-clip' : ''}`} id={`slide-${i}`} role="group" aria-roledescription="slide" aria-label={`Headline ${i + 1} of ${n}`}>
+      {st.clip ? <><div className="clip-head">{top}{hed}</div><ClipPrint st={st} D={D} h={h} clip={clip} /></>
+        : st.photo ? <><div className="clip-head">{top}{hed}</div><PhotoPrint st={st} D={D} h={h} /></> : <>{top}{hed}</>}
       <p className="lead-deck"><Marked text={st.deck} marks={st.mark} /></p>
       {rx.enabled ? <Suspense fallback={<div className="rxn-hold" />}><Reactions hk={hk} label={tickOf(st).hook} rx={rx} react={react} /></Suspense> : null}
       {st.bug ? <ScoreBug bug={st.bug} h={h} /> : st.trade ? <TradeGraphic trade={st.trade} D={D} h={h} /> : <Cast st={st} D={D} h={h} />}

@@ -1210,6 +1210,28 @@ function upsetStory() {
   };
 }
 
+// ---------- a celebration ----------
+// Dan's request Nov 9: Tarek finished Ironman Florida. A photo headline (assets/tarek-ironman.jpg, the finish line with
+// his training partner) that leads every carousel, the final-scores page included, until the week after turns over
+// (Tuesday Nov 17, 6am Central). Set IRONMAN to null to drop it.
+const IRONMAN = {
+  owner: '1004111276118761472', until: Date.parse('2026-11-17T06:00:00-06:00'),
+  src: 'assets/tarek-ironman.jpg', label: 'Tarek crossing the Ironman Florida finish line in Panama City Beach',
+};
+function ironmanStory() {
+  if (!IRONMAN || (AT ? +AT : Date.now()) >= IRONMAN.until) return null;
+  const t = ownerTeam(IRONMAN.owner);
+  if (!t) return null;
+  return {
+    type: 'ironman', key: `w${headlineWeek()}:ironman`, group: 'league', tone: 'good', kicker: 'Congratulations', stamp: 'Ironman',
+    rids: [t.rid], face: t.rid, mark: ['Tarek Matta'],
+    headline: 'Congratulations to our very own Tarek Matta on becoming an Ironman. We are incredibly proud of you.',
+    deck: "Ironman Florida, Panama City Beach: a 2.4-mile swim in the Gulf, 112 miles on the bike, then a full 26.2-mile marathon, 140.6 miles back to back in one day with 17 hours on the clock. It takes months of early swims, long rides and runs on dead legs just to reach the start line, and not everyone who starts gets to the finish. Tarek did. Our defending champion now owns a title no trade can touch.",
+    tick: { hook: 'Ironman', line: 'Tarek Matta is an Ironman: 140.6 miles in one day. The whole league is proud of you.' },
+    photo: { src: IRONMAN.src, label: IRONMAN.label },
+  };
+}
+
 // ---------- the video headline ----------
 // Dan's request after week 7: Tony Pollard scored the most points in the league for Mo the week after Akrm traded him
 // there, and the headline card plays the "Tony ya Tony" clip. Every number comes from the snapshot: his points and
@@ -1326,7 +1348,7 @@ function liveProps() {
   const wk = DATA.previews[0]?.week, { rows, standings } = liveWeek();
   const bull = DATA.bull && DATA.bull.state !== 'final' && DATA.bull.rows.find((x) => x.rid === myTeam);
   return {
-    D: DATA, fin, wk, rows, standings, car: fin ? null : carouselProps(),
+    D: DATA, fin, wk, rows, standings, car: fin ? carouselProps({ only: true }) : carouselProps(),
     played: DATA.live?.teams.length || 0, fetched: DATA.fetched || null,
     bull: bull ? awayText(bull) : null, onReveal: passThenReveal, h: { ...reactHelpers(), today: chicagoDate() },
   };
@@ -1491,19 +1513,19 @@ function siteStories() {
   const keys = storyKeys(base, headlineWeek());
   return base.map((st, i) => ({ ...st, key: keys[i] }));
 }
-function carouselProps({ all = false } = {}) {
-  const s = DATA.stories, own = postedStories();
+function carouselProps({ all = false, only = false } = {}) {
+  const s = DATA.stories, own = only ? [] : postedStories(), cel = ironmanStory();
   // Dan's edits and hides from the headline desk (api/headlines.js, by desk key); all: keep the hidden ones, marked
-  const site = siteStories().flatMap((st) => {
+  const site = only ? [] : siteStories().flatMap((st) => {
     const o = posts.site[st.key];
     if (o?.hide) return all ? [{ ...st, hidden: true }] : [];
     return [o?.story ? { ...st, ...hydrate(o.story), edited: true } : st];
   });
-  if (!site.length && !own.length) return null;
+  if (!site.length && !own.length && !cel) return null;
   return {
     // Dan's own headlines from the admin portal lead, ahead of everything the desk writes, and every headline sits in
-    // its section (the dots group them)
-    stories: arrangeStories([...own, ...site].map((st) => withTrade({ ...st, group: groupOf(st) }))),
+    // its section (the dots group them); a celebration (ironmanStory) goes ahead of them all
+    stories: [...(cel ? [cel] : []), ...arrangeStories([...own, ...site].map((st) => withTrade({ ...st, group: groupOf(st) })))],
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
     hold: onHold() ? NEWS_CLOCK.holdNote : null, night: !!s?.night, groups: GROUPS,
   };
