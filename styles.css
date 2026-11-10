@@ -2232,14 +2232,14 @@ html.locked { overflow: hidden; }
   --stk-up: var(--rh-up); --stk-down: var(--rh-down); --stk-rule: rgba(251, 246, 239, 0.42); --stk-ink: var(--p-dark-text); --stk-muted: var(--p-dark-muted); --stk-face: var(--p-dark); --stk-font: var(--p-mono); }
 .pp-val.up { --c: var(--rh-up); } .pp-val.down { --c: var(--rh-down); }
 /* a wash of the day's colour in the top corner, flat: one radial, no blur */
-.pp-val::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(60% 70% at 62% 0%, color-mix(in srgb, var(--c) 16%, transparent), transparent 70%); }
+.pp-val::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: radial-gradient(farthest-side at 62% 0%, color-mix(in srgb, var(--c) 15%, transparent), color-mix(in srgb, var(--c) 5%, transparent) 55%, transparent); }
 .pp-val > * { position: relative; }
 .pp-val .pp-label { position: absolute; color: var(--p-dark-muted); }
 .pp-val .pp-label i { background: var(--c); box-shadow: none; }
 .pp-val :focus-visible { outline-color: var(--p-dark-text); }
 .pv-tick { display: flex; align-items: center; gap: 10px; min-width: 0; margin-bottom: 14px; }
-.pv-tick b { flex: none; padding: 5px 10px; border-radius: 8px; background: rgba(251, 246, 239, 0.1); font: 500 13px var(--p-mono); letter-spacing: 0.02em; }
-.pv-tick span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--p-dark-muted); }
+.pv-tick b { flex: none; padding: 7px 14px; border-radius: 999px; background: rgba(251, 246, 239, 0.12); box-shadow: inset 0 0 0 1.5px var(--rh-line); font: 500 16px/1 var(--p-mono); letter-spacing: 0.02em; }
+.pv-tick span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 17px/1.2 var(--p-sans); color: var(--p-dark-text); opacity: 0.86; }
 .pv-big { font: 400 58px/1 var(--p-sans); letter-spacing: -0.045em; white-space: nowrap; }
 .pv-move { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 7px; margin-top: 12px; font: 500 14px/1.3 var(--p-sans); color: var(--p-dark-muted); }
 .pv-move.up { color: var(--rh-up); } .pv-move.down { color: var(--rh-down); }
@@ -2253,7 +2253,8 @@ html.locked { overflow: hidden; }
 .pp-val.flat .pv-range button[aria-pressed='true'] { background: var(--p-dark-text); }
 .pv-chart { align-self: center; min-width: 0; }
 .pp-val .stk-line { stroke-width: 3.5px; filter: drop-shadow(0 0 7px color-mix(in srgb, var(--c) 55%, transparent)); }
-.pp-val .stk-area { fill: var(--c); opacity: 0.1; }
+.pp-val .stk-fade-a { stop-color: var(--c); stop-opacity: 0.26; }
+.pp-val .stk-fade-b { stop-color: var(--c); stop-opacity: 0; }
 .pp-val .stk-dot { stroke: var(--p-dark); }
 .pv-stats { grid-column: 1 / 3; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; border-top: 1.5px solid var(--rh-line); }
 .pv-stats div { padding: 14px 14px 0 0; }
@@ -2271,7 +2272,7 @@ html.locked { overflow: hidden; }
 .pv-spark path { fill: none; stroke: var(--p-dark-muted); stroke-width: 1.8px; stroke-linecap: round; stroke-linejoin: round; }
 .pv-spark.up path { stroke: var(--rh-up); } .pv-spark.down path { stroke: var(--rh-down); }
 .pv-px { justify-items: end; }
-.pv-px b { min-width: 74px; padding: 6px 9px; border-radius: 8px; text-align: center; font: 500 13px/1 var(--p-mono); background: rgba(251, 246, 239, 0.14); color: var(--p-dark-text); }
+.pv-px b { min-width: 74px; padding: 6px 11px; border-radius: 999px; text-align: center; font: 500 13px/1 var(--p-mono); background: rgba(251, 246, 239, 0.14); color: var(--p-dark-text); }
 .pv-px.up b { background: var(--rh-up); color: #10141A; } .pv-px.down b { background: var(--rh-down); color: #10141A; }
 .pv-px small { display: inline-flex; align-items: center; gap: 4px; }
 .pv-px.up small { color: var(--rh-up); } .pv-px.down small { color: var(--rh-down); }
@@ -2279,8 +2280,23 @@ html.locked { overflow: hidden; }
 .pv-expand { position: absolute; top: 14px; right: 16px; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
   color: var(--p-dark-text); background: rgba(251, 246, 239, 0.1); box-shadow: inset 0 0 0 1.5px var(--rh-line); transition: background-color 0.15s; }
 @media (hover: hover) { .pv-expand:hover { background: rgba(251, 246, 239, 0.2); } }
-/* Focus: the card over everything (the dock included), on its own dark, scaled by JS to fit the screen whole */
-.paper.vf { position: fixed; inset: 0; z-index: 90; padding: 0; border-radius: 0; box-shadow: none; overflow: hidden; background-color: var(--p-dark); animation: unveil-in 0.2s ease-out; }
+/* Focus: the card over everything (the dock included), on its own dark, scaled by JS to fit the screen whole. The glow
+   belongs to the screen, not the card: one soft wash from the top across the whole of it (status bar included), so it
+   never stops on the card's edge, and the card itself goes clear. The pieces inside keep the site's rounding. */
+.paper.vf { position: fixed; inset: 0; z-index: 90; padding: 0; border-radius: 0; box-shadow: none; overflow: hidden; background-color: var(--p-dark); animation: unveil-in 0.2s ease-out;
+  --c: rgba(251, 246, 239, 0.5); }
+.paper.vf:has(.pp-val.up) { --c: #00C805; } .paper.vf:has(.pp-val.down) { --c: #FF6A2B; }
+.paper.vf::before { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(130% 75% at 70% -8%, color-mix(in srgb, var(--c) 17%, transparent) 0%, color-mix(in srgb, var(--c) 6%, transparent) 45%, transparent 78%),
+    radial-gradient(90% 50% at 0% 100%, rgba(251, 246, 239, 0.035), transparent 70%); }
+.vf .pp-tile.pp-val { background-color: transparent; }
+.vf .pp-val::before { display: none; }
+.vf .pv-stats { padding: 4px 16px 16px; border: 0; border-radius: 26px; background: rgba(251, 246, 239, 0.05); box-shadow: inset 0 0 0 1.5px var(--rh-line); }
+.vf .pv-list { border-radius: 26px; }
+.vf .pv-chart { padding: 6px 0 0; }
+.vf .pv-tick { margin-bottom: 18px; }
+.vf .pv-tick b { font-size: 17px; padding: 8px 15px; }
+.vf .pv-tick span { font-size: 19px; }
 .vf-fit { position: absolute; left: 0; top: 0; width: 100%; transform-origin: 0 0; }
 .vf .pp-tile.pp-val { width: 100%; min-height: 0; border-radius: 0; box-shadow: none; opacity: 1;
   padding: calc(70px + env(safe-area-inset-top)) max(22px, calc((100% - 1120px) / 2)) calc(28px + env(safe-area-inset-bottom)); }

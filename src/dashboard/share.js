@@ -33,7 +33,7 @@ export async function captureSheet(paper) {
   for (const el of stage.querySelectorAll('svg *')) {
     const cs = getComputedStyle(el);
     if (cs.display === 'none') { el.remove(); continue; } // hidden by CSS, which wouldn't come along (the odds glow)
-    for (const k of ['fill', 'stroke', 'stroke-width', 'stroke-opacity', 'fill-opacity', 'opacity', 'stroke-linecap']) {
+    for (const k of ['fill', 'stroke', 'stroke-width', 'stroke-opacity', 'fill-opacity', 'opacity', 'stroke-linecap', 'stop-color', 'stop-opacity']) {
       const v = cs.getPropertyValue(k);
       if (v) el.setAttribute(k, v);
     }

@@ -1,7 +1,7 @@
 // A team's value drawn like a stock: one line, a dotted rule at where it opened, a live dot on the last price. Drag or
 // hover along it to read any week (onScrub gets the point's index, or null when you let go). Used by the team
 // dashboard's value tile and the scouting report; each styles it through the --stk-* variables on its own wrapper.
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 
 const W = 560, PAD = { l: 10, r: 14, t: 16, b: 14 };
 
@@ -11,6 +11,7 @@ const W = 560, PAD = { l: 10, r: 14, t: 16, b: 14 };
  */
 export function StockLine({ points, height = 190, onScrub, lineRef, label, short = false, area = false }) {
   const [at, setAt] = useState(null);
+  const fade = `stk-fade-${useId().replace(/:/g, '')}`;
   const svg = useRef(null);
   const n = points.length;
   if (n < 2) return null;
@@ -38,7 +39,11 @@ export function StockLine({ points, height = 190, onScrub, lineRef, label, short
     <div className={`stk ${up ? 'up' : 'down'}${at != null ? ' scrubbing' : ''}`}>
       <svg ref={svg} viewBox={`0 0 ${W} ${height}`} role="img" aria-label={label} onPointerMove={scrub} onPointerDown={scrub} onPointerLeave={leave} onPointerCancel={leave}>
         <line className="stk-base" x1={PAD.l} x2={W - PAD.r} y1={y(points[0].value)} y2={y(points[0].value)} />
-        {area ? <path className="stk-area" d={`${d}L${x(n - 1).toFixed(1)},${height}L${x(0).toFixed(1)},${height}Z`} /> : null}
+        {/* the fill under the line fades out downward, so it melts into the card instead of ending on an edge */}
+        {area ? <>
+          <defs><linearGradient id={fade} x1="0" y1="0" x2="0" y2="1"><stop className="stk-fade-a" offset="0" /><stop className="stk-fade-b" offset="1" /></linearGradient></defs>
+          <path className="stk-area" fill={`url(#${fade})`} d={`${d}L${x(n - 1).toFixed(1)},${height}L${x(0).toFixed(1)},${height}Z`} />
+        </> : null}
         <path className="stk-line" ref={lineRef} d={d} pathLength="1" />
         {at != null ? <line className="stk-cursor" x1={x(at)} x2={x(at)} y1={2} y2={height - 2} /> : null}
         {at == null ? <circle className="stk-pulse" cx={x(n - 1)} cy={y(points[n - 1].value)} r="6" /> : null}
