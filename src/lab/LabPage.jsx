@@ -5,6 +5,7 @@ import { BumpChart, Scatter, HeatTable, DivergingBars } from '../charts.jsx';
 import { PosTag, TeamAvatar } from '../shared.jsx';
 import { WhatItTakes } from './WhatItTakes.jsx';
 import { FlukeOrReal } from './FlukeOrReal.jsx';
+import { PlayoffPath } from './PlayoffPath.jsx';
 
 const POS = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
 
@@ -75,6 +76,7 @@ export function LabPage({ D, me, h }) {
     ]} /></div>
     <div className="lab-grid">
       {view === 'form' ? (<section className="panel glass span-12"><h2>Rank flow</h2><p className="sub">Power rank after each week. The roster half uses today's ROS values throughout, so the movement comes from results.</p><BumpChart {...bump} /></section>) : null}
+      {view === 'race' ? <PlayoffPath D={D} me={me} h={h} /> : null}
       {view === 'race' ? <WhatItTakes D={D} me={me} h={h} /> : null}
       {view === 'form' ? (<section className="panel glass span-6"><h2>Luck index</h2><p className="sub">Actual wins minus all-play expected wins. Orange teams are winning more than their scores deserve, blue teams less.</p><DivergingBars rows={luckRows} /></section>) : null}
       {view === 'form' ? (<section className="panel glass span-6"><h2>Points for vs against</h2><p className="sub">Dashed lines are the league average. Bottom right is where you want to live.</p><Scatter {...sc} /></section>) : null}

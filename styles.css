@@ -1151,6 +1151,111 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .magic-chip.in { background: var(--grass-2); }
 .magic-chip.no { color: var(--chalk); background: var(--bad); }
 
+/* ---------- the Lab, League: "What needs to happen" (src/lab/PlayoffPath.jsx) ---------- */
+.pth { display: grid; gap: 16px; }
+.pth > .lab-lede { margin: 0; }
+.pth h3 { margin: 0 0 4px; font: 800 19px/1.1 var(--display); letter-spacing: 0.01em; color: var(--ink); }
+.pth-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 20px; }
+.pth-top h2 { margin-bottom: 4px; }
+.pth-top .sub { margin: 0; max-width: 75ch; }
+.pth-cap { margin: 0 0 10px; font-size: 13px; color: var(--ink-3); }
+.pth-scn { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0; padding: 8px 8px 8px 14px; border-radius: 999px; font-size: 13.5px; font-weight: 700; color: var(--ink);
+  background: var(--tile); box-shadow: var(--tray-edge); }
+.pth-scn > span { flex: 1 1 260px; }
+.pth-scn.thin { background: var(--notice-bg); }
+.pth-scn .chip, .pth-picked .chip { cursor: pointer; border: 0; }
+/* the three numbers: white chips raised inside one tray */
+.pth-stats { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(0, 2.2fr) minmax(150px, 1fr); gap: 10px; padding: 10px; border-radius: 26px; background: var(--tile); box-shadow: var(--tray-edge); }
+.pth-stat { display: grid; align-content: start; gap: 4px; padding: 12px 16px; border-radius: 20px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--outline), 0 3px 0 1.5px var(--ledge); }
+.pth-stat > small { font-size: 12.5px; font-weight: 700; color: var(--ink-3); }
+.pth-stat > b { font: 800 40px/1 var(--display); color: var(--ink); }
+.pth-stat > span { font-size: 12.5px; color: var(--ink-3); }
+.pth-stat.main > b { font-size: 52px; }
+.pth-fc { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 4px 0; }
+.pth-fc > span[data-tip] { display: grid; text-align: center; cursor: help; }
+.pth-fc em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--ink-3); }
+.pth-fc b { font: 800 30px/1 var(--display); color: var(--ink); }
+/* a dumbbell on a 0 to 100% tray: the bad-result dot, a filled bar, the good-result dot */
+.pth-db { position: relative; display: block; height: 14px; border-radius: 999px; background: var(--tile-2); box-shadow: inset 0 0 0 1.5px rgba(18, 48, 26, 0.12); }
+.pth-db > i { position: absolute; top: 50%; }
+.pth-db-span { height: 6px; margin-top: -3px; border-radius: 999px; background: var(--grass); }
+.pth-db-lo, .pth-db-hi { width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; }
+.pth-db-lo { background: var(--paper); box-shadow: 0 0 0 2px var(--bad); }
+.pth-db-hi { background: radial-gradient(circle at 34% 32%, rgba(255, 255, 255, 0.85) 0 2px, transparent 2.5px), var(--grass); box-shadow: 0 0 0 2px var(--outline); }
+.pth-db.big { height: 22px; }
+.pth-db.big .pth-db-span { height: 10px; margin-top: -5px; }
+.pth-db.big .pth-db-lo, .pth-db.big .pth-db-hi { width: 18px; height: 18px; margin: -9px 0 0 -9px; }
+.pth-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.pth-box { min-width: 0; padding: 14px 16px; border-radius: 26px; background: var(--tile); box-shadow: var(--tray-edge); }
+.pth-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.pth-list li { display: grid; grid-template-columns: 46px minmax(0, 1fr) minmax(90px, 0.8fr) auto; align-items: center; gap: 10px; padding: 6px 8px 6px 12px; border-radius: 999px; background: var(--paper);
+  box-shadow: 0 0 0 1.5px rgba(18, 48, 26, 0.12); }
+.pth-list li.crit { box-shadow: 0 0 0 2px var(--outline), 0 3px 0 1.5px var(--ledge-gold); }
+.pth-wk { font: 800 14px/1 var(--display); color: var(--ink-2); white-space: nowrap; }
+.pth-who { display: flex; align-items: center; min-width: 0; font-size: 13.5px; color: var(--ink); }
+.pth-who > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pth-flag { flex: none; margin-left: 8px; padding: 2px 8px; border-radius: 999px; font: 800 11.5px/1.3 var(--body); font-style: normal; color: var(--ink); background: var(--amber); }
+.pth-sw { display: grid; grid-template-columns: minmax(40px, 1fr) auto; align-items: center; gap: 8px; cursor: help; }
+.pth-sw b { font: 800 13px/1 var(--body); color: var(--ink); white-space: nowrap; }
+.pth-done { font-size: 12.5px; font-weight: 800; color: var(--ink-2); }
+.pth-pick { display: inline-flex; padding: 2px; border-radius: 999px; background: var(--tile-2); }
+.pth-pick button { min-width: 34px; max-width: 92px; padding: 5px 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 0; border-radius: 999px; font: 800 12.5px/1.2 var(--body); color: var(--ink-2); background: none; cursor: pointer; }
+.pth-pick button[aria-pressed='true'] { color: var(--ink); background: var(--amber); box-shadow: 0 0 0 1.5px var(--outline), 0 2px 0 0 var(--pop); }
+.pth-picked { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0 0; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.pth-rivals { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+.pth-rival { display: grid; align-content: start; gap: 8px; padding: 10px 12px; border-radius: 20px; background: var(--paper); box-shadow: 0 0 0 1.5px rgba(18, 48, 26, 0.12); }
+.pth-rv { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px; }
+.pth-rv b { font: 800 16px/1.2 var(--display); color: var(--ink); }
+.pth-rv small { font-size: 12px; color: var(--ink-3); }
+.pth-wks { display: flex; flex-wrap: wrap; gap: 6px; }
+.pth-wkchip { padding: 4px 10px; border: 0; border-radius: 999px; font: 700 12px/1.2 var(--body); color: var(--ink-2); background: var(--tile-2); cursor: pointer; }
+.pth-wkchip.big { font-weight: 800; color: var(--chalk); background: var(--bad); }
+.pth-wkchip[aria-pressed='true'] { color: var(--ink); background: var(--amber); }
+.pth-paths { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.pth-card { display: grid; align-content: start; gap: 10px; min-width: 0; padding: 14px 16px; border-radius: 26px; background: var(--tile); box-shadow: var(--tray-edge); }
+.pth-card.real { box-shadow: var(--tray-edge), 0 0 0 2px var(--grass); }
+.pth-rec { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin: 0; }
+.pth-rec b { font: 800 40px/1 var(--display); color: var(--ink); }
+.pth-rec span { font-size: 13px; font-weight: 700; color: var(--ink-3); }
+.pth-strip { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 4px; margin: 0; padding: 0; list-style: none; }
+.pth-strip li { display: grid; justify-items: center; gap: 2px; min-width: 0; padding: 5px 0 4px; border-radius: 14px; cursor: help; }
+.pth-strip li b { font: 800 16px/1 var(--display); }
+.pth-strip li small { font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.pth-strip li.w { color: var(--ink); background: var(--grass-2); box-shadow: 0 0 0 1.5px var(--outline), 0 2px 0 1px var(--ledge); }
+.pth-strip li.l { color: var(--ink-3); background: var(--paper); box-shadow: inset 0 0 0 1.5px rgba(18, 48, 26, 0.14); }
+.pth-note { margin: 0; font-size: 13.5px; color: var(--ink-2); text-wrap: pretty; }
+.pth-note.muted { color: var(--ink-3); }
+.pth-helps { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.pth-helps li { position: relative; padding: 6px 10px 6px 26px; border-radius: 14px; font-size: 13.5px; font-weight: 700; color: var(--ink); background: var(--paper); }
+.pth-helps li::before { content: ''; position: absolute; left: 10px; top: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
+.pth-helps small { display: block; font-size: 12px; font-weight: 600; color: var(--ink-3); }
+/* seed odds as a little bar chart, the playoff seeds in grass */
+.pth-seeds { display: grid; grid-template-columns: repeat(auto-fit, minmax(14px, 1fr)); align-items: end; gap: 4px; height: 110px; padding: 8px 8px 4px; border-radius: 16px; background: var(--paper); }
+.pth-seeds span { display: grid; grid-template-rows: 1fr auto; height: 100%; align-items: end; justify-items: center; gap: 3px; cursor: help; }
+.pth-seeds i { display: block; width: 100%; border-radius: 6px 6px 3px 3px; background: var(--tile-2); box-shadow: inset 0 0 0 1.5px rgba(18, 48, 26, 0.14); }
+.pth-seeds .in i { background: var(--grass-2); }
+.pth-seeds .top i { box-shadow: 0 0 0 2px var(--outline); }
+.pth-seeds small { font-size: 11.5px; font-weight: 700; color: var(--ink-3); }
+@media (max-width: 1100px) {
+  .pth-paths { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pth-paths .end { grid-column: 1 / -1; }
+}
+@media (max-width: 860px) { .pth-cols { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) {
+  .pth-team { width: 100%; }
+  .pth-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pth-stat.range { grid-column: 1 / -1; order: 3; }
+  .pth-stat > b { font-size: 32px; }
+  .pth-stat.main > b { font-size: 40px; }
+  .pth-box, .pth-card { padding: 12px; }
+  .pth-list li { grid-template-columns: 40px minmax(0, 1fr) auto; grid-template-areas: 'wk who pick' 'sw sw sw'; row-gap: 6px; padding: 8px 8px 8px 12px; border-radius: 20px; }
+  .pth-wk { grid-area: wk; } .pth-who { grid-area: who; } .pth-pick { grid-area: pick; } .pth-sw, .pth-done { grid-area: sw; }
+  .pth-pick button { min-height: 36px; max-width: 80px; }
+  .pth-rivals { grid-template-columns: minmax(0, 1fr); }
+  .pth-paths { grid-template-columns: minmax(0, 1fr); }
+  .pth-rec b { font-size: 32px; }
+}
+
 /* ---------- the Lab, League: "Fluke or for real?" ---------- */
 .talent { display: grid; gap: 6px; }
 .tl-row { display: grid; grid-template-columns: 180px minmax(0, 1fr) 112px; gap: 14px; align-items: center; }
@@ -3416,7 +3521,7 @@ main::after { border-radius: 56px 56px 0 0; }
 :root[data-theme='dark'] :is(.view-head .wk, .avatar.ph, .tier:not(.low, .stinks), .you, .rank.nudge:not(.open) .pull,
   .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .tabs a[aria-current='page'], .lab-tabs a[aria-current='page'], .key-tag,
   .kicker > span:first-child, .car-pause[aria-pressed='true'], .drive-pick button[aria-pressed='true'],
-  .drive-field .endzone, .gotw-more, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
+  .drive-field .endzone, .gotw-more, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .pth-flag, .pth-pick button[aria-pressed='true'], .pth-wkchip[aria-pressed='true'], .pth-strip li.w, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
   :is(.lead-face, .mgr-face, .fo-face, .stat-face, .deal-face, .pitch-face).ph, .lf .cap, .mu .vs, .day > h3, .clip-frame .clip-sound, .fo-side, .fo-vs i,
   .desk-note, .you-face.ph, .st-chip.won, .sup.champ, .bull-tag.lead, .chip:is(.to-again, .rank-pdf), .lo-tag, .pp-img.ph, .cta, .verdict-face.ph,
   .strip-face.ph, .pos, .champ, .ball-pct, .pp-card, .fo-fav.dog) {

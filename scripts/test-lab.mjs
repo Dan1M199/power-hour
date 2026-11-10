@@ -2,7 +2,7 @@
 // (empirical-Bayes shrinkage). Prints both tables and checks the invariants.
 import { buildFixture } from './fixture.mjs';
 import { computeLeague } from '../lib/engine.js';
-import { whatItTakes, trueTalent } from '../lib/labmodels.js';
+import { whatItTakes, trueTalent, restOfSeason, playoffPath } from '../lib/labmodels.js';
 
 const fx = buildFixture();
 const D = computeLeague({
@@ -39,4 +39,29 @@ for (const r of T.rows) {
   if (!(r.lo < r.est && r.est < r.hi)) fail(`${D.byRid[r.rid].name}: estimate outside its own range`);
 }
 if (T.rows.some((r, i) => i && r.est > T.rows[i - 1].est)) fail('rows not sorted by estimate');
-if (!process.exitCode) console.log('\nok   both lab models hold their invariants');
+
+// "What needs to happen": 20k seasons, then each team's path read off them
+const t1 = Date.now();
+const S = restOfSeason(D);
+console.log(`\nwhat needs to happen: ${S.sims} seasons, ${S.games.length} games in ${Date.now() - t1}ms`);
+for (const t of D.teams) {
+  const p = playoffPath(S, D, t.rid);
+  const fl = p.floor?.odds, ce = p.ceiling?.odds;
+  console.log(`${name(t.rid)} ${(p.odds * 100).toFixed(1).padStart(5)}%  floor ${fl == null ? '-' : (fl * 100).toFixed(0).padStart(3)}  ceiling ${ce == null ? '-' : (ce * 100).toFixed(0).padStart(3)}  need ${String(p.need ?? '-').padStart(2)}  usual ${p.ending.record} (${p.ending.seed})  realistic ${p.realistic?.record ?? '-'}  long shot ${p.longshot?.record ?? '-'}  rivals ${p.rivals.length}`);
+  if (Math.abs(p.odds - t.playoffPct) > 0.04) fail(`${t.name}: path odds ${p.odds.toFixed(3)} vs engine ${t.playoffPct.toFixed(3)}`);
+  if (fl != null && ce != null && !(fl <= p.odds + 1e-9 && p.odds <= ce + 1e-9)) fail(`${t.name}: odds outside floor and ceiling`);
+  const seeds = p.seeds.reduce((a, x) => a + x.share, 0);
+  if (Math.abs(seeds - 1) > 1e-9) fail(`${t.name}: seed shares add to ${seeds}`);
+  if (p.yours.length !== p.left) fail(`${t.name}: ${p.yours.length} games listed for ${p.left} left`);
+  if (p.yours.some((x) => x.ifGood != null && x.ifBad != null && x.ifGood < x.ifBad - 0.02)) fail(`${t.name}: a win hurts`);
+  if (p.longshot && p.realistic && p.longshot.wins >= p.realistic.wins) fail(`${t.name}: long shot needs as many wins as the realistic path`);
+  // picking your own next game reads the same number as that game's 'if you win'
+  const g = p.yours[0];
+  if (g && g.ifGood != null) {
+    const q = playoffPath(S, D, t.rid, { picks: { [g.i]: g.ra === t.rid ? 1 : 0 } });
+    if (Math.abs(q.odds - g.ifGood) > 1e-9) fail(`${t.name}: picked win reads ${q.odds} vs ${g.ifGood}`);
+  }
+}
+const S2 = restOfSeason(D);
+if (S2.res.some((v, i) => v !== S.res[i]) || S2.rank.some((v, i) => v !== S.rank[i])) fail('restOfSeason is not deterministic');
+if (!process.exitCode) console.log('\nok   all three lab models hold their invariants');
