@@ -9,7 +9,7 @@ import { storyKeys } from './storyKeys.js';
 import { useReactions, loadReactions, react } from './reactions.js';
 import { TeamAvatar, Headshot, ChampTag, ChampBadge } from '../shared.jsx';
 import { TradeGraphic } from './TradeGraphic.jsx';
-import { Card, DEPTH, PERIOD, useRing } from './Ring.jsx';
+import { Card, useRing } from './Ring.jsx';
 
 const asset = (p) => window.__ASSETS__?.[p] || p;
 // the reaction bar under each headline (EmojiReactions.jsx), in its own chunk: framer-motion only downloads once the
@@ -255,10 +255,10 @@ export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
   // the back, which ride up. On a wide screen every card is as tall as the tallest (square at least); on phones each
   // is as tall as its story and the frame hugs the one at the front, so short stories leave no gap. The cards behind
   // are cut to that height (`data-fit` marks the one the frame was fitted to).
-  const geom = useRef({ orbit: 0, depth: DEPTH, lean: 0, pull: 240 });
+  const geom = useRef({ step: 0, shrink: 0.05, reach: 600, pull: 240 });
   const lite = mq('(max-width: 760px), (pointer: coarse)');
   const ring = useRing({
-    n, geom, float: lite || calm() ? 0 : 22,
+    n, geom,
     onAt: (k, settling) => {
       at.current = k;
       setIdx(k);
@@ -269,9 +269,9 @@ export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
     const el = car.current, tr = track.current;
     if (!el || !tr) return;
     const phone = mq('(max-width: 760px)'), F = tr.clientWidth, many = n > 1;
-    const side = many ? (phone ? 12 : 34) : 0, lean = many ? (phone ? 16 : 24) : 0, pad = many ? lean + 6 : 0, W = F - 2 * side;
-    // the furthest a card reaches is the orbit plus half its own (smaller) width: this keeps that inside the frame
-    geom.current = { orbit: side + W * 0.03, depth: DEPTH, lean, pull: Math.max(160, W * 0.5) };
+    // a deck: the cards are as wide as the frame, and each one behind shows `step` of its top over the one in front
+    const side = 0, step = many ? (phone ? 10 : 13) : 0, pad = step * Math.min(n - 1, 2), W = F;
+    geom.current = { step, shrink: 0.05, reach: W + 24, pull: Math.max(180, W * 0.6) };
     el.style.setProperty('--side', `${side}px`);
     el.style.setProperty('--pad', `${pad}px`);
     el.style.setProperty('--card-w', `${W}px`);
@@ -360,7 +360,7 @@ export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
              three motions, three elements (see Ring.jsx). A card behind comes forward when tapped. */
           <div key={i} ref={(s) => (ring.slots.current[i] = s)} className={`car-slot${i === idx ? ' front' : ''}`}
             onClick={i === idx ? undefined : () => { if (!ring.dragged()) go(i); }}>
-            <div className="car-float" style={{ animationDuration: `${PERIOD[i % PERIOD.length]}s` }}>
+            <div className="car-float">
               <Card sink={8} off={i !== idx || ring.held || lite}>
                 <Slide st={st} i={i} n={n} D={D} h={h} groups={groups} runs={runs} date={date} night={night} front={i === idx}
                   clip={{ video: clipVideo, button: clipButton, state: clipState }} slideRef={(s) => (slides.current[i] = s)} hk={keys[i]} rx={rx} />

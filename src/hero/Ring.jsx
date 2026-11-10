@@ -253,7 +253,8 @@ const SLOP = 8;
    (Smaller than Bencho's, and longer: a headline card is three
    times the height of his photographs, so a degree swings its
    foot three times as far, and there can be eight headlines.) */
-const ANGLE = [-1.7, 1.1, -0.6, 1.5, 0.7, -1.2, 0.9, -1.5];
+// (no longer used at rest: the deck sits square. Kept with its note.)
+export const ANGLE = [-1.7, 1.1, -0.6, 1.5, 0.7, -1.2, 0.9, -1.5];
 
 /* the drift's periods, deliberately awkward so no two cards
    are ever doing the same thing. See the note in styles.css. */
@@ -285,40 +286,56 @@ export const PERIOD = [4.7, 5.9, 6.7, 5.3, 7.1, 6.1];
    round: with two headlines the other card is directly behind
    the front one, and its top edge over the front card's is
    all there is of it. */
-export const spotOf = (i, turn, n, { orbit, depth, lean }) => {
-  const th = (i - turn) * ((Math.PI * 2) / n);
-  const f = (Math.cos(th) + 1) / 2;
-  return {
-    f,
-    x: Math.sin(th) * orbit,
-    y: -(1 - f) * lean,
-    s: mix(1 - clamp(depth, 0, DEPTH_MAX) / 200, 1, f),
-    /* ── paint order is a z-index, by hand ──────────────
-       Everything here is 2D — scale and offset, not
-       translateZ — so nothing sorts itself and a card would
-       otherwise paint in DOM order and sit over the one in
-       front of it. `f` already knows which is nearer. */
-    z: Math.round(f * 100),
-  };
+/* ── and then the ring became a deck (Dan, Nov 10, the same day) ──
+   On the ring the cards behind sat out to both sides at their
+   own angles, and with headline cards nearly as wide as the
+   frame that read as a jumble: slivers of three cards at three
+   tilts. So the resting places are a tidy stack now. `d` is how
+   many places a card is behind the front one: the next headline
+   sits one `step` higher and a little smaller, squarely behind,
+   the one after another step, and the rest wait under that one
+   (SHOWN). No angle, no sideways offset: only the top edges show,
+   evenly, like cards in a deck.
+
+   The turn is still the ring's, and still not wrapped: only the
+   DISTANCE is taken modulo, and the seam is where the motion is.
+   Swipe and the front card is dealt off to the side, clear of
+   the deck (`reach`, a card's width and a bit), tucks to the
+   bottom's size on its way back and slides in underneath, while
+   every card behind steps forward one place. It changes from the
+   top of the paint order to the bottom at the far point of that
+   swing, when it overlaps nothing, so nothing pops. */
+const SHOWN = 2;
+export const spotOf = (i, turn, n, { step, shrink, reach }) => {
+  const d = mod(i - turn, n);
+  const deep = Math.min(n - 1, SHOWN);
+  if (n > 1 && d > n - 1) {
+    /* the card being dealt: t is 0 at the front and 1 at the bottom of the deck */
+    const t = n - d, swing = Math.sin(t * Math.PI), L = deep * t * t * (3 - 2 * t);
+    return { x: -swing * reach, y: -L * step, s: 1 - L * shrink, rot: -swing * 5, dim: L / SHOWN, z: t < 0.5 ? 200 : 0 };
+  }
+  const L = Math.min(d, SHOWN);
+  /* ── paint order is a z-index, by hand ──────────────
+     Everything here is 2D — scale and offset, not
+     translateZ — so nothing sorts itself and a card would
+     otherwise paint in DOM order and sit over the one in
+     front of it. `d` already knows which is nearer. */
+  return { x: 0, y: -L * step, s: 1 - L * shrink, rot: 0, dim: L / SHOWN, z: 100 - Math.round(d * 10) };
 };
 
-const write = (el, sp, angle, float) => {
+const write = (el, sp) => {
   /* NO OPACITY IS WRITTEN HERE. The cards used to fade with
      distance, which meant dragging dimmed and lit every one of
      them — the whole block pulsed on a gesture that should
      only move things round. Size, lean and paint order say
      which is in front; none of them touch the picture.
      (The headline cards do carry a shade, --dim, on a layer of
-     its own: what shows of a card behind is a strip of someone
-     else's sentence, and it should not compete with the one
+     its own: what shows of a card behind is the top of someone
+     else's story, and it should not compete with the one
      being read.) */
-  const back = 1 - sp.f;
-  el.style.transform = `translate(-50%, 0) translate(${sp.x.toFixed(2)}px, ${sp.y.toFixed(2)}px) rotate(${(angle * back).toFixed(3)}deg) scale(${sp.s.toFixed(4)})`;
+  el.style.transform = `translate(-50%, 0) translate(${sp.x.toFixed(2)}px, ${sp.y.toFixed(2)}px) rotate(${sp.rot.toFixed(3)}deg) scale(${sp.s.toFixed(4)})`;
   el.style.zIndex = String(sp.z);
-  el.style.setProperty('--dim', back.toFixed(3));
-  /* the drift fades out as a card comes forward: the front card holds still to be read */
-  el.style.setProperty('--bob', `${((clamp(float, 0, 100) / 100) * 16 * back).toFixed(2)}px`);
-  el.style.setProperty('--sway', `${((clamp(float, 0, 100) / 100) * 1.4 * back).toFixed(3)}deg`);
+  el.style.setProperty('--dim', sp.dim.toFixed(3));
 };
 
 const out = (t) => 1 - (1 - t) ** 4;
@@ -354,11 +371,11 @@ export function useRing({ n, geom, float = 0, settle = 50, onAt }) {
 
   const paint = useCallback(() => {
     slots.current.forEach((el, i) =>
-      el && write(el, spotOf(i, turn.current, n, geom.current), ANGLE[i % ANGLE.length], float));
+      el && write(el, spotOf(i, turn.current, n, geom.current)));
     /* the dots follow a drag as it crosses the halfway mark; a glide has already said where it is going */
     const k = mod(Math.round(turn.current), n);
     if (!gliding.current && k !== near.current) { near.current = k; told.current?.(k, false); }
-  }, [n, geom, float]);
+  }, [n, geom]);
 
   useEffect(() => () => cancelAnimationFrame(raf.current), []);
 

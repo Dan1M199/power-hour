@@ -563,7 +563,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
    carousel). .lead-car is only the frame: the note, the stack of cards, then the controls on a pill of their own.
    The frame's measurements (--side, --pad, --card-w, --card-h or --front-h) are written by layout() in Carousel.jsx.
    Square at least on a wide screen; a long story grows every card rather than being clipped. */
-.lead-car { position: relative; color: var(--chalk); overflow-x: clip; }
+.lead-car { position: relative; color: var(--chalk); }
 /* ── the frame is only a frame ─────────────────────────────
    No background, no clip, no mask. This was a box that cut
    the cards at its edges, and before that a mask that faded
@@ -598,17 +598,8 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
    is its own object being touched and wants its own vanishing
    point.
 
-   (--bob and --sway are written with the card's place on the ring and are zero at the front, so the card being read
-   holds still; phones and reduced motion get no drift at all, and it rests with the timer.) */
+   (The headline deck sits still: the drift made a stack of stories look untidy, so its keyframes are gone.) */
 .car-float { perspective: 760px; }
-@media (prefers-reduced-motion: no-preference) and (hover: hover) and (min-width: 761px) {
-  .ring .car-float { animation: car-bob 5s ease-in-out infinite; }
-  .lead-car:is(.away, .paused, .reacting) .car-float, .locked .car-float { animation-play-state: paused; }
-}
-@keyframes car-bob {
-  0%, 100% { transform: translateY(calc(var(--bob, 0px) * -1)) rotate(calc(var(--sway, 0deg) * -1)); }
-  50% { transform: translateY(var(--bob, 0px)) rotate(var(--sway, 0deg)); }
-}
 /* no transition on the card: the tilt is sprung in the component, and a transition on top would be a second opinion
    about how this card settles */
 .car-card { position: relative; isolation: isolate; display: flex; flex-direction: column; min-height: var(--card-h, 0px); max-height: var(--front-h, none);
@@ -616,7 +607,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .car-slot:not([data-fit]) .car-card { overflow: hidden; }
 .car-sheen, .car-dim { position: absolute; inset: 0; z-index: 4; display: block; border-radius: inherit; pointer-events: none; }
 /* a card behind the front one is in its shade */
-.car-dim { background: #04100A; opacity: calc(var(--dim, 0) * 0.5); }
+.car-dim { background: #04100A; opacity: calc(var(--dim, 0) * 0.42); }
 .slide { flex: 1 0 auto; container-type: inline-size; display: flex; flex-direction: column; padding: 30px 30px 26px; min-width: 0; }
 .slide img { -webkit-user-drag: none; }
 .lead-hed { margin: 0; font: 900 clamp(32px, 10.5cqi, 66px)/0.93 var(--display); letter-spacing: -0.005em; text-wrap: balance; color: var(--chalk); }
@@ -2117,10 +2108,22 @@ html.locked { overflow: hidden; }
 .pp-luck.on .toggle { background-color: var(--p-sun); }
 
 /* Share: a pill at the end of the sheet's header (the preview and the stage are at the end of this section) */
-.pp-share { display: inline-flex; align-items: center; gap: 8px; align-self: end; padding: 10px 18px; border: 0; border-radius: 99px; cursor: pointer;
-  background-color: var(--p-ink); color: var(--p-white); box-shadow: 0 3px 0 var(--p-ledge); font: 400 15px var(--p-sans); transition: transform 0.15s, box-shadow 0.15s; }
-.pp-share:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--p-ledge); }
-:root[data-theme='dark'] .pp-share { color: var(--p-bg); }
+.pp-share { position: relative; flex: none; display: inline-flex; align-items: center; gap: 8px; align-self: end; min-height: 44px; padding: 0 20px 0 16px; border: 0; border-radius: 99px; cursor: pointer; white-space: nowrap;
+  background-color: var(--p-hot); color: var(--p-white); box-shadow: 0 0 0 2px var(--outline), 0 4px 0 2px var(--p-hot-ledge); font: 500 15px var(--p-sans); transition: transform 0.15s, box-shadow 0.15s, background-color 0.15s; }
+.pp-share svg { flex: none; }
+@media (hover: hover) { .pp-share:hover { background-color: color-mix(in srgb, var(--p-hot) 86%, white); } }
+.pp-share:active { transform: translateY(3px); box-shadow: 0 0 0 2px var(--outline), 0 1px 0 2px var(--p-hot-ledge); }
+/* two four-point sparkles on its corner, twinkling out of step */
+.pp-share .spk { position: absolute; width: 16px; height: 16px; background: var(--p-sun); pointer-events: none;
+  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); }
+.pp-share .spk.a { top: -7px; right: 6px; }
+.pp-share .spk.b { top: 8px; right: -6px; width: 10px; height: 10px; background: var(--p-white); }
+@media (prefers-reduced-motion: no-preference) {
+  .pp-share .spk { animation: pp-twinkle 2.4s ease-in-out infinite; }
+  .pp-share .spk.b { animation-delay: -1.1s; }
+}
+@keyframes pp-twinkle { 0%, 100% { transform: scale(0.35) rotate(0deg); opacity: 0.2; } 45%, 60% { transform: scale(1) rotate(45deg); opacity: 1; } }
+
 
 /* 8. face off: a full-width tile, laid out in flow (not pixel-placed) since it spans 928, 612 or the phone's width.
    Front: the big odds and the ghost record on the left, the tug of war and the slider on the right. Back: the heist.
@@ -2218,39 +2221,75 @@ html.locked { overflow: hidden; }
 .pp-fo .back .pf-flip { margin-top: auto; padding-top: 9px; }
 .pp-fo .back .pf-pull .pf-flip { margin-top: 18px; }
 
-/* 9. team value: the roster's price as a stock. Full width, in flow like the face off: the price and its move on the
-   left, the line in the middle, the five dearest players on the right. Teal up, clay down, always with a word. */
-.pp-tile.pp-val { width: auto; height: auto; min-height: 296px; grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr) minmax(0, 270px); gap: 14px 30px; align-items: center; padding: 60px 26px 24px;
-  --stk-up: var(--p-easy); --stk-down: var(--p-hard); --stk-rule: var(--p-dotted); --stk-ink: var(--p-ink); --stk-muted: var(--p-muted); --stk-face: var(--p-tile); --stk-font: var(--p-mono); }
-.pv-big { font: 300 62px/1 var(--p-sans); letter-spacing: -0.04em; white-space: nowrap; }
-.pv-move { display: flex; align-items: center; gap: 6px; margin-top: 10px; font: 500 13px/1.3 var(--p-sans); color: var(--p-toss-ink); }
-.pv-move.up, .pv-px.up small { color: var(--p-easy-ink); } .pv-move.down, .pv-px.down small { color: var(--p-hard-ink); }
+/* 9. team value, as a brokerage card (Dan's request Nov 10: "like a Robinhood visual"). The one dark tile on the
+   sheet: the trading app's green for up and orange for down on the aubergine dark, a soft fill and a glow under the
+   line (the one place the sheet's flat rule gives, by request). Full width, in flow like the face off: the ticker and
+   price on the left, the line in the middle with the range's numbers under it, the watchlist on the right.
+   Up or down always comes with an arrow or a word, never the colour alone. */
+.pp-tile.pp-val { width: auto; height: auto; min-height: 296px; grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr) minmax(0, 330px); gap: 18px 26px; align-items: start; padding: 62px 26px 26px;
+  background-color: var(--p-dark); color: var(--p-dark-text);
+  --rh-up: #00C805; --rh-down: #FF6A2B; --rh-line: rgba(251, 246, 239, 0.14); --c: var(--p-dark-muted);
+  --stk-up: var(--rh-up); --stk-down: var(--rh-down); --stk-rule: rgba(251, 246, 239, 0.42); --stk-ink: var(--p-dark-text); --stk-muted: var(--p-dark-muted); --stk-face: var(--p-dark); --stk-font: var(--p-mono); }
+.pp-val.up { --c: var(--rh-up); } .pp-val.down { --c: var(--rh-down); }
+/* a wash of the day's colour in the top corner, flat: one radial, no blur */
+.pp-val::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(60% 70% at 62% 0%, color-mix(in srgb, var(--c) 16%, transparent), transparent 70%); }
+.pp-val > * { position: relative; }
+.pp-val .pp-label { position: absolute; color: var(--p-dark-muted); }
+.pp-val .pp-label i { background: var(--c); box-shadow: none; }
+.pp-val :focus-visible { outline-color: var(--p-dark-text); }
+.pv-tick { display: flex; align-items: center; gap: 10px; min-width: 0; margin-bottom: 14px; }
+.pv-tick b { flex: none; padding: 5px 10px; border-radius: 8px; background: rgba(251, 246, 239, 0.1); font: 500 13px var(--p-mono); letter-spacing: 0.02em; }
+.pv-tick span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--p-dark-muted); }
+.pv-big { font: 400 58px/1 var(--p-sans); letter-spacing: -0.045em; white-space: nowrap; }
+.pv-move { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 7px; margin-top: 12px; font: 500 14px/1.3 var(--p-sans); color: var(--p-dark-muted); }
+.pv-move.up { color: var(--rh-up); } .pv-move.down { color: var(--rh-down); }
 .pv-move svg { flex: none; }
-.pv-note { margin: 12px 0 0; font-size: 13px; line-height: 1.45; color: var(--p-muted); }
-.pv-range { display: inline-flex; gap: 4px; margin-top: 16px; padding: 4px; border-radius: 99px; background: var(--p-wash); box-shadow: var(--p-well); }
-.pv-range button { min-height: 32px; padding: 0 14px; border: 0; border-radius: 99px; background: none; color: var(--p-muted); font: 500 12px var(--p-mono); cursor: pointer; }
-.pv-range button[aria-pressed='true'] { background: var(--p-hot); color: var(--p-white); box-shadow: var(--p-chip); }
-.pv-hold { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.pv-hold li { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 7px 0; border-top: 1.5px solid var(--p-hair); }
-.pv-hold li:first-child { border-top: 0; }
-.pv-tk { font: 500 11.5px var(--p-mono); color: var(--p-muted); }
-.pv-name, .pv-px { display: grid; gap: 2px; min-width: 0; }
+.pv-move b { font-weight: 500; }
+.pv-move span { color: var(--p-dark-muted); }
+.pv-range { display: inline-flex; gap: 6px; margin-top: 22px; }
+.pv-range button { min-width: 52px; min-height: 34px; padding: 0 14px; border: 0; border-radius: 99px; background: none; color: var(--p-dark-muted); font: 500 12px var(--p-mono); letter-spacing: 0.04em; cursor: pointer; transition: background-color 0.15s, color 0.15s; }
+@media (hover: hover) { .pv-range button:hover { color: var(--p-dark-text); background: rgba(251, 246, 239, 0.08); } }
+.pv-range button[aria-pressed='true'] { background: var(--c); color: #10141A; }
+.pp-val.flat .pv-range button[aria-pressed='true'] { background: var(--p-dark-text); }
+.pv-chart { align-self: center; min-width: 0; }
+.pp-val .stk-line { stroke-width: 3.5px; filter: drop-shadow(0 0 7px color-mix(in srgb, var(--c) 55%, transparent)); }
+.pp-val .stk-area { fill: var(--c); opacity: 0.1; }
+.pp-val .stk-dot { stroke: var(--p-dark); }
+.pv-stats { grid-column: 1 / 3; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; border-top: 1.5px solid var(--rh-line); }
+.pv-stats div { padding: 14px 14px 0 0; }
+.pv-stats div + div { padding-left: 14px; border-left: 1.5px solid var(--rh-line); }
+.pv-stats dt { font: 500 11.5px/1.2 var(--p-mono); color: var(--p-dark-muted); }
+.pv-stats dd { margin: 6px 0 0; font: 400 19px/1 var(--p-sans); letter-spacing: -0.02em; white-space: nowrap; }
+.pv-list { grid-column: 3; grid-row: 1 / 3; align-self: stretch; padding: 14px 16px 6px; border-radius: 22px; background: rgba(251, 246, 239, 0.06); box-shadow: inset 0 0 0 1.5px var(--rh-line); }
+.pv-list > p { margin: 0 0 4px; font: 500 11.5px/1.2 var(--p-mono); color: var(--p-dark-muted); }
+.pv-list ol { list-style: none; margin: 0; padding: 0; }
+.pv-list li { display: grid; grid-template-columns: minmax(0, 1fr) 64px auto; align-items: center; gap: 10px; padding: 9px 0; border-top: 1.5px solid var(--rh-line); }
+.pv-list li:first-child { border-top: 0; }
+.pv-name, .pv-px { display: grid; gap: 3px; min-width: 0; }
 .pv-name b { font: 400 15px/1.2 var(--p-sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pv-hold small { font: 500 11.5px/1.2 var(--p-mono); color: var(--p-muted); white-space: nowrap; }
+.pv-list small { font: 500 11.5px/1.2 var(--p-mono); color: var(--p-dark-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pv-spark path { fill: none; stroke: var(--p-dark-muted); stroke-width: 1.8px; stroke-linecap: round; stroke-linejoin: round; }
+.pv-spark.up path { stroke: var(--rh-up); } .pv-spark.down path { stroke: var(--rh-down); }
 .pv-px { justify-items: end; }
-.pv-px b { font: 400 15px/1.2 var(--p-sans); }
+.pv-px b { min-width: 74px; padding: 6px 9px; border-radius: 8px; text-align: center; font: 500 13px/1 var(--p-mono); background: rgba(251, 246, 239, 0.14); color: var(--p-dark-text); }
+.pv-px.up b { background: var(--rh-up); color: #10141A; } .pv-px.down b { background: var(--rh-down); color: #10141A; }
 .pv-px small { display: inline-flex; align-items: center; gap: 4px; }
+.pv-px.up small { color: var(--rh-up); } .pv-px.down small { color: var(--rh-down); }
 @container (max-width: 927.98px) {
   .pp-tile.pp-val { grid-template-columns: minmax(0, 220px) minmax(0, 1fr); }
-  .pv-hold { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 26px; }
-  .pv-hold li:nth-child(2) { border-top: 0; }
-  .pv-big { font-size: 54px; }
+  .pv-list { grid-column: 1 / -1; grid-row: auto; }
+  .pv-big { font-size: 52px; }
 }
 @container (max-width: 611.98px) {
-  .pp-tile.pp-val { grid-template-columns: minmax(0, 1fr); padding: 58px 22px 20px; gap: 16px; }
-  .pv-hold { grid-template-columns: minmax(0, 1fr); }
-  .pv-hold li:nth-child(2) { border-top: 1.5px solid var(--p-hair); }
+  .pp-tile.pp-val { grid-template-columns: minmax(0, 1fr); padding: 58px 20px 20px; gap: 18px; }
+  .pv-stats { grid-column: 1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pv-stats div:nth-child(3) { padding-left: 0; border-left: 0; }
+  .pv-stats div:nth-child(n + 3) { margin-top: 14px; border-top: 1.5px solid var(--rh-line); }
+  .pv-list { grid-column: 1; padding-inline: 14px; }
+  .pv-list li { grid-template-columns: minmax(0, 1fr) 44px auto; gap: 8px; }
+  .pv-spark { width: 44px; }
   .pv-range button { min-height: 40px; }
+  .pv-big { font-size: 50px; }
 }
 @keyframes pp-sweep { from { left: -30%; } to { left: 100%; } }
 @keyframes pp-pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
@@ -2265,7 +2304,7 @@ html.locked { overflow: hidden; }
 /* one column: tiles take the full width; key players and the schedule stack their halves */
 @container (max-width: 611.98px) {
   .pp-head { grid-template-columns: auto minmax(0, 1fr) auto; }
-  .pp-share { grid-column: 3; grid-row: 1; align-self: start; padding: 9px 14px; }
+  .pp-share { grid-column: 3; grid-row: 1; align-self: start; }
   .pp-id h2 { font-size: 30px; }
   .pp-pick { grid-column: 1 / -1; }
   .pp-pick select { width: 100%; }

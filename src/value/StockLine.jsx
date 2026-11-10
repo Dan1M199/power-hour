@@ -7,9 +7,9 @@ const W = 560, PAD = { l: 10, r: 14, t: 16, b: 14 };
 
 /**
  * points: [{ label, value, now }], oldest first; height: the drawing's height on its 560-wide grid; lineRef: gets the
- * line's path (the dashboard draws it in with its intro); short: week labels as "W5".
+ * line's path (the dashboard draws it in with its intro); short: week labels as "W5"; area: a soft fill under the line.
  */
-export function StockLine({ points, height = 190, onScrub, lineRef, label, short = false }) {
+export function StockLine({ points, height = 190, onScrub, lineRef, label, short = false, area = false }) {
   const [at, setAt] = useState(null);
   const svg = useRef(null);
   const n = points.length;
@@ -38,6 +38,7 @@ export function StockLine({ points, height = 190, onScrub, lineRef, label, short
     <div className={`stk ${up ? 'up' : 'down'}${at != null ? ' scrubbing' : ''}`}>
       <svg ref={svg} viewBox={`0 0 ${W} ${height}`} role="img" aria-label={label} onPointerMove={scrub} onPointerDown={scrub} onPointerLeave={leave} onPointerCancel={leave}>
         <line className="stk-base" x1={PAD.l} x2={W - PAD.r} y1={y(points[0].value)} y2={y(points[0].value)} />
+        {area ? <path className="stk-area" d={`${d}L${x(n - 1).toFixed(1)},${height}L${x(0).toFixed(1)},${height}Z`} /> : null}
         <path className="stk-line" ref={lineRef} d={d} pathLength="1" />
         {at != null ? <line className="stk-cursor" x1={x(at)} x2={x(at)} y1={2} y2={height - 2} /> : null}
         {at == null ? <circle className="stk-pulse" cx={x(n - 1)} cy={y(points[n - 1].value)} r="6" /> : null}

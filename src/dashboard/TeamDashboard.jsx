@@ -47,7 +47,7 @@ export function TeamDashboard({ D, raw, ros, rid: start, h, calm, onTeam }) {
           </select>
         </label>
         <button type="button" className="pp-share" onClick={() => { intro.current?.(); setShare({ name: fileName(t.name, D.meta.lastScored), title: head.title, head }); }}>
-          <ShareIcon />Share
+          <ShareIcon /><span>Share</span><i className="spk a" aria-hidden="true" /><i className="spk b" aria-hidden="true" />
         </button>
       </header>
       <Sheet key={rid} m={m} h={h} calm={calm} finish={intro} D={D} raw={raw} />
