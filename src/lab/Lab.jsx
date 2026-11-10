@@ -23,7 +23,7 @@ export function Lab({ sub, D, raw, ros, me, team, onTeam, trade, calm, h }) {
     <LabPage D={D} me={me} h={h} />
   </>;
   return <>
-    {head(null, me ? 'Your season at a glance. Explore your strengths, playoff path and next opponent.' : 'Explore a team’s season, strengths and playoff path. Choose your team to make this yours.')}
+    {head(null, 'One team at a time: playoff odds, the players carrying it, how well it\'s managed, how it scores, where it\'s strong, what\'s left on the schedule and how it stacks up against any rival. Tap the buttons, the games and the switches.')}
     <div className="paper-slot" id="paper-root">
       <TeamDashboard me={me} D={D} raw={raw} ros={ros} rid={team} h={h} calm={calm} onTeam={onTeam} />
     </div>

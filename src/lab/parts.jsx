@@ -9,7 +9,7 @@ export const SECTIONS = ['team', 'trades', 'league'];
 function LabTabs({ sub, D, me }) {
   const ideas = me && D.meta.hasRos ? ((D._ideas ||= {})[me] ||= tradeIdeas(D, me)) : null;
   const items = [
-    ['team', 'Your team', 'Overview, roster, season, matchup'],
+    ['team', 'Your team', 'Eight cards, any team'],
     ['trades', 'Trades', !D.meta.hasRos ? 'Needs the rankings' : !me ? 'Pick your team' : `${ideas.length} ${ideas.length === 1 ? 'idea' : 'ideas'} for ${D.byRid[me].name}`],
     ['league', 'League', 'Playoff race, form, roster moves'],
   ];

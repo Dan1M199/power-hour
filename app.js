@@ -47,6 +47,9 @@ const tick = () => (AT ? +AT + (Date.now() - T0) : Date.now()); // the clock sti
 const onHold = () => isOnHold(clock());
 const gameWindow = () => inGameWindow(clock());
 const nightDesk = () => isNightDesk(clock());
+// the front page: Live while a week is on, and still Live (the final scores) after the final call until the game window
+// closes Tuesday 6am; the power rankings otherwise
+const liveHome = () => !!DATA.liveMode || (!!DATA.after && gameWindow());
 
 // last season's champion carries a trophy wherever their team shows up
 const CHAMPION = { user: '1004111276118761472', season: 2025 };
@@ -106,7 +109,7 @@ async function loadLive() {
 // the engine input for a league snapshot with the morning ROS values
 function leagueInput(raw, extra = {}) {
   const ros = RAW.ros && !RAW.ros.error ? RAW.ros : null;
-  const patched = ros ? applyOverrides(ros.values) : { values: {}, applied: [] };
+  const patched = ros ? applyOverrides(ros.values, undefined, { upcoming: (raw.league.settings?.last_scored_leg ?? 0) + 1 }) : { values: {}, applied: [] };
   return {
     input: {
       league: raw.league, users: raw.users, rosters: raw.rosters, matchups: raw.matchups, transactions: raw.transactions,
@@ -1719,7 +1722,7 @@ const PAGES = {
   wire: () => [WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x) }],
   matchups: () => [GamesPage, { calm: calm(), lite: lite() }],
   admin: () => [AdminShell, {
-    home: DATA.liveMode ? '#live' : '#rankings',
+    home: liveHome() ? '#live' : '#rankings',
     draft: draftFor, draftPlayers, draftGames, weekPlayers, weekGames, preview: (list) => postedStories(list).map(withTrade), tradeStyles: TRADE_STYLES,
     weeks: { scored: pointWeeks().filter((w) => w <= DATA.meta.lastScored).slice(0, 4), live: DATA.live ? DATA.meta.lastScored + 1 : null, ahead: DATA.previews[0]?.week ?? null }, order: () => carouselProps({ all: true })?.stories || [], groups: GROUPS, groupOf, week: headlineWeek(), now: AT ? +AT : Date.now(),
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
@@ -1889,7 +1892,7 @@ function reveal(root) {
 
 function route({ fresh = false } = {}) {
   // while a week is being played the Live tab is the front page; it only exists then
-  const home = DATA.liveMode ? 'live' : 'rankings';
+  const home = liveHome() ? 'live' : 'rankings';
   let [v, sub] = (location.hash || `#${home}`).slice(1).split('/');
   if (v === 'trades') [v, sub] = ['lab', 'trades']; // the Trade lab's old address
   const key = PAGES[v] && (v !== 'live' || DATA.liveMode || DATA.after) ? v : home;
@@ -1924,7 +1927,7 @@ function paintTabs() {
   const a = $('.tabs a[data-view="live"]'), fin = DATA.finalCall || DATA.after;
   a.hidden = !DATA.liveMode && !DATA.after;
   a.querySelector('.tn').textContent = fin ? 'Final' : 'Live';
-  $('.brand').setAttribute('href', DATA.liveMode ? '#live' : '#rankings');
+  $('.brand').setAttribute('href', liveHome() ? '#live' : '#rankings');
   placeInk({ settle: true });
 }
 
