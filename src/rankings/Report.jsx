@@ -2,6 +2,9 @@
 // position groups against the league, the schedule left, its weekly points and where it finishes in the simulations.
 import { Radar, WeeklyBars } from '../charts.jsx';
 import { ChampBadge, Headshot, PosTag } from '../shared.jsx';
+import { money, teamValues } from '../../lib/teamvalue.js';
+import { StockLine } from '../value/StockLine.jsx';
+import { useState } from 'react';
 
 // the league-wide superlatives a manager owns, at most three
 function superlatives(D, t, h) {
@@ -56,6 +59,34 @@ function ManagerCard({ D, t, h }) {
   );
 }
 
+// what the roster is worth in dollars (lib/teamvalue.js), the last three weeks drawn like a stock: run a finger along
+// the line to read a week
+function TeamValue({ D, t, h }) {
+  const [at, setAt] = useState(null);
+  const V = D.raw ? (D._worth ||= teamValues(D)) : null, v = V?.teams[t.rid];
+  if (!v || v.recent.length < 2) return null;
+  const pts = v.recent, p = at != null ? pts[at] : null, shown = p ? p.value : v.value;
+  const diff = shown - pts[0].value, pct = pts[0].value > 0 ? diff / pts[0].value : 0, mv = Math.abs(diff) < 0.05 ? 'flat' : diff > 0 ? 'up' : 'down';
+  return (
+    <div className="mini tv">
+      <h4>Team value, last 3 weeks (rest-of-season value, weekly points and position rank, in dollars)</h4>
+      <div className="tv-row">
+        <div className="tv-now">
+          <b>{money(shown)}</b>
+          <span className={`tv-move ${mv}`}>{`${mv === 'flat' ? 'Level' : `${mv === 'up' ? '▲' : '▼'} ${money(Math.abs(diff))} (${(Math.abs(pct) * 100).toFixed(1)}%)`} ${p ? (p.now ? 'today' : `at ${p.label.toLowerCase()}`) : 'in 3 weeks'}`}</span>
+          <small>{`${h.ordinal(v.rank)} most valuable of ${V.order.length}`}</small>
+        </div>
+        <StockLine points={pts} height={150} onScrub={setAt} label={`${t.name} value over the last three weeks: ${pts.map((x) => `${x.now ? 'now' : x.label} ${money(x.value)}`).join(', ')}`} />
+      </div>
+      <ul className="tv-top">{v.holdings.slice(0, 3).map((x) => (
+        <li key={x.id} data-tip={`${x.name}: rest-of-season value ${h.f1(x.ros)}${x.posRank ? `, ${x.pos} #${x.posRank} in points, ${h.f1(x.ppg)} a game lately` : ''}${x.bye ? ', on a bye this week' : ''}`}>
+          <PosTag pos={x.pos} /><span>{`${x.name}${x.posRank ? `, ${x.pos} #${x.posRank}` : ''}`}</span><b>{money(x.price)}</b>
+        </li>
+      ))}</ul>
+    </div>
+  );
+}
+
 export function Report({ D, t, h }) {
   const { f1, pct, ordinal } = h, n = D.teams.length;
   const axes = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
@@ -81,6 +112,7 @@ export function Report({ D, t, h }) {
             return <span key={g.week} className="g" style={{ '--p': Math.max(0, Math.min(1, (g.pWin - 0.3) / 0.4)).toFixed(3) }} data-tip={`Week ${g.week} vs ${o.name}: No. ${o.powerRank} power, ${f1(g.proj)} proj pts/wk, ${pct(g.pWin)} win chance`}><small>{`W${g.week}`}</small><b>{o.powerRank}</b></span>;
           })}</div>
           <p className="sched-sum">{`${t.schedWins >= 0 ? '+' : ''}${t.schedWins.toFixed(2)} wins vs an average slate, ${t.ranks.schedWins === n ? 'the toughest' : `${ordinal(n + 1 - t.ranks.schedWins)}-toughest`} in the league.`}</p></div> : null}
+        <TeamValue D={D} t={t} h={h} />
         <div className="mini"><h4>Weekly points (green = win, dashed = league average)</h4><WeeklyBars weeks={t.weeks} avg={avg} width={560} height={150} /></div>
         <div className="mini"><h4>{`Where they finish in 10,000 simulations (seed 1 → ${seeds.length})`}</h4>
           <div className="seeds" style={{ '--n': seeds.length }}>{seeds.map((p, i) => <i key={i} className={i < pt ? 'in' : ''} style={{ height: `${(p / maxSeed) * 100}%` }} data-tip={`Seed ${i + 1}: ${(p * 100).toFixed(1)}%`} />)}</div>

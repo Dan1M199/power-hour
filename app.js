@@ -1503,7 +1503,7 @@ function openReveal() {
 }
 
 // ---------- lead story ----------
-// The headline carousel (src/hero/Carousel.jsx): three headlines in one square card (four on night-edition nights, one
+// The headline carousel (src/hero/Carousel.jsx): three headlines, a card each on a ring (four on night-edition nights, one
 // per story on the week's desk). The stories are data; the carousel draws them.
 const CAROUSEL_SIZE = 3;
 // the site's own headlines as written, each with its desk key (w{week}:{type}), before Dan's edits and hides

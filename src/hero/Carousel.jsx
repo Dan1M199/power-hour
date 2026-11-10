@@ -1,6 +1,7 @@
-// The headline carousel: three headlines in one square scoreboard card (four on night-edition nights, one per story on
-// the week's desk), swiped, stepped with the arrows or picked from the dots; the active dot's fill is the auto-advance
-// timer. The stories themselves are written in app.js (and lib/stories.js, lib/nightdesk.js) as plain data; this draws
+// The headline carousel: each headline is its own scoreboard card, and the cards ride a ring (Ring.jsx, Bencho's
+// carousel): the one being read at the front, the others layered behind it, peeking out over its top and sides. Swipe
+// or drag to turn the ring (a flick carries it), step with the arrows, pick from the dots or tap a card behind; the
+// active dot's fill is the auto-advance timer. The stories themselves are written in app.js (and lib/stories.js, lib/nightdesk.js) as plain data; this draws
 // them and runs the card. A video story's clip plays muted on a loop while its slide shows (useClip).
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { shortName } from '../../lib/matchup.js';
@@ -8,6 +9,7 @@ import { storyKeys } from './storyKeys.js';
 import { useReactions, loadReactions, react } from './reactions.js';
 import { TeamAvatar, Headshot, ChampTag, ChampBadge } from '../shared.jsx';
 import { TradeGraphic } from './TradeGraphic.jsx';
+import { Card, DEPTH, PERIOD, useRing } from './Ring.jsx';
 
 const asset = (p) => window.__ASSETS__?.[p] || p;
 // the reaction bar under each headline (EmojiReactions.jsx), in its own chunk: framer-motion only downloads once the
@@ -187,7 +189,7 @@ function ScoreBug({ bug: { w, l, kw, kl }, h }) {
 const Brk = () => <span className="brk"><i aria-hidden="true" />Breaking</span>;
 const TONIGHT = new Set(['monday', 'locked', 'tonight']);
 
-function Slide({ st, i, n, D, h, groups, runs, date, night, clip, slideRef, hk, rx }) {
+function Slide({ st, i, n, D, h, groups, runs, date, night, clip, slideRef, hk, rx, front }) {
   const run = runs?.find((x) => x.i.includes(i));
   const breaking = st.type === 'shakeup' || st.breaking;
   const top = (
@@ -203,7 +205,7 @@ function Slide({ st, i, n, D, h, groups, runs, date, night, clip, slideRef, hk, 
   const Hed = i ? 'h2' : 'h1';
   const hed = <Hed className={`lead-hed${st.mark ? ' marked' : ''}`}><Marked text={st.headline} marks={st.mark} /></Hed>;
   return (
-    <article ref={slideRef} className={`slide${breaking ? ' breaking' : ''}${st.clip || st.photo ? ' has-clip' : ''}`} id={`slide-${i}`} role="group" aria-roledescription="slide" aria-label={`Headline ${i + 1} of ${n}`}>
+    <article ref={slideRef} className={`slide${breaking ? ' breaking' : ''}${st.clip || st.photo ? ' has-clip' : ''}`} id={`slide-${i}`} role="group" aria-roledescription="slide" aria-label={`Headline ${i + 1} of ${n}`} inert={!front}>
       {st.clip ? <><div className="clip-head">{top}{hed}</div><ClipPrint st={st} D={D} h={h} clip={clip} /></>
         : st.photo ? <><div className="clip-head">{top}{hed}</div><PhotoPrint st={st} D={D} h={h} /></> : <>{top}{hed}</>}
       <p className="lead-deck"><Marked text={st.deck} marks={st.mark} /></p>
@@ -234,7 +236,7 @@ export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(pausedForVisit);
   const car = useRef(null), track = useRef(null), slides = useRef([]), dots = useRef([]);
-  const at = useRef(0), resize = useRef(true);
+  const at = useRef(0);
   const clipVideo = useRef(null), clipButton = useRef(null);
   const [clipState, setClipState] = useState('play');
   const clipSync = useRef(null);
@@ -248,74 +250,92 @@ export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
     ? stories.reduce((a, st, i) => { const r = a[a.length - 1]; if (r?.g === st.group) r.i.push(i); else a.push({ g: st.group, i: [i] }); return a; }, [])
     : null;
 
-  // on phones the card hugs the story that's showing instead of the tallest one, so short stories leave no gap
-  const fit = () => {
-    const tr = track.current, sl = slides.current[at.current];
-    if (tr && sl) tr.style.height = mq('(max-width: 760px)') && n > 1 ? `${sl.offsetHeight}px` : '';
-  };
-  const steering = useRef(0);
-  const go = (i) => {
-    const k = (i + n) % n;
-    at.current = k; resize.current = true;
-    setIdx(k);
-    const sl = slides.current[k];
-    sl.classList.remove('enter');
-    void sl.offsetWidth; // restart the animation
-    sl.classList.add('enter');
-    clearTimeout(steering.current);
-    steering.current = setTimeout(() => (steering.current = 0), 700); // ignore scroll events from our own smooth scroll
-    track.current.scrollTo({ left: k * track.current.clientWidth, behavior: calm() ? 'auto' : 'smooth' });
-  };
+  // The ring's measurements, from the room there is. The cards are a little narrower than the frame (`side` of air
+  // each side) so the ones behind can show past the front one, and the frame keeps `pad` above them for the cards at
+  // the back, which ride up. On a wide screen every card is as tall as the tallest (square at least); on phones each
+  // is as tall as its story and the frame hugs the one at the front, so short stories leave no gap. The cards behind
+  // are cut to that height (`data-fit` marks the one the frame was fitted to).
+  const geom = useRef({ orbit: 0, depth: DEPTH, lean: 0, pull: 240 });
+  const lite = mq('(max-width: 760px), (pointer: coarse)');
+  const ring = useRing({
+    n, geom, float: lite || calm() ? 0 : 22,
+    onAt: (k, settling) => {
+      at.current = k;
+      setIdx(k);
+      if (settling) layout(); // a glide says where it's headed as it starts: the frame grows or shrinks along with it
+    },
+  });
+  function layout() {
+    const el = car.current, tr = track.current;
+    if (!el || !tr) return;
+    const phone = mq('(max-width: 760px)'), F = tr.clientWidth, many = n > 1;
+    const side = many ? (phone ? 12 : 34) : 0, lean = many ? (phone ? 16 : 24) : 0, pad = many ? lean + 6 : 0, W = F - 2 * side;
+    // the furthest a card reaches is the orbit plus half its own (smaller) width: this keeps that inside the frame
+    geom.current = { orbit: side + W * 0.03, depth: DEPTH, lean, pull: Math.max(160, W * 0.5) };
+    el.style.setProperty('--side', `${side}px`);
+    el.style.setProperty('--pad', `${pad}px`);
+    el.style.setProperty('--card-w', `${W}px`);
+    el.style.removeProperty('--card-h');
+    const tall = slides.current.map((s) => (s ? s.offsetHeight : 0));
+    const H = phone ? tall[at.current] : Math.max(W, ...tall);
+    el.style.setProperty(phone ? '--front-h' : '--card-h', `${H}px`);
+    if (phone) el.style.removeProperty('--card-h'); else el.style.removeProperty('--front-h');
+    tr.style.height = `${pad + H}px`;
+    ring.slots.current.forEach((s, i) => s && s.toggleAttribute('data-fit', !phone || i === at.current));
+    ring.paint();
+  }
+  const go = (i) => ring.to((i + n) % n);
   const goRef = useRef(go);
   goRef.current = go;
+  const layoutRef = useRef(layout);
+  layoutRef.current = layout;
 
-  // a slide change: resize the card (unless a finger is mid-swipe) and let the clip catch up
-  useLayoutEffect(() => {
-    if (resize.current) fit();
-    clipSync.current?.();
-  }, [idx]);
+  // placed before the first paint, and the clip catches up on every slide change
+  useLayoutEffect(() => { layoutRef.current(); }, []);
+  useLayoutEffect(() => { clipSync.current?.(); }, [idx]);
 
   useEffect(() => {
     const el = car.current, tr = track.current;
+    const fit = () => layoutRef.current();
     if (nav) nav.current = { at: () => at.current, go: (i) => goRef.current(i) }; // for the ticker
     // Only rotate (or play a clip) while the card is mostly on screen. A rotation changes the card's height on phones,
     // and iPhone Safari doesn't anchor scrolling, so rotating while someone reads further down would jolt the page.
     const seen = new IntersectionObserver(([e]) => { el.classList.toggle('away', e.intersectionRatio < 0.6); clipSync.current?.(); }, { threshold: [0, 0.6] });
     seen.observe(el);
-    if (n < 2) return () => { seen.disconnect(); if (nav) nav.current = null; };
-    fit();
     document.fonts?.ready.then(fit); // headline height changes once the display font arrives
     // and whenever a slide's own height changes: the reaction bar arrives after the first paint and its chips wrap
-    const grown = new ResizeObserver(() => fit());
+    const grown = new ResizeObserver(fit);
     slides.current.forEach((s) => s && grown.observe(s));
     // re-fit on real width changes only: iPhone fires resize as its toolbar hides during every scroll
     let width = innerWidth;
     const onResize = () => { if (innerWidth !== width) { width = innerWidth; fit(); } };
     addEventListener('resize', onResize, { passive: true });
-    // during a finger swipe, move the dots right away but resize only once the slide has settled
-    let settle = 0;
-    const onScroll = () => {
-      if (steering.current) return;
-      const i = Math.round(tr.scrollLeft / tr.clientWidth);
-      if (i !== at.current) { at.current = i; resize.current = false; setIdx(i); }
-      clearTimeout(settle);
-      settle = setTimeout(fit, 140);
-    };
-    tr.addEventListener('scroll', onScroll, { passive: true });
     // touch has no hover, so hold the timer while a finger is down
     const down = () => el.classList.add('held'), up = () => el.classList.remove('held');
     tr.addEventListener('pointerdown', down);
     tr.addEventListener('pointerup', up);
     tr.addEventListener('pointercancel', up);
+    // a two-finger sideways scroll on a trackpad turns the ring a card at a time
+    let sum = 0, rest = 0, quiet = 0;
+    const onWheel = (e) => {
+      if (n < 2 || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      clearTimeout(quiet);
+      quiet = setTimeout(() => { sum = 0; }, 160);
+      if (performance.now() < rest) return;
+      sum += e.deltaX;
+      if (Math.abs(sum) > 50) { goRef.current(at.current + Math.sign(sum)); sum = 0; rest = performance.now() + 450; }
+    };
+    tr.addEventListener('wheel', onWheel, { passive: false });
     return () => {
       seen.disconnect();
       grown.disconnect();
       removeEventListener('resize', onResize);
-      tr.removeEventListener('scroll', onScroll);
       tr.removeEventListener('pointerdown', down);
       tr.removeEventListener('pointerup', up);
       tr.removeEventListener('pointercancel', up);
-      clearTimeout(settle); clearTimeout(steering.current);
+      tr.removeEventListener('wheel', onWheel);
+      clearTimeout(quiet);
       if (nav) nav.current = null;
     };
   }, []);
@@ -332,12 +352,21 @@ export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
     </button>
   );
   return (
-    <section ref={car} className="lead-car glass rim" aria-roledescription="carousel" aria-label="Today's headlines">
+    <section ref={car} className={`lead-car${n > 1 ? ' ring' : ''}`} aria-roledescription="carousel" aria-label="Today's headlines">
       {hold ? <p className="desk-note" role="status"><span className="live-dot" aria-hidden="true" />{hold}</p> : null}
-      <div className="car-track" tabIndex="0" ref={track}>
+      <div className="car-track" tabIndex="0" ref={track} data-held={ring.held} {...ring.bind}>
         {stories.map((st, i) => (
-          <Slide key={i} st={st} i={i} n={n} D={D} h={h} groups={groups} runs={runs} date={date} night={night}
-            clip={{ video: clipVideo, button: clipButton, state: clipState }} slideRef={(s) => (slides.current[i] = s)} hk={keys[i]} rx={rx} />
+          /* the slot is where the card is on the ring, the floater its drift, the card its give under the pointer:
+             three motions, three elements (see Ring.jsx). A card behind comes forward when tapped. */
+          <div key={i} ref={(s) => (ring.slots.current[i] = s)} className={`car-slot${i === idx ? ' front' : ''}`}
+            onClick={i === idx ? undefined : () => { if (!ring.dragged()) go(i); }}>
+            <div className="car-float" style={{ animationDuration: `${PERIOD[i % PERIOD.length]}s` }}>
+              <Card sink={8} off={i !== idx || ring.held || lite}>
+                <Slide st={st} i={i} n={n} D={D} h={h} groups={groups} runs={runs} date={date} night={night} front={i === idx}
+                  clip={{ video: clipVideo, button: clipButton, state: clipState }} slideRef={(s) => (slides.current[i] = s)} hk={keys[i]} rx={rx} />
+              </Card>
+            </div>
+          </div>
         ))}
       </div>
       {n > 1 ? (

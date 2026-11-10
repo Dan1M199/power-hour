@@ -15,6 +15,7 @@ import { GroupsTile } from './GroupsTile.jsx';
 import { ScheduleTile } from './ScheduleTile.jsx';
 import { LuckTile } from './LuckTile.jsx';
 import { FaceOffTile } from './FaceOffTile.jsx';
+import { ValueTile } from './ValueTile.jsx';
 import { canShareFiles, captureSheet, pdfOf, pngOf, shareFile } from './share.js';
 
 /**
@@ -49,15 +50,15 @@ export function TeamDashboard({ D, raw, ros, rid: start, h, calm, onTeam }) {
           <ShareIcon />Share
         </button>
       </header>
-      <Sheet key={rid} m={m} h={h} calm={calm} finish={intro} />
+      <Sheet key={rid} m={m} h={h} calm={calm} finish={intro} D={D} raw={raw} />
       {share ? createPortal(<ShareSheet paper={paper.current} {...share} onClose={() => setShare(null)} />, document.body) : null}
     </section>
   );
 }
 
-// the eight tiles and the clock that plays their intro (about 3 s, then it stops; reduced motion draws the end at once)
+// the nine tiles (team value first, across the sheet) and the clock that plays their intro (about 3 s, then it stops; reduced motion draws the end at once)
 // finish: a ref that gets a function jumping the intro to its end (Share calls it, so the picture has the final numbers)
-function Sheet({ m, h, calm, finish }) {
+function Sheet({ m, h, calm, finish, D, raw }) {
   const clock = useMemo(createClock, []);
   useLayoutEffect(() => {
     if (calm) { clock.draw(TL.end + 1); return undefined; }
@@ -76,6 +77,7 @@ function Sheet({ m, h, calm, finish }) {
   return (
     <ClockContext.Provider value={clock}>
       <div className="pp-grid">
+        <ValueTile D={D} raw={raw} rid={m.t.rid} h={h} />
         <OddsTile m={m} h={h} />
         <PlayersTile m={m} h={h} calm={calm} />
         <EfficiencyTile m={m} h={h} />

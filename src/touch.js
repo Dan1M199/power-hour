@@ -140,7 +140,7 @@ function initDock(placeInk) {
 // ---------- shine ----------
 // The first time a glass card is properly on screen, a band of light crosses it once. The band is drawn on a box laid
 // over the card from <body> (page coordinates, so it scrolls with the card), not inside it.
-const SHINE = '.lead-car, .gotw, .rank-card, .you-strip, .matchups > .mu, .live-panel, .you-card, .trade, .idea, .lab-grid > .panel, .wire-stats, .futures, .poll';
+const SHINE = '.car-slot.front .car-card, .gotw, .rank-card, .you-strip, .matchups > .mu, .live-panel, .you-card, .trade, .idea, .lab-grid > .panel, .wire-stats, .futures, .poll';
 let shineIo = null;
 export function shine(scope) {
   shineIo?.disconnect();

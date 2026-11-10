@@ -162,9 +162,9 @@ button, select { font: inherit; color: inherit; }
 /* featured cards (top three, trades, the best trade idea) stand on a gold ledge */
 .glass.rim { --ledge-c: var(--ledge-gold); }
 /* the dark scoreboards are smoked glass: a faint sheen, a bright rim and a cartoon glint in the corner */
-.lead-car, .gotw { --rim: inset 0 1.5px 0 rgba(255, 255, 255, 0.24), inset 0 -22px 30px -22px rgba(0, 0, 0, 0.6);
+.car-card, .gotw { --rim: inset 0 1.5px 0 rgba(255, 255, 255, 0.24), inset 0 -22px 30px -22px rgba(0, 0, 0, 0.6);
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0, rgba(255, 255, 255, 0.03) 55%, rgba(255, 255, 255, 0) 100%); }
-.lead-car::after, .gotw::after { content: ''; position: absolute; z-index: 3; top: 7px; left: 7px; width: 56px; height: 56px;
+.car-card::after, .gotw::after { content: ''; position: absolute; z-index: 3; top: 7px; left: 7px; width: 56px; height: 56px;
   background: var(--glint) no-repeat; opacity: 0.5; pointer-events: none; }
 
 /* ---------- buttons: glossy cartoon pills ---------- */
@@ -383,6 +383,35 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .sched .g small { font-size: 11.5px; font-weight: 700; color: var(--ink-2); }
 .sched .g b { font: 800 18px/1 var(--display); }
 .sched-sum { margin: 8px 0 0; font-size: 12.5px; color: var(--ink-3); }
+
+/* team value drawn like a stock (src/value/StockLine.jsx): one line in the colour of its direction, a dotted rule at
+   the opening price, a live dot on the last one. The wrapper sets --stk-*; the scouting report's are the site's */
+.stk { --c: var(--stk-up); position: relative; min-width: 0; }
+.stk.down { --c: var(--stk-down); }
+.stk svg { display: block; width: 100%; height: auto; overflow: visible; touch-action: pan-y; cursor: crosshair; }
+.stk-line { fill: none; stroke: var(--c); stroke-width: 3px; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; }
+.stk-base { stroke: var(--stk-rule); stroke-width: 1.5px; stroke-dasharray: 1 6; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.stk-cursor { stroke: var(--stk-ink); stroke-width: 1.5px; opacity: 0.45; vector-effect: non-scaling-stroke; }
+.stk-dot { fill: var(--c); stroke: var(--stk-face); stroke-width: 2.5px; vector-effect: non-scaling-stroke; }
+.stk-pulse { fill: var(--c); opacity: 0; transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: no-preference) { .stk-pulse { animation: stk-pulse 2s ease-out infinite; } }
+@keyframes stk-pulse { 0% { opacity: 0.45; transform: scale(1); } 70%, 100% { opacity: 0; transform: scale(3); } }
+.stk-ticks { position: relative; height: 18px; margin-top: 4px; font: 600 11.5px/18px var(--stk-font); color: var(--stk-muted); }
+.stk-ticks span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+.stk-ticks .first { transform: none; } .stk-ticks .last { transform: translateX(-100%); margin-left: 6px; }
+.stk-ticks .on { color: var(--stk-ink); }
+.mini.tv { --stk-up: var(--good); --stk-down: var(--bad); --stk-rule: var(--ink-3); --stk-ink: var(--ink); --stk-muted: var(--ink-3); --stk-face: var(--tile); --stk-font: var(--body); }
+.tv-row { display: grid; grid-template-columns: minmax(0, 190px) minmax(0, 1fr); gap: 6px 16px; align-items: center; }
+.tv-now { display: grid; gap: 4px; }
+.tv-now b { font: 800 40px/1 var(--display); color: var(--ink); }
+.tv-move { font: 700 13px/1.25 var(--body); color: var(--ink-2); }
+.tv-move.up { color: var(--good); } .tv-move.down { color: var(--bad); }
+.tv-now small { font-size: 12.5px; color: var(--ink-3); }
+.tv-top { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.tv-top li { display: flex; align-items: center; gap: 4px; min-width: 0; padding: 6px 10px; border-radius: 999px; background: var(--paper); font-size: 13px; color: var(--ink); }
+.tv-top span:not(.pos) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tv-top b { font: 800 15px/1 var(--display); }
+@media (max-width: 760px) { .tv-row { grid-template-columns: minmax(0, 1fr); } .tv-now b { font-size: 34px; } }
 .seeds { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 3px; align-items: end; height: 54px; }
 .seeds i { display: block; border-radius: 8px 8px 2px 2px; background: var(--tile-2); min-height: 2px; }
 .seeds i.in { background: var(--grass); }
@@ -530,13 +559,66 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .hero-side .you-face { width: 72px; height: 72px; border-radius: 30px; }
 .hero-side .you-msg { font-size: clamp(21px, 1.9vw, 25px); }
 .hero-side .ys-body > b { white-space: normal; text-wrap: balance; } /* the column is narrower than the page: a long name wraps, never cut */
-/* square by default; overflow stays visible so a long story grows the card instead of being clipped */
-.lead-car { display: flex; flex-direction: column; aspect-ratio: 1; border-radius: var(--r-xl); color: var(--chalk); background-color: var(--board); overflow-x: clip; }
-.car-track { flex: 1 0 auto; display: grid; border-radius: var(--r-xl) var(--r-xl) 0 0; grid-auto-flow: column; grid-auto-columns: 100%; overflow-x: auto; overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory; scrollbar-width: none; outline: none; }
-.car-track::-webkit-scrollbar { display: none; }
-.car-track:focus-visible { box-shadow: inset 0 0 0 3px var(--yellow); }
-.slide { scroll-snap-align: start; scroll-snap-stop: always; container-type: inline-size; display: flex; flex-direction: column; padding: 30px 30px 8px; min-width: 0; }
+/* The headlines: each story is its own scoreboard card, and the cards ride a ring (src/hero/Ring.jsx, Bencho's
+   carousel). .lead-car is only the frame: the note, the stack of cards, then the controls on a pill of their own.
+   The frame's measurements (--side, --pad, --card-w, --card-h or --front-h) are written by layout() in Carousel.jsx.
+   Square at least on a wide screen; a long story grows every card rather than being clipped. */
+.lead-car { position: relative; color: var(--chalk); overflow-x: clip; }
+/* ── the frame is only a frame ─────────────────────────────
+   No background, no clip, no mask. This was a box that cut
+   the cards at its edges, and before that a mask that faded
+   them out there, and both were answers to the question of
+   what happens to a card when it runs out of block. The cards
+   are on a ring now and never reach an edge, so the question
+   is gone and so is everything that was answering it. */
+.car-track { position: relative; isolation: isolate; touch-action: pan-y; outline: none; }
+.ring .car-track { cursor: grab; }
+.ring .car-track[data-held='true'] { cursor: grabbing; user-select: none; -webkit-user-select: none; }
+.car-track:focus-visible .car-slot.front .car-card { outline: 3px solid var(--yellow); outline-offset: 3px; }
+/* the slot holds WHERE on the ring and the card's own resting
+   ANGLE, written per frame by the component — so it carries no
+   transition of its own, or the easing and the drag would
+   re-interpolate against each other and what you would see is
+   the transition rather than the finger */
+.car-slot { position: absolute; left: 50%; top: var(--pad, 0px); width: var(--card-w, 100%); transform: translate(-50%, 0); transform-origin: 50% 0; }
+.ring .car-slot { will-change: transform; }
+.ring .car-slot:not(.front) { cursor: pointer; }
+/* ── the drift ──────────────────────────────────────────────
+   Keyframes rather than a loop: a rAF per card would be a
+   permanent loop for motion nobody is watching, and a wall
+   holding several of these blocks would run a dozen. This
+   runs on the compositor and pauses itself when the tab
+   hides. The period is set per card and deliberately does not
+   divide into its neighbours' — that is what stops the row
+   breathing in unison.
+
+   The perspective lives HERE, not on the track: on the track
+   a card at the edge of the row would tilt toward the middle
+   of the stage rather than toward the finger on it. Each card
+   is its own object being touched and wants its own vanishing
+   point.
+
+   (--bob and --sway are written with the card's place on the ring and are zero at the front, so the card being read
+   holds still; phones and reduced motion get no drift at all, and it rests with the timer.) */
+.car-float { perspective: 760px; }
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (min-width: 761px) {
+  .ring .car-float { animation: car-bob 5s ease-in-out infinite; }
+  .lead-car:is(.away, .paused, .reacting) .car-float, .locked .car-float { animation-play-state: paused; }
+}
+@keyframes car-bob {
+  0%, 100% { transform: translateY(calc(var(--bob, 0px) * -1)) rotate(calc(var(--sway, 0deg) * -1)); }
+  50% { transform: translateY(var(--bob, 0px)) rotate(var(--sway, 0deg)); }
+}
+/* no transition on the card: the tilt is sprung in the component, and a transition on top would be a second opinion
+   about how this card settles */
+.car-card { position: relative; isolation: isolate; display: flex; flex-direction: column; min-height: var(--card-h, 0px); max-height: var(--front-h, none);
+  border-radius: var(--r-xl); color: var(--chalk); background-color: var(--board); }
+.car-slot:not([data-fit]) .car-card { overflow: hidden; }
+.car-sheen, .car-dim { position: absolute; inset: 0; z-index: 4; display: block; border-radius: inherit; pointer-events: none; }
+/* a card behind the front one is in its shade */
+.car-dim { background: #04100A; opacity: calc(var(--dim, 0) * 0.5); }
+.slide { flex: 1 0 auto; container-type: inline-size; display: flex; flex-direction: column; padding: 30px 30px 26px; min-width: 0; }
+.slide img { -webkit-user-drag: none; }
 .lead-hed { margin: 0; font: 900 clamp(32px, 10.5cqi, 66px)/0.93 var(--display); letter-spacing: -0.005em; text-wrap: balance; color: var(--chalk); }
 .lead-deck { margin: 14px 0 0; max-width: 64ch; color: rgba(255, 255, 255, 0.8); font-size: 16px; }
 .slide .cast { margin-top: auto; padding-top: 18px; }
@@ -723,7 +805,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .cg-label::before, .kicker .k[class*='g-']::before { content: ''; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--g); }
 .car-group:has(.car-dot[aria-current='true']) .cg-label { color: var(--chalk); }
 .kicker .k[class*='g-'] { display: inline-flex; align-items: center; gap: 6px; }
-.kicker .k small { font: 600 12px/1 var(--body); color: rgba(255, 255, 255, 0.62); }
+.kicker .k small { font: 600 12px/1 var(--body); color: rgba(255, 255, 255, 0.62);; white-space: nowrap; }
 /* the smallest phones: swipe does the arrows' job, so the section index and pause get the room */
 @media (max-width: 360px) { .car-nav { justify-content: center; padding-inline: 10px; } .car-nav .car-arrow { display: none; } .car-mid { gap: 12px; } .car-dots.grouped { gap: 14px; } .cg-dots { gap: 10px; } }
 /* the rail never grows past the card: with five or six sections the labels once came to ~400px, pushed the next arrow
@@ -1281,9 +1363,8 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 
 /* ---------- the news clock: games in progress ---------- */
 /* a strip across the top of the headline card while Sunday's games are on and the news is on hold */
-.desk-note { display: flex; align-items: center; gap: 10px; margin: 0; padding: 12px 30px; border-radius: var(--r-xl) var(--r-xl) 0 0;
+.desk-note { display: flex; align-items: center; gap: 10px; margin: 0 var(--side, 0px) 12px; padding: 11px 22px; border-radius: 999px;
   font: 700 14px/1.3 var(--body); color: var(--ink); background: var(--yellow); }
-.desk-note + .car-track { border-radius: 0; }
 .live-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--flag); box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.25); }
 @media (prefers-reduced-motion: no-preference) {
   .live-dot { animation: live-blink 1.6s ease-in-out infinite; }
@@ -1720,10 +1801,10 @@ html.locked { overflow: hidden; }
   .wire-stats > div:nth-child(n + 3) { border-top: 2px solid var(--line); }
   .wire-stats b { font-size: 24px; }
   .wt-rows li { grid-template-columns: 58px 1fr auto; }
-  /* phones: no forced square; the card fits the story on screen (height set by fit() in bindCarousel) */
-  .lead-car { border-radius: var(--r-lg); aspect-ratio: auto; }
-  .car-track { flex: none; align-items: start; overflow-y: hidden; transition: height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
-  .slide { padding: 22px 18px 4px; }
+  /* phones: no forced square; the frame fits the story at the front (layout() in Carousel.jsx) */
+  .car-card { border-radius: var(--r-lg); }
+  .car-track { transition: height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .slide { padding: 22px 18px 18px; }
   .slide .cast { margin-top: 0; padding-top: 16px; }
   .car-nav { padding: 8px 14px 16px; }
   .lead-deck { font-size: 15px; }
@@ -1779,7 +1860,7 @@ html.locked { overflow: hidden; }
   .fo-ph .champ-badge { width: 34px; height: 34px; top: -9px; right: -9px; }
   .fo-side.b .fo-ph .champ-badge { left: -9px; }
   .fo-ph .champ-badge .trophy { width: 21px; height: 21px; }
-  .desk-note { padding: 11px 18px; border-radius: var(--r-lg) var(--r-lg) 0 0; font-size: 13px; }
+  .desk-note { padding: 10px 16px; border-radius: 24px; font-size: 13px; }
   .wr { grid-template-columns: 26px 34px minmax(0, 1fr) auto; gap: 5px 10px; padding: 9px 4px; }
   .you-card { grid-template-columns: 60px minmax(0, 1fr); gap: 14px; padding: 14px; }
   .you-face { width: 60px; height: 60px; border-radius: 26px; }
@@ -2137,6 +2218,40 @@ html.locked { overflow: hidden; }
 .pp-fo .back .pf-flip { margin-top: auto; padding-top: 9px; }
 .pp-fo .back .pf-pull .pf-flip { margin-top: 18px; }
 
+/* 9. team value: the roster's price as a stock. Full width, in flow like the face off: the price and its move on the
+   left, the line in the middle, the five dearest players on the right. Teal up, clay down, always with a word. */
+.pp-tile.pp-val { width: auto; height: auto; min-height: 296px; grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr) minmax(0, 270px); gap: 14px 30px; align-items: center; padding: 60px 26px 24px;
+  --stk-up: var(--p-easy); --stk-down: var(--p-hard); --stk-rule: var(--p-dotted); --stk-ink: var(--p-ink); --stk-muted: var(--p-muted); --stk-face: var(--p-tile); --stk-font: var(--p-mono); }
+.pv-big { font: 300 62px/1 var(--p-sans); letter-spacing: -0.04em; white-space: nowrap; }
+.pv-move { display: flex; align-items: center; gap: 6px; margin-top: 10px; font: 500 13px/1.3 var(--p-sans); color: var(--p-toss-ink); }
+.pv-move.up, .pv-px.up small { color: var(--p-easy-ink); } .pv-move.down, .pv-px.down small { color: var(--p-hard-ink); }
+.pv-move svg { flex: none; }
+.pv-note { margin: 12px 0 0; font-size: 13px; line-height: 1.45; color: var(--p-muted); }
+.pv-range { display: inline-flex; gap: 4px; margin-top: 16px; padding: 4px; border-radius: 99px; background: var(--p-wash); box-shadow: var(--p-well); }
+.pv-range button { min-height: 32px; padding: 0 14px; border: 0; border-radius: 99px; background: none; color: var(--p-muted); font: 500 12px var(--p-mono); cursor: pointer; }
+.pv-range button[aria-pressed='true'] { background: var(--p-hot); color: var(--p-white); box-shadow: var(--p-chip); }
+.pv-hold { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.pv-hold li { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 7px 0; border-top: 1.5px solid var(--p-hair); }
+.pv-hold li:first-child { border-top: 0; }
+.pv-tk { font: 500 11.5px var(--p-mono); color: var(--p-muted); }
+.pv-name, .pv-px { display: grid; gap: 2px; min-width: 0; }
+.pv-name b { font: 400 15px/1.2 var(--p-sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pv-hold small { font: 500 11.5px/1.2 var(--p-mono); color: var(--p-muted); white-space: nowrap; }
+.pv-px { justify-items: end; }
+.pv-px b { font: 400 15px/1.2 var(--p-sans); }
+.pv-px small { display: inline-flex; align-items: center; gap: 4px; }
+@container (max-width: 927.98px) {
+  .pp-tile.pp-val { grid-template-columns: minmax(0, 220px) minmax(0, 1fr); }
+  .pv-hold { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 26px; }
+  .pv-hold li:nth-child(2) { border-top: 0; }
+  .pv-big { font-size: 54px; }
+}
+@container (max-width: 611.98px) {
+  .pp-tile.pp-val { grid-template-columns: minmax(0, 1fr); padding: 58px 22px 20px; gap: 16px; }
+  .pv-hold { grid-template-columns: minmax(0, 1fr); }
+  .pv-hold li:nth-child(2) { border-top: 1.5px solid var(--p-hair); }
+  .pv-range button { min-height: 40px; }
+}
 @keyframes pp-sweep { from { left: -30%; } to { left: 100%; } }
 @keyframes pp-pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 
@@ -3029,14 +3144,14 @@ main::after { border-radius: 56px 56px 0 0; }
 
 /* --- the tier behind a card --- */
 .glass.rim { --lift: 9px; }
-/* the headline carousel is the top of a deck: the next stories' edges show under it */
-.lead-car { position: relative; --deck-1: #1E5230; --deck-2: #357A49;
-  box-shadow: var(--rim), 0 0 0 1px rgba(0, 0, 0, 0.5), 0 12px 0 -7px var(--deck-1), 0 24px 0 -15px var(--deck-2), 0 40px 30px -18px var(--cast); }
+/* each headline card stands on its own short ledge; the deck behind it is the other headlines themselves.
+   ONE SHADOW, AND IT DOES NOT MOVE: the card gives under the pointer, its shadow only says it is off the ground. */
+.lead-car { --deck-1: #1E5230; --deck-2: #357A49; }
+.car-card { box-shadow: var(--rim), 0 0 0 1px rgba(0, 0, 0, 0.5), 0 6px 0 0 var(--deck-1), 0 22px 26px -14px var(--cast); }
 .hero { margin-bottom: 60px; }
 /* the scoreboard's face: a faint LED dot grid lit from the top (it fades out before the deck, so it never sits under
    reading text) and a floodlight bloom over the top right, behind the headline photos. Flat layers, no blur. */
-.lead-car { isolation: isolate; }
-.lead-car::before { content: ''; position: absolute; z-index: -1; inset: 0; border-radius: inherit; pointer-events: none;
+.car-card::before { content: ''; position: absolute; z-index: -1; inset: 0; border-radius: inherit; pointer-events: none;
   background: radial-gradient(70% 46% at 88% -6%, rgba(255, 236, 170, 0.13), rgba(255, 236, 170, 0) 70%),
     radial-gradient(circle, rgba(255, 255, 255, 0.07) 1px, rgba(255, 255, 255, 0) 1.6px) 0 0 / 7px 7px;
   -webkit-mask-image: linear-gradient(180deg, #000 0, rgba(0, 0, 0, 0.35) 30%, rgba(0, 0, 0, 0) 52%);
@@ -3051,6 +3166,11 @@ main::after { border-radius: 56px 56px 0 0; }
 .car-nav { padding-top: 14px; }
 .car-arrow, .car-pause:not([aria-pressed='true']) { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.14); }
 @media (max-width: 760px) { .car-nav { padding-top: 12px; } .car-nav::before { left: 14px; right: 14px; } }
+/* the rail is a pill of its own under the stack now that every headline is a card */
+.car-nav { margin: 18px var(--side, 0px) 0; padding: 10px 14px; border-radius: 30px; background-color: var(--board);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.5), 0 5px 0 0 var(--deck-1), 0 16px 18px -12px var(--cast); }
+.car-nav::before { display: none; }
+@media (max-width: 760px) { .car-nav { margin-top: 16px; padding: 8px 10px; } }
 /* --- sketch marks: a coach's pen on the page. A few hand-drawn touches, never on controls or numbers people read:
    a scribbled underline under a name the headline marks, a chalk ring around the No. 1 yard number, a margin note on
    the playoff cut and one on the pick-your-team card. Drawn as inline SVG, Caveat for the words. --- */
@@ -3163,7 +3283,6 @@ main::after { border-radius: 56px 56px 0 0; }
   .rank.closing .pull-x { display: none; }
   .rank.closing .pull-t { display: inline; }
   .rank.closing .pull .xp { transform: none; }
-  .lead-car { box-shadow: var(--rim), 0 0 0 1px rgba(0, 0, 0, 0.5), 0 9px 0 -5px var(--deck-1), 0 18px 0 -11px var(--deck-2), 0 30px 22px -14px var(--cast); }
   main::before { border-radius: 48px 48px 0 0; }
   .footer::before { border-radius: 48px 48px 0 0; }
   .key-tag { right: 34px; } .toilet-tag { left: 34px; }
