@@ -6,6 +6,11 @@
 //  - shine: a band of light crosses a glass card the first time it comes on screen
 //  - top pill: a round glass button that fills as you read down the page and takes you back to the top
 //  - hello: the one-time note that says what changed
+// 2.1 (Dan's request Nov 11, more of an iPhone app):
+//  - swipe: a sideways swipe on the page goes to the next or previous tab; a chip follows the finger in from the edge
+//  - pull: a scouting report's pull is a handle you can drag open or shut
+//  - page in: on phones a new tab's page slides in from the side you're heading
+//  - tapping the tab you're already on goes back to the top, as a tab bar does
 // All of it is off under reduced motion, and the press and the dock only answer a finger or a pen, never a mouse.
 
 const mq = (q) => { const m = matchMedia(q); return () => m.matches; };
@@ -156,6 +161,111 @@ function initDock(placeInk) {
   nav.addEventListener('pointerup', (e) => { if (drag && e.pointerId === drag.id) end(true); });
   nav.addEventListener('pointercancel', () => end(false));
   nav.addEventListener('click', (e) => { if (nav.dataset.slid) { e.preventDefault(); e.stopPropagation(); } }, true);
+  // the tab you're on: a tap goes back to the top of its page
+  nav.addEventListener('click', (e) => {
+    const a = e.target.closest?.('a[aria-current]');
+    if (!a || scrollY < 40) return;
+    e.preventDefault();
+    haptic();
+    scrollTo({ top: 0, behavior: calm() ? 'auto' : 'smooth' });
+  });
+}
+
+// ---------- swipe between tabs ----------
+// Phones: a sideways swipe anywhere on the page that isn't already something you drag (the headline deck, a slider, a
+// table that scrolls) goes to the next tab, or back to the one before. A glass chip with that tab's name follows the
+// finger in from the edge and turns amber once letting go will change the page. Touch events, all passive: the
+// browser decides between a scroll and this in the first few pixels, the same way we do. Starts within 24px of an
+// edge are left to Safari's own back and forward swipe.
+const OWN_DRAG = '.lead-car, .tabs, .me, .rxn, .ticker, .stk, .pull, .adm-page, .unveil, .share-sheet, .lockout, .vf, input, select, textarea, [contenteditable]';
+const scrollsSideways = (n) => {
+  for (; n && n !== document.body; n = n.parentElement) {
+    if (n.scrollWidth > n.clientWidth + 4) { const o = getComputedStyle(n).overflowX; if (o === 'auto' || o === 'scroll') return true; }
+  }
+  return false;
+};
+let swipeDir = 0; // which way the last swipe went, for pageIn
+function initSwipe() {
+  const chip = el('div', 'tx-swipe', '<span></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>');
+  chip.setAttribute('aria-hidden', 'true');
+  document.body.append(chip);
+  const label = chip.firstChild, NEED = 96;
+  let g = null;
+  const hide = () => { chip.classList.remove('on', 'go'); chip.style.transform = ''; g = null; };
+  addEventListener('touchstart', (e) => {
+    g = null;
+    if (!phone() || e.touches.length !== 1 || root.matches('.locked, .admin-mode, .focusing')) return;
+    const t = e.touches[0];
+    if (t.clientX < 24 || t.clientX > innerWidth - 24) return;
+    if (e.target.closest?.(OWN_DRAG) || scrollsSideways(e.target)) return;
+    g = { x: t.clientX, y: t.clientY, lock: false, armed: false };
+  }, { passive: true });
+  addEventListener('touchmove', (e) => {
+    if (!g) return;
+    if (e.touches.length !== 1) return hide();
+    const dx = e.touches[0].clientX - g.x, dy = e.touches[0].clientY - g.y;
+    if (!g.lock) {
+      if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
+      if (Math.abs(dx) < Math.abs(dy) * 1.7) { g = null; return; }
+      const tabs = [...document.querySelectorAll('.tabs a')].filter((a) => !a.hidden), i = tabs.findIndex((a) => a.hasAttribute('aria-current'));
+      g.dir = dx < 0 ? 1 : -1; // a swipe to the left is the next tab
+      g.next = i < 0 ? null : tabs[i + g.dir];
+      if (!g.next) { g = null; return; }
+      g.lock = true;
+      label.textContent = g.next.querySelector('.ts, .tn')?.textContent || g.next.textContent.trim();
+      chip.classList.toggle('back', g.dir < 0);
+      chip.classList.add('on');
+    }
+    const pull = Math.max(0, -dx * g.dir), p = Math.min(1, pull / NEED), armed = p >= 1;
+    // the chip comes out of the edge with the finger, and gives a little more past the point of no return
+    const out = (1 - p) * 105 - (armed ? Math.min(8, (pull - NEED) / 12) : 0);
+    chip.style.transform = `translateX(${g.dir > 0 ? out : -out}%)`;
+    if (armed !== g.armed) { g.armed = armed; chip.classList.toggle('go', armed); haptic(); }
+  }, { passive: true });
+  addEventListener('touchend', () => {
+    if (g?.lock && g.armed) { swipeDir = g.dir; location.hash = g.next.getAttribute('href'); }
+    hide();
+  }, { passive: true });
+  addEventListener('touchcancel', hide, { passive: true });
+}
+
+// Phones: the new tab's page slides in from the side you're heading (route() in app.js calls this after it renders).
+// One short animation on #app, opacity and the `translate` property only. A fixed thing inside the page (the rankings
+// lockout) would be carried along by it, so that page just appears.
+export function pageIn(dir) {
+  const app = document.getElementById('app'), d = swipeDir || dir;
+  swipeDir = 0;
+  if (!app || !d || calm() || !phone() || app.querySelector('.lockout')) return;
+  app.animate([{ opacity: 0, translate: `${d * 36}px 0` }, { opacity: 1, translate: '0 0' }], { duration: 340, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+}
+
+// ---------- the scouting report's pull ----------
+// A ranking card's pull is a handle: drag it down and the report opens, drag it up on an open one and it shuts. The
+// words give with the finger (a paused Web Animation on `translate`, scrubbed by the drag) and the row's own button
+// does the opening, so the drawer's animation is exactly a tap's.
+function initPull() {
+  const NEED = 30;
+  let p = null;
+  const drop = () => { p?.give?.cancel(); p = null; };
+  addEventListener('touchstart', (e) => {
+    drop();
+    const pull = e.touches.length === 1 && e.target.closest?.('.pull'), btn = pull && pull.closest('.rank-btn');
+    if (!btn) return;
+    const open = !!pull.closest('.rank.open'), way = open ? -1 : 1;
+    p = { btn, y: e.touches[0].clientY, way, done: false, give: null };
+    if (!calm()) { p.give = pull.animate([{ translate: '0 0' }, { translate: `0 ${way * 9}px` }], { duration: 100, fill: 'both' }); p.give.pause(); }
+  }, { passive: true });
+  addEventListener('touchmove', (e) => {
+    if (!p || p.done) return;
+    const d = (e.touches[0].clientY - p.y) * p.way;
+    if (p.give) p.give.currentTime = Math.max(0, Math.min(1, d / NEED)) * 100;
+    if (d < NEED) return;
+    p.done = true;
+    haptic();
+    p.give?.cancel();
+    p.btn.click();
+  }, { passive: true });
+  for (const type of ['touchend', 'touchcancel']) addEventListener(type, drop, { passive: true });
 }
 
 // ---------- shine ----------
@@ -223,10 +333,10 @@ function initTopPill() {
 // ---------- hello ----------
 // Once per device: a glass note above the dock that names the update and the one gesture nobody would guess.
 function hello() {
-  const KEY = 'ph-hello-2';
+  const KEY = 'ph-hello-21';
   if (root.classList.contains('admin-mode') || root.classList.contains('locked')) return;
   try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, '1'); } catch { return; }
-  const note = el('div', 'tx-hello', `<b>2.0</b><span><strong>The Power Hour 2.0.</strong> ${phone() ? 'The tabs moved down to your thumb: slide a finger along them. Your team and the night game are in the circle.' : 'New glass all round, and built for your phone.'}</span>`);
+  const note = el('div', 'tx-hello', `<b>2.1</b><span><strong>The Power Hour 2.1.</strong> ${phone() ? 'Swipe sideways to change tabs, drag a scouting report open, and tap the tab you are on to jump to the top.' : 'Flatter glass and tidier type, with more to swipe on your phone.'}</span>`);
   note.setAttribute('role', 'status');
   document.body.append(note);
   const close = () => { note.classList.remove('on'); setTimeout(() => note.remove(), 500); };
@@ -239,5 +349,7 @@ export function initTouch({ placeInk }) {
   initDock(placeInk);
   initTopPill();
   if (!calm()) initPress();
+  initSwipe();
+  initPull();
   return { hello };
 }

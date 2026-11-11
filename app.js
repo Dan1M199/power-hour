@@ -18,7 +18,7 @@ import { storyKeys } from './src/hero/storyKeys.js';
 import { posts, loadPosts } from './src/admin/posts.js';
 import { AdminShell } from './src/admin/AdminShell.jsx';
 import { createStore } from './src/store.js';
-import { initTouch, shine } from './src/touch.js';
+import { initTouch, shine, pageIn } from './src/touch.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
 import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
 
@@ -1886,6 +1886,23 @@ function reveal(root) {
     // phones: count the numbers on the first screen once (ranking rows count as they arrive); nothing else runs
     // while scrolling
     countAll([...root.querySelectorAll(COUNT)].filter((el) => { if (el.closest('.rank')) return false; const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; }));
+    // 2.1: cards below the first screen rise in as they arrive (.rv in styles.css: opacity and transform only, so
+    // nothing below them moves), their bars and lines draw once they're in, and their numbers count up then
+    io = new IntersectionObserver((entries) => {
+      entries.filter((e) => e.isIntersecting).forEach((e, k) => {
+        const el = e.target;
+        io.unobserve(el);
+        countAll([...el.querySelectorAll(COUNT)].filter((c) => !c.closest('.rank')));
+        el.style.setProperty('--d', `${Math.min(k, 4) * 50}ms`);
+        el.classList.add('rv-in');
+        el.addEventListener('animationend', function done(ev) {
+          if (ev.target !== el) return;
+          el.classList.remove('rv', 'rv-in');
+          el.removeEventListener('animationend', done);
+        });
+      });
+    }, { rootMargin: '0px 0px -4% 0px' });
+    root.querySelectorAll(REVEAL).forEach((el) => { if (el.getBoundingClientRect().top >= innerHeight * 0.94) { el.classList.add('rv'); io.observe(el); } });
     return;
   }
   io = new IntersectionObserver((entries) => {
@@ -1936,6 +1953,7 @@ function route({ fresh = false } = {}) {
     if (fresh) { app.focus({ preventScroll: true }); window.scrollTo({ top: 0 }); }
     reveal(app);
     shine(app); // 2.0: light crosses each glass card once as it comes on screen (src/touch.js)
+    if (currentView && key !== currentView) pageIn(dir === 'back' ? -1 : 1); // 2.1, phones: the page slides in
     currentView = key;
     if (key === 'rankings') maybeMessage();
   };

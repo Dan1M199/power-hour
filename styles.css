@@ -4061,3 +4061,97 @@ html:is(.admin-mode, .locked) .tx-top { display: none; }
   html.lens-glass .tabs, html.lens-glass .me-btn { -webkit-backdrop-filter: url(#dock-lens) saturate(2.2) brightness(1.1); backdrop-filter: url(#dock-lens) saturate(2.2) brightness(1.1); }
   :root[data-theme='dark'].lens-glass .tabs, :root[data-theme='dark'].lens-glass .me-btn { backdrop-filter: url(#dock-lens) saturate(2) brightness(0.92); }
 }
+
+/* ---------- 2.1: flatter glass, tighter type, and more to do with a thumb (Dan's request Nov 11) ----------
+   The same cartoon glass, pressed flatter: the sheen is a breath, not a band; the shaded foot inside every card is
+   gone; ledges are 4px, not 7; buttons lose the dark half of their gloss and a pixel of ledge; trays are a hairline
+   dip. The phone dock keeps its clear refracting glass (Nov 10). Type: smoothed, display numerals a weight lighter
+   and tighter with quiet captions under them, body copy a touch smaller on phones. Motion: phones now get the cards
+   rising in as they scroll into view (.rv, reveal() in app.js) and the bars, win bars and chart lines drawing
+   themselves, held until their card arrives. Gestures (src/touch.js): swipe sideways to change tab (.tx-swipe is the
+   chip that follows the finger in from the edge), drag a scouting report's pull, tap the tab you're on to go to the
+   top. Kept last, night values beside the day ones. */
+:root {
+  --sheen: linear-gradient(180deg, rgba(206, 236, 253, 0.4) 0, rgba(255, 255, 255, 0) 100%);
+  --rim: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0, rgba(255, 255, 255, 0) 58%);
+  --cast: rgba(6, 34, 14, 0.34);
+  --tray-edge: inset 0 1px 2px rgba(11, 36, 18, 0.14), inset 0 0 0 1px rgba(11, 36, 18, 0.1);
+  --chip-shade: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 2px rgba(6, 34, 14, 0.25);
+  --press: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 0 1px rgba(11, 36, 18, 0.28), 0 2px 0 var(--ledge-gold), 0 5px 8px -4px rgba(90, 50, 0, 0.4);
+  --press-down: inset 0 1px 2px rgba(90, 50, 0, 0.35), 0 0 0 1px rgba(11, 36, 18, 0.28);
+  --soft: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 0 1px rgba(11, 36, 18, 0.22), 0 2px 0 var(--ledge), 0 5px 8px -5px rgba(6, 34, 14, 0.4);
+  --soft-down: inset 0 1px 2px rgba(11, 36, 18, 0.18), 0 0 0 1px rgba(11, 36, 18, 0.22);
+  --in-tray: inset 0 1px 0 #FFFFFF, 0 0 0 1px rgba(11, 36, 18, 0.1), 0 4px 8px -6px var(--cast);
+  --chrome-rim: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+:root[data-theme='dark'] {
+  --sheen: linear-gradient(180deg, rgba(150, 200, 255, 0.06) 0, rgba(255, 255, 255, 0) 100%);
+  --rim: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0, rgba(255, 255, 255, 0) 58%);
+  --cast: rgba(0, 0, 0, 0.5);
+  --tray-edge: inset 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(234, 244, 230, 0.06);
+  --chip-shade: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.5);
+  --soft: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.6), 0 2px 0 var(--ledge), 0 5px 8px -5px rgba(0, 0, 0, 0.6);
+  --soft-down: inset 0 1px 2px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.6);
+  --in-tray: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.4), 0 4px 8px -6px var(--cast);
+  --chrome-rim: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+.glass { --lift: 4px; background-size: 100% 96px; }
+.car-card, .gotw { --rim: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0, rgba(255, 255, 255, 0) 50%); }
+.car-card::after, .gotw::after { opacity: 0.22; }
+.tab-ink, .lab-tabs a[aria-current='page'], .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'] {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 0 1px rgba(11, 36, 18, 0.28), 0 2px 0 var(--pop), 0 5px 8px -4px rgba(90, 50, 0, 0.4); }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .mu:hover, .idea:hover, .wire-team:hover, .trade:hover { transform: translateY(-2px); --lift: 5px; }
+  .rank-card:hover { transform: translateY(-1px); --lift: 5px; }
+}
+
+/* --- type: smoothed, numerals lighter and tighter, captions quiet --- */
+body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; font-variant-numeric: tabular-nums lining-nums; }
+p, li { text-wrap: pretty; }
+h2, .sec-title, .team-name, .mu-team .tn { letter-spacing: -0.005em; }
+.view-head :is(h1, .page-title), .lead-hed { letter-spacing: -0.02em; }
+:is(.score, .odds b, .mu-team .pr, .wp-labels.odds, .gotw-score b, .cast-odds b, .odds-tag, .wr-num b, .wire-stats b) { font-weight: 700; letter-spacing: -0.02em; }
+:is(.odds, .mu-team, .cast-odds, .wp-labels.odds) small { font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; }
+.view-head p, .sub { line-height: 1.45; }
+@media (max-width: 760px) {
+  body { font-size: 15px; line-height: 1.5; }
+  .view-head :is(h1, .page-title) { font-size: clamp(46px, 14.5vw, 64px); }
+  .lead-deck { font-size: 14.5px; line-height: 1.45; }
+  .score, .rank:nth-child(-n + 3) .score { font-size: 44px; }
+  .odds b { font-size: 30px; }
+  .mu-team .pr { font-size: 38px; }
+  .wp-labels.odds { font-size: 26px; }
+}
+
+/* --- motion on phones: cards rise in, data draws itself (desktop has had both since 1.0) --- */
+@media (prefers-reduced-motion: no-preference) {
+  @media (max-width: 760px), (pointer: coarse) {
+    .rv { opacity: 0; }
+    .rv.rv-in { opacity: 1; animation: rv-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: var(--d, 0ms); }
+    @keyframes rv-up { from { opacity: 0; transform: translateY(22px) scale(0.97); } }
+    .track i, .wp-bar i:first-child { transform-origin: left; animation: grow-x 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both; }
+    .wp-bar i:last-child { transform-origin: right; animation: grow-x 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both; }
+    .rank .track i { animation-delay: calc(var(--d, 0ms) + 380ms); }
+    .seeds i { transform-origin: bottom; animation: grow-y 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both; }
+    .chart .line, .spark path { stroke-dasharray: 1; animation: draw 1.1s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both; }
+    .rank.pending .track i, .rv:not(.rv-in) :is(.track i, .wp-bar i, .seeds i, .chart .line, .spark path) { animation-play-state: paused; }
+    /* the scouting report's pull is a handle: a finger drags it, the page doesn't scroll under it */
+    .pull { touch-action: none; }
+  }
+}
+
+/* --- swipe to the next tab: a glass chip follows the finger in from the edge and turns amber when letting go will
+   change the page (src/touch.js, initSwipe) --- */
+.tx-swipe { position: fixed; z-index: 19; top: 46%; right: 0; display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 16px 0 14px;
+  border-radius: 999px 0 0 999px; font: 800 17px/1 var(--display); color: var(--ink); pointer-events: none; visibility: hidden;
+  background: var(--chrome); -webkit-backdrop-filter: var(--frost-s); backdrop-filter: var(--frost-s);
+  box-shadow: var(--chrome-rim), 0 0 0 1.5px var(--outline), 0 3px 0 1.5px var(--ledge), 0 10px 16px -8px var(--cast);
+  transform: translateX(105%); transition: background-color 0.15s, transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s 0.25s; }
+.tx-swipe.back { right: auto; left: 0; flex-direction: row-reverse; padding: 0 14px 0 16px; border-radius: 0 999px 999px 0; transform: translateX(-105%); }
+.tx-swipe.on { visibility: visible; transition: background-color 0.15s; }
+.tx-swipe.go { background: var(--amber); color: #0B2412; }
+.tx-swipe svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.tx-swipe.back svg { transform: scaleX(-1); }
