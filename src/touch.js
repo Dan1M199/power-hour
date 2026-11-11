@@ -83,9 +83,33 @@ function initPress() {
 // ---------- the dock ----------
 // Phones: slide a finger along the tab bar and the amber pill follows it, tab to tab; lifting picks the tab under it.
 // A plain tap is left to the link itself. placeInk (app.js) puts the pill back on the page's own tab.
+// Real refraction for the dock's glass where the browser can bend a backdrop through an SVG filter (Chromium; iPhone
+// Safari can't, and every browser on an iPhone is Safari underneath, so it keeps the CSS caustics and prism). The
+// backdrop is pushed around by a slow, stretched noise, each colour channel by a different amount, and the three are
+// added back together: straight lines behind the glass bend and fringe into red, green and blue, like light through a
+// thick lens. styles.css applies it under html.lens-glass.
+function lensGlass() {
+  const ua = navigator.userAgent;
+  if (!window.chrome || /iPhone|iPad|iPod/.test(ua) || document.getElementById('dock-lens')) return;
+  const ch = (scale, m) => `<feDisplacementMap in="SourceGraphic" in2="n" scale="${scale}" xChannelSelector="R" yChannelSelector="G" result="d${scale}"/>`
+    + `<feColorMatrix in="d${scale}" type="matrix" values="${m} 0 0 0 1 0" result="c${scale}"/>`;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('width', '0'); svg.setAttribute('height', '0');
+  svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+  svg.innerHTML = '<filter id="dock-lens" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">'
+    + '<feTurbulence type="fractalNoise" baseFrequency="0.008 0.05" numOctaves="2" seed="11" result="n"/>'
+    + ch(26, '1 0 0 0 0  0 0 0 0 0  0 0 0 0 0') + ch(18, '0 0 0 0 0  0 1 0 0 0  0 0 0 0 0') + ch(11, '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0')
+    + '<feBlend in="c26" in2="c18" mode="screen" result="rg"/><feBlend in="rg" in2="c11" mode="screen" result="rgb"/>'
+    + '<feGaussianBlur in="rgb" stdDeviation="1.6"/></filter>';
+  document.body.append(svg);
+  root.classList.add('lens-glass');
+}
+
 function initDock(placeInk) {
   const nav = document.querySelector('.tabs'), ink = nav?.querySelector('.tab-ink');
   if (!nav || !ink) return;
+  lensGlass();
   let drag = null;
   const tabs = () => [...nav.querySelectorAll('a')].filter((a) => !a.hidden);
   const under = (x) => {
