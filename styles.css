@@ -4028,28 +4028,32 @@ html:is(.admin-mode, .locked) .tx-top { display: none; }
    header's chrome) under a light frost: a short blur so shapes and colours behind still read, the colour pushed up
    and brightened the way thick glass concentrates light. Three layers make it read as a lens rather than a tint:
    - ::before, the caustics: light pooled under the top edge and caught again along the curve of the bottom;
-   - ::after, the prism: a thin spectral rim just inside the ink edge, where a real glass edge splits white light into
-     colour, turning slowly (--prism-a) so the colours travel round as if the light source moved;
+   - ::after, the thickness: a clear bevel just inside the ink edge (Dan, Nov 10: no rainbow, clear and more 3D), lit
+     along the top and shaded along the foot, with a second fainter rim inside it, so the edge reads as a slab of glass
+     with depth, layered, rather than a line;
    - real refraction where the browser can (Chromium: html.lens-glass, src/touch.js): the backdrop itself is bent
-     through an SVG filter (#dock-lens), each colour channel by a different amount, so edges behind the glass fringe
+     through an SVG filter (#dock-lens), clear, every colour by the same amount, so what passes behind the glass
      into red, green and blue. iPhone Safari can't filter a backdrop through SVG, so there it's the first two.
    The words and icons keep a soft halo so they hold up over whatever passes under them. --- */
-@property --prism-a { syntax: '<angle>'; inherits: false; initial-value: 200deg; }
 @media (max-width: 760px) {
   :root { --dock-glass: rgba(236, 248, 255, 0.26); --dock-frost: blur(5px) saturate(2.3) brightness(1.12) contrast(1.05);
-    --dock-halo: rgba(255, 255, 255, 0.85); --caustic: rgba(255, 255, 255, 0.6); --prism-o: 0.75; }
+    --dock-halo: rgba(255, 255, 255, 0.85); --caustic: rgba(255, 255, 255, 0.6);
+    --bevel-hi: rgba(255, 255, 255, 0.95); --bevel-lo: rgba(11, 36, 18, 0.28); --bevel-in: rgba(255, 255, 255, 0.55); }
   :root[data-theme='dark'] { --dock-glass: rgba(12, 28, 20, 0.3); --dock-frost: blur(5px) saturate(2) brightness(0.92) contrast(1.08);
-    --dock-halo: rgba(0, 0, 0, 0.75); --caustic: rgba(255, 255, 255, 0.22); --prism-o: 0.6; }
+    --dock-halo: rgba(0, 0, 0, 0.75); --caustic: rgba(255, 255, 255, 0.22);
+    --bevel-hi: rgba(255, 255, 255, 0.42); --bevel-lo: rgba(0, 0, 0, 0.55); --bevel-in: rgba(255, 255, 255, 0.16); }
   .tabs, :root[data-theme='dark'] .tabs, .me-btn { background: var(--dock-glass); -webkit-backdrop-filter: var(--dock-frost); backdrop-filter: var(--dock-frost); }
   .me-btn { position: relative; isolation: isolate; }
   .tabs::before, .me-btn::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
     background: radial-gradient(110% 80% at 50% -28%, var(--caustic), transparent 58%), radial-gradient(70% 55% at 50% 128%, var(--caustic), transparent 62%),
       linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.12) 46%, transparent 58%); }
-  .tabs::after, .me-btn::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; padding: 2.5px; pointer-events: none; opacity: var(--prism-o);
-    background: conic-gradient(from var(--prism-a), #FF4D6D, #FFB338, #F5F25A, #5BF08E, #3CC8FF, #7A6BFF, #E55CFF, #FF4D6D);
+  /* the glass's thickness: a bevel ring lit on top and shaded at the foot, then a fainter inner rim a step in */
+  .tabs::after, .me-btn::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; padding: 4px; pointer-events: none;
+    background: linear-gradient(180deg, var(--bevel-hi) 0%, rgba(255, 255, 255, 0.18) 38%, rgba(255, 255, 255, 0) 55%, var(--bevel-lo) 100%);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-    filter: blur(0.7px) saturate(1.2); }
-  @media (prefers-reduced-motion: no-preference) { .tabs::after, .me-btn::after { animation: prism-turn 14s linear infinite; } }
+    box-shadow: inset 0 0 0 1px var(--bevel-in); }
+  .tabs, .me-btn { box-shadow: inset 0 1.5px 0 var(--bevel-hi), inset 0 -2px 0 var(--bevel-lo), inset 0 0 0 5px rgba(255, 255, 255, 0.05), inset 0 6px 10px -6px var(--bevel-in),
+      0 0 0 1.5px var(--outline), 0 4px 0 1.5px var(--ledge), 0 16px 22px -8px rgba(0, 20, 8, 0.7); }
   .tabs a { text-shadow: 0 0 6px var(--dock-halo), 0 0 2px var(--dock-halo); }
   .tabs a .ti, .me-btn-icon { filter: drop-shadow(0 0 3px var(--dock-halo)); }
   .tabs a[aria-current='page'] { text-shadow: none; }
@@ -4057,4 +4061,3 @@ html:is(.admin-mode, .locked) .tx-top { display: none; }
   html.lens-glass .tabs, html.lens-glass .me-btn { -webkit-backdrop-filter: url(#dock-lens) saturate(2.2) brightness(1.1); backdrop-filter: url(#dock-lens) saturate(2.2) brightness(1.1); }
   :root[data-theme='dark'].lens-glass .tabs, :root[data-theme='dark'].lens-glass .me-btn { backdrop-filter: url(#dock-lens) saturate(2) brightness(0.92); }
 }
-@keyframes prism-turn { to { --prism-a: 560deg; } }
