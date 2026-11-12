@@ -4447,3 +4447,56 @@ main::before, :root[data-theme='dark'] main::before { top: calc(-22px - var(--st
     repeating-linear-gradient(180deg, transparent 0 112px, rgba(0, 0, 0, 0.07) 112px 120px, transparent 120px 232px, rgba(255, 255, 255, 0.07) 232px 240px) content-box content-box,
     repeating-linear-gradient(180deg, var(--grass) 0 120px, var(--stripe) 120px 240px) content-box content-box;
   image-rendering: pixelated; }
+
+/* --- the headlines are a television (Dan's request Nov 12: "a retro arcade screen or a retro tv screen") ---
+   Each headline card is a wood-cabinet set: a walnut frame (the card's border, grained with border-image), a black
+   inner bezel, and the tube, the one rounded thing on the card, its corners filled in by the overlay (.car-card::after:
+   four corner fillets, a vignette, a band of glare across the glass, and the scan lines). The words glow and split a
+   pixel into red and cyan like a tired tube. When a headline comes to the front its picture snaps on from a line, the
+   way a set changes channel (crt-on, transform and opacity only; off under reduced motion). The controls under the
+   stack are the set's own panel: the same walnut, a speaker grille, a power light, two feet. From 761px the top set
+   wears rabbit ears. Cards behind the front one are sets stacked behind it, in shade as before. */
+:root { --wood-1: #8D5A2B; --wood-2: #6E4420; --wood-3: #A56B33; --tube: #020604;
+  --grain: repeating-linear-gradient(90deg, var(--wood-1) 0 7px, var(--wood-2) 7px 9px, var(--wood-1) 9px 19px, var(--wood-3) 19px 21px, var(--wood-1) 21px 26px, var(--wood-2) 26px 27px); }
+.car-card { --tv: 12px; --tube-r: 22px; border: var(--tv) solid var(--wood-1); border-image: var(--grain) 12; --rim: inset 0 0 0 4px var(--tube);
+  box-shadow: var(--rim), 0 0 0 3px #000, 0 6px 0 3px var(--deck-1); background-image: none; }
+.car-card::before { -webkit-mask-image: none; mask-image: none; opacity: 1;
+  background: radial-gradient(120% 90% at 50% 40%, rgba(62, 159, 70, 0.16), rgba(62, 159, 70, 0) 70%); }
+.car-card::after { content: ''; position: absolute; z-index: 3; inset: 0; top: 0; left: 0; width: auto; height: auto; opacity: 1; pointer-events: none;
+  background:
+    radial-gradient(circle at 100% 100%, transparent calc(var(--tube-r) - 1px), var(--tube) var(--tube-r)) 0 0 / var(--tube-r) var(--tube-r) no-repeat,
+    radial-gradient(circle at 0 100%, transparent calc(var(--tube-r) - 1px), var(--tube) var(--tube-r)) 100% 0 / var(--tube-r) var(--tube-r) no-repeat,
+    radial-gradient(circle at 100% 0, transparent calc(var(--tube-r) - 1px), var(--tube) var(--tube-r)) 0 100% / var(--tube-r) var(--tube-r) no-repeat,
+    radial-gradient(circle at 0 0, transparent calc(var(--tube-r) - 1px), var(--tube) var(--tube-r)) 100% 100% / var(--tube-r) var(--tube-r) no-repeat,
+    linear-gradient(112deg, rgba(255, 255, 255, 0) 8%, rgba(255, 255, 255, 0.07) 9% 17%, rgba(255, 255, 255, 0) 18% 21%, rgba(255, 255, 255, 0.04) 22% 25%, rgba(255, 255, 255, 0) 26%),
+    radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0) 58%, rgba(0, 0, 0, 0.42) 100%),
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0 1px, rgba(0, 0, 0, 0) 1px 3px); }
+.slide .lead-hed { text-shadow: -1px 0 rgba(255, 0, 128, 0.55), 1px 0 rgba(79, 189, 242, 0.6), 0 0 10px rgba(255, 255, 255, 0.28); }
+.slide .lead-deck { text-shadow: 0 0 6px rgba(255, 255, 255, 0.18); }
+.slide { padding: 26px 26px 22px; }
+@media (max-width: 760px) { .car-card { --tv: 9px; --tube-r: 16px; border-image: var(--grain) 9; } .slide { padding: 18px 14px 16px; } }
+@media (prefers-reduced-motion: no-preference) {
+  .ring .car-slot.front .slide { animation: crt-on 0.34s steps(6, end) both; transform-origin: 50% 42%; }
+  @keyframes crt-on { 0% { transform: scale(1, 0.02); opacity: 0.2; } 45% { transform: scale(1, 0.02); opacity: 1; } 100% { transform: none; opacity: 1; } }
+  .ring .car-slot.front .car-card::after { animation: crt-hum 3.2s steps(1, end) infinite; }
+  @keyframes crt-hum { 0%, 100% { opacity: 1; } 47% { opacity: 0.86; } 50% { opacity: 1; } 78% { opacity: 0.92; } 81% { opacity: 1; } }
+}
+/* the panel: walnut, a grille either side of the channel display, a power light, feet */
+.car-nav { border: 6px solid var(--wood-1); border-image: var(--grain) 6; background-color: var(--wood-2);
+  background-image: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.42) 0 2px, rgba(0, 0, 0, 0) 2px 6px); background-size: auto; background-repeat: repeat;
+  box-shadow: 0 0 0 3px #000, 0 5px 0 3px var(--deck-1); }
+.car-mid { position: relative; padding: 6px 14px; background: var(--tube); box-shadow: inset 0 0 0 2px rgba(255, 224, 26, 0.35), 0 0 0 2px #000; }
+.car-arrow, .car-pause, .car-pause:not([aria-pressed='true']) { color: #0B2412; background: #E9E2CE; box-shadow: inset 0 3px 0 #FFFFFF, inset 0 -3px 0 rgba(0, 0, 0, 0.25), 0 0 0 2px #000, 0 3px 0 2px rgba(0, 0, 0, 0.45); }
+.car-arrow:hover, .car-pause:hover { background: #FFFFFF; }
+.car-pause[aria-pressed='true'] { background: var(--yellow); }
+.car-arrow:active, .car-pause:active { transform: translateY(2px); box-shadow: inset 0 3px 0 rgba(0, 0, 0, 0.2), 0 0 0 2px #000; }
+.car-nav::before { content: ''; display: block; position: absolute; top: 50%; left: auto; right: 58px; width: 7px; height: 7px; margin-top: -4px; background: #FF3B30; box-shadow: 0 0 0 2px #000, 0 0 8px 2px rgba(255, 59, 48, 0.7); }
+.car-nav::after { content: ''; position: absolute; left: 18px; right: 18px; top: calc(100% + 11px); height: 9px; pointer-events: none;
+  background: linear-gradient(90deg, #000 0 46px, rgba(0, 0, 0, 0) 46px calc(100% - 46px), #000 calc(100% - 46px)); }
+@media (max-width: 420px) { .car-nav::before { display: none; } }
+/* rabbit ears on the top set (desktop: a phone has no sky above the stack to put them in) */
+@media (min-width: 761px) {
+  .lead-car::before, .lead-car::after { content: ''; position: absolute; z-index: -1; left: 50%; top: -34px; width: 4px; height: 76px; background: #C9D3CC; box-shadow: 0 0 0 2px #000; transform-origin: 50% 100%; }
+  .lead-car::before { transform: translateX(-10px) rotate(-34deg); }
+  .lead-car::after { transform: translateX(6px) rotate(34deg); }
+}
