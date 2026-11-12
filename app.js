@@ -18,7 +18,7 @@ import { storyKeys } from './src/hero/storyKeys.js';
 import { posts, loadPosts } from './src/admin/posts.js';
 import { AdminShell } from './src/admin/AdminShell.jsx';
 import { createStore } from './src/store.js';
-import { initTouch, shine, pageIn } from './src/touch.js';
+import { initTouch, pageIn } from './src/touch.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
 import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
 
@@ -1952,7 +1952,6 @@ function route({ fresh = false } = {}) {
     showPage(Page, { D: DATA, me: myTeam, h: reactHelpers(), ...props });
     if (fresh) { app.focus({ preventScroll: true }); window.scrollTo({ top: 0 }); }
     reveal(app);
-    shine(app); // 2.0: light crosses each glass card once as it comes on screen (src/touch.js)
     if (currentView && key !== currentView) pageIn(dir === 'back' ? -1 : 1); // 2.1, phones: the page slides in
     currentView = key;
     if (key === 'rankings') maybeMessage();

@@ -3739,7 +3739,6 @@ main::after { border-radius: 56px 56px 0 0; }
   /* a card's sheen picks up the sky, and its upper edge is wet */
   --sheen: linear-gradient(180deg, rgba(206, 236, 253, 0.95) 0, rgba(255, 255, 255, 0) 100%);
   --rim: inset 0 2px 0 #FFFFFF, inset 0 0 0 1.5px rgba(255, 255, 255, 0.7), inset 0 -16px 20px -16px rgba(11, 36, 18, 0.22);
-  --shine: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(140, 212, 255, 0.2) 30%, rgba(255, 255, 255, 0.9) 50%, rgba(140, 212, 255, 0.2) 70%, rgba(255, 255, 255, 0) 100%);
   --lens: radial-gradient(circle closest-side, rgba(255, 255, 255, 0.7) 0, rgba(255, 255, 255, 0.28) 52%, rgba(11, 36, 18, 0.13) 86%, rgba(11, 36, 18, 0) 100%);
   --dock-h: 62px;
   --dock-gap: calc(10px + env(safe-area-inset-bottom, 0px));
@@ -3751,7 +3750,6 @@ main::after { border-radius: 56px 56px 0 0; }
   --smoke: rgba(4, 12, 7, 0.74);
   --sheen: linear-gradient(180deg, rgba(150, 200, 255, 0.13) 0, rgba(255, 255, 255, 0) 100%);
   --rim: inset 0 1.5px 0 rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -16px 20px -16px rgba(0, 0, 0, 0.6);
-  --shine: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(140, 200, 255, 0.1) 30%, rgba(255, 255, 255, 0.3) 50%, rgba(140, 200, 255, 0.1) 70%, rgba(255, 255, 255, 0) 100%);
   --lens: radial-gradient(circle closest-side, rgba(255, 255, 255, 0.34) 0, rgba(255, 255, 255, 0.12) 52%, rgba(255, 255, 255, 0.2) 88%, rgba(255, 255, 255, 0) 100%);
 }
 /* no blur, no see-through: the chrome goes back to solid */
@@ -3777,8 +3775,6 @@ main::after { border-radius: 56px 56px 0 0; }
 /* --- 3. light: the press bubble and the card shine (src/touch.js) --- */
 .tx-lens { position: fixed; z-index: 80; overflow: hidden; pointer-events: none; contain: strict; }
 .tx-lens i { position: absolute; border-radius: 50%; background: var(--lens); opacity: 0; will-change: transform, opacity; }
-.tx-shine { position: absolute; z-index: 15; overflow: hidden; pointer-events: none; contain: strict; }
-.tx-shine i { position: absolute; top: -20%; bottom: -20%; left: 0; width: 120px; background: var(--shine); transform: translateX(-200px); will-change: transform; }
 .tx-haptic { position: fixed; left: -99px; top: 0; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 /* a touch has the bubble; the grey flash iOS paints on a tapped link would sit on top of it */
 @media (pointer: coarse) { a, button, summary, select, label { -webkit-tap-highlight-color: transparent; } }
@@ -4205,10 +4201,10 @@ h2, .sec-title, .team-name, .mu-team .tn { letter-spacing: -0.005em; }
    1. Pixels. Nothing is round any more: every corner is square (one rule, with a few listed exceptions that have to
       stay circles), every shadow is hard, every edge is a 3px ink line. Depth is layered tiers: a card stands on its
       ledge, and the ledge on a darker one.
-   2. Type. Jersey, a pixel face cut after football jerseys, in three sizes of pixel: Jersey 10 (page titles, the
-      yard numbers), Jersey 15 (display: numerals, names, headings; also the body's bold) and Jersey 25 (body), plus
-      Press Start 2P (a few cabinet labels only: it is very wide). All OFL, self-hosted. Tracking is
-      zero everywhere and weights are never faked (pixel faces smear when a browser emboldens them).
+   2. Type. Jersey, a pixel face cut after football jerseys, for headers and big numerals only: Jersey 10 (page
+      titles, the yard numbers) and Jersey 15 (display: numerals, names, headings). Body copy and subheadings are
+      Oxanium, squared and readable; Doto is the dot-matrix face (the playoff odds panels); Press Start 2P is for a few
+      cabinet labels (it is very wide). All OFL, self-hosted. Tracking is zero and weights are never faked.
    3. The screen. A banded sky with a sliced retro sun (a moon at night) and block clouds, a dithered field with hash
       marks, a perspective grid in the end zone, and scanlines over the whole picture (body::after), like a CRT.
    4. The cabinet. The header, the phone dock and the circle are the control panel: solid board, no glass, the active
@@ -4223,20 +4219,16 @@ h2, .sec-title, .team-name, .mu-team .tn { letter-spacing: -0.005em; }
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
 @font-face { font-family: 'Jersey 10'; font-style: normal; font-weight: 400; font-display: swap;
   src: url('assets/fonts/jersey-10-latin.woff2') format('woff2'); }
-/* the body face is two cuts of Jersey under one name: the fine one (25) for running text, the chunky one (15) wherever
-   the page asks for bold, so emphasis survives without a browser smearing a pixel face into a fake bold */
-@font-face { font-family: 'Arcade Text'; font-style: normal; font-weight: 400 500; font-display: swap; size-adjust: 118%;
-  src: url('assets/fonts/jersey-25-latin.woff2') format('woff2');
+/* body and subheadings: Oxanium, a squared retro-futurist face that stays readable small (Dan, Nov 12: the pixel face
+   was hard to read at text sizes, so it keeps the headers and big numerals only). Doto is the dot-matrix face. */
+@font-face { font-family: 'Oxanium'; font-style: normal; font-weight: 200 800; font-display: swap;
+  src: url('assets/fonts/oxanium-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: 'Arcade Text'; font-style: normal; font-weight: 400 500; font-display: swap; size-adjust: 118%;
-  src: url('assets/fonts/jersey-25-latin-ext.woff2') format('woff2');
+@font-face { font-family: 'Oxanium'; font-style: normal; font-weight: 200 800; font-display: swap;
+  src: url('assets/fonts/oxanium-latin-ext.woff2') format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
-@font-face { font-family: 'Arcade Text'; font-style: normal; font-weight: 600 900; font-display: swap; size-adjust: 118%;
-  src: url('assets/fonts/jersey-15-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: 'Arcade Text'; font-style: normal; font-weight: 600 900; font-display: swap; size-adjust: 118%;
-  src: url('assets/fonts/jersey-15-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Doto'; font-style: normal; font-weight: 100 900; font-display: swap;
+  src: url('assets/fonts/doto-latin.woff2') format('woff2'); }
 @font-face { font-family: 'Press Start 2P'; font-style: normal; font-weight: 400; font-display: swap;
   src: url('assets/fonts/press-start-2p-latin.woff2') format('woff2'); }
 
@@ -4244,9 +4236,10 @@ h2, .sec-title, .team-name, .mu-team .tn { letter-spacing: -0.005em; }
   --px: #06140B;                      /* the pixel line: every edge is drawn in it, day and night */
   --display: 'Jersey 15', 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
   --title: 'Jersey 10', 'Jersey 15', 'Big Shoulders Display', Impact, sans-serif;
-  --body: 'Arcade Text', 'Albert Sans', 'Segoe UI', system-ui, sans-serif;
-  --arcade: 'Press Start 2P', 'Arcade Text', monospace;
-  --hand: 'Arcade Text', 'Albert Sans', sans-serif;
+  --body: 'Oxanium', 'Albert Sans', 'Segoe UI', system-ui, sans-serif;
+  --matrix: 'Doto', 'Jersey 15', monospace;
+  --arcade: 'Press Start 2P', 'Oxanium', monospace;
+  --hand: 'Oxanium', 'Albert Sans', sans-serif;
   --r-xl: 0px; --r-lg: 0px; --r-md: 0px;
   --edge: 3px;
   --outline: var(--px);
@@ -4268,7 +4261,6 @@ h2, .sec-title, .team-name, .mu-team .tn { letter-spacing: -0.005em; }
   --chrome-rim: inset 0 3px 0 rgba(255, 255, 255, 0.14), inset 0 -3px 0 rgba(0, 0, 0, 0.4);
   --frost-paper: var(--paper);
   --smoke: var(--board);
-  --shine: linear-gradient(90deg, transparent 0 38%, rgba(255, 255, 255, 0.55) 38% 46%, transparent 46% 52%, rgba(255, 255, 255, 0.55) 52% 56%, transparent 56%);
   --lens: rgba(255, 255, 255, 0.3);
   --scan: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.055) 0 1px, transparent 1px 3px);
   --led: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0 2px, transparent 2px 4px);
@@ -4293,7 +4285,6 @@ h2, .sec-title, .team-name, .mu-team .tn { letter-spacing: -0.005em; }
   --chrome-rim: inset 0 3px 0 rgba(255, 255, 255, 0.1), inset 0 -3px 0 rgba(0, 0, 0, 0.5);
   --frost-paper: var(--paper);
   --smoke: #050D08;
-  --shine: linear-gradient(90deg, transparent 0 38%, rgba(255, 255, 255, 0.22) 38% 46%, transparent 46% 52%, rgba(255, 255, 255, 0.22) 52% 56%, transparent 56%);
   --lens: rgba(255, 255, 255, 0.18);
 }
 
@@ -4499,4 +4490,26 @@ main::before, :root[data-theme='dark'] main::before { top: calc(-22px - var(--st
   .lead-car::before, .lead-car::after { content: ''; position: absolute; z-index: -1; left: 50%; top: -34px; width: 4px; height: 76px; background: #C9D3CC; box-shadow: 0 0 0 2px #000; transform-origin: 50% 100%; }
   .lead-car::before { transform: translateX(-10px) rotate(-34deg); }
   .lead-car::after { transform: translateX(6px) rotate(34deg); }
+}
+
+/* --- playoff odds as a dot-matrix panel (Dan's request Nov 12; Ring in src/shared.jsx). A black board of unlit dots,
+   the number in Doto, and under it a row of ten lamps, one lit per ten points of odds. Lime, yellow when it's yours.
+   The lamps come on one at a time when the card arrives. --- */
+.aring, :root[data-theme='dark'] .aring { display: inline-grid; grid-template-rows: 1fr auto; place-items: center; gap: 4px; width: auto; min-width: 76px; height: 60px; padding: 6px 6px 7px;
+  color: var(--aring-c); background: radial-gradient(circle, rgba(255, 255, 255, 0.055) 0.9px, rgba(255, 255, 255, 0) 1.3px) 1px 1px / 4px 4px, var(--island);
+  box-shadow: inset 0 0 0 2px #1C2A20, 0 0 0 3px var(--px), 0 3px 0 3px var(--shade); }
+.aring-n b, .odds .aring-n b, .ys-odds .aring-n b { font: 900 28px/1 var(--matrix); color: color-mix(in srgb, var(--aring-c) 72%, #FFFFFF); text-shadow: 0 0 5px color-mix(in srgb, var(--aring-c) 45%, transparent); }
+.aring-meter { position: relative; display: block; width: 58px; height: 4px; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.16) 0 4px, rgba(255, 255, 255, 0) 4px 6px); }
+.aring-meter::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--p) * 0.6px); width: calc(round(var(--p) / 10, 1) * 6px);
+  background: repeating-linear-gradient(90deg, var(--aring-c) 0 4px, rgba(255, 255, 255, 0) 4px 6px); }
+@media (max-width: 760px) {
+  .aring, :root[data-theme='dark'] .aring { min-width: 70px; height: 54px; padding: 5px 5px 6px; }
+  .aring-n b, .odds .aring-n b, .ys-odds .aring-n b { font-size: 25px; }
+  .ys-odds .aring { width: auto; height: 54px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .aring-meter::after { clip-path: inset(0 0 0 0); animation: lamps-on 0.9s steps(10, end) 0.25s both; }
+  .rank .aring-meter::after { animation-delay: calc(var(--d, 0ms) + 420ms); }
+  @keyframes lamps-on { from { clip-path: inset(0 100% 0 0); } }
+  :is(.rank.pending, .rv:not(.rv-in), .reveal:not(.in)) .aring-meter::after { animation-play-state: paused; }
 }

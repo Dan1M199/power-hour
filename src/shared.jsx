@@ -57,17 +57,15 @@ export const ScenariosLink = () => (
   </a>
 );
 
-// An activity ring (Nov 11, the soft-futurism pass): a black disc with one bright arc for a share from 0 to 1 and the
-// number set inside it. The arc draws itself in once its card is on screen (styles.css, "2.2"); yellow when it's yours.
+// Playoff odds as a dot-matrix panel (Nov 12, the arcade pass; it was an activity ring on Nov 11, hence the names): a
+// black board of dots with the number set in a dot-matrix face and a row of ten lamps under it, one lit per ten points
+// (--p, 0 to 100). Lime, yellow when it's yours; the lamps come on once its card is on screen (styles.css).
 export const Ring = ({ v, mine = false, children }) => {
   const p = Math.max(0, Math.min(1, v || 0)) * 100;
   return (
     <span className={`aring${mine ? ' you' : ''}`}>
-      <svg viewBox="0 0 44 44" aria-hidden="true">
-        <circle className="aring-track" cx="22" cy="22" r="18" pathLength="100" />
-        {p > 0.5 ? <circle className="aring-arc" cx="22" cy="22" r="18" pathLength="100" style={{ '--p': p }} /> : null}
-      </svg>
       <span className="aring-n">{children}</span>
+      <i className="aring-meter" style={{ '--p': p }} aria-hidden="true" />
     </span>
   );
 };
