@@ -191,6 +191,7 @@ const Brk = () => <span className="brk"><i aria-hidden="true" />Breaking</span>;
 const TONIGHT = new Set(['monday', 'locked', 'tonight']);
 
 function Slide({ st, i, n, D, h, groups, runs, date, night, clip, slideRef, hk, rx, front }) {
+  const [reading, setReading] = useState(false);
   const run = runs?.find((x) => x.i.includes(i));
   const breaking = st.type === 'shakeup' || st.breaking;
   const top = (
@@ -209,7 +210,10 @@ function Slide({ st, i, n, D, h, groups, runs, date, night, clip, slideRef, hk, 
     <article ref={slideRef} className={`slide${breaking ? ' breaking' : ''}${st.clip || st.photo ? ' has-clip' : ''}`} id={`slide-${i}`} role="group" aria-roledescription="slide" aria-label={`Headline ${i + 1} of ${n}`} inert={!front}>
       {st.clip ? <><div className="clip-head">{top}{hed}</div><ClipPrint st={st} D={D} h={h} clip={clip} /></>
         : st.photo ? <><div className="clip-head">{top}{hed}</div><PhotoPrint st={st} D={D} h={h} /></> : <>{top}{hed}</>}
-      <p className="lead-deck"><Marked text={st.deck} marks={st.mark} /></p>
+      <div className={`story-copy${reading ? ' expanded' : ''}`}>
+        <p className="lead-deck" id={`story-copy-${i}`}><Marked text={st.deck} marks={st.mark} /></p>
+        {st.deck?.length > 150 ? <button className="story-more" type="button" aria-expanded={reading} aria-controls={`story-copy-${i}`} onClick={() => setReading((v) => !v)}>{reading ? 'Less detail' : 'Read story'}<span aria-hidden="true">{reading ? '−' : '+'}</span></button> : null}
+      </div>
       {rx.enabled ? <Suspense fallback={<div className="rxn-hold" />}><Reactions hk={hk} label={tickOf(st).hook} rx={rx} react={react} /></Suspense> : null}
       {st.bug ? <ScoreBug bug={st.bug} h={h} /> : st.trade ? <TradeGraphic trade={st.trade} D={D} h={h} /> : <Cast st={st} D={D} h={h} />}
     </article>
@@ -252,11 +256,10 @@ export function Carousel({ D, h, stories, date, hold, night, groups }) {
 
   // The ring's measurements, from the room there is. The cards are a little narrower than the frame (`side` of air
   // each side) so the ones behind can show past the front one, and the frame keeps `pad` above them for the cards at
-  // the back, which ride up. On a wide screen every card is as tall as the tallest (square at least); on phones each
+  // the back, which ride up. On a wide screen every card is as tall as the tallest; on phones each
   // is as tall as its story and the frame hugs the one at the front, so short stories leave no gap. The cards behind
   // are cut to that height (`data-fit` marks the one the frame was fitted to).
   const geom = useRef({ step: 0, shrink: 0.05, reach: 600, pull: 240 });
-  const lite = mq('(max-width: 760px), (pointer: coarse)');
   const ring = useRing({
     n, geom,
     onAt: (k, settling) => {
@@ -277,7 +280,7 @@ export function Carousel({ D, h, stories, date, hold, night, groups }) {
     el.style.setProperty('--card-w', `${W}px`);
     el.style.removeProperty('--card-h');
     const tall = slides.current.map((s) => (s ? s.offsetHeight : 0));
-    const H = phone ? tall[at.current] : Math.max(W, ...tall);
+    const H = phone ? tall[at.current] : Math.max(W * 0.75, ...tall);
     el.style.setProperty(phone ? '--front-h' : '--card-h', `${H}px`);
     if (phone) el.style.removeProperty('--card-h'); else el.style.removeProperty('--front-h');
     tr.style.height = `${pad + H}px`;
@@ -359,7 +362,7 @@ export function Carousel({ D, h, stories, date, hold, night, groups }) {
           <div key={i} ref={(s) => (ring.slots.current[i] = s)} className={`car-slot${i === idx ? ' front' : ''}`} style={pigmentFor(keys[i] || st.type || i)}
             onClick={i === idx ? undefined : () => { if (!ring.dragged()) go(i); }}>
             <div className="car-float">
-              <Card sink={8} off={i !== idx || ring.held || lite}>
+              <Card sink={8} off>
                 <Slide st={st} i={i} n={n} D={D} h={h} groups={groups} runs={runs} date={date} night={night} front={i === idx}
                   clip={{ video: clipVideo, button: clipButton, state: clipState }} slideRef={(s) => (slides.current[i] = s)} hk={keys[i]} rx={rx} />
               </Card>

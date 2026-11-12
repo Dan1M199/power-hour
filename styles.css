@@ -1,3 +1,4 @@
+@layer legacy {
 /* The Power Hour: a day game. A deep sky over mowed grass and chalk lines. The language is the bowl: everything is a
    stadium shape, shaded like a real rounded thing, stacked in tiers, and things come out from behind other things.
    See "the bowl" near the end of this file. No backdrop-filter, so phones draw exactly
@@ -4785,4 +4786,6 @@ main:has(> .rk)::before { grid-row: 1 / auto; top: 0; }
   .lb-pull.teach > .xp { margin-left: 0; }
   .lb-pull.teach { color: var(--ink); background-image: linear-gradient(110deg, rgba(239, 35, 60, 0.1), transparent 80%); }
   .lb-row.open .lb-pull { color: var(--ink); }
+}
+
 }

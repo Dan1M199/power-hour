@@ -213,7 +213,7 @@ export function RankingsPage({ D, me, h, held, car, sources, updated, message, r
 
   return <div className="rk">
     <Hero D={D} h={h} car={car} head={<RankHead wk={wk} message={message} />}
-      side={youStrip} hint={<p className="you-card glass empty" data-open-me>{'Pick your team '}<span className="where-d">in the top right</span><span className="where-p">in the circle at the bottom right</span>{' and this spot shows your rank, your tier and your playoff odds.'}</p>}
+      side={youStrip} hint={<p className="you-card glass empty" data-open-me>{'Pick your team '}<span className="where-d">in the top right</span><span className="where-p">with the profile button above</span>{' and this spot shows your rank, your tier and your playoff odds.'}</p>}
       more={<Movers D={D} h={h} onJump={jumpTo} />} />
     {rosError ? <div className="notice glass"><strong>Results-only mode.</strong>{` The rest-of-season rankings couldn't be loaded (${rosError}), so these ranks use this season's results alone until they come back.`}</div> : null}
     <div id="poll-slot"><Poll D={D} h={h} poll={poll} /></div>

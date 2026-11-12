@@ -29,7 +29,7 @@ export function LabHead({ sub, D, me, aside, children }) {
   return (
     <section className="view-head lab-head">
       <div>
-        <h1><span className="wk">For the spreadsheet people</span>The Lab</h1>
+        <h1>The Lab</h1>
         <LabTabs sub={sub} D={D} me={me} />
         <p>{children}</p>
       </div>
