@@ -13,6 +13,8 @@
 //  - tapping the tab you're already on goes back to the top, as a tab bar does
 // All of it is off under reduced motion, and the press and the dock only answer a finger or a pen, never a mouse.
 
+import { GRADIENT_CONTROLS, initGradient } from './gradient.js';
+
 const mq = (q) => { const m = matchMedia(q); return () => m.matches; };
 const calm = mq('(prefers-reduced-motion: reduce)');
 const phone = mq('(max-width: 760px)');
@@ -72,6 +74,7 @@ function initPress() {
     const s = Math.max(0.93, 1 - 5 / Math.max(r.width, r.height));
     dip = node.animate([{ scale: '1' }, { scale: String(s) }], { duration: 110, easing: 'ease-out', fill: 'forwards' });
     // the light: a box the shape of the thing pressed, a bubble growing in it from under the finger
+    if (hit.matches(GRADIENT_CONTROLS)) return; // these ripple on a completed click, on every input device
     const cs = getComputedStyle(node);
     lens.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;border-radius:${cs.borderRadius}`;
     const reach = Math.hypot(Math.max(e.clientX - r.left, r.right - e.clientX), Math.max(e.clientY - r.top, r.bottom - e.clientY));
@@ -348,6 +351,7 @@ function hello() {
 }
 
 export function initTouch({ placeInk }) {
+  initGradient();
   initDock(placeInk);
   initTopPill();
   if (!calm()) initPress();

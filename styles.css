@@ -4718,3 +4718,47 @@ main:has(> .rk)::before { grid-row: 1 / auto; top: 0; }
 .hero-side > :is(.you-strip, .you-card) { align-self: end; }
 .hero .view-head { margin: 0; }
 @media (max-width: 760px) { .hero { margin-bottom: 18px; } }
+
+/* ---------- pigment: ice and racing red dissolving into obsidian ----------
+   Static, grainy color fields; only a deliberate press sends the color moving. */
+:root {
+  --pigment: radial-gradient(ellipse at 8% 18%, rgba(223, 229, 235, 0.17), transparent 55%),
+    radial-gradient(ellipse at 100% 90%, rgba(239, 35, 60, 0.34), transparent 62%),
+    radial-gradient(ellipse at 72% 0%, rgba(163, 18, 42, 0.24), transparent 52%);
+  --pigment-button: radial-gradient(ellipse at 12% 0%, rgba(223, 229, 235, 0.16), transparent 65%),
+    radial-gradient(ellipse at 100% 100%, rgba(17, 18, 23, 0.35), transparent 75%);
+}
+.sky, :root[data-theme='dark'] .sky {
+  background-image: linear-gradient(180deg, var(--canvas), transparent 180px),
+    radial-gradient(ellipse at 100% 28%, rgba(239, 35, 60, 0.19), transparent 58%),
+    radial-gradient(ellipse at 0% 58%, rgba(223, 229, 235, 0.1), transparent 55%);
+  background-color: var(--canvas);
+}
+.car-card::before { background: var(--pigment); }
+.car-card::after {
+  display: block; content: ''; position: absolute; inset: 0; z-index: -1;
+  border-radius: inherit; background: var(--grain); background-size: 160px 160px;
+  opacity: 0.1; mix-blend-mode: soft-light; pointer-events: none;
+}
+.gotw { background-image: var(--pigment); }
+.tab-ink,
+:root :is(.lab-tabs a[aria-current='page'], .filters [aria-pressed='true'], .filters a[aria-current='page'],
+  .focus-nav button[aria-pressed='true'], .drive-pick button[aria-pressed='true'],
+  .pth-pick button[aria-pressed='true'], .pth-lose button[aria-pressed='true'], .cta, .pth-cta, .gotw-more) {
+  background-image: var(--pigment-button);
+}
+@media (hover: hover) and (pointer: fine) {
+  :root :is(.tabs a, .lab-tabs a, .filters button, .filters a, .focus-nav button, .drive-pick button,
+    .pth-pick button, .pth-lose button, .cta, .pth-cta, .gotw-more, .detail-close,
+    .car-arrow, .car-pause, .odds-more, .pick):not(:disabled, [aria-disabled='true']):hover {
+    background-image: radial-gradient(ellipse at 10% 0%, rgba(223, 229, 235, 0.2), transparent 65%),
+      radial-gradient(ellipse at 95% 100%, rgba(239, 35, 60, 0.18), transparent 75%);
+  }
+}
+.gradient-ripple { position: fixed; z-index: 80; overflow: hidden; pointer-events: none; contain: strict; }
+.gradient-ripple i {
+  position: absolute; border-radius: 50%; opacity: 0;
+  background: radial-gradient(circle at 30% 25%, var(--ice), transparent 58%),
+    radial-gradient(circle at 70% 70%, var(--red), transparent 65%);
+}
+@media (prefers-reduced-motion: reduce) { .gradient-ripple { display: none; } }
