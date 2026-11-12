@@ -4428,3 +4428,22 @@ main::after { top: -8px; border-width: 4px; border-color: rgba(255, 255, 255, 0.
 .two-col > *, .wire-sec, .moves, .trade, .trade-side { min-width: 0; }
 .trade-side * { overflow-wrap: anywhere; }
 @media (max-width: 760px) { .me-panel { outline: 3px solid var(--px); } }
+
+/* --- the stadium (Nov 12): pixel art along the top edge of the field on every page, drawn by scripts/draw-stadium.py
+   in the site's colours: floodlights, three tiers of crowd, the wall, the goalposts, and two teams lined up either
+   side of the ball. It is the field's own first layer: main::before grows upward by --stad-h and keeps the grass,
+   lines and hash marks in its content box, under the strip. The page's heading (always the first child) leaves room
+   for it. The picture is six times its pixels, so 3x (desktop) and 2x (phones) both land on whole pixels. --- */
+:root { --stad-h: 138px; }
+@media (max-width: 760px) { :root { --stad-h: 92px; } }
+main > :first-child:not(.loading) { padding-bottom: calc(var(--stad-h) + 6px); }
+main::before, :root[data-theme='dark'] main::before { top: calc(-22px - var(--stad-h)); padding-top: var(--stad-h); box-shadow: none;
+  background:
+    url('assets/stadium.png') 50% 0 / auto var(--stad-h) repeat-x padding-box padding-box,
+    linear-gradient(180deg, var(--chalk) 0 6px, var(--px) 6px 9px, transparent 9px) 0 0 / 100% 9px no-repeat content-box content-box,
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0 4px, transparent 4px 24px) calc(50% - min(300px, 30vw)) 0 / 16px 100% no-repeat content-box content-box,
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0 4px, transparent 4px 24px) calc(50% + min(300px, 30vw)) 0 / 16px 100% no-repeat content-box content-box,
+    repeating-linear-gradient(180deg, transparent 0 236px, rgba(255, 255, 255, 0.6) 236px 240px) content-box content-box,
+    repeating-linear-gradient(180deg, transparent 0 112px, rgba(0, 0, 0, 0.07) 112px 120px, transparent 120px 232px, rgba(255, 255, 255, 0.07) 232px 240px) content-box content-box,
+    repeating-linear-gradient(180deg, var(--grass) 0 120px, var(--stripe) 120px 240px) content-box content-box;
+  image-rendering: pixelated; }
