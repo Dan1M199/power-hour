@@ -4548,3 +4548,173 @@ main::after { display: none; }
 .lead-car, .gotw, .footer, .takeover, .unveil, .lo-clock { --yellow: #FF5468; }
 .lead-car :is(.kicker > span:first-child, .car-pause[aria-pressed='true'], .car-dot i, .desk-note), .gotw :is(.kicker > span:first-child, .drive-pick button[aria-pressed='true']) { --yellow: #EF233C; }
 .car-dot i { background: var(--red); }
+
+/* ---------- 3.1: the board (Dan's request Nov 12: new layout and flatter shapes on the main page) ----------
+   The power rankings stop being twelve tall cards and become one board: a table with a row per team, grouped under
+   tier labels, the four parts of the score as columns. Reading order: the headlines and, beside them, the title, your
+   rank and the week's movers; then the board; then how the score works and the futures. Shapes inside .rk are flat
+   rounded rectangles (20 to 24px corners) with no slab under them: depth here is only tone (ice face, a darker band
+   for labels, the drawer under an opened row). Buttons keep their pills and slabs. Below 1000px a row keeps rank,
+   team, score and odds, and the four parts move to the top of the opened report. */
+.rk { --r-xl: 24px; --r-lg: 20px; --r-md: 14px; display: grid; grid-template-columns: minmax(0, 1fr); }
+main:has(> .rk)::before { grid-row: 1 / auto; top: 0; }
+.rk .glass, .rk .glass.rim { --lift: 0px; box-shadow: var(--rim), 0 0 0 var(--ring-w) var(--red); }
+.rk :is(.you-strip, .you-card) { --ring-w: 3px; }
+.rk .you-card.empty { --ring-w: 0px; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) { .rk .you-strip:hover { transform: none; } }
+
+/* --- the top: headlines left, the page's own column right (title, your rank, movers) --- */
+.rk .hero { align-items: stretch; gap: 20px 32px; margin: 4px 0 28px; }
+.rk .hero-side { grid-template-rows: auto auto 1fr; align-content: stretch; gap: 16px; }
+.rk .hero-side > .movers { align-self: end; margin: 0; }
+.rk .view-head { display: block; margin: 0; }
+.rk .view-head :is(h1, .page-title) { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: clamp(40px, 5vw, 68px); line-height: 0.92; }
+.rk .view-head :is(h1, .page-title) .wk { display: inline-block; margin: 0; padding: 7px 12px 6px; font: 800 15px/1 var(--display); letter-spacing: 0.02em; }
+.rk .view-head p { margin: 10px 0 0; max-width: 52ch; }
+.rk-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
+.rk-actions .pth-cta { margin-top: 0; }
+.rk > .view-head { margin-bottom: 20px; }
+.rk > .view-head .sources { justify-content: flex-start; max-width: none; margin-top: 14px; }
+.rk > :is(.you-strip, .movers) { margin: 0 0 16px; }
+.rk .you-strip { border-radius: var(--r-lg); }
+.rk .strip-face { border-radius: 50%; transform: none; border: 0; box-shadow: 0 0 0 2px var(--paper); }
+
+/* --- movers: two short lists, each row a button that jumps to the team --- */
+.movers { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 6px 20px; padding: 14px 12px 8px; border-radius: var(--r-lg); }
+.mv-col { min-width: 0; }
+.mv-col h3 { margin: 0 6px 4px; font: 700 12.5px/1.2 var(--body); letter-spacing: 0; color: var(--ink-3); }
+.mv-col ul { list-style: none; margin: 0; padding: 0; }
+.mv-col li + li { border-top: 1px solid var(--line); }
+.mv-col button { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto 44px; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 4px 6px;
+  border-radius: 10px; cursor: pointer; transition: background-color 0.15s; }
+.mv-col button:focus-visible { outline: 3px solid var(--red); outline-offset: -2px; }
+@media (hover: hover) { .mv-col button:hover { background-color: var(--hover); } }
+.mv-col .avatar { width: 28px; height: 28px; }
+.mv-col .avatar.ph { font-size: 13px; }
+.mv-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 17px/1.1 var(--display); color: var(--ink); }
+.mv-to { text-align: right; font: 700 12.5px/1 var(--body); color: var(--ink-3); white-space: nowrap; }
+
+/* --- the board --- */
+.board { --cols: 34px 48px minmax(0, 1fr) 54px 54px repeat(4, 72px) 68px 52px 26px; --gx: 14px; --px: 18px; margin: 0 0 22px; padding: 0; border-radius: var(--r-xl); overflow: clip; }
+.lb-cols { display: grid; grid-template-columns: var(--cols); column-gap: var(--gx); align-items: end; padding: 14px var(--px) 10px;
+  font: 700 12px/1.1 var(--body); color: var(--ink-3); }
+.lb-cols span:nth-child(n + 4) { text-align: right; }
+.lb-cols span:nth-child(1), .lb-cols span:nth-child(11) { text-align: center; }
+.lb-tier { margin: 0; padding: 7px var(--px) 6px; font: 700 12.5px/1.2 var(--body); letter-spacing: 0; color: var(--ink-2); background-color: var(--tile); }
+.lb-group.stinks .lb-tier { color: var(--bad); }
+.lb { list-style: none; margin: 0; padding: 0; }
+.lb > .lb-row { --pull-h: 0px; position: relative; z-index: auto; padding-left: 0; background-color: var(--face); }
+.lb > .lb-row + .lb-row { border-top: 1px solid var(--line); }
+.lb > .lb-row.mine { background-color: var(--mine-bg); box-shadow: inset 0 0 0 2px var(--mine-edge); }
+.lb-btn { all: unset; box-sizing: border-box; display: grid; grid-template-columns: var(--cols); column-gap: var(--gx); align-items: center; width: 100%; min-height: 66px;
+  padding: 9px var(--px); cursor: pointer; transition: background-color 0.15s; }
+.lb-btn:focus-visible { outline: 3px solid var(--red); outline-offset: -3px; }
+@media (hover: hover) { .lb-btn:hover { background-color: var(--hover); } .lb-row.mine .lb-btn:hover { background-color: transparent; } }
+.lb-rank { text-align: center; font: 800 26px/1 var(--display); letter-spacing: -0.02em; color: var(--ink-2); }
+.lb-row.top .lb-rank { color: var(--flag); }
+.lb-btn > :is(.avatar, .lb-face) { justify-self: center; width: 40px; height: 40px; }
+.lb-face { border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--paper); }
+.lb-face.ph { display: grid; place-items: center; font: 800 20px var(--display); color: #111217; background: var(--lime); }
+.lb-team { display: grid; gap: 3px; min-width: 0; }
+.lb-name { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font: 800 21px/1.05 var(--display); letter-spacing: -0.005em; color: var(--ink); }
+.lb-name .name { overflow-wrap: anywhere; }
+.lb-meta { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 12.5px; line-height: 1.3; color: var(--ink-3); }
+.lb-meta b { font-weight: 700; color: var(--ink-2); }
+.lb-meta-rec, .lb-meta-ppg { display: none; }
+.lb-hint { font-weight: 700; color: var(--bad); }
+.lb-num { text-align: right; font: 700 15px/1 var(--body); color: var(--ink); }
+.lb-part { display: grid; gap: 5px; text-align: right; }
+.lb-part b { font: 700 14px/1 var(--body); color: var(--ink-2); }
+.lb-part .track { height: 5px; }
+.lb-part.none { color: var(--ink-3); }
+.lb-score { text-align: right; }
+.lb-score .score, .rk .lb-score .score { font: 800 28px/1 var(--display); letter-spacing: -0.02em; }
+.lb-odds { display: grid; justify-items: center; }
+.lb-odds .aring { width: 46px; height: 46px; box-shadow: none; }
+.lb-odds .aring-n b { font-size: 14px; }
+.lb-btn > .xp { width: 26px; height: 26px; }
+/* the team to beat leads the board: a taller row, the manager's face, a bigger name */
+.lb-row.lead .lb-btn { min-height: 96px; padding-block: 16px; }
+.lb-row.lead .lb-rank { font-size: 46px; }
+.lb-row.lead .lb-face { width: 48px; height: 48px; }
+.lb-row.lead .lb-name { font-size: 30px; }
+.lb-row.lead .lb-score .score { font-size: 38px; }
+.lb-parts { display: none; }
+.lb-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 12px var(--px) 14px; background-color: var(--tile); }
+.lb-foot p { margin: 0; font-size: 13px; color: var(--ink-3); }
+.lb-foot .sources { max-width: none; }
+.rk .method-box { margin-top: 0; border-radius: var(--r-lg); }
+.rk .futures { margin-top: 22px; }
+.rk .fut { border-radius: var(--r-md); }
+.rk .detail-inner { padding-top: 16px; }
+
+/* narrower than a table: rank, team, score, odds; the parts open with the report */
+@media (max-width: 999px) {
+  .board { --cols: 30px 40px minmax(0, 1fr) auto 46px; --gx: 10px; --px: 12px; }
+  .lb-cols, .lb-rec, .lb-ppg, .lb-part, .lb-btn > .xp { display: none; }
+  .lb-meta-rec, .lb-meta-ppg { display: inline; }
+  .lb-btn { min-height: 68px; }
+  .lb-name { font-size: 19px; }
+  .lb-row.lead .lb-btn { min-height: 84px; }
+  .lb-row.lead .lb-rank { font-size: 36px; }
+  .lb-row.lead .lb-face { width: 40px; height: 40px; }
+  .lb-row.lead .lb-name { font-size: 24px; }
+  .lb-score .score, .rk .lb-score .score { font-size: 26px; }
+  .lb-row.lead .lb-score .score { font-size: 32px; }
+  .lb-parts { display: grid; gap: 5px; padding: 14px 14px 2px; }
+}
+@media (max-width: 760px) {
+  .rk .hero { margin-bottom: 18px; }
+  .rk .view-head :is(h1, .page-title) { font-size: clamp(38px, 11vw, 48px); }
+  .rk .view-head p { font-size: 14.5px; }
+  /* the phone drawer (src/rankings/drawer.js) slides the report's sheet down from under its row; the row has no
+     pull strip now, so the sheet starts at the row's foot and is a plain square sheet */
+  .lb .lb-row .detail { margin: 0; clip-path: inset(0); }
+  .lb .lb-row .detail > div { padding-top: 0; border-radius: 0; box-shadow: none; }
+  .lb .lb-row.open .detail > div { box-shadow: inset 0 1px 0 var(--line); }
+  .mv-name { font-size: 16px; }
+}
+/* the title sits at the top of its column; your card and the movers sit together at its foot, level with the carousel's */
+.rk .hero-side { grid-template-rows: auto 1fr auto; }
+.rk .hero-side > :is(.you-strip, .you-card) { align-self: end; }
+/* the column names stay in view under the bar while the board scrolls */
+@media (min-width: 1000px) { .lb-cols { position: sticky; top: 84px; z-index: 3; background-color: var(--face); box-shadow: 0 1px 0 var(--line); border-radius: var(--r-xl) var(--r-xl) 0 0; } }
+.lb-odds .aring-n b { font-size: 14.5px; }
+@media (max-width: 520px) {
+  /* one line under the name: record and points; the manager's first name is in the report */
+  .lb-meta > span[title] { display: none; }
+  /* movers side by side: the new rank drops out, the arrow says the move */
+  .movers { grid-template-columns: 1fr 1fr; gap: 0 10px; padding: 12px 8px 6px; }
+  .mv-col button { grid-template-columns: 26px minmax(0, 1fr) auto; gap: 6px; padding-inline: 4px; }
+  .mv-col .avatar { width: 26px; height: 26px; }
+  .mv-to { display: none; }
+  .mv-name { font-size: 15px; }
+}
+@media (max-width: 400px) { .lb-row.lead .lb-name { font-size: 21px; } .lb-row.lead .lb-rank { font-size: 30px; } .lb-row.lead .lb-score .score { font-size: 28px; } }
+@media (min-width: 1000px) { .lb-cols { top: 70px; border-radius: 0; } }
+
+/* ---------- 3.1 everywhere: the board's flat shapes and title on every page (Dan, Nov 12) ----------
+   What .rk tried on the rankings is now the site's: flat rounded rectangles with no slab, the page title with its
+   pill beside it, drawers as plain strips. Buttons keep their pills and slabs; the headline deck keeps its stack. */
+:root { --r-xl: 24px; --r-lg: 20px; --r-md: 14px; --lip: 0px; }
+@media (max-width: 760px) { :root { --lip: 0px; } }
+.glass, .glass.rim, .notice { --lift: 0px; box-shadow: var(--rim), 0 0 0 var(--ring-w) var(--red); }
+.gotw { box-shadow: var(--rim), 0 0 0 1px rgba(223, 229, 235, 0.07); }
+.topbar { box-shadow: var(--chrome-rim), 0 0 0 1px rgba(223, 229, 235, 0.1); }
+.paper, :root[data-theme='dark'] .paper { --p-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4); border-radius: var(--r-xl); }
+:root[data-theme='dark'] .paper { --p-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07); }
+.view-head :is(h1, .page-title) { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: clamp(40px, 5vw, 68px); line-height: 0.92; }
+.view-head :is(h1, .page-title) .wk { order: 2; display: inline-block; margin: 0; padding: 7px 12px 6px; font: 800 15px/1 var(--display); letter-spacing: 0.02em; }
+.view-head p { margin-top: 10px; }
+.view-head { margin-bottom: 28px; }
+@media (max-width: 760px) { .view-head :is(h1, .page-title) { font-size: clamp(38px, 11vw, 48px); } }
+:is(.pull, .mu-more)::before { display: none; }
+.mu-more { padding: 12px 20px; }
+.sec-title:has(+ :is(.moves, .wire-team, .ideas, .matchups)) { margin-bottom: 12px; padding-bottom: 9px; border-radius: 999px; }
+.sec-title { border-radius: 999px; }
+/* the Live page's top lines up like the rankings': title at the top of its column, your card at its foot */
+.hero { align-items: stretch; gap: 20px 32px; margin: 4px 0 28px; }
+.hero-side { grid-template-rows: auto 1fr auto; align-content: stretch; gap: 16px; }
+.hero-side > :is(.you-strip, .you-card) { align-self: end; }
+.hero .view-head { margin: 0; }
+@media (max-width: 760px) { .hero { margin-bottom: 18px; } }
