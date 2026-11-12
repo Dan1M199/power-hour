@@ -10,6 +10,7 @@ import { useReactions, loadReactions, react } from './reactions.js';
 import { TeamAvatar, Headshot, ChampTag, ChampBadge } from '../shared.jsx';
 import { TradeGraphic } from './TradeGraphic.jsx';
 import { Card, useRing } from './Ring.jsx';
+import { pigmentFor } from './pigment.js';
 
 const asset = (p) => window.__ASSETS__?.[p] || p;
 // the reaction bar under each headline (EmojiReactions.jsx), in its own chunk: framer-motion only downloads once the
@@ -355,7 +356,7 @@ export function Carousel({ D, h, stories, date, hold, night, groups }) {
         {stories.map((st, i) => (
           /* the slot is where the card is on the ring, the floater its drift, the card its give under the pointer:
              three motions, three elements (see Ring.jsx). A card behind comes forward when tapped. */
-          <div key={i} ref={(s) => (ring.slots.current[i] = s)} className={`car-slot${i === idx ? ' front' : ''}`}
+          <div key={i} ref={(s) => (ring.slots.current[i] = s)} className={`car-slot${i === idx ? ' front' : ''}`} style={pigmentFor(keys[i] || st.type || i)}
             onClick={i === idx ? undefined : () => { if (!ring.dragged()) go(i); }}>
             <div className="car-float">
               <Card sink={8} off={i !== idx || ring.held || lite}>

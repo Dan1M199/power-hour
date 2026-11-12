@@ -67,11 +67,33 @@ const partTip = (t, k, h) => {
 function RankRow({ D, t, me, h, open, nudge, onToggle, onClose, rowRef, btnRef }) {
   const { f1, pct } = h, mine = t.rid === me, lead = t.powerRank === 1;
   const built = useRef(false); // the report is built the first time it opens, then kept (for the fold)
+  const pull = useRef(null), swallowClick = useRef(0);
+  const startPull = (e) => {
+    if (!e.isPrimary) { pull.current = null; return; }
+    if (e.button !== 0) return;
+    swallowClick.current = 0;
+    pull.current = { id: e.pointerId, x: e.clientX, y: e.clientY, open };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const endPull = (e) => {
+    const p = pull.current;
+    pull.current = null;
+    if (!p || p.id !== e.pointerId) return;
+    const dx = e.clientX - p.x, dy = e.clientY - p.y;
+    // Ignore a cancelled/sideways pull and suppress the click generated after a drag.
+    if (Math.hypot(dx, dy) < 10) return;
+    swallowClick.current = performance.now() + 700;
+    if (p.open !== open || Math.abs(dy) < 32 || Math.abs(dy) < Math.abs(dx) * 1.5) return;
+    if ((open && dy < 0) || (!open && dy > 0)) onToggle();
+  };
   if (open) built.current = true;
   const has = (k) => t.parts?.[k] != null;
   return (
     <li ref={rowRef} className={`rank lb-row${mine ? ' mine' : ''}${lead ? ' lead' : ''}${t.powerRank <= 3 ? ' top' : ''}${open ? ' open' : ''}`} data-rid={t.rid}>
-      <button ref={btnRef} className="lb-btn" aria-expanded={open} aria-controls={`d-${t.rid}`} onClick={onToggle}>
+      <button ref={btnRef} className="lb-btn" aria-expanded={open} aria-controls={`d-${t.rid}`} onClick={(e) => {
+        if (e.detail && performance.now() < swallowClick.current) { swallowClick.current = 0; return; }
+        onToggle();
+      }}>
         <span className="lb-rank" aria-hidden="true">{t.powerRank}</span>
         {lead ? <Headshot t={t} cls="lb-face" h={h} /> : <TeamAvatar t={t} />}
         <span className="lb-team">
@@ -86,6 +108,13 @@ function RankRow({ D, t, me, h, open, nudge, onToggle, onClose, rowRef, btnRef }
         <span className="lb-score"><span className="score">{t.score.toFixed(1)}</span></span>
         <span className="lb-odds"><Ring v={t.playoffPct} mine={mine}><b>{pct(t.playoffPct)}</b></Ring></span>
         <Xp />
+        <span className={`lb-pull${nudge ? ' teach' : ''}`} onPointerDown={startPull} onPointerUp={endPull}
+          onPointerCancel={() => { pull.current = null; }} onLostPointerCapture={() => { pull.current = null; }}>
+          <span className="lb-grip" aria-hidden="true" />
+          <span>{open ? 'Close scouting report' : 'Scouting report'}</span>
+          {nudge && !open ? <span className="lb-pull-hint">Tap or pull down</span> : null}
+          <Xp />
+        </span>
       </button>
       <div className="detail" id={`d-${t.rid}`}><div>{built.current ? <div className="detail-body">
         <div className="lb-parts">{PARTS.filter(([k]) => has(k)).map(([k, label, cls]) => (

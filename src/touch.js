@@ -180,7 +180,7 @@ function initDock(placeInk) {
 // finger in from the edge and turns amber once letting go will change the page. Touch events, all passive: the
 // browser decides between a scroll and this in the first few pixels, the same way we do. Starts within 24px of an
 // edge are left to Safari's own back and forward swipe.
-const OWN_DRAG = '.lead-car, .tabs, .me, .rxn, .stk, .pull, .adm-page, .unveil, .share-sheet, .lockout, .vf, input, select, textarea, [contenteditable]';
+const OWN_DRAG = '.lead-car, .tabs, .me, .rxn, .stk, .pull, .lb-pull, .adm-page, .unveil, .share-sheet, .lockout, .vf, input, select, textarea, [contenteditable]';
 const scrollsSideways = (n) => {
   for (; n && n !== document.body; n = n.parentElement) {
     if (n.scrollWidth > n.clientWidth + 4) { const o = getComputedStyle(n).overflowX; if (o === 'auto' || o === 'scroll') return true; }

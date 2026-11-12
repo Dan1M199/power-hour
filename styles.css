@@ -4734,13 +4734,16 @@ main:has(> .rk)::before { grid-row: 1 / auto; top: 0; }
     radial-gradient(ellipse at 0% 58%, rgba(223, 229, 235, 0.1), transparent 55%);
   background-color: var(--canvas);
 }
+.car-card { --rim: inset 0 1px 0 rgba(223, 229, 235, var(--pigment-rim, 0.08)); }
 .car-card::before { background: var(--pigment); }
 .car-card::after {
   display: block; content: ''; position: absolute; inset: 0; z-index: -1;
+  width: auto; height: auto;
   border-radius: inherit; background: var(--grain); background-size: 160px 160px;
-  opacity: 0.1; mix-blend-mode: soft-light; pointer-events: none;
+  opacity: var(--pigment-grain, 0.1); mix-blend-mode: soft-light; pointer-events: none;
 }
-.gotw { background-image: var(--pigment); }
+.gotw { background-image: linear-gradient(135deg, rgba(223, 229, 235, 0.12), transparent 38%),
+  radial-gradient(ellipse at 0% 100%, rgba(239, 35, 60, 0.4), transparent 70%); }
 .tab-ink,
 :root :is(.lab-tabs a[aria-current='page'], .filters [aria-pressed='true'], .filters a[aria-current='page'],
   .focus-nav button[aria-pressed='true'], .drive-pick button[aria-pressed='true'],
@@ -4762,3 +4765,24 @@ main:has(> .rk)::before { grid-row: 1 / auto; top: 0; }
     radial-gradient(circle at 70% 70%, var(--red), transparent 65%);
 }
 @media (prefers-reduced-motion: reduce) { .gradient-ripple { display: none; } }
+
+/* A report always has a visible handle, even after the first-use hint is learned.
+   Only this strip owns a pull gesture; the team and stats above still scroll. */
+.lb-pull { display: none; }
+@media (max-width: 760px) {
+  .lb-btn, .lb-row.lead .lb-btn { padding-bottom: 0; }
+  .lb-meta .lb-hint { display: none; }
+  .lb-pull {
+    grid-column: 1 / -1; display: flex; align-items: center; gap: 8px;
+    min-height: 36px; margin: 9px calc(-1 * var(--px)) 0; padding: 0 var(--px);
+    border-top: 1px solid var(--line); background-color: var(--tile);
+    color: var(--ink-2); font: 600 12px/1.2 var(--body);
+    touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  .lb-grip { width: 18px; height: 4px; border-radius: 999px; background-color: currentColor; opacity: 0.5; }
+  .lb-pull > .xp { margin-left: auto; width: 22px; height: 22px; box-shadow: none; }
+  .lb-pull-hint { margin-left: auto; font-size: 11.5px; font-weight: 500; }
+  .lb-pull.teach > .xp { margin-left: 0; }
+  .lb-pull.teach { color: var(--ink); background-image: linear-gradient(110deg, rgba(239, 35, 60, 0.1), transparent 80%); }
+  .lb-row.open .lb-pull { color: var(--ink); }
+}
