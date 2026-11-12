@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { closeDrawer, openDrawer, slides, sliding } from './drawer.js';
-import { ChampTag, Headshot, TeamAvatar, Xp, ScenariosLink } from '../shared.jsx';
+import { ChampTag, Headshot, TeamAvatar, Xp, ScenariosLink, Ring } from '../shared.jsx';
 import { Hero } from '../hero/Hero.jsx';
 import { Futures } from './Futures.jsx';
 import { Poll } from './Poll.jsx';
@@ -73,7 +73,7 @@ function RankRow({ D, t, me, h, open, nudge, onToggle, onClose, rowRef, btnRef }
             <div className="meter-top"><span className="score">{t.score.toFixed(1)}</span><small>power score</small></div>
             <div className="split">{parts.map(([k, label, cls, tip]) => <div key={k} className="split-row" data-tip={tip}><span>{label}</span><span className="track"><i className={cls} style={{ width: `${t.parts[k]}%` }} /></span><span>{Math.round(t.parts[k])}</span></div>)}</div>
           </div>
-          <div className="odds"><b>{pct(t.playoffPct)}</b><small>playoffs</small></div>
+          <div className="odds"><Ring v={t.playoffPct} mine={mine}><b>{pct(t.playoffPct)}</b></Ring><small>playoffs</small></div>
           <span className="pull" aria-hidden="true"><span className="pull-t">Scouting report</span><span className="pull-n">Tap for the scouting report</span><span className="pull-x">Hide report</span><Xp /></span>
         </button>
         <div className="detail" id={`d-${t.rid}`}><div>{built.current ? <div className="detail-body">
@@ -153,7 +153,7 @@ export function RankingsPage({ D, me, h, held, car, sources, updated, message, r
     <Headshot t={mine} cls="strip-face" h={h} />
     <span className="ys-rank"><small>You're</small><b>{`No. ${mine.powerRank}`}</b></span>
     <span className="ys-body"><b>{mine.name}</b><span className="ys-tags"><span className={`tier ${mine.tier.key}`}>{mine.tier.label}</span><MoveTag t={mine} /></span></span>
-    <span className="ys-odds"><b>{h.pct(mine.playoffPct)}</b><small>playoffs</small></span><Xp />
+    <span className="ys-odds"><Ring v={mine.playoffPct} mine><b>{h.pct(mine.playoffPct)}</b></Ring><small>playoffs</small></span><Xp />
   </button> : null;
 
   return <>

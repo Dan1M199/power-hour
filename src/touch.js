@@ -186,10 +186,11 @@ const scrollsSideways = (n) => {
 };
 let swipeDir = 0; // which way the last swipe went, for pageIn
 function initSwipe() {
-  const chip = el('div', 'tx-swipe', '<span></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>');
+  // a black island that flows out of the screen's edge, its corners curving into it; the ring fills as you pull
+  const chip = el('div', 'tx-swipe', '<span></span><svg viewBox="0 0 32 32" aria-hidden="true"><circle class="sw-track" cx="16" cy="16" r="13" pathLength="100"/><circle class="sw-ring" cx="16" cy="16" r="13" pathLength="100"/><path d="M13.5 10.5l5.5 5.5-5.5 5.5"/></svg>');
   chip.setAttribute('aria-hidden', 'true');
   document.body.append(chip);
-  const label = chip.firstChild, NEED = 96;
+  const label = chip.firstChild, ring = chip.querySelector('.sw-ring'), NEED = 96;
   let g = null;
   const hide = () => { chip.classList.remove('on', 'go'); chip.style.transform = ''; g = null; };
   addEventListener('touchstart', (e) => {
@@ -220,6 +221,7 @@ function initSwipe() {
     // the chip comes out of the edge with the finger, and gives a little more past the point of no return
     const out = (1 - p) * 105 - (armed ? Math.min(8, (pull - NEED) / 12) : 0);
     chip.style.transform = `translateX(${g.dir > 0 ? out : -out}%)`;
+    ring.style.strokeDasharray = `${(p * 100).toFixed(1)} 100`;
     if (armed !== g.armed) { g.armed = armed; chip.classList.toggle('go', armed); haptic(); }
   }, { passive: true });
   addEventListener('touchend', () => {

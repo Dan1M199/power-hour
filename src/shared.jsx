@@ -56,3 +56,18 @@ export const ScenariosLink = () => (
     <i className="spk a" aria-hidden="true" /><i className="spk b" aria-hidden="true" />
   </a>
 );
+
+// An activity ring (Nov 11, the soft-futurism pass): a black disc with one bright arc for a share from 0 to 1 and the
+// number set inside it. The arc draws itself in once its card is on screen (styles.css, "2.2"); yellow when it's yours.
+export const Ring = ({ v, mine = false, children }) => {
+  const p = Math.max(0, Math.min(1, v || 0)) * 100;
+  return (
+    <span className={`aring${mine ? ' you' : ''}`}>
+      <svg viewBox="0 0 44 44" aria-hidden="true">
+        <circle className="aring-track" cx="22" cy="22" r="18" pathLength="100" />
+        {p > 0.5 ? <circle className="aring-arc" cx="22" cy="22" r="18" pathLength="100" style={{ '--p': p }} /> : null}
+      </svg>
+      <span className="aring-n">{children}</span>
+    </span>
+  );
+};

@@ -4155,3 +4155,93 @@ h2, .sec-title, .team-name, .mu-team .tn { letter-spacing: -0.005em; }
 .tx-swipe.go { background: var(--amber); color: #0B2412; }
 .tx-swipe svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 .tx-swipe.back svg { transform: scaleX(-1); }
+
+/* ---------- 2.2: soft futurism, in small doses (Dan's request Nov 11) ----------
+   Three borrowed moves, kept to a few places so the stadium stays the stadium:
+   1. A grainy holographic sky: the flat blue bands become a soft blend of the sky's blues with a lilac and pink haze
+      and a warm patch of the first-down yellow, under a film grain (--grain, an SVG noise tile). Night: violet, teal
+      and a breath of the magenta hint under the stars.
+   2. Islands: solid black shapes that flow out of the screen's edge, their corners curving inward where they meet it
+      (a concave fillet on each side, a radial-gradient pseudo-element, like the key tags' shoulders). On phones the
+      ticker drops out of the top edge as one, and the swipe-to-change-tab chip slides out of the side as one.
+   3. Activity rings: playoff odds on the ranking rows and your strip are a black disc with one bright arc and the
+      number inside. Lime for everyone, yellow for you; the arc draws in when its card arrives.
+   Islands and ring discs are pure black (--island) on purpose: the contrast against the soft sky is the point. */
+:root {
+  --island: #000000;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/* --- 1. the grainy sky --- */
+.sky { background:
+  radial-gradient(55% 38% at 10% 6%, rgba(255, 255, 255, 0.6), transparent 70%),
+  radial-gradient(50% 40% at 92% 14%, rgba(190, 165, 255, 0.62), transparent 72%),
+  radial-gradient(65% 42% at 68% 58%, rgba(255, 176, 214, 0.5), transparent 72%),
+  radial-gradient(70% 45% at 18% 66%, rgba(255, 224, 26, 0.3), transparent 72%),
+  radial-gradient(45% 35% at 40% 32%, rgba(120, 230, 220, 0.35), transparent 72%),
+  linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 50%, var(--sky-3) 100%); }
+.sky::after { content: ''; position: absolute; inset: 0; background-image: var(--grain); background-size: 160px 160px; opacity: 0.34; mix-blend-mode: overlay; }
+:root[data-theme='dark'] .sky { background:
+  radial-gradient(1.5px 1.5px at 12% 18%, rgba(255, 255, 255, 0.75) 99%, transparent),
+  radial-gradient(1px 1px at 27% 8%, rgba(255, 255, 255, 0.6) 99%, transparent),
+  radial-gradient(1.5px 1.5px at 44% 26%, rgba(255, 255, 255, 0.55) 99%, transparent),
+  radial-gradient(1px 1px at 63% 12%, rgba(255, 255, 255, 0.7) 99%, transparent),
+  radial-gradient(1.5px 1.5px at 78% 30%, rgba(255, 255, 255, 0.5) 99%, transparent),
+  radial-gradient(1px 1px at 90% 6%, rgba(255, 255, 255, 0.65) 99%, transparent),
+  radial-gradient(50% 40% at 88% 12%, rgba(130, 90, 230, 0.42), transparent 72%),
+  radial-gradient(55% 40% at 14% 30%, rgba(20, 170, 175, 0.3), transparent 72%),
+  radial-gradient(60% 40% at 66% 62%, rgba(255, 0, 128, 0.14), transparent 72%),
+  linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 50%, var(--sky-3) 100%); }
+:root[data-theme='dark'] .sky::after { opacity: 0.4; mix-blend-mode: soft-light; }
+
+/* --- 2. islands --- */
+@media (max-width: 760px) {
+  /* the ticker drops out of the top edge: flat black, rounded at the foot, its top corners curving into the edge */
+  .ticker, :root[data-theme='dark'] .ticker { top: 0; width: calc(100% - 48px); height: calc(env(safe-area-inset-top, 0px) + 46px); padding: env(safe-area-inset-top, 0px) 6px 0;
+    border-radius: 0 0 24px 24px; background-color: var(--island); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.55);
+    transform: scale(0.55, 0.15); transform-origin: 50% 0; }
+  .ticker.on { transform: none; transition: transform 0.5s cubic-bezier(0.3, 1.35, 0.5, 1), opacity 0.15s, visibility 0s; }
+  .ticker::before, .ticker::after { content: ''; position: absolute; top: 0; width: 22px; height: 22px; pointer-events: none; }
+  .ticker::before { right: 100%; background: radial-gradient(circle at 0 100%, transparent 21.5px, var(--island) 22px); }
+  .ticker::after { left: 100%; background: radial-gradient(circle at 100% 100%, transparent 21.5px, var(--island) 22px); }
+}
+/* the swipe chip slides out of the side edge, a ring filling as you pull and lime once letting go changes the tab */
+.tx-swipe, .tx-swipe.go { height: 56px; padding: 0 12px 0 20px; border-radius: 28px 0 0 28px; color: #FFFFFF; background: var(--island);
+  -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; overflow: visible; }
+.tx-swipe.back, .tx-swipe.back.go { padding: 0 20px 0 12px; border-radius: 0 28px 28px 0; }
+.tx-swipe.go { color: var(--lime); }
+.tx-swipe::before, .tx-swipe::after { content: ''; position: absolute; right: 0; width: 22px; height: 22px; pointer-events: none; }
+.tx-swipe::before { bottom: 100%; background: radial-gradient(circle at 0 0, transparent 21.5px, var(--island) 22px); }
+.tx-swipe::after { top: 100%; background: radial-gradient(circle at 0 100%, transparent 21.5px, var(--island) 22px); }
+.tx-swipe.back::before, .tx-swipe.back::after { right: auto; left: 0; }
+.tx-swipe.back::before { background: radial-gradient(circle at 100% 0, transparent 21.5px, var(--island) 22px); }
+.tx-swipe.back::after { background: radial-gradient(circle at 100% 100%, transparent 21.5px, var(--island) 22px); }
+.tx-swipe svg { width: 32px; height: 32px; stroke-width: 2.6; }
+.tx-swipe circle { fill: none; stroke-width: 3; transform: rotate(-90deg); transform-origin: 16px 16px; }
+.sw-track { stroke: rgba(255, 255, 255, 0.18); }
+.sw-ring { stroke: var(--lime); stroke-dasharray: 0 100; stroke-linecap: round; }
+
+/* --- 3. activity rings --- */
+.aring { --aring-c: var(--lime); position: relative; display: inline-grid; place-items: center; width: 62px; height: 62px; border-radius: 50%;
+  color: #FFFFFF; background: var(--island); box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.6); }
+:root[data-theme='dark'] .aring { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08); }
+.aring.you { --aring-c: var(--yellow); }
+.aring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); fill: none; stroke-width: 4.5; stroke-linecap: round; }
+.aring-track { stroke: var(--aring-c); opacity: 0.2; }
+.aring-arc { stroke: var(--aring-c); stroke-dasharray: var(--p) 100; }
+.aring-n { position: relative; }
+.aring-n b, .odds .aring-n b, .ys-odds .aring-n b { display: block; font: 700 18px/1 var(--display); letter-spacing: -0.01em; color: #FFFFFF; }
+.odds, .ys-odds { display: grid; justify-items: center; gap: 5px; text-align: center; }
+.odds { min-width: 74px; }
+@media (max-width: 760px) {
+  .aring { width: 54px; height: 54px; }
+  .aring-n b, .odds .aring-n b, .ys-odds .aring-n b { font-size: 16px; }
+  .ys-odds .aring { width: 48px; height: 48px; }
+  .ys-odds .aring-n b { font-size: 14.5px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .aring-arc { animation: aring-draw 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s both; }
+  .rank .aring-arc { animation-delay: calc(var(--d, 0ms) + 420ms); }
+  @keyframes aring-draw { from { stroke-dasharray: 0 100; } }
+  :is(.rank.pending, .rv:not(.rv-in), .reveal:not(.in)) .aring-arc { animation-play-state: paused; }
+}
