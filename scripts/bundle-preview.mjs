@@ -43,8 +43,8 @@ if (!js || !css) throw new Error('preview: the built page has no script or no st
 
 // the demo snapshot, the managers' headshots and the other pictures the code asks for by name (photoUrl in
 // lib/members.js reads window.__HEADS__, asset() in src/hero/Carousel.jsx window.__ASSETS__)
-const heads = Object.fromEntries(readdirSync(`${root}assets/heads`).filter((f) => f.endsWith('.jpg'))
-  .map((f) => [f.slice(0, -4), `data:image/jpeg;base64,${readFileSync(`${root}assets/heads/${f}`).toString('base64')}`]));
+const heads = Object.fromEntries(readdirSync(`${root}assets/heads/px`).filter((f) => f.endsWith('.png'))
+  .map((f) => [f.slice(0, -4), `data:image/png;base64,${readFileSync(`${root}assets/heads/px/${f}`).toString('base64')}`]));
 const assets = Object.fromEntries(['assets/money-week-flyer.jpg'].map((p) => [p, `data:image/jpeg;base64,${readFileSync(`${root}${p}`).toString('base64')}`]));
 const demo = r('demo/demo.json').replace(/<\//g, '<\\/');
 const inline = (s) => s.replace(/<\/(script|style)/gi, '<\\/$1');
