@@ -335,10 +335,10 @@ function initTopPill() {
 // ---------- hello ----------
 // Once per device: a glass note above the dock that names the update and the one gesture nobody would guess.
 function hello() {
-  const KEY = 'ph-hello-21';
+  const KEY = 'ph-hello-30';
   if (root.classList.contains('admin-mode') || root.classList.contains('locked')) return;
   try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, '1'); } catch { return; }
-  const note = el('div', 'tx-hello', `<b>2.1</b><span><strong>The Power Hour 2.1.</strong> ${phone() ? 'Swipe sideways to change tabs, drag a scouting report open, and tap the tab you are on to jump to the top.' : 'Flatter glass and tidier type, with more to swipe on your phone.'}</span>`);
+  const note = el('div', 'tx-hello', `<b>3.0</b><span><strong>The Power Hour 3.0.</strong> ${phone() ? 'A new look: obsidian, ice and racing red. The circle at the bottom right switches the cards between ice and obsidian.' : 'A new look: obsidian, ice and racing red. The moon in the bar switches the cards between ice and obsidian.'}</span>`);
   note.setAttribute('role', 'status');
   document.body.append(note);
   const close = () => { note.classList.remove('on'); setTimeout(() => note.remove(), 500); };

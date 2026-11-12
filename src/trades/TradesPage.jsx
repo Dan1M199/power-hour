@@ -59,7 +59,7 @@ export function TradesPage({ D, me, h, state, onState }) {
         <button key={k} type="button" aria-pressed={shape === k} disabled={!(count(k) || shape === k)} onClick={() => pick(k)}>{`${label} (${count(k)})`}</button>
       ))}</div>
     </div>
-    <p className="sub trade-legend">Green bars are projected starting-lineup points per week gained by each side. The dot on the value balance is your side of the consensus value: right of center you come out ahead, left of center they do. Uneven trades count the cut player or the free-agent pickup they force.</p>
+    <p className="sub trade-legend">The bars are projected starting-lineup points per week gained by each side. The dot on the value balance is your side of the consensus value: right of center you come out ahead, left of center they do. Uneven trades count the cut player or the free-agent pickup they force.</p>
     {ideas.length ? <div className="ideas">{ideas.map(card)}</div>
       : <p className="empty glass panel">{all.length ? 'No ideas of this shape. Try another filter.' : 'No trade both sides should take right now. Your roster is balanced enough that every fair deal makes one lineup worse. Check back after the next round of waivers or injuries.'}</p>}
   </>;

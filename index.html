@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>The Power Hour</title>
   <meta name="description" content="Power rankings, waiver wire and data-nerd stats for the NFL Fantasy Championship league.">
-  <meta name="theme-color" content="#4FBDF2">
+  <meta name="theme-color" content="#111217">
   <!-- the theme, before the first paint: a choice kept on this device (ph-theme) wins, else the device's own setting.
        app.js keeps it in step afterwards (the header's sun and moon button, a change in the device's setting). -->
   <script>
@@ -14,7 +14,7 @@
       try { t = localStorage.getItem('ph-theme'); } catch (e) {}
       if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       document.documentElement.dataset.theme = t;
-      if (t === 'dark') document.querySelector('meta[name="theme-color"]').content = '#0A1630';
+      if (t === 'dark') document.querySelector('meta[name="theme-color"]').content = '#111217';
     })();
   </script>
   <link rel="icon" type="image/png" href="assets/favicon.png">
@@ -119,7 +119,7 @@
     <p class="masthead" id="masthead" hidden></p>
     <p class="masthead" id="reigning" hidden></p>
     <p class="fine">League data from the Sleeper API. Rest-of-season rankings from FantasyPros, DraftSharks and LeagueLogs, blended into one consensus. Not affiliated with any of them.</p>
-    <p class="version">Mir Inc. Sleeper Power Hour V2.1</p>
+    <p class="version">Mir Inc. Sleeper Power Hour V3.0</p>
   </footer>
 
   <div id="tip" class="tip" role="tooltip" hidden></div>
