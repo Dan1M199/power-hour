@@ -228,10 +228,9 @@ const PauseIcon = ({ paused }) => (
 
 /**
  * stories: the headlines, in order; date: today, for the first kicker; hold: the "games in progress" note, or null;
- * night: the night edition is on; groups: section labels by story group; nav: a ref for the ticker
- * shares, set here to { at, go } (which slide is showing, and turning to one).
+ * night: the night edition is on; groups: section labels by story group.
  */
-export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
+export function Carousel({ D, h, stories, date, hold, night, groups }) {
   const n = stories.length;
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(pausedForVisit);
@@ -297,7 +296,6 @@ export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
   useEffect(() => {
     const el = car.current, tr = track.current;
     const fit = () => layoutRef.current();
-    if (nav) nav.current = { at: () => at.current, go: (i) => goRef.current(i) }; // for the ticker
     // Only rotate (or play a clip) while the card is mostly on screen. A rotation changes the card's height on phones,
     // and iPhone Safari doesn't anchor scrolling, so rotating while someone reads further down would jolt the page.
     const seen = new IntersectionObserver(([e]) => { el.classList.toggle('away', e.intersectionRatio < 0.6); clipSync.current?.(); }, { threshold: [0, 0.6] });
@@ -336,7 +334,6 @@ export function Carousel({ D, h, stories, date, hold, night, groups, nav }) {
       tr.removeEventListener('pointercancel', up);
       tr.removeEventListener('wheel', onWheel);
       clearTimeout(quiet);
-      if (nav) nav.current = null;
     };
   }, []);
 

@@ -2475,7 +2475,7 @@ html.locked { overflow: hidden; }
 .vf .pp-val .pp-label { top: calc(26px + env(safe-area-inset-top)); left: max(22px, calc((100% - 1120px) / 2)); }
 .vf .pv-expand { top: calc(16px + env(safe-area-inset-top)); right: max(16px, calc((100% - 1120px) / 2 - 6px)); }
 .vf .pv-big { font-size: 64px; }
-html.focusing :is(.tabs, .me, .tx-top, .ticker) { visibility: hidden; }
+html.focusing :is(.tabs, .me, .tx-top) { visibility: hidden; }
 @container (max-width: 927.98px) {
   .pp-tile.pp-val { grid-template-columns: minmax(0, 220px) minmax(0, 1fr); }
   .pv-list { grid-column: 1 / -1; grid-row: auto; }
@@ -2896,52 +2896,11 @@ html.focusing :is(.tabs, .me, .tx-top, .ticker) { visibility: hidden; }
 
 @keyframes rxn-bow { 0%, 100% { transform: none; } 40% { transform: translateY(2px) scale(1, 0.9); } 60% { transform: translateY(1px) scale(1, 0.95); } }
 
-/* ---------- the news ticker ----------
-   Scrolled past the headline card, its headlines run on as a scoreboard strip (src/hero/Ticker.jsx, portaled to body):
-   under the nav bar on desktop, along the top of the screen on phones. It drops in from its top edge,
-   transform and opacity only, and the loop is one transform animation that only runs while the strip shows. */
-.ticker { position: fixed; z-index: 19; top: var(--tk-top, 84px); left: 0; right: 0; width: var(--page); margin: 0 auto; height: 42px;
-  display: flex; align-items: center; gap: 10px; padding: 0 6px; border-radius: 999px; color: var(--chalk); background-color: var(--board);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 0 var(--edge) var(--outline), 0 4px 0 var(--edge) var(--ledge-gold);
-  transform-origin: 50% 0; opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-12px) scaleY(0.4);
-  transition: transform 0.3s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.2s, visibility 0s 0.3s; }
-.ticker.on { opacity: 1; visibility: visible; pointer-events: auto; transform: none;
-  transition: transform 0.42s cubic-bezier(0.2, 0.8, 0.2, 1.15), opacity 0.2s, visibility 0s; }
-.tk-badge { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px;
-  font: 800 13px/1 var(--body); color: var(--chalk); background: var(--flag); }
-.tk-badge i { width: 7px; height: 7px; border-radius: 50%; background: var(--chalk); animation: brk-blink 1s steps(2, start) infinite; }
-.tk-window { flex: 1; min-width: 0; overflow: hidden; align-self: stretch; display: flex; align-items: center;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 22px), transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 22px), transparent); }
-.tk-track { display: flex; width: max-content; animation: tk-run var(--tk-dur, 40s) linear infinite paused; }
-.ticker.on .tk-track { animation-play-state: running; }
-@media (hover: hover) and (pointer: fine) { .ticker.on:hover .tk-track { animation-play-state: paused; } }
-@keyframes tk-run { to { transform: translateX(-50%); } }
-.tk-item { display: inline-flex; align-items: center; gap: 8px; padding: 6px 2px; border: 0; border-radius: 14px; background: none; cursor: pointer;
-  color: var(--chalk); font: 600 14px/1.2 var(--body); white-space: nowrap; }
-.tk-item:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
-@media (hover: hover) { .tk-item:hover span { color: var(--yellow); } }
-.tk-kick { font: 800 15px/1 var(--display); letter-spacing: 0.02em; color: var(--yellow); }
-.tk-sep { flex: none; width: 20px; height: 12px; margin: 0 12px; fill: #8D5A2B; stroke: var(--chalk); stroke-width: 1.1; stroke-linecap: round; }
-@media (prefers-reduced-motion: reduce) {
-  .ticker, .ticker.on { transition: opacity 0.2s, visibility 0s; transform: none; }
-  .tk-track { animation: none; }
-  .tk-window { overflow-x: auto; scrollbar-width: none; -webkit-mask-image: none; mask-image: none; }
-  .tk-window::-webkit-scrollbar { display: none; }
-}
-@media (max-width: 760px) {
-  /* along the top of the screen: phones have no bar (the tabs are the dock at the foot) */
-  .ticker { top: calc(env(safe-area-inset-top, 0px) + 10px); height: 44px; gap: 8px; padding: 0 5px; }
-  .tk-badge { padding: 9px; } /* just the blinking dot: the strip needs the room */
-  .tk-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .tk-item { font-size: 13.5px; }
-}
-
 /* ---------- the headline desk (#admin, src/admin): Dan's newsroom, set like a newspaper ----------
    By Dan's request (Nov 6) the desk is a newspaper front: newsprint and black ink, a blackletter nameplate between two
    ears, a folio line under a heavy rule, an index box, lettered sections under thick rules, headlines set in a news
    serif with italic bylines, and a Franklin gothic for every label and control. Flat print: rules, not shadows; square
-   corners, not stadiums. route() sets html.admin-mode, which takes away the site's header, sky, field, ticker and footer.
+   corners, not stadiums. route() sets html.admin-mode, which takes away the site's header, sky, field and footer.
    Its own tokens (--np-*), day and night (the night edition: the same paper, inverted). The slide preview inside is the
    real carousel and keeps the site's look. Phones first: the same paper arranged for a thumb (usePhone). */
 html.admin-mode {
@@ -2958,7 +2917,7 @@ html.admin-mode[data-theme='dark'] {
 }
 html.admin-mode body { background: var(--np-paper); color: var(--np-ink); }
 html.admin-mode ::selection { color: var(--np-paper); background: var(--np-ink); }
-html.admin-mode :is(.topbar, .sky, .footer, .ticker) { display: none; }
+html.admin-mode :is(.topbar, .sky, .footer) { display: none; }
 html.admin-mode main { width: min(100% - 32px, 1180px); padding: 0 0 56px; }
 html.admin-mode main::before, html.admin-mode main::after { display: none; }
 
@@ -3603,6 +3562,7 @@ main::after { border-radius: 56px 56px 0 0; }
 
 /* the night sky: dim clouds and a few stars; the field's chalk lines dimmer under the lights */
 :root[data-theme='dark'] .sky { background:
+  linear-gradient(180deg, var(--sky-1) 0, var(--sky-1) env(safe-area-inset-top, 0px), transparent calc(env(safe-area-inset-top, 0px) + 150px)),
   radial-gradient(1.5px 1.5px at 12% 18%, rgba(255, 255, 255, 0.75) 99%, transparent),
   radial-gradient(1px 1px at 27% 8%, rgba(255, 255, 255, 0.6) 99%, transparent),
   radial-gradient(1.5px 1.5px at 44% 26%, rgba(255, 255, 255, 0.55) 99%, transparent),
@@ -3700,7 +3660,7 @@ main::after { border-radius: 56px 56px 0 0; }
 .share-note { margin: 0; font-size: 13px; color: var(--ink-3); text-align: center; text-wrap: pretty; }
 
 /* ---------- the rankings lockout (a week being played) ---------- */
-/* under the header (z-index 20) and the ticker (19), so the tabs stay usable; nothing behind it is rendered anyway */
+/* under the header (z-index 20), so the tabs stay usable; nothing behind it is rendered anyway */
 .lockout { position: fixed; inset: 0; z-index: 18; display: grid; place-items: center; padding: 96px 16px 20px; overflow-y: auto;
   background: rgba(19, 48, 28, 0.86); animation: unveil-in 0.3s ease-out; }
 .lo-card { position: relative; width: min(560px, 100%); padding: 26px 26px 22px; border-radius: var(--r-xl); text-align: center; }
@@ -3757,7 +3717,7 @@ main::after { border-radius: 56px 56px 0 0; }
    The same bowl, cartoon ink and football colours, with real glass where the page moves under something and light
    that answers a finger. Kept last so it reads as one layer over everything above; its night values sit beside the day
    ones here. Four parts:
-   1. Frosted chrome. The things that float over the page (the header, the phone dock, the ticker, the tooltip, the
+   1. Frosted chrome. The things that float over the page (the header, the phone dock, the tooltip, the
       chips standing on the grass) are translucent and blur what passes under them (--frost). Cards stay solid: a
       blurred backdrop on a dozen cards costs a phone its scrolling, and words on a card must not swim.
    2. The dock (phones). The tabs leave the header and float at the foot of the screen, under the thumb, icon over
@@ -3776,7 +3736,6 @@ main::after { border-radius: 56px 56px 0 0; }
   --chrome-rim: inset 0 1.5px 0 rgba(255, 255, 255, 0.95), inset 0 0 0 1px rgba(255, 255, 255, 0.4), inset 0 -12px 16px -12px rgba(11, 36, 18, 0.22);
   --frost-paper: rgba(255, 255, 255, 0.74);  /* white chips standing on the grass */
   --smoke: rgba(9, 28, 16, 0.76);            /* the dark boards that float: the tooltip, the 2.0 note */
-  --smoke-2: rgba(9, 28, 16, 0.9);           /* the ticker: words run across it, so less shows through */
   /* a card's sheen picks up the sky, and its upper edge is wet */
   --sheen: linear-gradient(180deg, rgba(206, 236, 253, 0.95) 0, rgba(255, 255, 255, 0) 100%);
   --rim: inset 0 2px 0 #FFFFFF, inset 0 0 0 1.5px rgba(255, 255, 255, 0.7), inset 0 -16px 20px -16px rgba(11, 36, 18, 0.22);
@@ -3790,7 +3749,6 @@ main::after { border-radius: 56px 56px 0 0; }
   --chrome-rim: inset 0 1.5px 0 rgba(255, 255, 255, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.07), inset 0 -12px 16px -12px rgba(0, 0, 0, 0.6);
   --frost-paper: rgba(30, 50, 38, 0.72);
   --smoke: rgba(4, 12, 7, 0.74);
-  --smoke-2: rgba(4, 12, 7, 0.9);
   --sheen: linear-gradient(180deg, rgba(150, 200, 255, 0.13) 0, rgba(255, 255, 255, 0) 100%);
   --rim: inset 0 1.5px 0 rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 -16px 20px -16px rgba(0, 0, 0, 0.6);
   --shine: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(140, 200, 255, 0.1) 30%, rgba(255, 255, 255, 0.3) 50%, rgba(140, 200, 255, 0.1) 70%, rgba(255, 255, 255, 0) 100%);
@@ -3798,13 +3756,12 @@ main::after { border-radius: 56px 56px 0 0; }
 }
 /* no blur, no see-through: the chrome goes back to solid */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  :root { --chrome: var(--header); --frost-paper: var(--paper); --smoke: var(--board); --smoke-2: var(--board); }
+  :root { --chrome: var(--header); --frost-paper: var(--paper); --smoke: var(--board); }
 }
 
 /* --- 1. frosted chrome --- */
 .topbar { background-color: var(--chrome); box-shadow: var(--chrome-rim), 0 0 0 var(--edge) var(--outline), 0 var(--lift) 0 var(--edge) var(--ledge-c), 0 calc(var(--lift) + 12px) 20px -8px var(--cast);
   -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost); }
-.ticker { background-color: var(--smoke-2); -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost); }
 .tip { background: var(--smoke); -webkit-backdrop-filter: var(--frost-s); backdrop-filter: var(--frost-s); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 4px 0 var(--ledge); }
 :root[data-theme='dark'] .tip { background: rgba(234, 244, 230, 0.86); }
 :is(.unveil, .share-sheet) { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
@@ -3854,7 +3811,7 @@ html:is(.admin-mode, .locked) .tx-top { display: none; }
 
 /* --- 2. the dock (phones) --- */
 @media (max-width: 760px) {
-  html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 66px); } /* no bar on phones; room for the ticker */
+  html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 16px); } /* no bar on phones */
   /* no bar on phones (Nov 9): the tabs are the dock and you are the circle beside it, both fixed to the foot of the
      screen. The header keeps no box of its own (a box here, or a backdrop-filter or transform on it, would trap the
      fixed dock inside it), and the logo stays in the end zone. */
@@ -4162,8 +4119,8 @@ h2, .sec-title, .team-name, .mu-team .tn { letter-spacing: -0.005em; }
       and a warm patch of the first-down yellow, under a film grain (--grain, an SVG noise tile). Night: violet, teal
       and a breath of the magenta hint under the stars.
    2. Islands: solid black shapes that flow out of the screen's edge, their corners curving inward where they meet it
-      (a concave fillet on each side, a radial-gradient pseudo-element, like the key tags' shoulders). On phones the
-      ticker drops out of the top edge as one, and the swipe-to-change-tab chip slides out of the side as one.
+      (a concave fillet on each side, a radial-gradient pseudo-element, like the key tags' shoulders). The
+      swipe-to-change-tab chip slides out of the side as one.
    3. Activity rings: playoff odds on the ranking rows and your strip are a black disc with one bright arc and the
       number inside. Lime for everyone, yellow for you; the arc draws in when its card arrives.
    Islands and ring discs are pure black (--island) on purpose: the contrast against the soft sky is the point. */
@@ -4172,16 +4129,22 @@ h2, .sec-title, .team-name, .mu-team .tn { letter-spacing: -0.005em; }
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
 }
 
-/* --- 1. the grainy sky --- */
+/* --- 1. the grainy sky ---
+   The top edge is solid --sky-1, the same colour as the theme-color and the body, fading into the hazes over 150px:
+   the browser tints the status bar with that colour, so the sky now flows out of it with no seam. */
 .sky { background:
+  linear-gradient(180deg, var(--sky-1) 0, var(--sky-1) env(safe-area-inset-top, 0px), transparent calc(env(safe-area-inset-top, 0px) + 150px)),
   radial-gradient(55% 38% at 10% 6%, rgba(255, 255, 255, 0.6), transparent 70%),
   radial-gradient(50% 40% at 92% 14%, rgba(190, 165, 255, 0.62), transparent 72%),
   radial-gradient(65% 42% at 68% 58%, rgba(255, 176, 214, 0.5), transparent 72%),
   radial-gradient(70% 45% at 18% 66%, rgba(255, 224, 26, 0.3), transparent 72%),
   radial-gradient(45% 35% at 40% 32%, rgba(120, 230, 220, 0.35), transparent 72%),
   linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 50%, var(--sky-3) 100%); }
-.sky::after { content: ''; position: absolute; inset: 0; background-image: var(--grain); background-size: 160px 160px; opacity: 0.34; mix-blend-mode: overlay; }
+.sky::after { content: ''; position: absolute; inset: 0; background-image: var(--grain); background-size: 160px 160px; opacity: 0.34; mix-blend-mode: overlay;
+  -webkit-mask-image: linear-gradient(180deg, transparent env(safe-area-inset-top, 0px), #000 calc(env(safe-area-inset-top, 0px) + 150px));
+  mask-image: linear-gradient(180deg, transparent env(safe-area-inset-top, 0px), #000 calc(env(safe-area-inset-top, 0px) + 150px)); }
 :root[data-theme='dark'] .sky { background:
+  linear-gradient(180deg, var(--sky-1) 0, var(--sky-1) env(safe-area-inset-top, 0px), transparent calc(env(safe-area-inset-top, 0px) + 150px)),
   radial-gradient(1.5px 1.5px at 12% 18%, rgba(255, 255, 255, 0.75) 99%, transparent),
   radial-gradient(1px 1px at 27% 8%, rgba(255, 255, 255, 0.6) 99%, transparent),
   radial-gradient(1.5px 1.5px at 44% 26%, rgba(255, 255, 255, 0.55) 99%, transparent),
@@ -4195,16 +4158,6 @@ h2, .sec-title, .team-name, .mu-team .tn { letter-spacing: -0.005em; }
 :root[data-theme='dark'] .sky::after { opacity: 0.4; mix-blend-mode: soft-light; }
 
 /* --- 2. islands --- */
-@media (max-width: 760px) {
-  /* the ticker drops out of the top edge: flat black, rounded at the foot, its top corners curving into the edge */
-  .ticker, :root[data-theme='dark'] .ticker { top: 0; width: calc(100% - 48px); height: calc(env(safe-area-inset-top, 0px) + 46px); padding: env(safe-area-inset-top, 0px) 6px 0;
-    border-radius: 0 0 24px 24px; background-color: var(--island); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.55);
-    transform: scale(0.55, 0.15); transform-origin: 50% 0; }
-  .ticker.on { transform: none; transition: transform 0.5s cubic-bezier(0.3, 1.35, 0.5, 1), opacity 0.15s, visibility 0s; }
-  .ticker::before, .ticker::after { content: ''; position: absolute; top: 0; width: 22px; height: 22px; pointer-events: none; }
-  .ticker::before { right: 100%; background: radial-gradient(circle at 0 100%, transparent 21.5px, var(--island) 22px); }
-  .ticker::after { left: 100%; background: radial-gradient(circle at 100% 100%, transparent 21.5px, var(--island) 22px); }
-}
 /* the swipe chip slides out of the side edge, a ring filling as you pull and lime once letting go changes the tab */
 .tx-swipe, .tx-swipe.go { height: 56px; padding: 0 12px 0 20px; border-radius: 28px 0 0 28px; color: #FFFFFF; background: var(--island);
   -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; overflow: visible; }
