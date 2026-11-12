@@ -22,8 +22,8 @@
   <!-- everything the first screen needs starts downloading here, in parallel: the stylesheet, both typefaces (served
        from this site) and the connection to Sleeper's picture CDN for the team avatars. The build (vite.config.js)
        bundles app.js and lib/ and adds a modulepreload for each piece of the bundle itself. -->
-  <link rel="preload" href="assets/fonts/jersey-15-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/fonts/oxanium-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/big-shoulders-display-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/albert-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://sleepercdn.com">
   <!-- the league data: asked for as soon as the clock module is in, while the rest of the code is still on its way.
@@ -119,7 +119,7 @@
     <p class="masthead" id="masthead" hidden></p>
     <p class="masthead" id="reigning" hidden></p>
     <p class="fine">League data from the Sleeper API. Rest-of-season rankings from FantasyPros, DraftSharks and LeagueLogs, blended into one consensus. Not affiliated with any of them.</p>
-    <p class="version">Mir Inc. Sleeper Power Hour V3.0</p>
+    <p class="version">Mir Inc. Sleeper Power Hour V2.1</p>
   </footer>
 
   <div id="tip" class="tip" role="tooltip" hidden></div>

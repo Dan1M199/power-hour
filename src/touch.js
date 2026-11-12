@@ -3,6 +3,7 @@
 // rule uses for layout), so React's nodes, their classes and their own transitions are never touched.
 //  - press: a pressable thing dips under the finger and springs back, and a bubble of light spreads from the touch
 //  - dock: the phone's tab bar (styles.css, "2.0") follows a finger slid across it; lifting picks the tab under it
+//  - shine: a band of light crosses a glass card the first time it comes on screen
 //  - top pill: a round glass button that fills as you read down the page and takes you back to the top
 //  - hello: the one-time note that says what changed
 // 2.1 (Dan's request Nov 11, more of an iPhone app):
@@ -87,9 +88,30 @@ function initPress() {
 // ---------- the dock ----------
 // Phones: slide a finger along the tab bar and the amber pill follows it, tab to tab; lifting picks the tab under it.
 // A plain tap is left to the link itself. placeInk (app.js) puts the pill back on the page's own tab.
+// Real refraction for the dock's glass where the browser can bend a backdrop through an SVG filter (Chromium; iPhone
+// Safari can't, and every browser on an iPhone is Safari underneath, so it keeps the CSS frost, caustics and bevel).
+// The backdrop is pushed around by a slow, stretched noise, every colour by the same amount, so what passes behind the
+// glass bends like it would through a thick lens, clear, with no colour fringes (Dan, Nov 10).
+// styles.css applies it under html.lens-glass.
+function lensGlass() {
+  const ua = navigator.userAgent;
+  if (!window.chrome || /iPhone|iPad|iPod/.test(ua) || document.getElementById('dock-lens')) return;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('width', '0'); svg.setAttribute('height', '0');
+  svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+  svg.innerHTML = '<filter id="dock-lens" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">'
+    + '<feTurbulence type="fractalNoise" baseFrequency="0.008 0.05" numOctaves="2" seed="11" result="n"/>'
+    + '<feDisplacementMap in="SourceGraphic" in2="n" scale="18" xChannelSelector="R" yChannelSelector="G" result="d"/>'
+    + '<feGaussianBlur in="d" stdDeviation="1.2"/></filter>';
+  document.body.append(svg);
+  root.classList.add('lens-glass');
+}
+
 function initDock(placeInk) {
   const nav = document.querySelector('.tabs'), ink = nav?.querySelector('.tab-ink');
   if (!nav || !ink) return;
+  lensGlass();
   let drag = null;
   const tabs = () => [...nav.querySelectorAll('a')].filter((a) => !a.hidden);
   const under = (x) => {
@@ -248,6 +270,44 @@ function initPull() {
   for (const type of ['touchend', 'touchcancel']) addEventListener(type, drop, { passive: true });
 }
 
+// ---------- shine ----------
+// The first time a glass card is properly on screen, a band of light crosses it once. The band is drawn on a box laid
+// over the card from <body> (page coordinates, so it scrolls with the card), not inside it.
+const SHINE = '.car-slot.front .car-card, .gotw, .rank-card, .you-strip, .matchups > .mu, .live-panel, .you-card, .trade, .idea, .lab-grid > .panel, .wire-stats, .futures, .poll';
+let shineIo = null;
+export function shine(scope) {
+  shineIo?.disconnect();
+  if (calm() || !('IntersectionObserver' in window) || !scope) return;
+  let k = 0, last = 0;
+  shineIo = new IntersectionObserver((entries) => {
+    for (const en of entries) {
+      if (!en.isIntersecting) continue;
+      const card = en.target;
+      shineIo.unobserve(card);
+      // a card's own entrance (the ranking rows rise and grow) finishes first; a batch goes one after another
+      const now = performance.now(), at = Math.max(now + 420, last + 140);
+      last = at;
+      setTimeout(() => {
+        if (!card.isConnected) return;
+        const r = card.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > innerHeight || !r.width) return;
+        const box = el('div', 'tx-shine', '<i></i>');
+        box.setAttribute('aria-hidden', 'true');
+        box.style.cssText = `left:${r.left + scrollX}px;top:${r.top + scrollY}px;width:${r.width}px;height:${Math.min(r.height, 900)}px;border-radius:${getComputedStyle(card).borderRadius}`;
+        document.body.append(box);
+        // the band is a fixed width, so it reads the same on a phone card and a desktop row
+        const band = Math.min(r.width * 0.34, 150), i = box.firstChild;
+        i.style.width = `${band}px`;
+        const run = i.animate([{ transform: `translateX(${-band * 1.4}px) skewX(-18deg)` }, { transform: `translateX(${r.width + band * 0.4}px) skewX(-18deg)` }],
+          { duration: Math.min(1300, 700 + r.width * 0.5), easing: 'cubic-bezier(0.4, 0, 0.3, 1)' });
+        run.finished.catch(() => {}).then(() => box.remove());
+      }, at - now);
+      if (++k > 40) shineIo.disconnect(); // plenty for one page
+    }
+  }, { threshold: 0.25, rootMargin: '0px 0px -8% 0px' });
+  scope.querySelectorAll(SHINE).forEach((card) => shineIo.observe(card));
+}
+
 // ---------- the top pill ----------
 // Past a screen and a half, a round glass button rises above the dock: its ring fills with how far down the page you
 // are, and a tap goes back to the top.
@@ -275,10 +335,10 @@ function initTopPill() {
 // ---------- hello ----------
 // Once per device: a glass note above the dock that names the update and the one gesture nobody would guess.
 function hello() {
-  const KEY = 'ph-hello-3';
+  const KEY = 'ph-hello-21';
   if (root.classList.contains('admin-mode') || root.classList.contains('locked')) return;
   try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, '1'); } catch { return; }
-  const note = el('div', 'tx-hello', `<b>3.0</b><span><strong>The Power Hour 3.0.</strong> Arcade mode: the whole stadium redrawn in pixels. ${phone() ? 'Swipe sideways to change tabs.' : 'Same numbers, new cabinet.'}</span>`);
+  const note = el('div', 'tx-hello', `<b>2.1</b><span><strong>The Power Hour 2.1.</strong> ${phone() ? 'Swipe sideways to change tabs, drag a scouting report open, and tap the tab you are on to jump to the top.' : 'Flatter glass and tidier type, with more to swipe on your phone.'}</span>`);
   note.setAttribute('role', 'status');
   document.body.append(note);
   const close = () => { note.classList.remove('on'); setTimeout(() => note.remove(), 500); };
