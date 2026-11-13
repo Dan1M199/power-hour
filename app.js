@@ -19,6 +19,7 @@ import { posts, loadPosts } from './src/admin/posts.js';
 import { AdminShell } from './src/admin/AdminShell.jsx';
 import { createStore } from './src/store.js';
 import { initTouch, shine, pageIn } from './src/touch.js';
+import { initLiquid } from './src/liquid.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
 import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
 
@@ -2061,6 +2062,7 @@ async function main() {
   initMe();
   initTooltips();
   const touch = initTouch({ placeInk }); // 2.0: press, the dock's slide, the top pill (src/touch.js)
+  initLiquid(); // 2.3: the chrome's lens, its light and the scroll edges (src/liquid.js)
   const loader = startLoader();
   // Dan's posted headlines come with the data; a slow answer doesn't hold the page (they're added when they land)
   const posted = new URLSearchParams(location.search).has('demo') || window.__DEMO__ ? null : loadPosts();

@@ -88,30 +88,9 @@ function initPress() {
 // ---------- the dock ----------
 // Phones: slide a finger along the tab bar and the amber pill follows it, tab to tab; lifting picks the tab under it.
 // A plain tap is left to the link itself. placeInk (app.js) puts the pill back on the page's own tab.
-// Real refraction for the dock's glass where the browser can bend a backdrop through an SVG filter (Chromium; iPhone
-// Safari can't, and every browser on an iPhone is Safari underneath, so it keeps the CSS frost, caustics and bevel).
-// The backdrop is pushed around by a slow, stretched noise, every colour by the same amount, so what passes behind the
-// glass bends like it would through a thick lens, clear, with no colour fringes (Dan, Nov 10).
-// styles.css applies it under html.lens-glass.
-function lensGlass() {
-  const ua = navigator.userAgent;
-  if (!window.chrome || /iPhone|iPad|iPod/.test(ua) || document.getElementById('dock-lens')) return;
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('width', '0'); svg.setAttribute('height', '0');
-  svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
-  svg.innerHTML = '<filter id="dock-lens" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">'
-    + '<feTurbulence type="fractalNoise" baseFrequency="0.008 0.05" numOctaves="2" seed="11" result="n"/>'
-    + '<feDisplacementMap in="SourceGraphic" in2="n" scale="18" xChannelSelector="R" yChannelSelector="G" result="d"/>'
-    + '<feGaussianBlur in="d" stdDeviation="1.2"/></filter>';
-  document.body.append(svg);
-  root.classList.add('lens-glass');
-}
-
 function initDock(placeInk) {
   const nav = document.querySelector('.tabs'), ink = nav?.querySelector('.tab-ink');
   if (!nav || !ink) return;
-  lensGlass();
   let drag = null;
   const tabs = () => [...nav.querySelectorAll('a')].filter((a) => !a.hidden);
   const under = (x) => {
@@ -335,10 +314,10 @@ function initTopPill() {
 // ---------- hello ----------
 // Once per device: a glass note above the dock that names the update and the one gesture nobody would guess.
 function hello() {
-  const KEY = 'ph-hello-21';
+  const KEY = 'ph-hello-23';
   if (root.classList.contains('admin-mode') || root.classList.contains('locked')) return;
   try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, '1'); } catch { return; }
-  const note = el('div', 'tx-hello', `<b>2.1</b><span><strong>The Power Hour 2.1.</strong> ${phone() ? 'Swipe sideways to change tabs, drag a scouting report open, and tap the tab you are on to jump to the top.' : 'Flatter glass and tidier type, with more to swipe on your phone.'}</span>`);
+  const note = el('div', 'tx-hello', `<b>2.3</b><span><strong>The Power Hour 2.3.</strong> ${phone() ? 'Liquid glass: slide a finger along the tab bar and the pill turns to a drop of glass.' : 'Liquid glass: the bars bend the page under them, and their edge catches your pointer.'}</span>`);
   note.setAttribute('role', 'status');
   document.body.append(note);
   const close = () => { note.classList.remove('on'); setTimeout(() => note.remove(), 500); };
