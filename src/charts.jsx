@@ -215,8 +215,8 @@ export function HeatTable({ rows, cols, cells, n, invert = true, caption, mine =
                 if (!c) return <td key={j} />;
                 const t = (c.rank - 1) / Math.max(1, n - 1); // 0 best
                 const v = invert ? t : 1 - t;
-                const hue = v < 0.5 ? 212 : 352; // ice blue for the good end, racing red for the bad, fading out in the middle
-                return <td key={j} style={{ '--h': hue.toFixed(0), '--s': v < 0.5 ? '26%' : '82%', '--a': (0.06 + Math.abs(v - 0.5) * 1.3).toFixed(2) }} data-tip={c.tip}>{c.label ?? c.rank}</td>;
+                const hue = v < 0.5 ? 205 : 36; // sky blue for the good end, amber for the bad, fading to white in the middle
+                return <td key={j} style={{ '--h': hue.toFixed(0), '--a': (0.06 + Math.abs(v - 0.5) * 1.3).toFixed(2) }} data-tip={c.tip}>{c.label ?? c.rank}</td>;
               })}
             </tr>
           ))}

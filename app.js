@@ -276,7 +276,7 @@ function initTheme() {
   const html = document.documentElement, btn = $('#theme-btn'), dark = matchMedia('(prefers-color-scheme: dark)');
   const paint = (t) => {
     html.dataset.theme = t;
-    $('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#15122C' : '#F2F1FC');
+    $('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#0A1630' : '#4FBDF2');
     btn?.setAttribute('aria-label', t === 'dark' ? 'Switch to the day game (light mode)' : 'Switch to the night game (dark mode)');
   };
   paint(html.dataset.theme === 'dark' ? 'dark' : 'light');
@@ -1780,6 +1780,10 @@ function placeInk({ settle = false } = {}) {
   requestAnimationFrame(() => ink.classList.toggle('live', !morphs()));
 }
 
+// You (phones): the bar is gone, so the team picker and the theme switch live in a glass circle beside the tab dock,
+// your face in it. A tap opens the panel out of the circle (so does a tap on an empty you card, [data-open-me]); a tap outside, Escape, picking a team or scrolling away
+// closes it. On desktop .me and its panel are display: contents, so none of this shows and the bar is as it was.
+const phone = mq('(max-width: 760px)');
 function initMe() {
   const me = $('#me'), btn = $('#me-btn'), panel = $('#me-panel');
   if (!me || !btn || !panel) return;
@@ -1801,7 +1805,8 @@ function initMe() {
   $('#my-team')?.addEventListener('change', () => setTimeout(() => set(false), 250));
   addEventListener('hashchange', () => set(false));
   // the empty you cards point at the circle; on a phone a tap on one opens it
-  document.addEventListener('click', (e) => { if (e.target.closest?.('[data-open-me]')) { set(true); btn.focus({ preventScroll: true }); } });
+  document.addEventListener('click', (e) => { if (phone() && e.target.closest?.('[data-open-me]')) set(true); });
+  matchMedia('(max-width: 760px)').addEventListener?.('change', () => phone() || set(false));
 }
 
 // count big numbers up from zero, keeping their format (decimals, sign, %)
@@ -1962,6 +1967,7 @@ function paintTabs() {
   const a = $('.tabs a[data-view="live"]'), fin = DATA.finalCall || DATA.after;
   a.hidden = !DATA.liveMode && !DATA.after;
   a.querySelector('.tn').textContent = fin ? 'Final' : 'Live';
+  $('.brand').setAttribute('href', liveHome() ? '#live' : '#rankings');
   placeInk({ settle: true });
 }
 
@@ -2068,6 +2074,7 @@ async function main() {
     (showPage ||= pageRoot($('#app')))(LoadError, { message: String(e.message || e) });
     return;
   }
+  $('#league-name').textContent = `${RAW.league.name} ${RAW.league.season}`;
   $('#footer-meta').textContent = `${RAW.isDemo ? 'Demo snapshot. ' : ''}Through week ${DATA.meta.lastScored}. ${updatedText() ? `${updatedText()}.` : ''}${DATA.overrides.length ? ` Manual fixes: ${DATA.overrides.map((o) => o.note).join('; ')}.` : ''}`;
   initTeamPicker();
   paintTabs();

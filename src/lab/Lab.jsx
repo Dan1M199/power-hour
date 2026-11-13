@@ -15,7 +15,7 @@ export function Lab({ sub, D, raw, ros, me, team, onTeam, trade, calm, h }) {
   const head = (aside, line) => <LabHead sub={sub} D={D} me={me} aside={aside}>{line}</LabHead>;
   if (sub === 'trades') return <>
     {head(<TradePicker D={D} me={me} onTeam={trade.onTeam} />,
-      'Find fair trades that improve both starting lineups. Pick your team to explore the possibilities.')}
+      'Every 1-for-1, 2-for-1 and 1-for-2 swap with the rest of the league, kept only when both starting lineups get better and the consensus values line up. Ranked by how much the deal helps you, with a bonus for deals the other side should like too.')}
     <TradesPage D={D} me={me} h={h} state={trade.state} onState={trade.onState} />
   </>;
   if (sub === 'league') return <>
@@ -23,7 +23,7 @@ export function Lab({ sub, D, raw, ros, me, team, onTeam, trade, calm, h }) {
     <LabPage D={D} me={me} h={h} />
   </>;
   return <>
-    {head(null, 'Your roster, playoff odds and season in one place. Pick a team to explore.')}
+    {head(null, 'One team at a time: playoff odds, the players carrying it, how well it\'s managed, how it scores, where it\'s strong, what\'s left on the schedule and how it stacks up against any rival. Tap the buttons, the games and the switches.')}
     <div className="paper-slot" id="paper-root">
       <TeamDashboard me={me} D={D} raw={raw} ros={ros} rid={team} h={h} calm={calm} onTeam={onTeam} />
     </div>

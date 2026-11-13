@@ -47,7 +47,7 @@ export function GamesPage({ D, me, h, calm, lite }) {
     <section className="view-head">
       <div>
         <h1><span className="wk">{wk ? `Week ${wk}` : 'Off week'}</span>Games</h1>
-        <p>This week’s matchups, odds and lineup breakdowns. Make your pick before kickoff.</p>
+        <p>Every game this week, projected from the lineups as they stand. Open one for the slot-by-slot breakdown, and make your pick before kickoff.</p>
       </div>
     </section>
     <GameOfTheWeek D={D} h={h} onBreakdown={toBreakdown} />

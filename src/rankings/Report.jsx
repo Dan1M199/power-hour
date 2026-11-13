@@ -113,7 +113,7 @@ export function Report({ D, t, h }) {
           })}</div>
           <p className="sched-sum">{`${t.schedWins >= 0 ? '+' : ''}${t.schedWins.toFixed(2)} wins vs an average slate, ${t.ranks.schedWins === n ? 'the toughest' : `${ordinal(n + 1 - t.ranks.schedWins)}-toughest`} in the league.`}</p></div> : null}
         <TeamValue D={D} t={t} h={h} />
-        <div className="mini"><h4>Weekly points (solid = win, red = loss, dashed = league average)</h4><WeeklyBars weeks={t.weeks} avg={avg} width={560} height={150} /></div>
+        <div className="mini"><h4>Weekly points (green = win, dashed = league average)</h4><WeeklyBars weeks={t.weeks} avg={avg} width={560} height={150} /></div>
         <div className="mini"><h4>{`Where they finish in 10,000 simulations (seed 1 → ${seeds.length})`}</h4>
           <div className="seeds" style={{ '--n': seeds.length }}>{seeds.map((p, i) => <i key={i} className={i < pt ? 'in' : ''} style={{ height: `${(p / maxSeed) * 100}%` }} data-tip={`Seed ${i + 1}: ${(p * 100).toFixed(1)}%`} />)}</div>
           <div className="seed-axis" style={{ '--n': seeds.length }}>{seeds.map((_, i) => <span key={i}>{i + 1}</span>)}</div>

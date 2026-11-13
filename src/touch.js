@@ -13,9 +13,6 @@
 //  - tapping the tab you're already on goes back to the top, as a tab bar does
 // All of it is off under reduced motion, and the press and the dock only answer a finger or a pen, never a mouse.
 
-import { initFlow } from './flow.js';
-import { GRADIENT_CONTROLS, initGradient } from './gradient.js';
-
 const mq = (q) => { const m = matchMedia(q); return () => m.matches; };
 const calm = mq('(prefers-reduced-motion: reduce)');
 const phone = mq('(max-width: 760px)');
@@ -75,7 +72,6 @@ function initPress() {
     const s = Math.max(0.93, 1 - 5 / Math.max(r.width, r.height));
     dip = node.animate([{ scale: '1' }, { scale: String(s) }], { duration: 110, easing: 'ease-out', fill: 'forwards' });
     // the light: a box the shape of the thing pressed, a bubble growing in it from under the finger
-    if (hit.matches(GRADIENT_CONTROLS)) return; // these ripple on a completed click, on every input device
     const cs = getComputedStyle(node);
     lens.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;border-radius:${cs.borderRadius}`;
     const reach = Math.hypot(Math.max(e.clientX - r.left, r.right - e.clientX), Math.max(e.clientY - r.top, r.bottom - e.clientY));
@@ -181,7 +177,7 @@ function initDock(placeInk) {
 // finger in from the edge and turns amber once letting go will change the page. Touch events, all passive: the
 // browser decides between a scroll and this in the first few pixels, the same way we do. Starts within 24px of an
 // edge are left to Safari's own back and forward swipe.
-const OWN_DRAG = '.lead-car, .tabs, .me, .rxn, .stk, .pull, .lb-pull, .adm-page, .unveil, .share-sheet, .lockout, .vf, input, select, textarea, [contenteditable]';
+const OWN_DRAG = '.lead-car, .tabs, .me, .rxn, .stk, .pull, .adm-page, .unveil, .share-sheet, .lockout, .vf, input, select, textarea, [contenteditable]';
 const scrollsSideways = (n) => {
   for (; n && n !== document.body; n = n.parentElement) {
     if (n.scrollWidth > n.clientWidth + 4) { const o = getComputedStyle(n).overflowX; if (o === 'auto' || o === 'scroll') return true; }
@@ -339,10 +335,10 @@ function initTopPill() {
 // ---------- hello ----------
 // Once per device: a glass note above the dock that names the update and the one gesture nobody would guess.
 function hello() {
-  const KEY = 'ph-hello-50';
+  const KEY = 'ph-hello-21';
   if (root.classList.contains('admin-mode') || root.classList.contains('locked')) return;
   try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, '1'); } catch { return; }
-  const note = el('div', 'tx-hello', `<b>5.0</b><span><strong>Flowy glass.</strong> The sky follows your finger. New under the rankings: Bragging rights, with crowns, bounties and a tale of the tape.</span>`);
+  const note = el('div', 'tx-hello', `<b>2.1</b><span><strong>The Power Hour 2.1.</strong> ${phone() ? 'Swipe sideways to change tabs, drag a scouting report open, and tap the tab you are on to jump to the top.' : 'Flatter glass and tidier type, with more to swipe on your phone.'}</span>`);
   note.setAttribute('role', 'status');
   document.body.append(note);
   const close = () => { note.classList.remove('on'); setTimeout(() => note.remove(), 500); };
@@ -352,8 +348,6 @@ function hello() {
 }
 
 export function initTouch({ placeInk }) {
-  initGradient();
-  initFlow();
   initDock(placeInk);
   initTopPill();
   if (!calm()) initPress();

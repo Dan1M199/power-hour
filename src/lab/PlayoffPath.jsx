@@ -256,7 +256,7 @@ export function PlayoffPath({ D, me, h }) {
                 <i style={{ height: `${Math.max(2, (s.share / seedMax) * 100)}%` }} /><small>{s.seed}</small>
               </span>
             ))}</div>
-            <p className="pth-note">{end.inPlayoffs ? `The highlighted seeds make the playoffs. The usual finish gets you in.` : `The highlighted seeds make the playoffs. The usual finish leaves you out, so the paths beside this one are the plan.`}</p>
+            <p className="pth-note">{end.inPlayoffs ? `Green seeds make the playoffs. The usual finish gets you in.` : `Green seeds make the playoffs. The usual finish leaves you out, so the paths beside this one are the plan.`}</p>
           </> : null}
         </article>
       </div>
