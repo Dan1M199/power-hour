@@ -368,3 +368,59 @@ html.admin-mode :is(.topbar,.sky,.footer) { display: none; }
 :root:root[data-theme='dark'] .view-head :is(h1,.page-title) .wk { color: #FFA3B1; }
 
 .trade-legend { background: var(--face); border-radius: 20px; box-shadow: none; border: 0; padding: 18px; }
+
+/* Inset edges give the flat surfaces a pressed, tactile finish. */
+:root {
+  --edge-light: rgba(255,255,255,.9); --edge-shade: rgba(38,53,77,.15);
+  --imprint: inset 1px 1px 0 var(--edge-light), inset -1px -2px 0 var(--edge-shade);
+  --pressed: inset 1px 2px 3px rgba(38,53,77,.18), inset -1px -1px 0 var(--edge-light);
+  --accent-blue: #37629B; --accent-teal: #287568; --accent-plum: #795892;
+  --wash-blue: #E8EFF9; --wash-teal: #E5F2EE; --wash-plum: #F0EAF6; --wash-amber: #F7EEDC;
+}
+:root[data-theme='dark'] {
+  --edge-light: rgba(255,255,255,.12); --edge-shade: rgba(0,0,0,.4);
+  --pressed: inset 1px 2px 3px rgba(0,0,0,.4), inset -1px -1px 0 var(--edge-light);
+  --accent-blue: #A6C7F4; --accent-teal: #95D8C4; --accent-plum: #D1B4EB;
+  --wash-blue: #243449; --wash-teal: #213B35; --wash-plum: #362D43; --wash-amber: #403726;
+}
+:is(.glass,.glass.rim,.rk .glass,.rk .glass.rim,.pp-tile,.pp-head,.wire-stats > div,.adm-signin) {
+  box-shadow: var(--imprint), 0 0 0 var(--ring-w,0px) var(--mine-edge);
+}
+:is(.filters button,.filters a,.cta,.pth-cta,.gotw-more,.drive-pick button,.odds-more,.pick,.poll-pick,.detail-close,.focus-nav button,.pp-share,.car-arrow,.car-pause,.adm-btn,.adm-pill,.theme-btn,.me-btn) {
+  box-shadow: var(--imprint);
+}
+:is(.filters button,.cta,.pth-cta,.gotw-more,.drive-pick button,.odds-more,.pick,.poll-pick,.detail-close,.focus-nav button,.pp-share,.car-arrow,.car-pause,.adm-btn,.adm-pill,.theme-btn,.me-btn):active {
+  box-shadow: var(--pressed); transform: translateY(1px);
+}
+:is(.mini,.mgr,.trade-side,.idea-swap > div,.bd-side,.fan,.fut,.trade-legend) { box-shadow: var(--pressed); }
+.wire-stats > div:nth-child(1) { background: var(--wash-blue); }
+.wire-stats > div:nth-child(2) { background: var(--wash-teal); }
+.wire-stats > div:nth-child(3) { background: var(--wash-plum); }
+.wire-stats > div:nth-child(4) { background: var(--wash-amber); }
+.lab-tabs a:nth-child(1)[aria-current='page'] { background: var(--wash-blue); }
+.lab-tabs a:nth-child(2)[aria-current='page'] { background: var(--wash-plum); }
+.lab-tabs a:nth-child(3)[aria-current='page'] { background: var(--wash-teal); }
+/* A named, tinted enclosure makes every tier a distinct group at every width. */
+.lb-group { --tier-wash: var(--wash-blue); --tier-ink: var(--accent-blue); padding: 12px; margin: 18px 0;
+  border: 1px solid color-mix(in srgb, var(--tier-ink) 26%, transparent); border-radius: 26px;
+  background: var(--tier-wash); box-shadow: var(--pressed); }
+.lb-group.good { --tier-wash: var(--wash-teal); --tier-ink: var(--accent-teal); }
+.lb-group.mid { --tier-wash: var(--wash-plum); --tier-ink: var(--accent-plum); }
+.lb-group.low { --tier-wash: var(--wash-amber); --tier-ink: #8A6028; }
+.lb-group.stinks { --tier-wash: var(--bad-bg); --tier-ink: #A62C42; }
+:root[data-theme='dark'] .lb-group.low { --tier-ink: #E8C17F; }
+:root[data-theme='dark'] .lb-group.stinks { --tier-ink: #FFADBB; }
+.lb-group .lb-tier { display: flex; align-items: center; gap: 14px; margin: 0; padding: 4px 6px 14px;
+  background: none; color: var(--tier-ink); font: 750 13px/1.4 var(--body); letter-spacing: .01em; }
+.lb-group .lb-tier::after { content: ''; flex: 1; height: 1px; background: currentColor; opacity: .28; }
+.lb-group .lb { border-radius: 18px; overflow: clip; background: var(--face); }
+.gotw .ball-pct { color: #171B25; }
+@media (max-width:760px) {
+  .lb-group { padding: 10px; margin: 22px 0; border-radius: 26px; }
+  .lb-group:first-of-type { margin-top: 0; }
+  .lb-group .lb { background: none; overflow: visible; }
+  .lb-group .lb > .lb-row { border-radius: 18px; box-shadow: var(--imprint); }
+  .board { --cols: 20px 28px minmax(0,1fr) auto 36px; --gx: 6px; --px: 10px; }
+  .lb-btn > :is(.avatar,.lb-face), .lb-row.lead .lb-face { width: 28px; height: 28px; }
+  .lb-odds .aring { width: 36px; height: 36px; }
+}
