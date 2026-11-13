@@ -11,6 +11,7 @@ import { Poll } from './Poll.jsx';
 import { Report } from './Report.jsx';
 import { usePosts } from '../admin/posts.js';
 import { Lockout } from './Lockout.jsx';
+import { Rivalry } from './Rivalry.jsx';
 
 // Dan's way into the headline desk (#admin), shown only while he's signed in
 function DeskLink() {
@@ -237,6 +238,7 @@ export function RankingsPage({ D, me, h, held, car, sources, updated, message, r
         <Sources sources={sources} updated={updated} />
       </div>
     </section>
+    <Rivalry D={D} me={me} h={h} />
     <details className="panel glass method-box">
       <summary><h2>How the score works</h2><Xp /></summary>
       <div className="method">{METHOD(h.pctW)}</div>

@@ -13,6 +13,7 @@
 //  - tapping the tab you're already on goes back to the top, as a tab bar does
 // All of it is off under reduced motion, and the press and the dock only answer a finger or a pen, never a mouse.
 
+import { initFlow } from './flow.js';
 import { GRADIENT_CONTROLS, initGradient } from './gradient.js';
 
 const mq = (q) => { const m = matchMedia(q); return () => m.matches; };
@@ -338,10 +339,10 @@ function initTopPill() {
 // ---------- hello ----------
 // Once per device: a glass note above the dock that names the update and the one gesture nobody would guess.
 function hello() {
-  const KEY = 'ph-hello-40';
+  const KEY = 'ph-hello-50';
   if (root.classList.contains('admin-mode') || root.classList.contains('locked')) return;
   try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, '1'); } catch { return; }
-  const note = el('div', 'tx-hello', `<b>4.0</b><span><strong>The Power Hour.</strong> Open Profile in the bottom bar to pick your team or switch themes.</span>`);
+  const note = el('div', 'tx-hello', `<b>5.0</b><span><strong>Flowy glass.</strong> The sky follows your finger. New under the rankings: Bragging rights, with crowns, bounties and a tale of the tape.</span>`);
   note.setAttribute('role', 'status');
   document.body.append(note);
   const close = () => { note.classList.remove('on'); setTimeout(() => note.remove(), 500); };
@@ -352,6 +353,7 @@ function hello() {
 
 export function initTouch({ placeInk }) {
   initGradient();
+  initFlow();
   initDock(placeInk);
   initTopPill();
   if (!calm()) initPress();
