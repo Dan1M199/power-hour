@@ -424,3 +424,56 @@ html.admin-mode :is(.topbar,.sky,.footer) { display: none; }
   .lb-btn > :is(.avatar,.lb-face), .lb-row.lead .lb-face { width: 28px; height: 28px; }
   .lb-odds .aring { width: 36px; height: 36px; }
 }
+
+/* One dock for navigation, team selection and theme on every screen. */
+:root { --dock-h: 64px; --dock-gap: calc(12px + env(safe-area-inset-bottom, 0px)); }
+html { scroll-padding: calc(16px + env(safe-area-inset-top, 0px)) 0 calc(var(--dock-h) + var(--dock-gap) + 16px); }
+.topbar.bottom-dock {
+  display: flex; position: fixed; z-index: 20; inset: auto 0 var(--dock-gap);
+  width: min(540px, calc(100% - 24px)); height: var(--dock-h);
+  margin: 0 auto; padding: 6px; gap: 4px; border-radius: 22px;
+  overflow: visible; background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.bottom-dock::before {
+  content: ''; display: block; position: absolute; inset: 0; z-index: -1;
+  width: auto; height: auto; border-radius: inherit; background: var(--dock-glass);
+  box-shadow: var(--chrome-rim), var(--chrome-shadow);
+  backdrop-filter: var(--frost); -webkit-backdrop-filter: var(--frost);
+}
+.bottom-dock .tabs, :root[data-theme='dark'] .bottom-dock .tabs {
+  display: flex; position: relative; inset: auto; transform: none;
+  flex: 1; min-width: 0; width: auto; height: auto; padding: 0; margin: 0;
+  background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.bottom-dock .tabs a { flex: 1; min-width: 0; padding: 0; flex-direction: column; gap: 4px; font-size: 11px; }
+.bottom-dock .tabs .ti { display: block; width: 20px; height: 20px; }
+.bottom-dock .tabs .tl { display: none; }
+.bottom-dock .tabs .ts { display: inline; }
+.bottom-dock .tab-ink { inset: 0 auto 0 0; border-radius: 16px; background: var(--bad-bg); }
+.bottom-dock .tabs a[aria-current='page'] { color: #B8112A; }
+:root[data-theme='dark'] .bottom-dock .tabs a[aria-current='page'] { color: #FFA3B1; }
+.bottom-dock .me { display: block; position: relative; inset: auto; flex: 0 0 clamp(46px, 15%, 72px); width: auto; height: auto; }
+.bottom-dock .me-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  width: 100%; height: 100%; color: var(--on-canvas); background: var(--tile);
+  border-radius: 16px; font: 650 11px/1.2 var(--body);
+}
+.bottom-dock .me-btn :is(svg,img) { width: 20px; height: 20px; }
+.bottom-dock .me-btn [hidden] { display: none; }
+.bottom-dock .me-panel {
+  display: none; position: absolute; inset: auto 0 calc(100% + 16px) auto;
+  width: min(320px, calc(100vw - 36px)); padding: 16px; gap: 10px; border-radius: 24px;
+  background: var(--face); color: var(--on-canvas); box-shadow: var(--imprint), var(--chrome-shadow);
+}
+.bottom-dock .me.open .me-panel { display: grid; opacity: 1; visibility: visible; pointer-events: auto; transform: none; }
+.bottom-dock .me-head { display: block; margin: 0; font: 750 18px var(--body); }
+.bottom-dock .team-pick { display: flex; align-items: center; margin: 0; }
+.bottom-dock .team-pick select { flex: 1; min-width: 0; max-width: none; min-height: 44px; font-size: 16px; }
+.bottom-dock .me-panel .theme-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 44px; }
+.bottom-dock .theme-btn::after { content: 'Obsidian cards'; }
+:root[data-theme='dark'] .bottom-dock .theme-btn::after { content: 'Ice cards'; }
+.footer { padding-bottom: calc(36px + var(--dock-h) + var(--dock-gap)); }
+.bottom-dock .tabs { align-items: stretch; }
+.bottom-dock .tabs a:not([hidden]) { display: flex; align-items: center; justify-content: center; }
+.tx-hello { bottom: calc(var(--dock-h) + var(--dock-gap) + 12px); }
+main { padding-top: calc(22px + env(safe-area-inset-top, 0px)); }

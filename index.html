@@ -43,11 +43,7 @@
 <body>
   <div class="sky" aria-hidden="true"><span class="cloud c1"></span><span class="cloud c2"></span><span class="cloud c3"></span></div>
 
-  <header class="topbar glass">
-    <a class="brand" href="#rankings" aria-label="The Power Hour home">
-      <img class="brand-logo" src="assets/logo-header.webp" alt="" width="52" height="48" fetchpriority="high">
-      <span class="brand-text"><strong>The Power Hour</strong><small id="league-name">Loading league…</small></span>
-    </a>
+  <div class="topbar bottom-dock">
     <nav class="tabs" aria-label="Sections">
       <span class="tab-ink" aria-hidden="true"></span>
       <!-- the icons show on phones only, where the tabs are the glass dock at the foot of the screen (2.0, styles.css) -->
@@ -57,13 +53,11 @@
       <a href="#matchups" data-view="matchups"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20c-1.200-5.600.2-10.400 3.200-13.200S14.400 2.800 20 4c1.200 5.600-.2 10.400-3.200 13.200S9.600 21.200 4 20Z"/><path d="M9.300 14.700l5.400-5.400M10.500 11l2.500 2.500"/></svg><span class="tn">Games</span></a>
       <a href="#lab" data-view="lab"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5.500 9.500A1.700 1.700 0 0 0 6 21h12a1.700 1.700 0 0 0 1.500-2.500L14 9V3M7.600 15h8.800"/></svg><span class="tn">Lab</span></a>
     </nav>
-    <!-- you: on desktop the theme switch and the team picker sit in the bar as before (.me and .me-panel are display:
-         contents there). On phones the bar is gone and this is a glass circle beside the tab dock, your face in it; a tap
-         opens the panel out of the circle (initMe in app.js). -->
     <div class="me" id="me">
       <button class="me-btn" id="me-btn" type="button" aria-expanded="false" aria-controls="me-panel" aria-label="Your team and the theme">
         <img class="me-btn-face" alt="" hidden>
         <svg class="me-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20.5c1.2-4 4-6 7.5-6s6.3 2 7.5 6"/></svg>
+        <span class="profile-label">Profile</span>
       </button>
       <div class="me-panel" id="me-panel">
         <p class="me-head" aria-hidden="true">Your team</p>
@@ -78,7 +72,7 @@
         </label>
       </div>
     </div>
-  </header>
+  </div>
 
   <main id="app" tabindex="-1">
     <!-- the kicker loader: shown only if loading takes longer than 300 ms (app.js, startLoader). The clip isn't

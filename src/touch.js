@@ -341,7 +341,7 @@ function hello() {
   const KEY = 'ph-hello-40';
   if (root.classList.contains('admin-mode') || root.classList.contains('locked')) return;
   try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, '1'); } catch { return; }
-  const note = el('div', 'tx-hello', `<b>4.0</b><span><strong>The Power Hour.</strong> ${phone() ? 'A new look: obsidian, ice and racing red. Your profile button at the top picks your team and switches between ice and obsidian.' : 'A new look: obsidian, ice and racing red. The moon in the bar switches the cards between ice and obsidian.'}</span>`);
+  const note = el('div', 'tx-hello', `<b>4.0</b><span><strong>The Power Hour.</strong> Open Profile in the bottom bar to pick your team or switch themes.</span>`);
   note.setAttribute('role', 'status');
   document.body.append(note);
   const close = () => { note.classList.remove('on'); setTimeout(() => note.remove(), 500); };
