@@ -1561,29 +1561,137 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .you-chip.up { color: var(--good); background: var(--good-bg); }
 .you-chip.down { color: var(--bad); background: var(--bad-bg); }
 .chip .dot.live { background: var(--flag); }
-.wr-list { list-style: none; margin: 0; padding: 0; display: grid; }
-.wr { display: grid; grid-template-columns: 30px 38px minmax(0, 1fr) auto; gap: 5px 12px; align-items: center; padding: 8px 8px; border-bottom: 1px solid var(--line); }
-.wr:last-child { border-bottom: 0; }
-.wr.mine { border-radius: 22px; background: var(--mine-bg); box-shadow: inset 0 0 0 2px var(--mine-edge); }
-.wr-n { font: 900 28px/1 var(--display); text-align: right; color: var(--ink); }
-.wr:nth-child(-n + 3) .wr-n { color: var(--good); }
-.wr.last .wr-n { color: var(--bad); }
-.wr .avatar { width: 38px; height: 38px; }
-.wr .avatar.ph { font-size: 17px; }
-.wr-who { min-width: 0; display: grid; gap: 4px; justify-items: start; }
-.wr-who b { max-width: 100%; font: 800 19px/1.05 var(--display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.st-chip { max-width: 100%; padding: 3px 9px; border-radius: 999px; font: 700 11.5px/1.3 var(--body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.st-chip.up { color: var(--good); background: var(--good-bg); }
-.st-chip.down { color: var(--bad); background: var(--bad-bg); }
-.st-chip.won { color: var(--ink); background: var(--grass-2); }
-.st-chip.lost { color: var(--chalk); background: var(--flag); }
-.wr-bar { grid-column: 3 / -1; grid-row: 2; display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--tile-2); }
-.wr-bar i { display: block; height: 100%; }
-.wr-bar .bk { background: var(--turf); }
-.wr-bar .rs { background: repeating-linear-gradient(135deg, var(--grass-2) 0 6px, #B9DC8F 6px 12px); }
-.wr-num { text-align: right; line-height: 1.1; }
-.wr-num b { display: block; font: 900 26px/1 var(--display); color: var(--ink); }
-.wr-num small { font-size: 11.5px; color: var(--ink-3); white-space: nowrap; }
+/* the week as cards (src/live/WeekCards.jsx): one tray a team, a health bar for the week and the win odds as a ring;
+   a tap flips the card to its scoreboard side. Phones: four to a page, two by two, pages swiped sideways (scroll snap). */
+.wc-track { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 12px; }
+.wc-page { display: contents; }
+.wc-pager { display: none; }
+.wc { list-style: none; perspective: 900px; min-width: 0; }
+.wc-in { position: relative; display: grid; width: 100%; height: 100%; border-radius: 26px;
+  transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.3, 1.25, 0.5, 1); }
+.wc-face.front { margin: 0; border: 0; width: 100%; height: 100%; font: inherit; color: inherit; text-align: left; }
+.wc-face { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.wc-face:focus-visible, .wc-acts button:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+/* pressed: the card gives under the finger (the face, so the flip's own transform is untouched) */
+.wc-face.front { transition: scale 0.12s ease-out, background-color 0.15s; }
+.wc-face.front:active { scale: 0.97; }
+.wc.flipped .wc-in { transform: rotateY(180deg); }
+.wc-face { grid-area: 1 / 1; display: grid; align-content: start; gap: 7px; min-width: 0; padding: 12px 13px 13px; border-radius: 26px;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.wc-face.front { position: relative; background-color: var(--tile); box-shadow: var(--tray-edge); }
+.wc.mine .wc-face.front { background-color: var(--mine-bg); box-shadow: var(--tray-edge), inset 0 0 0 2px var(--mine-edge); }
+.wc-face.back { transform: rotateY(180deg); align-content: space-between; color: var(--chalk); background-color: var(--board);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.12), 0 4px 0 rgba(0, 30, 10, 0.35); }
+@media (hover: hover) {
+  .wc-face.front:hover { background-color: var(--tile-2); } .wc.mine .wc-face.front:hover { background-color: var(--mine-bg); }
+  .wc-face.front:hover .wc-turn { color: var(--ink); background: var(--amber); }
+}
+.wc-top { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 8px; }
+.wc-n { font: 900 30px/1 var(--display); color: var(--ink); min-width: 1ch; }
+.wc.top .wc-n, .wc:nth-child(-n + 3) .wc-n { color: var(--good); }
+.wc-page:not(:first-child) .wc:nth-child(-n + 3) .wc-n { color: var(--ink); }
+.wc.last .wc-n { color: var(--bad); }
+.wc-av.avatar { width: 34px; height: 34px; }
+.wc-top .aring { justify-self: end; width: 46px; height: 46px; }
+.wc-top .aring-n b { font-size: 14px; }
+.wc-name { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.1em;
+  font: 800 17px/1.05 var(--display); color: var(--ink); overflow-wrap: anywhere; }
+.wc-pts { display: flex; align-items: baseline; gap: 5px; }
+.wc-pts b { font: 900 32px/1 var(--display); color: var(--ink); }
+.wc-pts small, .wc-foot { font-size: 11.5px; font-weight: 700; color: var(--ink-3); }
+.wc-foot { display: flex; justify-content: space-between; gap: 6px; white-space: nowrap; }
+.wc-foot span { overflow: hidden; text-overflow: ellipsis; }
+/* the word on the game and the flip glyph: every card says it turns over, a tap isn't a hidden gesture */
+.wc-tag { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.wc-turn { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; color: var(--ink-2); background: var(--paper);
+  box-shadow: inset 0 0 0 1.5px var(--line); transition: background-color 0.15s, color 0.15s, rotate 0.4s cubic-bezier(0.3, 1.4, 0.5, 1); }
+.wc-turn svg { width: 15px; height: 15px; }
+.wc-face.front:active .wc-turn { rotate: 180deg; }
+.wc-word { justify-self: start; padding: 2px 9px; border-radius: 999px; font: 700 11.5px/1.35 var(--body); }
+.wc-word.good { color: var(--good); background: var(--good-bg); }
+.wc-word.bad { color: var(--bad); background: var(--bad-bg); }
+.wc-word.toss { color: var(--ink-2); background: var(--paper); }
+/* the health bar: a scoreboard capsule cut into ten cells, banked solid, the rest striped, a notch at the opponent */
+.hp { --hp: var(--lime); position: relative; display: flex; height: 14px; padding: 2px; border-radius: 999px; overflow: hidden;
+  background: var(--board); box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.35); }
+.hp.good { --hp: #7BE052; }
+.hp.toss { --hp: var(--amber); }
+.hp.bad { --hp: #FF5A4A; }
+.hp.opp { --hp: #9FC3FF; }
+.hp i { display: block; height: 100%; min-width: 0; }
+.hp-bk { border-radius: 999px 0 0 999px; background: var(--hp); box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.45); }
+.hp-rs { border-radius: 0 999px 999px 0; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--hp) 70%, transparent) 0 4px, color-mix(in srgb, var(--hp) 30%, transparent) 4px 8px); }
+.hp::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1.5px), rgba(13, 36, 21, 0.85) calc(10% - 1.5px) 10%); }
+.hp-notch { position: absolute; z-index: 1; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; border-radius: 2px; background: #FFFFFF; box-shadow: 0 0 0 1px var(--board); }
+/* the back: the two teams' bars against each other */
+.wc-vs { font-size: 11.5px; font-weight: 700; color: rgba(232, 240, 223, 0.78); }
+.wc-duel { display: grid; gap: 5px; }
+.wc-row { display: flex; justify-content: space-between; gap: 6px; align-items: baseline; }
+.wc-row em { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 13px/1.1 var(--body); font-style: normal; }
+.wc-row b { font: 800 19px/1 var(--display); color: var(--yellow); }
+.wc-row + .hp + .wc-row b { color: var(--chalk); }
+.wc-gap { font: 800 16px/1.1 var(--display); color: var(--chalk); }
+.wc-left { font-size: 11.5px; line-height: 1.35; color: rgba(232, 240, 223, 0.82); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+/* the back's actions: over to the opponent's card, and back over */
+.wc-acts { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.wc-acts button { margin: 0; border: 0; font: inherit; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.wc-acts .wc-jump { min-width: 0; min-height: 32px; padding: 0 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 999px;
+  font: 700 12.5px/1 var(--body); color: var(--board); background: var(--yellow); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.45); }
+.wc-jump::after { content: ' \2192'; }
+.wc-jump:active { translate: 0 2px; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.45); }
+.wc-turn.back { color: var(--chalk); background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.25); }
+@media (pointer: coarse) { .wc-jump, .wc-turn.back { min-height: 40px; } .wc-turn.back { width: 40px; height: 40px; } }
+/* the card you jumped to answers with a ring that pulses out twice */
+.wc.ping .wc-in::after { content: ''; position: absolute; inset: -4px; border-radius: 30px; pointer-events: none; box-shadow: 0 0 0 3px var(--amber); }
+@media (prefers-reduced-motion: reduce) { .wc-in { transition: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .wc.ping .wc-in::after { animation: wc-ping 0.8s ease-out 2 both; }
+  @keyframes wc-ping { from { opacity: 1; scale: 1; } to { opacity: 0; scale: 1.08; } }
+  /* first visit only: the first card lifts its corner to show it turns over, then settles (gone once any card is flipped) */
+  .wc.teach .wc-in { animation: wc-peek 1.3s cubic-bezier(0.3, 1.2, 0.5, 1) 1.4s 2 both; }
+  :is(.rv:not(.rv-in), .reveal:not(.in)) .wc.teach .wc-in { animation-play-state: paused; }
+  @keyframes wc-peek { 0%, 100% { transform: none; } 35% { transform: rotateY(-32deg); } 60% { transform: rotateY(6deg); } }
+  .wc.teach .wc-turn { animation: wc-turn-hint 1.3s ease-in-out 1.4s 2 both; }
+  @keyframes wc-turn-hint { 35% { rotate: 180deg; color: var(--ink); background: var(--amber); } 100% { rotate: 360deg; } }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hp i { transform-origin: left; animation: grow-x 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both; }
+  .hp .hp-rs { animation-delay: 0.45s; }
+  :is(.rv:not(.rv-in), .reveal:not(.in)) .hp i { animation-play-state: paused; }
+}
+/* phones: pages of four, two by two, swiped sideways; the pager under them says where you are and jumps */
+@media (max-width: 760px) {
+  .wk-rank { padding-inline: 12px; }
+  .wk-rank > :is(h2, .sub) { padding-inline: 6px; }
+  .wc-track { display: grid; grid-auto-flow: column; grid-auto-columns: calc(100% - 22px); gap: 0; margin: 0 -12px; position: relative; padding: 4px 0 6px;
+    grid-template-columns: var(--wc-cols);
+    overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .wc-track::-webkit-scrollbar { display: none; }
+  /* each page is a little narrower than the screen, so the next one's edge peeks in: the sign that there's more */
+  .wc-page { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-auto-rows: 1fr; gap: 10px; margin: 0; padding: 0 0 0 12px;
+    scroll-snap-align: start; scroll-snap-stop: always; }
+  .wc-face { padding: 11px 11px 12px; gap: 6px; border-radius: 22px; }
+  .wc-in { border-radius: 22px; }
+  .wc-n { font-size: 26px; }
+  .wc-av.avatar { width: 28px; height: 28px; }
+  .wc-top { gap: 6px; }
+  .wc-top .aring { width: 42px; height: 42px; }
+  .wc-top .aring-n b { font-size: 13px; }
+  .wc-name { font-size: 16px; }
+  .wc-pts b { font-size: 28px; }
+  .wc-pager { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 10px; }
+  .wc-dot, .wc-arrow { all: unset; box-sizing: border-box; display: grid; place-items: center; min-height: 44px; cursor: pointer; touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent; }
+  .wc-dot { padding: 0 14px; border-radius: 999px; font: 700 13px/1 var(--body); color: var(--ink-2); background: var(--tile); box-shadow: var(--tray-edge); }
+  /* the last page is a full column with the peek's width as padding, so it lines up like the others with equal cards */
+  .wc-page:last-child { padding-right: 22px; }
+  .wc-dot.you { position: relative; box-shadow: var(--tray-edge), inset 0 0 0 2px var(--mine-edge); }
+  .wc-dot.you::after { content: ''; position: absolute; top: 4px; right: 4px; width: 9px; height: 9px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 0 2px var(--ink); }
+  .wc-dot.on { color: var(--ink); background: var(--amber); box-shadow: inset 0 0 0 2px var(--ink), 0 3px 0 var(--pop); }
+  .wc-arrow { width: 44px; border-radius: 50%; font: 800 26px/1 var(--display); color: var(--ink); }
+  .wc-arrow:disabled { opacity: 0.3; cursor: default; }
+}
 /* the seed numbers keep one column whether or not a move chip follows them */
 .stand .seed { white-space: nowrap; }
 .stand th.num:first-child, .stand td.seed { text-align: left; }
@@ -2027,14 +2135,9 @@ html.locked { overflow: hidden; }
   .fo-side.b .fo-ph .champ-badge { left: -9px; }
   .fo-ph .champ-badge .trophy { width: 21px; height: 21px; }
   .desk-note { padding: 10px 16px; border-radius: 24px; font-size: 13px; }
-  .wr { grid-template-columns: 26px 34px minmax(0, 1fr) auto; gap: 5px 10px; padding: 9px 4px; }
   .you-card { grid-template-columns: 60px minmax(0, 1fr); gap: 14px; padding: 14px; }
   .you-face { width: 60px; height: 60px; border-radius: 26px; }
   .you-msg { font-size: 21px; }
-  .wr .avatar { width: 34px; height: 34px; }
-  .wr-n { font-size: 24px; }
-  .wr-who b { font-size: 17px; }
-  .wr-num b { font-size: 24px; }
   /* phones: Before moves into After's tooltip (the seed's move chip already shows the change), so the playoff
      odds stay on screen without a sideways scroll */
   .stand .pf, .stand .now { display: none; }
@@ -3551,7 +3654,7 @@ main::after { border-radius: 56px 56px 0 0; }
 }
 /* anything on a bright fill (amber, yellow, lime, the matchup sides, the pastel position and tier chips) keeps the
    day's dark ink, so its words stay readable */
-:root[data-theme='dark'] :is(.view-head .wk, .avatar.ph, .tier:not(.low, .stinks), .you, .rank.nudge:not(.open) .pull,
+:root[data-theme='dark'] :is(.view-head .wk, .wc-dot.on, .avatar.ph, .tier:not(.low, .stinks), .you, .rank.nudge:not(.open) .pull,
   .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .tabs a[aria-current='page'], .lab-tabs a[aria-current='page'], .key-tag,
   .kicker > span:first-child, .car-pause[aria-pressed='true'], .drive-pick button[aria-pressed='true'],
   .drive-field .endzone, .gotw-more, .fut.fav .odds-tag, .pick.on, .st.q, .st.fin, .magic-chip.in, .pth-cta, .pth-flag, .pth-pick button[aria-pressed='true'], .pth-lose button[aria-pressed='true'], .pth-spot-text small, .pth-strip li.w, .tl-verdict.hot, .tl-verdict.real, .tl-verdict.under,
@@ -4075,7 +4178,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 p, li { text-wrap: pretty; }
 h2, .sec-title, .team-name, .mu-team .tn { letter-spacing: -0.005em; }
 .view-head :is(h1, .page-title), .lead-hed { letter-spacing: -0.02em; }
-:is(.score, .odds b, .mu-team .pr, .wp-labels.odds, .gotw-score b, .cast-odds b, .odds-tag, .wr-num b, .wire-stats b) { font-weight: 700; letter-spacing: -0.02em; }
+:is(.score, .odds b, .mu-team .pr, .wp-labels.odds, .gotw-score b, .cast-odds b, .odds-tag, .wc-pts b, .wire-stats b) { font-weight: 700; letter-spacing: -0.02em; }
 :is(.odds, .mu-team, .cast-odds, .wp-labels.odds) small { font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; }
 .view-head p, .sub { line-height: 1.45; }
 @media (max-width: 760px) {

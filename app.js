@@ -1817,7 +1817,7 @@ function initMe() {
 }
 
 // count big numbers up from zero, keeping their format (decimals, sign, %)
-const COUNT = '.score, .wr-num b, .odds b, .wire-stats b, .mu-team .pr, .gotw-score b, .cast-odds b';
+const COUNT = '.score, .wc-pts b, .odds b, .wire-stats b, .mu-team .pr, .gotw-score b, .cast-odds b';
 // Reads first (final widths and display, one layout for the whole batch), writes later in startCounts, so a batch never
 // interleaves reads and writes. Each number's width is locked so growing digits can't nudge the layout.
 function measureCounts(els) {
