@@ -1567,9 +1567,14 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .wc-page { display: contents; }
 .wc-pager { display: none; }
 .wc { list-style: none; perspective: 900px; min-width: 0; }
-.wc-in { all: unset; box-sizing: border-box; position: relative; display: grid; width: 100%; height: 100%; cursor: pointer; border-radius: 26px;
-  transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.3, 1.25, 0.5, 1); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-.wc-in:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+.wc-in { position: relative; display: grid; width: 100%; height: 100%; border-radius: 26px;
+  transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.3, 1.25, 0.5, 1); }
+.wc-face.front { margin: 0; border: 0; width: 100%; height: 100%; font: inherit; color: inherit; text-align: left; }
+.wc-face { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.wc-face:focus-visible, .wc-acts button:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+/* pressed: the card gives under the finger (the face, so the flip's own transform is untouched) */
+.wc-face.front { transition: scale 0.12s ease-out, background-color 0.15s; }
+.wc-face.front:active { scale: 0.97; }
 .wc.flipped .wc-in { transform: rotateY(180deg); }
 .wc-face { grid-area: 1 / 1; display: grid; align-content: start; gap: 7px; min-width: 0; padding: 12px 13px 13px; border-radius: 26px;
   backface-visibility: hidden; -webkit-backface-visibility: hidden; }
@@ -1577,7 +1582,10 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .wc.mine .wc-face.front { background-color: var(--mine-bg); box-shadow: var(--tray-edge), inset 0 0 0 2px var(--mine-edge); }
 .wc-face.back { transform: rotateY(180deg); align-content: space-between; color: var(--chalk); background-color: var(--board);
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.12), 0 4px 0 rgba(0, 30, 10, 0.35); }
-@media (hover: hover) { .wc-in:hover .wc-face.front { background-color: var(--tile-2); } .wc.mine .wc-in:hover .wc-face.front { background-color: var(--mine-bg); } }
+@media (hover: hover) {
+  .wc-face.front:hover { background-color: var(--tile-2); } .wc.mine .wc-face.front:hover { background-color: var(--mine-bg); }
+  .wc-face.front:hover .wc-turn { color: var(--ink); background: var(--amber); }
+}
 .wc-top { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 8px; }
 .wc-n { font: 900 30px/1 var(--display); color: var(--ink); min-width: 1ch; }
 .wc.top .wc-n, .wc:nth-child(-n + 3) .wc-n { color: var(--good); }
@@ -1593,6 +1601,12 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .wc-pts small, .wc-foot { font-size: 11.5px; font-weight: 700; color: var(--ink-3); }
 .wc-foot { display: flex; justify-content: space-between; gap: 6px; white-space: nowrap; }
 .wc-foot span { overflow: hidden; text-overflow: ellipsis; }
+/* the word on the game and the flip glyph: every card says it turns over, a tap isn't a hidden gesture */
+.wc-tag { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.wc-turn { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; color: var(--ink-2); background: var(--paper);
+  box-shadow: inset 0 0 0 1.5px var(--line); transition: background-color 0.15s, color 0.15s, rotate 0.4s cubic-bezier(0.3, 1.4, 0.5, 1); }
+.wc-turn svg { width: 15px; height: 15px; }
+.wc-face.front:active .wc-turn { rotate: 180deg; }
 .wc-word { justify-self: start; padding: 2px 9px; border-radius: 999px; font: 700 11.5px/1.35 var(--body); }
 .wc-word.good { color: var(--good); background: var(--good-bg); }
 .wc-word.bad { color: var(--bad); background: var(--bad-bg); }
@@ -1619,7 +1633,28 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .wc-row + .hp + .wc-row b { color: var(--chalk); }
 .wc-gap { font: 800 16px/1.1 var(--display); color: var(--chalk); }
 .wc-left { font-size: 11.5px; line-height: 1.35; color: rgba(232, 240, 223, 0.82); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+/* the back's actions: over to the opponent's card, and back over */
+.wc-acts { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.wc-acts button { margin: 0; border: 0; font: inherit; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.wc-acts .wc-jump { min-width: 0; min-height: 32px; padding: 0 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 999px;
+  font: 700 12.5px/1 var(--body); color: var(--board); background: var(--yellow); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.45); }
+.wc-jump::after { content: ' \2192'; }
+.wc-jump:active { translate: 0 2px; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.45); }
+.wc-turn.back { color: var(--chalk); background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.25); }
+@media (pointer: coarse) { .wc-jump, .wc-turn.back { min-height: 40px; } .wc-turn.back { width: 40px; height: 40px; } }
+/* the card you jumped to answers with a ring that pulses out twice */
+.wc.ping .wc-in::after { content: ''; position: absolute; inset: -4px; border-radius: 30px; pointer-events: none; box-shadow: 0 0 0 3px var(--amber); }
 @media (prefers-reduced-motion: reduce) { .wc-in { transition: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .wc.ping .wc-in::after { animation: wc-ping 0.8s ease-out 2 both; }
+  @keyframes wc-ping { from { opacity: 1; scale: 1; } to { opacity: 0; scale: 1.08; } }
+  /* first visit only: the first card lifts its corner to show it turns over, then settles (gone once any card is flipped) */
+  .wc.teach .wc-in { animation: wc-peek 1.3s cubic-bezier(0.3, 1.2, 0.5, 1) 1.4s 2 both; }
+  :is(.rv:not(.rv-in), .reveal:not(.in)) .wc.teach .wc-in { animation-play-state: paused; }
+  @keyframes wc-peek { 0%, 100% { transform: none; } 35% { transform: rotateY(-32deg); } 60% { transform: rotateY(6deg); } }
+  .wc.teach .wc-turn { animation: wc-turn-hint 1.3s ease-in-out 1.4s 2 both; }
+  @keyframes wc-turn-hint { 35% { rotate: 180deg; color: var(--ink); background: var(--amber); } 100% { rotate: 360deg; } }
+}
 @media (prefers-reduced-motion: no-preference) {
   .hp i { transform-origin: left; animation: grow-x 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both; }
   .hp .hp-rs { animation-delay: 0.45s; }
@@ -1629,10 +1664,12 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 @media (max-width: 760px) {
   .wk-rank { padding-inline: 12px; }
   .wk-rank > :is(h2, .sub) { padding-inline: 6px; }
-  .wc-track { display: grid; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 100%; gap: 0; margin: 0 -12px; padding: 4px 0 6px;
+  .wc-track { display: grid; grid-auto-flow: column; grid-auto-columns: calc(100% - 22px); gap: 0; margin: 0 -12px; position: relative; padding: 4px 0 6px;
+    grid-template-columns: var(--wc-cols);
     overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .wc-track::-webkit-scrollbar { display: none; }
-  .wc-page { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-auto-rows: 1fr; gap: 10px; margin: 0; padding: 0 12px;
+  /* each page is a little narrower than the screen, so the next one's edge peeks in: the sign that there's more */
+  .wc-page { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-auto-rows: 1fr; gap: 10px; margin: 0; padding: 0 0 0 12px;
     scroll-snap-align: start; scroll-snap-stop: always; }
   .wc-face { padding: 11px 11px 12px; gap: 6px; border-radius: 22px; }
   .wc-in { border-radius: 22px; }
@@ -1647,7 +1684,10 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   .wc-dot, .wc-arrow { all: unset; box-sizing: border-box; display: grid; place-items: center; min-height: 44px; cursor: pointer; touch-action: manipulation;
     -webkit-tap-highlight-color: transparent; }
   .wc-dot { padding: 0 14px; border-radius: 999px; font: 700 13px/1 var(--body); color: var(--ink-2); background: var(--tile); box-shadow: var(--tray-edge); }
-  .wc-dot.you { box-shadow: var(--tray-edge), inset 0 0 0 2px var(--mine-edge); }
+  /* the last page is a full column with the peek's width as padding, so it lines up like the others with equal cards */
+  .wc-page:last-child { padding-right: 22px; }
+  .wc-dot.you { position: relative; box-shadow: var(--tray-edge), inset 0 0 0 2px var(--mine-edge); }
+  .wc-dot.you::after { content: ''; position: absolute; top: 4px; right: 4px; width: 9px; height: 9px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 0 2px var(--ink); }
   .wc-dot.on { color: var(--ink); background: var(--amber); box-shadow: inset 0 0 0 2px var(--ink), 0 3px 0 var(--pop); }
   .wc-arrow { width: 44px; border-radius: 50%; font: 800 26px/1 var(--display); color: var(--ink); }
   .wc-arrow:disabled { opacity: 0.3; cursor: default; }
