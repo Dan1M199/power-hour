@@ -4504,3 +4504,52 @@ html:is(.admin-mode, .locked) .tx-edge { display: none; }
 /* the island steps aside for a story, and on a wide screen drops in under the header rather than over the tabs */
 html.focusing .bz-island { opacity: 0; pointer-events: none; }
 @media (min-width: 761px) { .bz-island { top: 96px; } }
+
+/* ---- 2.4, part two: who's here, away and back, the Home Screen (src/buzz/presence.js, away.js, install.js) ---- */
+/* here now: a green "active" dot on a face whose manager is on the site, and the count on the rail */
+.bz-on { position: absolute; left: 3px; bottom: 3px; width: 17px; height: 17px; border-radius: 50%; background: #2FD158; box-shadow: 0 0 0 3px var(--face, #fff); }
+@media (prefers-reduced-motion: no-preference) {
+  .bz-on::after { content: ''; position: absolute; inset: 0; border-radius: 50%; animation: bz-live 2.2s ease-out infinite; }
+}
+@keyframes bz-live { 0% { box-shadow: 0 0 0 0 rgba(47, 209, 88, 0.55); } 75%, 100% { box-shadow: 0 0 0 9px rgba(47, 209, 88, 0); } }
+.bz-here { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 9px; border-radius: 999px; font: 700 12.5px/1 var(--body); color: var(--ink);
+  background-color: var(--tile); box-shadow: inset 0 0 0 1.5px rgba(47, 209, 88, 0.55); white-space: nowrap; }
+.bz-here i { width: 8px; height: 8px; border-radius: 50%; background: #2FD158; box-shadow: 0 0 0 3px rgba(47, 209, 88, 0.22); }
+.bz-rail-head .bz-here { align-self: center; }
+.bz-rail-head .bz-here + .bz-streak { margin-left: 0; }
+.bz-rail-head .bz-here { margin-left: auto; }
+/* phones: the chips get a row of their own under the title, here-now on the left and the streak on the right */
+.bz-break { display: none; }
+@media (max-width: 760px) {
+  .bz-break { display: block; flex-basis: 100%; height: 0; }
+  .bz-rail-head .bz-here { margin-left: 0; }
+  .bz-rail-head .bz-here + .bz-streak { margin-left: auto; }
+}
+
+/* the island's arrow and bolt, and a note you can tap to act on */
+.bz-island .bz-arrow { width: 24px; height: 24px; color: var(--yellow); }
+.bz-island .bz-arrow.up { color: var(--lime); } .bz-island .bz-arrow.down { color: #FF9C85; }
+button.bz-island { border: 0; font: inherit; text-align: left; }
+.bz-island-go { flex: none; padding: 9px 16px; border-radius: 999px; font: 800 14px/1 var(--body); color: var(--ink); background: var(--amber); }
+.bz-island.act { padding-right: 10px; }
+
+/* the Home Screen sheet: slides up over the dock on a phone, a card in the corner on a desktop */
+.bz-install { position: fixed; z-index: 30; left: 12px; right: 12px; bottom: calc(var(--dock-h, 64px) + var(--dock-gap, 12px) + 14px);
+  display: grid; grid-template-columns: auto 1fr; gap: 12px 14px; align-items: start; padding: 16px; border-radius: 30px; color: var(--ink);
+  background-color: var(--face); box-shadow: 0 0 0 1px var(--outline, rgba(0, 0, 0, 0.12)), 0 5px 0 var(--ledge-c, #2C7A33), 0 24px 50px rgba(0, 0, 0, 0.28);
+  transform: translateY(30px) scale(0.96); opacity: 0; transition: transform 0.5s cubic-bezier(0.3, 1.35, 0.4, 1), opacity 0.3s; }
+.bz-install.on { transform: none; opacity: 1; }
+@media (min-width: 761px) { .bz-install { left: auto; right: 24px; bottom: 24px; width: 400px; } }
+.bz-install-icon { width: 64px; height: 64px; border-radius: 15px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12), 0 6px 14px rgba(0, 0, 0, 0.2); }
+.bz-install-txt { display: grid; gap: 4px; }
+.bz-install-txt b { font: 800 19px/1.1 var(--display); letter-spacing: 0.005em; }
+.bz-install-txt > span { font-size: 14px; line-height: 1.4; color: var(--ink-2); }
+.bz-install-steps { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; counter-reset: s; }
+.bz-install-steps li { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700; }
+.bz-install-steps i { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; color: #0A84FF; background-color: var(--tile); }
+.bz-install-btns { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; }
+.bz-install-btns button { min-height: 44px; padding: 0 18px; border: 0; border-radius: 999px; font: 700 15px/1 var(--body); cursor: pointer; touch-action: manipulation; }
+.bz-install-go { color: #12301A; background: var(--amber); box-shadow: 0 3px 0 #C98A00; }
+.bz-install-later { color: var(--ink-2); background: var(--tile); }
+@media (prefers-reduced-motion: reduce) { .bz-install { transition: opacity 0.2s; transform: none; } }
+html.focusing .bz-install { visibility: hidden; }

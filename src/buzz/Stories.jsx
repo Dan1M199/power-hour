@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Headshot, Ring } from '../shared.jsx';
 import { markStory, storySeen } from './seen.js';
+import { useHere } from './presence.js';
 
 const FRAME_MS = 5000;
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -85,6 +86,7 @@ export function StoryRail({ D, me, h, streak, now }) {
   const [, redraw] = useState(0);
   const [open, setOpen] = useState(null); // { i, from: {x, y} }
   const fresh = order.filter((s) => !storySeen(s.t.rid, s.sig)).length;
+  const hr = useHere(), live = new Set(hr.enabled ? hr.teams.filter((rid) => rid !== me) : []);
   const start = (i, e) => {
     const r = e.currentTarget.querySelector('.bz-ring').getBoundingClientRect();
     setOpen({ i, from: { x: r.left + r.width / 2, y: r.top + r.height / 2 } });
@@ -94,14 +96,16 @@ export function StoryRail({ D, me, h, streak, now }) {
       <div className="bz-rail-head">
         <h2>Stories</h2>
         <span className="bz-rail-sub">{fresh ? `${fresh} new since you last looked` : "You're all caught up"}</span>
+        <span className="bz-break" aria-hidden="true" />
+        {hr.enabled && hr.others ? <HereNow hr={hr} D={D} h={h} me={me} /> : null}
         {streak ? <StreakChip s={streak} /> : null}
       </div>
       <div className="bz-rail-row">{order.map((s, i) => {
         const seen = storySeen(s.t.rid, s.sig), mine = s.t.rid === me;
         return (
           <button type="button" key={s.t.rid} className={`bz-face${seen ? ' seen' : ''}${mine ? ' mine' : ''}`} onClick={(e) => start(i, e)}
-            aria-label={`${mine ? 'Your story' : `${h.first(s.t)}'s story`}${seen ? '' : ', new'}`}>
-            <span className="bz-ring"><Headshot t={s.t} cls="bz-pic" h={h} />{mine ? null : <span className="bz-no">{s.t.powerRank}</span>}</span>
+            aria-label={`${mine ? 'Your story' : `${h.first(s.t)}'s story`}${seen ? '' : ', new'}${live.has(s.t.rid) ? ', here now' : ''}`}>
+            <span className="bz-ring"><Headshot t={s.t} cls="bz-pic" h={h} />{mine ? null : <span className="bz-no">{s.t.powerRank}</span>}{live.has(s.t.rid) ? <span className="bz-on" title="Here now" /> : null}</span>
             <span className="bz-name">{mine ? 'Your story' : h.first(s.t)}</span>
           </button>
         );
@@ -110,6 +114,18 @@ export function StoryRail({ D, me, h, streak, now }) {
         onSeen={(s) => { markStory(s.t.rid, s.sig); redraw((x) => x + 1); }} onClose={() => setOpen(null)} /> : null}
     </section>
   );
+}
+
+// who else is on the site right now (api/presence.js): named when we know their team, counted otherwise; the cities
+// they're in are only ever a number, in the tooltip
+function HereNow({ hr, D, h, me }) {
+  const names = hr.teams.filter((rid) => rid !== me && D.byRid[rid]).map((rid) => h.first(D.byRid[rid]));
+  const rest = hr.others - names.length;
+  const said = !names.length ? `${hr.others} other${hr.others === 1 ? '' : 's'} here now`
+    : rest > 0 ? `${names[0]} and ${hr.others - 1} other${hr.others - 1 === 1 ? '' : 's'} here now`
+    : names.length === 1 ? `${names[0]} is here now` : names.length === 2 ? `${names[0]} and ${names[1]} are here now` : `${names[0]} and ${names.length - 1} others here now`;
+  const tip = hr.cities > 1 ? `${hr.here} people on The Power Hour right now, in ${hr.cities} cities` : `${hr.here} people on The Power Hour right now`;
+  return <span className="bz-here" title={tip}><i aria-hidden="true" />{said}</span>;
 }
 
 // the daily streak, a flame and the count; it glows on a milestone day

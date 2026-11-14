@@ -2,9 +2,10 @@
 // 6am Central), a black island drops out of the top of the screen with a flame and the count, the way a phone's
 // Dynamic Island shows a live activity, then tucks back after a few seconds (a tap tucks it at once). Milestone days
 // (3, 7, 14, 30, ...) get a gold flame and a shower of confetti; a broken run says so, gently, once. The count itself
-// lives on the Stories rail (src/buzz/Stories.jsx). Plain DOM on <body>, like the rest of the page's chrome.
+// lives on the Stories rail (src/buzz/Stories.jsx). The island itself is src/buzz/island.js.
 import { streak } from './seen.js';
 import { haptic } from '../touch.js';
+import { island } from './island.js';
 
 const FLAME = '<svg class="bz-flame" viewBox="0 0 24 24" aria-hidden="true"><path class="fl-out" d="M12 1.6c.7 3.7 6.1 6.3 6.1 12.1a6.1 6.1 0 0 1-12.2 0c0-3.1 1.7-5.2 3.3-6.5.1 2.1 1 3.3 2.1 3.8-.4-3.6-.1-6.5.7-9.4z"/><path class="fl-in" d="M12.2 11.4c.4 1.9 3 3.1 3 5.9a3.2 3.2 0 0 1-6.4 0c0-1.5.8-2.6 1.6-3.2.1 1 .5 1.6 1 1.9-.1-1.7.2-3.2.8-4.6z"/></svg>';
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -22,22 +23,10 @@ export function streakNote({ delay = 900 } = {}) {
   if (!s.fresh) return;
   setTimeout(() => {
     const [big, small] = words(s);
-    const note = document.createElement('div');
-    note.className = `bz-island${s.milestone ? ' gold' : ''}`;
-    note.setAttribute('role', 'status');
-    note.innerHTML = `<span class="bz-island-flame">${FLAME}</span><span class="bz-island-txt"><b>${big}</b><small>${small}</small></span>${s.n > 1 ? `<span class="bz-island-n">${s.n}</span>` : ''}`;
-    document.body.append(note);
-    requestAnimationFrame(() => requestAnimationFrame(() => note.classList.add('on')));
-    if (s.milestone) { haptic(); confetti(); }
-    let gone = false;
-    const tuck = () => {
-      if (gone) return;
-      gone = true;
-      note.classList.remove('on');
-      setTimeout(() => note.remove(), calm() ? 0 : 520);
-    };
-    note.addEventListener('click', tuck);
-    setTimeout(tuck, s.milestone ? 5200 : 4200);
+    island({
+      icon: FLAME, big, small, n: s.n > 1 ? s.n : null, gold: !!s.milestone, ms: s.milestone ? 5200 : 4200,
+      onShow: () => { if (s.milestone) { haptic(); confetti(); } },
+    });
   }, delay);
 }
 

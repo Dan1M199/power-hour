@@ -22,6 +22,9 @@ import { initTouch, shine, pageIn } from './src/touch.js';
 import { initLiquid } from './src/liquid.js';
 import { streak, wireNew, wireSeen } from './src/buzz/seen.js';
 import { streakNote } from './src/buzz/streak.js';
+import { startPresence, presenceNow } from './src/buzz/presence.js';
+import { initAway, recapNote } from './src/buzz/away.js';
+import { initInstall, appBadge } from './src/buzz/install.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
 import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
 
@@ -1727,6 +1730,7 @@ function setMyTeam(rid) {
   store.set('ph-my-team', myTeam ? String(myTeam) : null);
   $('#my-team').value = myTeam ? String(myTeam) : '';
   route();
+  presenceNow(); // the others see your face light up without waiting for the next beat
 }
 // ---------- nerd lab ----------
 // Return visits open your own dashboard; browsing rivals never changes your identity.
@@ -1983,6 +1987,7 @@ function paintWireBadge() {
   if (!a) return;
   const n = wireNew(DATA, myTeam, DATA.now);
   let b = a.querySelector('.bz-badge');
+  appBadge(n); // on the Home Screen icon too, where the site runs as an installed app (src/buzz/install.js)
   if (!n) { b?.remove(); a.removeAttribute('aria-description'); return; }
   if (!b) { b = document.createElement('b'); b.className = 'bz-badge'; b.setAttribute('aria-hidden', 'true'); a.append(b); }
   b.textContent = n > 9 ? '9+' : String(n);
@@ -2081,6 +2086,9 @@ async function main() {
   const touch = initTouch({ placeInk }); // 2.0: press, the dock's slide, the top pill (src/touch.js)
   initLiquid(); // 2.3: the chrome's lens, its light and the scroll edges (src/liquid.js)
   const loader = startLoader();
+  // 2.4: the browser's install offer can come at any moment, so the listener starts first; the sheet waits for a
+  // device's second day (src/buzz/install.js)
+  { const s = streak(); initInstall({ returning: s.n >= 2 || s.best >= 2 || !s.fresh }); }
   // Dan's posted headlines come with the data; a slow answer doesn't hold the page (they're added when they land)
   const posted = new URLSearchParams(location.search).has('demo') || window.__DEMO__ ? null : loadPosts();
   let postedLate = false;
@@ -2120,7 +2128,22 @@ async function main() {
   }, { passive: true });
   route();
   setTimeout(touch.hello, 2400); // once per device, after the page has settled
-  if (currentView !== 'admin') streakNote(); // once a day: the streak island drops in (src/buzz/streak.js)
+  if (currentView !== 'admin') {
+    streakNote(); // once a day: the streak island drops in (src/buzz/streak.js)
+    recapNote(myTeam && team(myTeam), { week: DATA.meta.lastScored, pct }); // then what moved for your team since last time
+  }
+  // who's here now (src/buzz/presence.js) and what the tab says while you're away (src/buzz/away.js)
+  if (!RAW.isDemo || window.__PRESENCE_TEST__) startPresence({ team: () => myTeam }); // the demo stays offline; tests set the flag
+  initAway({
+    key: () => (RAW.isDemo ? 'demo' : leagueKey()),
+    title: () => {
+      const n = wireNew(DATA, myTeam, DATA.now);
+      if (n) return `(${n}) New on the Wire`;
+      if (DATA.finalCall) return 'Final scores are in';
+      if (DATA.liveMode) return `Week ${DATA.meta.lastScored + 1} is live, come back`;
+      return null;
+    },
+  });
   if (postedLate) posted.then((p) => { if (p.list.length && ['rankings', 'live'].includes(currentView)) route(); });
   // the first route can measure the tabs before the stylesheet or the fonts have applied (fast or cached data)
   const settle = () => placeInk({ settle: true });

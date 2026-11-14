@@ -19,6 +19,12 @@
   </script>
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <!-- 2.4: the site as a Home Screen app (src/buzz/install.js): full screen from the icon, the Wire count on it -->
+  <link rel="manifest" href="assets/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Power Hour">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <!-- everything the first screen needs starts downloading here, in parallel: the stylesheet, both typefaces (served
        from this site) and the connection to Sleeper's picture CDN for the team avatars. The build (vite.config.js)
        bundles app.js and lib/ and adds a modulepreload for each piece of the bundle itself. -->
