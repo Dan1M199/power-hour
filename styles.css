@@ -1584,12 +1584,15 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .wr-num { text-align: right; line-height: 1.1; }
 .wr-num b { display: block; font: 900 26px/1 var(--display); color: var(--ink); }
 .wr-num small { font-size: 11.5px; color: var(--ink-3); white-space: nowrap; }
+/* the seed numbers keep one column whether or not a move chip follows them */
 .stand .seed { white-space: nowrap; }
-.stand .seed b { font: 800 18px/1 var(--display); }
-.stand .seed .move { margin-left: 6px; font-size: 11px; padding: 3px 6px; }
+.stand th.num:first-child, .stand td.seed { text-align: left; }
+.stand .seed b { display: inline-block; min-width: 1.1em; text-align: right; font: 800 18px/1 var(--display); }
+.stand .seed .move { margin-left: 6px; font-size: 11.5px; padding: 3px 6px; }
 .stand td.tm { white-space: nowrap; font-weight: 600; }
 .stand .now small { color: var(--ink-3); }
 .stand tr.cut td { border-bottom: 3px dashed var(--grass); }
+.stand tr.cut + tr td { padding-top: 18px; } /* room for the "playoff line" note, so it never sits on the next row's odds */
 
 /* ---------- the defending champion's trophy ---------- */
 .trophy { flex: none; vertical-align: -3px; }
@@ -2032,11 +2035,15 @@ html.locked { overflow: hidden; }
   .wr-n { font-size: 24px; }
   .wr-who b { font-size: 17px; }
   .wr-num b { font-size: 24px; }
-  .stand .pf, .stand .now small { display: none; }
+  /* phones: Before moves into After's tooltip (the seed's move chip already shows the change), so the playoff
+     odds stay on screen without a sideways scroll */
+  .stand .pf, .stand .now { display: none; }
   .stand { font-size: 13px; }
   .stand td, .stand th { padding: 7px 4px; white-space: nowrap; }
-  .stand td.tm { max-width: 27vw; overflow: hidden; text-overflow: ellipsis; }
-  .stand .seed .move { margin-left: 3px; padding: 2px 4px; font-size: 10px; }
+  .stand th { white-space: normal; vertical-align: bottom; line-height: 1.15; }
+  .stand td.tm { max-width: calc(100vw - 256px); overflow: hidden; text-overflow: ellipsis; }
+  .stand .seed .move { margin-left: 4px; padding: 2px 5px; font-size: 11.5px; }
+  @media (max-width: 360px) { .stand td.tm .avatar { display: none; } }
   .me-face { width: 28px; height: 28px; box-shadow: 0 0 0 2px var(--yellow); }
   .unveil { padding: 12px; place-items: start center; }
   .unveil-card { padding: 20px 16px 18px; }
