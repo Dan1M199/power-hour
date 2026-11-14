@@ -20,6 +20,8 @@ import { AdminShell } from './src/admin/AdminShell.jsx';
 import { createStore } from './src/store.js';
 import { initTouch, shine, pageIn } from './src/touch.js';
 import { initLiquid } from './src/liquid.js';
+import { streak, wireNew, wireSeen } from './src/buzz/seen.js';
+import { streakNote } from './src/buzz/streak.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
 import { TZ, NEWS_CLOCK, centralDate, morningKey, leagueKey, isOnHold, isNightDesk, inGameWindow } from './lib/newsclock.js';
 
@@ -1742,7 +1744,7 @@ const reactHelpers = () => ({
 const PAGES = {
   live: () => [LivePage, liveProps()],
   rankings: () => [RankingsPage, rankingsProps()],
-  wire: () => [WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x) }],
+  wire: () => [WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x), since: wireSeen(DATA.now) }],
   matchups: () => [GamesPage, { calm: calm(), lite: lite() }],
   admin: () => [AdminShell, {
     home: liveHome() ? '#live' : '#rankings',
@@ -1950,7 +1952,9 @@ function route({ fresh = false } = {}) {
     paintMe();
     const app = $('#app'), [Page, props] = PAGES[key]();
     showPage ||= pageRoot(app);
-    showPage(Page, { D: DATA, me: myTeam, h: reactHelpers(), ...props });
+    // buzz: the stories rail's streak count and the clock its "how long ago" reads (src/buzz)
+    showPage(Page, { D: DATA, me: myTeam, h: reactHelpers(), buzz: { streak: streak(), now: DATA.now }, ...props });
+    paintWireBadge();
     if (fresh) { app.focus({ preventScroll: true }); window.scrollTo({ top: 0 }); }
     reveal(app);
     shine(app); // 2.0: light crosses each glass card once as it comes on screen (src/touch.js)
@@ -1970,6 +1974,19 @@ function paintTabs() {
   a.querySelector('.tn').textContent = fin ? 'Final' : 'Live';
   $('.brand').setAttribute('href', liveHome() ? '#live' : '#rankings');
   placeInk({ settle: true });
+}
+
+// the Wire tab's count of moves since this device last opened it (src/buzz/seen.js), like an app's unread badge;
+// opening the Wire clears it
+function paintWireBadge() {
+  const a = $('.tabs a[data-view="wire"]');
+  if (!a) return;
+  const n = wireNew(DATA, myTeam, DATA.now);
+  let b = a.querySelector('.bz-badge');
+  if (!n) { b?.remove(); a.removeAttribute('aria-description'); return; }
+  if (!b) { b = document.createElement('b'); b.className = 'bz-badge'; b.setAttribute('aria-hidden', 'true'); a.append(b); }
+  b.textContent = n > 9 ? '9+' : String(n);
+  a.setAttribute('aria-description', `${n} new move${n === 1 ? '' : 's'}`);
 }
 
 // your own face next to the team picker once you have chosen a team, and in the phone's circle (a figure until then)
@@ -2103,6 +2120,7 @@ async function main() {
   }, { passive: true });
   route();
   setTimeout(touch.hello, 2400); // once per device, after the page has settled
+  if (currentView !== 'admin') streakNote(); // once a day: the streak island drops in (src/buzz/streak.js)
   if (postedLate) posted.then((p) => { if (p.list.length && ['rankings', 'live'].includes(currentView)) route(); });
   // the first route can measure the tabs before the stylesheet or the fonts have applied (fast or cached data)
   const settle = () => placeInk({ settle: true });

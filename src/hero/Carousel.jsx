@@ -3,13 +3,14 @@
 // or drag to turn the ring (a flick carries it), step with the arrows, pick from the dots or tap a card behind; the
 // active dot's fill is the auto-advance timer. The stories themselves are written in app.js (and lib/stories.js, lib/nightdesk.js) as plain data; this draws
 // them and runs the card. A video story's clip plays muted on a loop while its slide shows (useClip).
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { shortName } from '../../lib/matchup.js';
 import { storyKeys } from './storyKeys.js';
 import { useReactions, loadReactions, react } from './reactions.js';
 import { TeamAvatar, Headshot, ChampTag, ChampBadge } from '../shared.jsx';
 import { TradeGraphic } from './TradeGraphic.jsx';
 import { Card, useRing } from './Ring.jsx';
+import { doubleTap, fireHeadline } from '../buzz/burst.js';
 
 const asset = (p) => window.__ASSETS__?.[p] || p;
 // the reaction bar under each headline (EmojiReactions.jsx), in its own chunk: framer-motion only downloads once the
@@ -204,8 +205,13 @@ function Slide({ st, i, n, D, h, groups, runs, date, night, clip, slideRef, hk, 
   );
   const Hed = i ? 'h2' : 'h1';
   const hed = <Hed className={`lead-hed${st.mark ? ' marked' : ''}`}><Marked text={st.headline} marks={st.mark} /></Hed>;
+  // double tap the headline to fire it (src/buzz/burst.js); the handlers live as long as the slide, so a re-render
+  // between the two taps doesn't lose the first
+  const key = useRef(hk);
+  key.current = hk;
+  const tap = useMemo(() => doubleTap((x, y) => fireHeadline(key.current, x, y)), []);
   return (
-    <article ref={slideRef} className={`slide${breaking ? ' breaking' : ''}${st.clip || st.photo ? ' has-clip' : ''}`} id={`slide-${i}`} role="group" aria-roledescription="slide" aria-label={`Headline ${i + 1} of ${n}`} inert={!front}>
+    <article ref={slideRef} {...(front ? tap : null)} className={`slide${breaking ? ' breaking' : ''}${st.clip || st.photo ? ' has-clip' : ''}`} id={`slide-${i}`} role="group" aria-roledescription="slide" aria-label={`Headline ${i + 1} of ${n}`} inert={!front}>
       {st.clip ? <><div className="clip-head">{top}{hed}</div><ClipPrint st={st} D={D} h={h} clip={clip} /></>
         : st.photo ? <><div className="clip-head">{top}{hed}</div><PhotoPrint st={st} D={D} h={h} /></> : <>{top}{hed}</>}
       <p className="lead-deck"><Marked text={st.deck} marks={st.mark} /></p>

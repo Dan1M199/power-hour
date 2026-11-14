@@ -6,6 +6,7 @@ import { flushSync } from 'react-dom';
 import { closeDrawer, openDrawer, slides, sliding } from './drawer.js';
 import { ChampTag, Headshot, TeamAvatar, Xp, ScenariosLink, Ring } from '../shared.jsx';
 import { Hero } from '../hero/Hero.jsx';
+import { StoryRail } from '../buzz/Stories.jsx';
 import { Futures } from './Futures.jsx';
 import { Poll } from './Poll.jsx';
 import { Report } from './Report.jsx';
@@ -100,7 +101,7 @@ const METHOD = (pctW) => <>
  * when they were refreshed; message: { ready, play } for the important message's replay chip, or null; rosError: why the
  * ROS rankings are missing; calm: reduced motion; poll: { on, question, store, onPick }.
  */
-export function RankingsPage({ D, me, h, held, car, sources, updated, message, rosError, calm, poll }) {
+export function RankingsPage({ D, me, h, held, car, sources, updated, message, rosError, calm, poll, buzz }) {
   const [open, setOpen] = useState(() => new Set());
   const [nudged, setNudged] = useState(() => !seen());
   const rows = useRef(new Map()), btns = useRef(new Map()), unpin = useRef(new Map());
@@ -161,6 +162,7 @@ export function RankingsPage({ D, me, h, held, car, sources, updated, message, r
       ? <section className="view-head"><RankHead wk={wk} held sources={sources} updated={updated} /></section>
       : <Hero D={D} h={h} car={car} head={<RankHead D={D} h={h} wk={wk} sources={sources} updated={updated} message={message} />}
         side={youStrip} hint={<p className="you-card glass empty" data-open-me>{'Pick your team '}<span className="where-d">in the top right</span><span className="where-p">in the circle at the bottom right</span>{' and this spot shows your rank, your tier and your playoff odds.'}</p>} />}
+    {held ? null : <StoryRail D={D} me={me} h={h} streak={buzz?.streak} now={buzz?.now ?? D.now} />}
     {held ? <div className="notice glass hold"><span><strong>Power rankings are on hold.</strong>{` Week ${wk} is being played, so these are the ranks going into the week. They update as soon as every game is final. For how this week is going, see the `}<a href="#live">Live</a> tab.</span></div> : null}
     {rosError ? <div className="notice glass"><strong>Results-only mode.</strong>{` The rest-of-season rankings couldn't be loaded (${rosError}), so these ranks use this season's results alone until they come back.`}</div> : null}
     <div id="poll-slot"><Poll D={D} h={h} poll={poll} /></div>

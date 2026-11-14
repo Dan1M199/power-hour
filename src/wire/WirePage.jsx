@@ -13,9 +13,11 @@ function dayLabel(ts) {
   return new Date(ts).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'short', day: 'numeric' });
 }
 const timeLabel = (ts) => new Date(ts).toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' });
+// what came in since this device last opened the Wire (src/buzz/seen.js): a glowing dot and the word, like an unread mark
+const NewTag = () => <span className="bz-new"><i aria-hidden="true" />New</span>;
 const tone = (x, d = 0.4) => (x > d ? 'plus' : x < -d ? 'minus' : 'flat');
 
-export function WirePage({ D, me, h, state, onState }) {
+export function WirePage({ D, me, h, state, onState, since = Infinity }) {
   const [s, setS] = useState(state);
   const set = (patch) => setS((x) => { const n = { ...x, ...patch }; onState?.(n); return n; });
   const { f1, short } = h, team = (rid) => D.byRid[rid], hasRos = D.meta.hasRos;
@@ -54,8 +56,8 @@ export function WirePage({ D, me, h, state, onState }) {
     const sides = item.sides, best = Math.max(...sides.map((x) => x.net));
     const winner = sides.length === 2 && Math.abs(sides[0].net - sides[1].net) >= 3 ? sides.find((x) => x.net === best) : null;
     return (
-      <li key={item.id} className="trade glass rim">
-        <div className="trade-head">{dealFaces(sides)}<span className="when">{`${dayLabel(item.ts)}, ${timeLabel(item.ts)}, week ${item.week}`}</span></div>
+      <li key={item.id} className={`trade glass rim${item.ts > since ? ' is-new' : ''}`}>
+        <div className="trade-head">{dealFaces(sides)}{item.ts > since ? <NewTag /> : null}<span className="when">{`${dayLabel(item.ts)}, ${timeLabel(item.ts)}, week ${item.week}`}</span></div>
         <div className="trade-sides">{sides.map((x) => (
           <div key={x.rid} className={`trade-side ${winner && winner.rid === x.rid ? 'won' : ''} ${x.rid === me ? 'mine' : ''}`}>
             <h3><TeamAvatar t={team(x.rid)} /><span className="tn">{team(x.rid).name}</span>{hasRos ? <span className={winner ? tone(x.net, 0) : 'flat'}>{signed(x.net)}</span> : null}</h3>
@@ -79,8 +81,8 @@ export function WirePage({ D, me, h, state, onState }) {
     const line = (p, add) => <div key={`${add ? 'a' : 'd'}${p.id}`} className={add ? 'add' : 'drop'}><span className="sign" aria-label={add ? 'Added' : 'Dropped'}>{add ? '+' : '−'}</span><PosTag pos={h.posOf(p.id)} /><span className="pl">{h.nameOf(p.id)}</span></div>;
     const how = item.type === 'waiver' ? `Waiver${item.bid ? ` $${item.bid}` : ''}` : item.type === 'commissioner' ? 'Commish' : '';
     return (
-      <li key={item.id}>
-        <span className="t">{timeLabel(item.ts)}{how ? <small>{how}</small> : null}</span>
+      <li key={item.id} className={item.ts > since ? 'is-new' : undefined}>
+        <span className="t">{item.ts > since ? <NewTag /> : null}{timeLabel(item.ts)}{how ? <small>{how}</small> : null}</span>
         <div className="lines">{x.adds.map((p) => line(p, true))}{x.drops.map((p) => line(p, false))}</div>
         {hasRos ? <span className={`net ${tone(x.net)}`} data-tip="Change in consensus ROS value from this move">{signed(x.net)}</span> : null}
       </li>

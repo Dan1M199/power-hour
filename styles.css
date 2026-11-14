@@ -4317,3 +4317,190 @@ html:is(.admin-mode, .locked) .tx-edge { display: none; }
   :root { --lg-tint: rgba(236, 248, 255, 0.9); --dock-glass: rgba(236, 248, 255, 0.88); --lg-chip: rgba(255, 255, 255, 0.94); }
   :root[data-theme='dark'], :root[data-theme='dark'][data-theme] { --lg-tint: rgba(10, 24, 17, 0.92); --dock-glass: rgba(10, 24, 17, 0.9); --lg-chip: rgba(26, 46, 34, 0.94); }
 }
+
+/* ---------- 2.4: the buzz (Dan's request Nov 14: the pull of Instagram, done in the bowl's colours) ----------
+   src/buzz. Four things that reward coming back:
+   - Stories: a rail of manager faces under the headlines (.bz-rail), each in a ring lit amber-to-flame while its story
+     is new to this device and grey once watched; a tap opens it full screen out of the face (.bz-viewer, .bz-stage)
+     with progress bars across the top, tap to step, hold to pause, swipe sideways for the next team, down to close.
+   - The streak: a flame and the count of mornings in a row (.bz-streak on the rail), and once a day a black island
+     drops out of the top of the screen with it (.bz-island; gold with confetti on a milestone).
+   - The Wire's unread badge (.bz-badge on the tab) and the New marks on what came in since you last looked (.bz-new).
+   - Double tap a headline: a cartoon flame pops where you tapped in a ring of sparks (.bz-burst) and it gets your fire.
+   Transform and opacity only; reduced motion keeps everything still. */
+:root { --bz-ring: conic-gradient(from 210deg, var(--yellow), var(--amber) 30%, #FF6A3D 55%, var(--amber) 80%, var(--yellow)); }
+
+/* the flame (rail chip, island) */
+.bz-flame { width: 16px; height: 16px; flex: none; overflow: visible; }
+.bz-flame .fl-out { fill: var(--amber); stroke: #12301A; stroke-width: 1.3; stroke-linejoin: round; }
+.bz-flame .fl-in { fill: var(--yellow); }
+
+/* ---- the rail ---- */
+.bz-rail { border-radius: var(--r-lg); padding: 16px 18px 12px; margin: 0 0 22px; }
+.bz-rail-head { display: flex; align-items: baseline; gap: 6px 12px; flex-wrap: wrap; padding: 0 4px 6px; }
+.bz-rail-head h2 { margin: 0; font: 700 22px/1 var(--display); letter-spacing: -0.01em; color: var(--ink); }
+.bz-rail-sub { font-size: 13px; color: var(--ink-3); }
+.bz-streak { margin-left: auto; align-self: center; display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px 5px 9px; border-radius: 999px;
+  font: 700 13px/1 var(--body); color: var(--ink); background-color: var(--tile); box-shadow: inset 0 0 0 1.5px var(--line, rgba(0, 0, 0, 0.12)); white-space: nowrap; }
+.bz-streak.hot { background-color: #FFE9A8; box-shadow: inset 0 0 0 1.5px #E3A500, 0 0 0 3px rgba(249, 176, 0, 0.18); }
+.bz-rail-row { display: flex; gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none;
+  margin: 0 -18px; padding: 8px 18px 6px; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 28px), transparent); }
+.bz-rail-row::-webkit-scrollbar { display: none; }
+.bz-face { flex: none; display: grid; justify-items: center; gap: 6px; width: 78px; padding: 0; border: 0; background: none; cursor: pointer; scroll-snap-align: start;
+  font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.bz-ring { position: relative; display: grid; place-items: center; width: 74px; height: 74px; border-radius: 50%; isolation: isolate; transition: transform 0.25s cubic-bezier(0.3, 1.4, 0.5, 1); }
+.bz-ring::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: 50%; background: var(--bz-ring); }
+.bz-face.seen .bz-ring::before { background: var(--tile-2); inset: 4px; box-shadow: 0 0 0 1.5px var(--tile-2); }
+.bz-pic { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--face, #fff); background-color: var(--tile); }
+.bz-pic.ph { display: grid; place-items: center; font: 800 22px/1 var(--display); color: var(--ink-2); }
+.bz-face.seen .bz-pic { width: 62px; height: 62px; border-width: 2px; }
+.bz-no { position: absolute; right: -2px; bottom: -2px; display: grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 999px;
+  font: 800 14px/1 var(--display); color: #fff; background-color: var(--board); box-shadow: 0 0 0 2.5px var(--face, #fff); }
+.bz-face.mine .bz-ring::before { background: conic-gradient(from 210deg, var(--yellow), #FFF3A0, var(--yellow), #F2C200, var(--yellow)); }
+.bz-face.mine.seen .bz-ring::before { background: var(--tile-2); }
+.bz-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.bz-face:not(.seen) .bz-name { color: var(--ink); font-weight: 700; }
+.bz-face.mine .bz-name { font-weight: 800; }
+.bz-face:active .bz-ring { transform: scale(0.92); }
+@media (hover: hover) { .bz-face:hover .bz-ring { transform: scale(1.06); } }
+.bz-face:focus-visible { outline: none; }
+.bz-face:focus-visible .bz-ring { box-shadow: 0 0 0 3px var(--face, #fff), 0 0 0 6px var(--ink); }
+@media (prefers-reduced-motion: no-preference) {
+  .bz-face:not(.seen) .bz-ring::before { animation: bz-spin 7s linear infinite; }
+}
+@keyframes bz-spin { to { transform: rotate(1turn); } }
+
+/* ---- the viewer ---- */
+.bz-viewer { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; background: rgba(4, 12, 7, 0.88); animation: bz-fade 0.25s ease-out both;
+  -webkit-backdrop-filter: blur(12px) saturate(1.2); backdrop-filter: blur(12px) saturate(1.2); overscroll-behavior: contain; }
+.bz-viewer.out { animation: bz-fade 0.26s ease-in reverse both; }
+@keyframes bz-fade { from { opacity: 0; } }
+.bz-stage { --pull: 0px; position: relative; overflow: hidden; isolation: isolate; outline: none; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  width: min(100vw, calc(min(100dvh, 880px) * 9 / 16)); height: min(100dvh, 880px); border-radius: 30px; color: #fff; cursor: pointer;
+  translate: 0 var(--pull); scale: calc(1 - min(var(--pull) / 2400px, 0.15)); transition: translate 0.2s, scale 0.2s;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: radial-gradient(120% 70% at 85% 0%, var(--glow), transparent 60%), linear-gradient(165deg, var(--bg1), var(--bg2)); }
+.bz-stage[style*='--pull'] { transition: none; }
+.bz-stage::after { content: ''; position: absolute; inset: 0; z-index: -1; background-image: var(--grain); background-size: 160px; opacity: 0.22; mix-blend-mode: overlay; pointer-events: none; }
+.bz-stage.k-rank { --bg1: #2A8A37; --bg2: #0D2415; --glow: rgba(255, 224, 26, 0.45); }
+.bz-stage.k-won { --bg1: #4FB357; --bg2: #134A18; --glow: rgba(191, 208, 42, 0.6); }
+.bz-stage.k-lost, .bz-stage.k-tie { --bg1: #2C3340; --bg2: #0B1310; --glow: rgba(255, 90, 61, 0.38); }
+.bz-stage.k-tie { --glow: rgba(142, 214, 248, 0.4); }
+.bz-stage.k-move { --bg1: #A65A00; --bg2: #2A1500; --glow: rgba(255, 224, 26, 0.5); }
+.bz-stage.k-odds { --bg1: #2470A8; --bg2: #0A1C30; --glow: rgba(142, 214, 248, 0.55); }
+@media (max-width: 760px) { .bz-stage { width: 100vw; height: 100dvh; border-radius: 0; box-shadow: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .bz-stage[data-dir='0'] { animation: bz-open 0.42s cubic-bezier(0.2, 0.9, 0.25, 1) both; }
+  .bz-viewer.out .bz-stage { animation: bz-open 0.26s cubic-bezier(0.5, 0, 0.75, 0.3) reverse both; }
+  .bz-stage[data-dir='1'] { transform-origin: 0% 50%; animation: bz-turn-next 0.45s cubic-bezier(0.25, 0.9, 0.3, 1) both; }
+  .bz-stage[data-dir='-1'] { transform-origin: 100% 50%; animation: bz-turn-prev 0.45s cubic-bezier(0.25, 0.9, 0.3, 1) both; }
+  .bz-body > * { animation: bz-rise 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15) both; }
+  .bz-body > :nth-child(2) { animation-delay: 0.05s; } .bz-body > :nth-child(3) { animation-delay: 0.1s; }
+  .bz-body > :nth-child(4) { animation-delay: 0.15s; } .bz-body > :nth-child(5) { animation-delay: 0.2s; }
+}
+@keyframes bz-open { from { transform: translate(calc(var(--ox) - 50vw), calc(var(--oy) - 50vh)) scale(0.1); border-radius: 50%; opacity: 0.4; } }
+@keyframes bz-turn-next { from { transform: perspective(1400px) translateX(60%) rotateY(-60deg); opacity: 0.3; } }
+@keyframes bz-turn-prev { from { transform: perspective(1400px) translateX(-60%) rotateY(60deg); opacity: 0.3; } }
+@keyframes bz-rise { from { transform: translateY(18px) scale(0.96); opacity: 0; } }
+
+.bz-bars { position: absolute; z-index: 2; top: max(10px, env(safe-area-inset-top)); left: 12px; right: 12px; display: flex; gap: 4px; }
+.bz-bars span { flex: 1; height: 3px; border-radius: 999px; overflow: hidden; background: rgba(255, 255, 255, 0.32); }
+.bz-bars i { display: block; height: 100%; border-radius: inherit; background: #fff; transform: scaleX(0); transform-origin: 0 50%; }
+.bz-bars .done i { transform: none; }
+.bz-bars .on i { animation: bz-fill linear both; }
+.bz-stage.paused .bz-bars .on i { animation-play-state: paused; }
+@keyframes bz-fill { to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .bz-bars .on i { transform: none; } }
+.bz-top { position: absolute; z-index: 2; top: calc(max(10px, env(safe-area-inset-top)) + 12px); left: 12px; right: 6px; display: flex; align-items: center; gap: 10px; transition: opacity 0.2s; }
+.bz-top-pic { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px #fff; background-color: rgba(255, 255, 255, 0.2); }
+.bz-top-pic.ph { display: grid; place-items: center; font: 800 16px/1 var(--display); color: #fff; }
+.bz-top-who { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px; }
+.bz-top-who b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
+.bz-top-who small { flex: none; font-size: 13px; color: rgba(255, 255, 255, 0.72); }
+.bz-x { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: #fff; cursor: pointer; }
+.bz-x:hover { background: rgba(255, 255, 255, 0.14); }
+.bz-stage.paused .bz-top, .bz-stage.paused .bz-bars { opacity: 0.35; }
+.bz-hint { position: absolute; bottom: max(16px, env(safe-area-inset-bottom)); left: 0; right: 0; margin: 0; text-align: center; font-size: 12.5px; color: rgba(255, 255, 255, 0.6); }
+
+.bz-body { position: absolute; inset: 90px 26px 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; pointer-events: none; }
+.bz-body p { margin: 0; }
+.bz-kick { font-size: 16px; font-weight: 700; color: rgba(255, 255, 255, 0.82); }
+.bz-big { font: 900 clamp(104px, 34vw, 150px)/0.85 var(--display); letter-spacing: -0.03em; color: #fff; text-shadow: 5px 6px 0 rgba(0, 0, 0, 0.32); }
+.k-rank .bz-big { color: var(--yellow); }
+.bz-body .tier { font-size: 14px; padding: 7px 14px; }
+.bz-line { font: 800 24px/1.15 var(--display); letter-spacing: 0.01em; }
+.bz-line.up { color: var(--lime); } .bz-line.down { color: #FF9C85; }
+.bz-sub { max-width: 30ch; font-size: 15.5px; line-height: 1.45; color: rgba(255, 255, 255, 0.78); }
+.bz-score { display: flex; align-items: center; gap: 18px; }
+.bz-score > span { display: grid; justify-items: center; gap: 10px; }
+.bz-score b { font: 900 54px/1 var(--display); letter-spacing: -0.02em; color: rgba(255, 255, 255, 0.7); }
+.k-won .bz-score .bz-me b { color: var(--yellow); text-shadow: 4px 5px 0 rgba(0, 0, 0, 0.3); }
+.k-lost .bz-score > span:last-child b { color: #fff; }
+.bz-score .bz-vs { font: 800 18px/1 var(--display); color: rgba(255, 255, 255, 0.6); }
+.bz-score-pic { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 3px #fff; background-color: rgba(255, 255, 255, 0.2); }
+.bz-score-pic.ph { display: grid; place-items: center; font: 800 24px/1 var(--display); color: #fff; }
+.k-lost .bz-score .bz-me .bz-score-pic { filter: grayscale(1); }
+.bz-players { display: grid; gap: 8px; width: min(100%, 320px); margin: 0; padding: 0; list-style: none; }
+.bz-players li { display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; border-radius: 999px; text-align: left; font-size: 16px; font-weight: 700;
+  background: rgba(255, 255, 255, 0.13); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16); }
+.bz-players li.out { opacity: 0.72; }
+.bz-players small { margin-left: auto; font-size: 12.5px; color: rgba(255, 255, 255, 0.7); }
+.bz-players .sign { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%; font-weight: 900; color: var(--ink); background: var(--lime); }
+.bz-players .out .sign { background: #FF9C85; }
+.bz-pl { flex: none; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: rgba(255, 255, 255, 0.2); }
+.bz-odds .aring { width: 190px; height: 190px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 20px 50px rgba(0, 0, 0, 0.35); }
+.bz-odds .aring svg { stroke-width: 3.2; }
+.bz-odds .aring-n b { font-size: 54px; }
+
+/* ---- the streak island ---- */
+.bz-island { position: fixed; z-index: 96; top: max(10px, env(safe-area-inset-top)); left: 50%; display: flex; align-items: center; gap: 12px;
+  width: max-content; max-width: min(420px, calc(100vw - 24px)); padding: 10px 18px 10px 10px; border-radius: 999px; color: #fff; background: var(--island, #000);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35); cursor: pointer; transform: translate(-50%, -140%) scale(0.6, 0.5); opacity: 0;
+  transition: transform 0.55s cubic-bezier(0.3, 1.35, 0.4, 1), opacity 0.3s; }
+.bz-island.on { transform: translate(-50%, 0); opacity: 1; }
+.bz-island-flame { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle at 50% 60%, rgba(249, 176, 0, 0.45), rgba(249, 176, 0, 0.06) 70%); }
+.bz-island-flame .bz-flame { width: 28px; height: 28px; }
+.bz-island-flame .fl-out { stroke: #000; }
+.bz-island-txt { display: grid; gap: 3px; min-width: 0; }
+.bz-island-txt b { font: 800 18px/1 var(--display); letter-spacing: 0.01em; color: var(--yellow); }
+.bz-island-txt small { font-size: 13px; line-height: 1.3; color: rgba(255, 255, 255, 0.78); }
+.bz-island-n { display: grid; place-items: center; min-width: 40px; height: 40px; padding: 0 8px; border-radius: 999px; font: 900 22px/1 var(--display); color: var(--ink); background: var(--yellow); }
+.bz-island.gold { box-shadow: 0 0 0 2px var(--amber), 0 14px 40px rgba(249, 176, 0, 0.4); }
+.bz-island.gold .bz-island-n { background: linear-gradient(160deg, #FFF3A0, var(--amber)); }
+@media (prefers-reduced-motion: no-preference) {
+  .bz-island.on .bz-flame { animation: bz-flicker 1.2s ease-in-out infinite; transform-origin: 50% 90%; }
+}
+@keyframes bz-flicker { 50% { transform: scale(1.08, 0.94) rotate(-3deg); } }
+@media (prefers-reduced-motion: reduce) { .bz-island { transition: opacity 0.2s; transform: translate(-50%, 0); } }
+.bz-confetti { position: fixed; z-index: 95; top: 40px; left: 50%; width: 0; height: 0; pointer-events: none; }
+.bz-confetti i { position: absolute; top: 0; left: 0; width: 8px; height: 12px; border-radius: 2px; will-change: transform; }
+
+/* ---- the Wire's unread badge and New marks ---- */
+.tabs a .bz-badge { position: absolute; top: -4px; right: -2px; z-index: 2; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+  font: 800 11.5px/1 var(--body); color: #fff; background: #E8341C; box-shadow: 0 0 0 2px var(--face, #fff), 0 3px 8px rgba(232, 52, 28, 0.45); pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) { .tabs a .bz-badge { animation: bz-badge-in 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both; } }
+@keyframes bz-badge-in { from { transform: scale(0); } }
+@media (max-width: 760px) { .tabs a .bz-badge { top: 1px; right: calc(50% - 24px); min-width: 18px; height: 18px; padding: 0 5px; } }
+.bz-new { display: inline-flex; align-items: center; gap: 5px; margin-right: 8px; padding: 3px 8px 3px 6px; border-radius: 999px; font: 800 11.5px/1 var(--body); color: var(--ink);
+  background: var(--yellow); vertical-align: 1px; }
+.bz-new i { width: 7px; height: 7px; border-radius: 50%; background: #E8341C; }
+@media (prefers-reduced-motion: no-preference) { .bz-new i { animation: bz-ping 1.6s ease-out infinite; } }
+@keyframes bz-ping { 0% { box-shadow: 0 0 0 0 rgba(232, 52, 28, 0.6); } 70%, 100% { box-shadow: 0 0 0 7px rgba(232, 52, 28, 0); } }
+.wt-rows li.is-new .t { display: grid; justify-items: start; gap: 4px; }
+.wt-rows li.is-new .bz-new { margin: 0; }
+
+/* ---- double tap to fire ---- */
+.slide { touch-action: manipulation; }
+.bz-burst { position: fixed; z-index: 96; width: 0; height: 0; pointer-events: none; }
+.bz-burst-flame { position: absolute; left: 0; top: 0; width: 120px; height: 120px; transform: translate(-50%, -50%) scale(0); filter: drop-shadow(0 8px 18px rgba(255, 90, 31, 0.5)); will-change: transform, opacity; }
+.bz-burst-flame svg { width: 100%; height: 100%; overflow: visible; }
+.bz-spark { position: absolute; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 1.5px #12301A; will-change: transform, opacity; }
+.bz-spark.w { width: 7px; height: 7px; background: #fff; }
+
+/* night: the rail sits on the night card like everything else; the badge's ring matches the dark face */
+:root[data-theme='dark'] .bz-streak.hot { background-color: #4A3A10; box-shadow: inset 0 0 0 1.5px #E3A500; }
+:root[data-theme='dark'] .bz-new { color: #12301A; }
+/* the island steps aside for a story, and on a wide screen drops in under the header rather than over the tabs */
+html.focusing .bz-island { opacity: 0; pointer-events: none; }
+@media (min-width: 761px) { .bz-island { top: 96px; } }

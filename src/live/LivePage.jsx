@@ -4,6 +4,7 @@
 // use.
 import { ChampTag, Headshot, TeamAvatar, ScenariosLink } from '../shared.jsx';
 import { Hero } from '../hero/Hero.jsx';
+import { StoryRail } from '../buzz/Stories.jsx';
 
 // "Your week": a note from the desk to whoever picked a team. Winning gets congratulated, losing gets roasted, and a
 // coin flip gets a pep talk if they're ahead or a reality check if they're behind. Wording rotates daily.
@@ -73,7 +74,7 @@ function LiveHead({ fin, wk, played, fetched }) {
   </>;
 }
 
-export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetched, bull, onReveal }) {
+export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetched, bull, onReveal, buzz }) {
   const { f1, pct, ordinal } = h, pt = D.meta.playoffTeams, n = rows.length;
   const max = Math.max(1, ...rows.map((r) => r.proj)) * 1.04;
   const status = (r) => {
@@ -87,6 +88,7 @@ export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetc
       ? <section className="view-head"><LiveHead fin wk={wk} played={played} fetched={fetched} /></section>
       : <Hero D={D} h={h} car={car} head={<LiveHead fin={fin} wk={wk} played={played} fetched={fetched} />}
         side={fin ? null : <YourWeek rows={rows} standings={standings} me={me} h={h} bull={bull} />} />}
+    <StoryRail D={D} me={me} h={h} streak={buzz?.streak} now={buzz?.now ?? D.now} />
     {fin ? <div className="unveil-cta"><button type="button" className="cta" data-reveal onClick={(e) => onReveal(e.currentTarget)}>Done with Live Ranks, Show me the Power Ranking</button></div> : null}
     <div className="live-grid">
       <section className="panel glass live-panel wk-rank">
