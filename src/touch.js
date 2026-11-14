@@ -250,21 +250,28 @@ function initPull() {
 }
 
 // ---------- shine ----------
-// The first time a glass card is properly on screen, a band of light crosses it once. The band is drawn on a box laid
-// over the card from <body> (page coordinates, so it scrolls with the card), not inside it.
-const SHINE = '.car-slot.front .car-card, .gotw, .rank-card, .you-strip, .matchups > .mu, .live-panel, .you-card, .trade, .idea, .lab-grid > .panel, .wire-stats, .futures, .poll';
+// A band of light crosses a featured glass card once as it comes on screen: only the cards that stand out (the front
+// headline, the game of the week, your strip, the podium), at most SHINE_MAX a page, and each tab only on its first
+// visit, so scrolling a list never sets off card after card. The band is drawn on a box laid over the card from <body>
+// (page coordinates, so it scrolls with the card), not inside it.
+const SHINE = '.car-slot.front .car-card, .gotw, .rank-card.rim, .you-strip, .you-card, .matchups > .mu.rim, .poll';
+const SHINE_MAX = 3;
+const shone = new Set();
 let shineIo = null;
 export function shine(scope) {
   shineIo?.disconnect();
   if (calm() || !('IntersectionObserver' in window) || !scope) return;
+  const page = (location.hash || '#').split('/')[0];
+  if (shone.has(page)) return;
+  shone.add(page);
   let k = 0, last = 0;
   shineIo = new IntersectionObserver((entries) => {
     for (const en of entries) {
-      if (!en.isIntersecting) continue;
+      if (!en.isIntersecting || k >= SHINE_MAX) continue;
       const card = en.target;
       shineIo.unobserve(card);
       // a card's own entrance (the ranking rows rise and grow) finishes first; a batch goes one after another
-      const now = performance.now(), at = Math.max(now + 420, last + 140);
+      const now = performance.now(), at = Math.max(now + 420, last + 260);
       last = at;
       setTimeout(() => {
         if (!card.isConnected) return;
@@ -275,15 +282,15 @@ export function shine(scope) {
         box.style.cssText = `left:${r.left + scrollX}px;top:${r.top + scrollY}px;width:${r.width}px;height:${Math.min(r.height, 900)}px;border-radius:${getComputedStyle(card).borderRadius}`;
         document.body.append(box);
         // the band is a fixed width, so it reads the same on a phone card and a desktop row
-        const band = Math.min(r.width * 0.34, 150), i = box.firstChild;
+        const band = Math.min(r.width * 0.3, 120), i = box.firstChild;
         i.style.width = `${band}px`;
         const run = i.animate([{ transform: `translateX(${-band * 1.4}px) skewX(-18deg)` }, { transform: `translateX(${r.width + band * 0.4}px) skewX(-18deg)` }],
-          { duration: Math.min(1300, 700 + r.width * 0.5), easing: 'cubic-bezier(0.4, 0, 0.3, 1)' });
+          { duration: Math.min(1500, 900 + r.width * 0.5), easing: 'cubic-bezier(0.4, 0, 0.3, 1)' });
         run.finished.catch(() => {}).then(() => box.remove());
       }, at - now);
-      if (++k > 40) shineIo.disconnect(); // plenty for one page
+      if (++k >= SHINE_MAX) shineIo.disconnect();
     }
-  }, { threshold: 0.25, rootMargin: '0px 0px -8% 0px' });
+  }, { threshold: 0.5, rootMargin: '0px 0px -8% 0px' });
   scope.querySelectorAll(SHINE).forEach((card) => shineIo.observe(card));
 }
 
