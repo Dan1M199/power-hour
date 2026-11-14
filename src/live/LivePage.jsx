@@ -111,7 +111,7 @@ export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetc
         <h2>{fin ? 'Standings after the week' : 'Projected standings'}</h2>
         <p className="sub">{`${fin ? `The table with week ${wk} counted, points added for the tiebreaker.` : `The table after week ${wk} if every game ends the way it's trending, projected points added for the tiebreaker.`} The dashed line is the playoff cut (top ${pt}).`}</p>
         <div className="heat-wrap"><table className="table stand">
-          <thead><tr><th className="num">Seed</th><th>Team</th><th className="num">Before</th><th className="num">After</th><th className="num">This week</th><th className="num pf">PF after</th><th className="num">Playoffs</th></tr></thead>
+          <thead><tr><th className="num">Seed</th><th>Team</th><th className="num now">Before</th><th className="num">After</th><th className="num">This week</th><th className="num pf">PF after</th><th className="num">Playoffs</th></tr></thead>
           <tbody>{standings.map((x) => {
             const t = x.t, r = x.r, won = r.won, mv = x.was - x.seed;
             const after = `${t.wins + (won ? 1 : 0)}-${t.losses + (won ? 0 : 1)}${t.ties ? `-${t.ties}` : ''}`;
@@ -120,7 +120,7 @@ export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetc
                 <td className="num seed"><b>{x.seed}</b>{mv ? <span className={`move ${mv > 0 ? 'up' : 'down'}`}>{`${mv > 0 ? '▲' : '▼'}${Math.abs(mv)}`}</span> : null}</td>
                 <td className="tm"><TeamAvatar t={t} cls="avatar xs" />{h.short(t.name, 22)}<ChampTag t={t} h={h} label={false} /></td>
                 <td className="num now">{h.record(t)}<small>{` (${ordinal(x.was)})`}</small></td>
-                <td className="num"><b data-tip={`${t.name}: ${after} with ${f1(x.pf)} points for after the week`}>{after}</b></td>
+                <td className="num"><b data-tip={`${t.name}: ${h.record(t)} (${ordinal(x.was)}) before the week, ${after} with ${f1(x.pf)} points for after it`}>{after}</b></td>
                 <td className="num"><span className={won ? 'plus' : 'minus'} data-tip={`${t.name} wins this week in ${pct(r.win)} of outcomes`}>{r.final || r.locked ? (won ? 'W' : 'L') : pct(r.win)}</span></td>
                 <td className="num pf">{f1(x.pf)}</td>
                 <td className="num"><b>{pct(t.playoffPct)}</b></td>
