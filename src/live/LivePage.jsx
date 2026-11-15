@@ -81,7 +81,8 @@ export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetc
     const o = r.opp ? r.opp.name : 'their opponent';
     if (r.final) return r.ahead ? <span className="st-chip won">{`Beat ${o}`}</span> : <span className="st-chip lost">{`Lost to ${o}`}</span>;
     if (r.locked) return r.ahead ? <span className="st-chip won">{`Locked up vs ${o}`}</span> : <span className="st-chip lost">{`Can't catch ${o}`}</span>;
-    return <span className={`st-chip ${r.win >= 0.5 ? 'up' : 'down'}`}>{`${pct(r.win)} to beat ${o}`}</span>;
+    // phones say it short (the opponent's name won't fit beside the score); wider screens name them
+    return <span className={`st-chip ${r.win >= 0.5 ? 'up' : 'down'}`}><span className="st-l">{`${pct(r.win)} to beat ${o}`}</span><span className="st-s">{`${pct(r.win)} to win`}</span></span>;
   };
   return <>
     {fin && !car
