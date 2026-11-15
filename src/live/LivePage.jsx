@@ -5,7 +5,6 @@
 import { ChampTag, Headshot, TeamAvatar, ScenariosLink } from '../shared.jsx';
 import { Hero } from '../hero/Hero.jsx';
 import { StoryRail } from '../buzz/Stories.jsx';
-import { WeekCards } from './WeekCards.jsx';
 
 // "Your week": a note from the desk to whoever picked a team. Winning gets congratulated, losing gets roasted, and a
 // coin flip gets a pep talk if they're ahead or a reality check if they're behind. Wording rotates daily.
@@ -76,7 +75,15 @@ function LiveHead({ fin, wk, played, fetched }) {
 }
 
 export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetched, bull, onReveal, buzz }) {
-  const { f1, pct, ordinal } = h, pt = D.meta.playoffTeams;
+  const { f1, pct, ordinal } = h, pt = D.meta.playoffTeams, n = rows.length;
+  const max = Math.max(1, ...rows.map((r) => r.proj)) * 1.04;
+  const status = (r) => {
+    const o = r.opp ? r.opp.name : 'their opponent';
+    if (r.final) return r.ahead ? <span className="st-chip won">{`Beat ${o}`}</span> : <span className="st-chip lost">{`Lost to ${o}`}</span>;
+    if (r.locked) return r.ahead ? <span className="st-chip won">{`Locked up vs ${o}`}</span> : <span className="st-chip lost">{`Can't catch ${o}`}</span>;
+    // phones say it short (the opponent's name won't fit beside the score); wider screens name them
+    return <span className={`st-chip ${r.win >= 0.5 ? 'up' : 'down'}`}><span className="st-l">{`${pct(r.win)} to beat ${o}`}</span><span className="st-s">{`${pct(r.win)} to win`}</span></span>;
+  };
   return <>
     {fin && !car
       ? <section className="view-head"><LiveHead fin wk={wk} played={played} fetched={fetched} /></section>
@@ -87,8 +94,19 @@ export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetc
     <div className="live-grid">
       <section className="panel glass live-panel wk-rank">
         <h2>{`Week ${wk}, top to bottom`}</h2>
-        <p className="sub">{fin ? 'Final scores, one card a team. Tap a card for its matchup.' : 'By projected final score. Each health bar is the week: solid is banked, striped is still to come, the white notch is the opponent. Tap a card for its matchup.'}</p>
-        <WeekCards rows={rows} me={me} h={h} fin={fin} />
+        <p className="sub">{fin ? 'Final scores. 12th is the worst week in the league.' : 'By projected final score. Dark is banked, striped is still to come. 12th is the worst week in the league.'}</p>
+        <ol className="wr-list">{rows.map((r, i) => {
+          const t = r.t, rest = Math.max(0, r.proj - r.banked);
+          const tip = `${t.name}: ${f1(r.banked)} scored, ${f1(rest)} more projected from ${r.left.length ? r.left.map((x) => x.name).join(', ') : 'nobody'}`;
+          return (
+            <li key={t.rid} className={`wr ${t.rid === me ? 'mine' : ''} ${i === n - 1 ? 'last' : ''}`}>
+              <span className="wr-n">{i + 1}</span><TeamAvatar t={t} />
+              <div className="wr-who"><b>{t.name}<ChampTag t={t} h={h} label={false} /></b>{status(r)}</div>
+              <div className="wr-bar" data-tip={tip}><i className="bk" style={{ width: `${(r.banked / max) * 100}%` }} /><i className="rs" style={{ width: `${(rest / max) * 100}%` }} /></div>
+              <div className="wr-num"><b>{f1(r.proj)}</b><small>{fin ? 'Final' : `${f1(r.banked)} in, ${r.left.length ? `${r.left.length} to play` : 'all done'}`}</small></div>
+            </li>
+          );
+        })}</ol>
       </section>
       <section className="panel glass live-panel wk-stand">
         <h2>{fin ? 'Standings after the week' : 'Projected standings'}</h2>
