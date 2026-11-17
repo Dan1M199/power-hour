@@ -2,7 +2,9 @@
 // playoffPath in lib/labmodels.js). The odds with next week's floor and ceiling, your games by how much each one moves
 // you (the critical weeks), the other games to watch and who to root for, who needs to lose and when, the most
 // realistic way in, a long shot and the most common ending. Every game is pickable: pick a winner and everything is
-// read again from only the seasons where that happened, so you can build your own scenario.
+// read again from only the seasons where that happened, so you can build your own scenario. The scenario builder (Dan's
+// request Nov 17) lists every remaining game week by week as two team buttons, a first visit points at one ("Tap a
+// team", until this device has picked once: ph-pth-picked), and a sticky bar carries the picks and the odds they moved.
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { restOfSeason, playoffPath } from '../../lib/labmodels.js';
 import { TeamAvatar } from '../shared.jsx';
@@ -42,6 +44,8 @@ export function PlayoffPath({ D, me, h }) {
   const bubble = useMemo(() => [...D.teams].sort((a, b) => Math.abs(a.playoffPct - 0.5) - Math.abs(b.playoffPct - 0.5))[0]?.rid, [D]);
   const [pickRid, setRid] = useState(null);
   const [picks, setPicks] = useState({});
+  const [bw, setBw] = useState(null); // the builder's week
+  const [taught, setTaught] = useState(() => { try { return localStorage.getItem('ph-pth-picked') === '1'; } catch { return false; } });
   const rid = pickRid ?? me ?? bubble;
   // a tap paints its pressed button at once; the seasons are read again in a render React can drop if another tap comes
   const dRid = useDeferredValue(rid), dPicks = useDeferredValue(picks);
@@ -60,7 +64,10 @@ export function PlayoffPath({ D, me, h }) {
   const nm = (r, k = 16) => h.short(team(r).name, k);
   const nPicks = Object.keys(picks).length;
   const thin = P.matches < 400;
-  const pick = (i, v) => setPicks((cur) => { const next = { ...cur }; if (next[i] === v) delete next[i]; else next[i] = v; return next; });
+  const pick = (i, v) => {
+    setPicks((cur) => { const next = { ...cur }; if (next[i] === v) delete next[i]; else next[i] = v; return next; });
+    if (!taught) { setTaught(true); try { localStorage.setItem('ph-pth-picked', '1'); } catch { /* private mode */ } }
+  };
   const game = (i) => S.games[i];
   const winnerSide = (x, r) => (r === x.ra ? 1 : 0);
 
@@ -109,7 +116,6 @@ export function PlayoffPath({ D, me, h }) {
   const signed = (d) => (d == null ? '–' : `${d >= 0 ? '+' : '−'}${Math.abs(d * 100).toFixed(Math.abs(d) < 0.1 ? 1 : 0)}%`);
   // who needs to lose: every rival loss that helps, the biggest dozen, in week order
   const losses = base.rivals.flatMap((r) => r.weeks.map((w) => ({ ...w, rid: r.rid }))).sort((a, b) => b.swing - a.swing).slice(0, 12).sort(byWeek);
-  const shown = new Set([...P.yours.map((x) => x.i), ...base.watch.map((x) => x.i)]);
   const floor = P.floor, ceil = P.ceiling;
   const fcTip = (b, word) => b && `${word} for week ${b.week}: ${b.results.map((r) => `${team(r.winner).name} win`).join(', ')}. Your odds by Tuesday: ${p0(b.odds)}.`;
   const crit = new Set([...P.yours].filter((x) => !x.picked).sort((a, b) => b.swing - a.swing).slice(0, 2).map((x) => x.i));
@@ -149,12 +155,13 @@ export function PlayoffPath({ D, me, h }) {
         </label>
       </div>
       <p className="lab-lede">{lede}</p>
-      {nPicks ? (
-        <p className={`pth-scn${thin ? ' thin' : ''}`}>
-          <span>{`Your scenario: ${nPicks} ${nPicks === 1 ? 'result' : 'results'} picked, ${P.matches.toLocaleString('en-US')} of ${S.sims.toLocaleString('en-US')} seasons match${thin ? '. Thin sample, read loosely' : ''}. Odds were ${p0(base.odds)}.`}</span>
-          <button type="button" className="chip" onClick={() => setPicks({})}>Clear picks</button>
-        </p>
-      ) : null}
+      {nPicks ? null : (
+        <button type="button" className="pth-invite" onClick={() => document.getElementById('pth-build')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })}>
+          <span className="pth-invite-dots" aria-hidden="true"><i /><i /><i /></span>
+          <span><b>Build your own scenario</b><small>Tap a team in any game to make them win, and watch every number on this card follow.</small></span>
+          <span className="pth-invite-go" aria-hidden="true">Start</span>
+        </button>
+      )}
 
       <div className="pth-stats">
         <div className="pth-stat main"><small>Playoff odds</small><b>{p0(P.odds)}</b><span>{nPicks ? `${P.odds >= base.odds ? '+' : ''}${Math.round((P.odds - base.odds) * 100)} from your picks` : `top ${S.P} of ${D.teams.length}`}</span></div>
@@ -190,6 +197,50 @@ export function PlayoffPath({ D, me, h }) {
         );
       })() : null}
 
+      {(() => {
+        const wk = bw ?? S.weeks[0];
+        const list = P.games.filter((g) => g.week === wk);
+        const inWeek = (w) => Object.keys(picks).filter((i) => game(Number(i)).week === w).length;
+        const side = (g, r) => {
+          const a = r === g.ra, v = a ? 1 : 0, on = picks[g.i] === v, off = g.i in picks && !on;
+          const win = a ? g.pA : 1 - g.pA, yours = a ? g.oA : g.oB, d = move(yours), mine = r === dRid;
+          return (
+            <button type="button" className={`pth-side${on ? ' on' : ''}${off ? ' off' : ''}${mine ? ' mine' : ''}`} aria-pressed={on} onClick={() => pick(g.i, v)}
+              aria-label={`${team(r).name} win week ${g.week}${yours != null ? `: your odds ${p0(yours)}` : ''}`}>
+              <TeamAvatar t={team(r)} cls="avatar xs" />
+              <span className="pth-side-name"><b>{nm(r, 18)}</b><small>{on ? 'Wins in your scenario' : off ? 'Loses in your scenario' : `Wins ${p0(win)} of the time`}</small></span>
+              {mine ? null : <span className={`pth-side-odds${d == null ? '' : d > 0.004 ? ' up' : d < -0.004 ? ' down' : ''}`}><b>{p0(yours)}</b><small>{d == null || Math.abs(d) < 0.005 ? 'your odds' : signed(d)}</small></span>}
+            </button>
+          );
+        };
+        return (
+          <div className="pth-box pth-build" id="pth-build">
+            <div className="pth-build-head">
+              <div>
+                <h3>Build your scenario</h3>
+                <p className="pth-cap">{`Every game left, week by week. Tap a team to make them win; tap again to take it back. The numbers beside each team are ${first}'s playoff odds if that happens.`}</p>
+              </div>
+              <div className="pth-weeks" role="tablist" aria-label="Week">
+                {S.weeks.map((w) => (
+                  <button key={w} type="button" role="tab" aria-selected={w === wk} onClick={() => setBw(w)}>
+                    {`Wk ${w}`}{inWeek(w) ? <i className="pth-wcount">{inWeek(w)}</i> : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <ul className="pth-games">{list.map((g, k) => (
+              <li key={g.i} className={`${g.ra === dRid || g.rb === dRid ? 'yours' : ''}${g.i in picks ? ' picked' : ''}`.trim() || undefined}>
+                {g.ra === dRid || g.rb === dRid ? <em className="pth-flag">{`${first}'s game`}</em> : null}
+                {side(g, g.ra)}
+                <span className="pth-vs" aria-hidden="true">vs</span>
+                {side(g, g.rb)}
+                {!taught && k === 0 ? <span className="pth-coach" aria-hidden="true">Tap a team</span> : null}
+              </li>
+            ))}</ul>
+          </div>
+        );
+      })()}
+
       <div className="pth-cols">
         <div className="pth-box">
           <h3>Critical weeks to win</h3>
@@ -218,10 +269,6 @@ export function PlayoffPath({ D, me, h }) {
               {Pick({ x: x, a: x.root, b: x.against, labelA: h.first(team(x.root)), labelB: h.first(team(x.against)) })}
             </li>
           ))}</ul> : <p className="pth-cap">Nobody else's games move you by much.</p>}
-          {Object.keys(picks).filter((i) => !shown.has(Number(i))).map((i) => {
-            const g = game(Number(i));
-            return <p key={i} className="pth-picked">{`Picked: week ${g.week}, ${nm(picks[i] ? g.ra : g.rb)} beat ${nm(picks[i] ? g.rb : g.ra)}`}<button type="button" className="chip" onClick={() => pick(Number(i), picks[i])}>Undo</button></p>;
-          })}
         </div>
       </div>
 
@@ -260,6 +307,23 @@ export function PlayoffPath({ D, me, h }) {
           </> : null}
         </article>
       </div>
+      {nPicks ? (
+        <div className={`pth-bar${thin ? ' thin' : ''}`} role="status">
+          <div className="pth-bar-odds">
+            <small>Your scenario</small>
+            <b>{p0(P.odds)}</b>
+            <span className={P.odds >= base.odds ? 'up' : 'down'}>{`${P.odds >= base.odds ? '+' : '−'}${Math.abs(Math.round((P.odds - base.odds) * 100))} from ${p0(base.odds)}`}</span>
+          </div>
+          <ul className="pth-bar-picks">{Object.keys(picks).map(Number).sort((a, b) => game(a).week - game(b).week).map((i) => {
+            const g = game(i), w = picks[i] ? g.ra : g.rb;
+            return <li key={i}><button type="button" onClick={() => pick(i, picks[i])} aria-label={`Take back: ${team(w).name} win week ${g.week}`}>{`Wk ${g.week}: ${nm(w, 14)} win`}<span aria-hidden="true" className="pth-x" /></button></li>;
+          })}</ul>
+          <div className="pth-bar-end">
+            <small>{`${P.matches.toLocaleString('en-US')} of ${S.sims.toLocaleString('en-US')} seasons${thin ? ', thin sample' : ''}`}</small>
+            <button type="button" className="chip" onClick={() => setPicks({})}>Clear</button>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
