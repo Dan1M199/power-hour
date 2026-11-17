@@ -1,6 +1,6 @@
 ---
 name: The Power Hour
-description: A league sports desk built like a stadium bowl, with shaded stadium-shaped cards stacked in tiers on a mowed field under a deep sky.
+description: A league sports desk of flat blocks, rounded-square cards standing on solid slabs on a mowed field under a flat sky.
 colors:
   grass: "#3E9F46"
   grass-2: "#76B038"
@@ -34,28 +34,30 @@ colors:
   header: "#EAF6FC"
 typography:
   display:
-    fontFamily: "Big Shoulders Display, Arial Narrow, Impact, sans-serif"
-    fontSize: "clamp(48px, 8.4vw, 104px)"
-    fontWeight: 900
-    lineHeight: 0.86
-    letterSpacing: "-0.01em"
+    fontFamily: "Albert Sans, Segoe UI, system-ui, sans-serif"
+    fontSize: "clamp(40px, 6vw, 72px)"
+    fontWeight: 800
+    lineHeight: 0.98
+    letterSpacing: "-0.035em"
   headline:
-    fontFamily: "Big Shoulders Display, Arial Narrow, Impact, sans-serif"
+    fontFamily: "Albert Sans, Segoe UI, system-ui, sans-serif"
+    fontSize: "24px"
+    fontWeight: 800
+    lineHeight: 1.15
+    letterSpacing: "-0.02em"
+  title:
+    fontFamily: "Albert Sans, Segoe UI, system-ui, sans-serif"
+    fontSize: "21px"
+    fontWeight: 800
+    lineHeight: 1.05
+    letterSpacing: "-0.02em"
+  numeral:
+    fontFamily: "Albert Sans, Segoe UI, system-ui, sans-serif"
     fontSize: "30px"
     fontWeight: 800
     lineHeight: 1
-    letterSpacing: "0.005em"
-  title:
-    fontFamily: "Big Shoulders Display, Arial Narrow, Impact, sans-serif"
-    fontSize: "21px"
-    fontWeight: 800
-    lineHeight: 1.1
-    letterSpacing: "0.01em"
-  numeral:
-    fontFamily: "Big Shoulders Display, Arial Narrow, Impact, sans-serif"
-    fontSize: "38px"
-    fontWeight: 900
-    lineHeight: 0.9
+    letterSpacing: "-0.03em"
+    fontFeature: "'tnum' 1"
   body:
     fontFamily: "Albert Sans, Segoe UI, system-ui, sans-serif"
     fontSize: "16px"
@@ -68,10 +70,10 @@ typography:
     fontWeight: 700
     lineHeight: 1.2
 rounded:
-  md: "16px"
-  lg: "24px"
-  xl: "32px"
-  pill: "999px"
+  tag: "8px"
+  ctl: "10px"
+  mid: "14px"
+  card: "20px"
 spacing:
   xs: "8px"
   sm: "14px"
@@ -80,52 +82,61 @@ spacing:
   xl: "44px"
 components:
   card:
-    backgroundColor: "rgba(255, 255, 255, 0.96)"
+    backgroundColor: "#F7FAF3"
     textColor: "{colors.ink}"
-    rounded: "{rounded.lg}"
+    rounded: "{rounded.card}"
     padding: "18px"
   card-featured:
-    backgroundColor: "rgba(255, 255, 255, 0.96)"
+    backgroundColor: "#F7FAF3"
     textColor: "{colors.ink}"
-    rounded: "{rounded.xl}"
+    rounded: "{rounded.card}"
   scoreboard:
     backgroundColor: "{colors.board}"
     textColor: "{colors.chalk}"
-    rounded: "{rounded.xl}"
+    rounded: "{rounded.card}"
     padding: "26px 28px"
   button-primary:
     backgroundColor: "{colors.amber}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.pill}"
+    rounded: "{rounded.ctl}"
     padding: "8px 15px"
   button-secondary:
     backgroundColor: "{colors.chalk}"
     textColor: "{colors.ink-2}"
-    rounded: "{rounded.pill}"
+    rounded: "{rounded.ctl}"
     padding: "8px 15px"
   chip:
     backgroundColor: "{colors.chalk}"
     textColor: "{colors.ink-2}"
-    rounded: "{rounded.pill}"
+    rounded: "{rounded.tag}"
     padding: "5px 11px"
   you-tag:
     backgroundColor: "{colors.yellow}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.pill}"
+    rounded: "{rounded.tag}"
     padding: "5px 8px"
   section-sign:
     backgroundColor: "{colors.chalk}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.pill}"
+    rounded: "{rounded.tag}"
     padding: "10px 18px 9px"
   tab-active:
     backgroundColor: "{colors.amber}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.pill}"
+    rounded: "{rounded.tag}"
     padding: "8px 16px"
 ---
 
-> The current language is **the bowl**: everything is a stadium shape or a circle, shaded and stacked in tiers; things come out from behind other things. Amber marks actions and what's on; magenta is a tiny hint on a few ledges and text selection. Where anything below still says cartoon glass, ink outlines, hard ledges or no soft shadows, the bowl wins. The rules live in the "the bowl" section of `styles.css` and the Design system section of `CLAUDE.md`.
+> **3.0, flat blocks (Nov 17)** is the current language and wins over anything below that still describes the bowl or cartoon glass. Same sky, field and colours; a new material:
+> - **Cards** are flat faces (no gloss, sheen or outline) standing on a solid slab, the block's darker side (`--slab`, 8px; gold `--slab-gold` for featured), with a soft shadow cast on the ground under it (`--cast`). Hover lifts the card 3px and the slab grows to 11px.
+> - **Corners are rounded squares**: 20px cards (`--r-card`), 14px nested panels (`--r-mid`), 10px controls (`--r-ctl`), 8px tags (`--r-tag`). Faces and avatars stay round. The field's own rounded top and the clouds keep their shapes.
+> - **Panels inside a card** are flat tinted wells, never pressed in (no inset shadows).
+> - **Controls are blocks**: amber (primary, on) on a gold slab, white on a pale green slab (`--slab-soft`); 4px slab, pressing down 3px on `:active`. The active tab and pressed filters keep the magenta slab hint (`--pop`).
+> - **Chrome is solid**: the header, phone dock, the circle, the top button and the tooltip are flat blocks on their own slab. No frost, glass or lens (2.3's liquid glass and `src/liquid.js` are gone).
+> - **Scoreboards** (the headline carousel and the game of the week) are flat dark blocks on a black slab: no LED dots, no glint, no smoked sheen.
+> - **One type family**: Albert Sans (self-hosted variable, 100 to 900) for everything. 800 for titles, scores and names, 700 for labels, 400 for reading, tabular numbers everywhere; display sizes were retuned for its wider figures. Big Shoulders is no longer used. The sketch notes are set in Albert Sans too.
+> - **Kept as they were**: the yard numbers (now in Albert Sans), the team dashboard's Paper Widgets look, and the headline desk's newspaper.
+> The rules live in the last block of `styles.css` ("3.0: flat blocks").
 
 # Design System: The Power Hour
 

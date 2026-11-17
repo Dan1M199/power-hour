@@ -19,7 +19,6 @@ import { posts, loadPosts } from './src/admin/posts.js';
 import { AdminShell } from './src/admin/AdminShell.jsx';
 import { createStore } from './src/store.js';
 import { initTouch, shine, pageIn } from './src/touch.js';
-import { initLiquid } from './src/liquid.js';
 import { streak, wireNew, wireSeen } from './src/buzz/seen.js';
 import { streakNote } from './src/buzz/streak.js';
 import { startPresence, presenceNow } from './src/buzz/presence.js';
@@ -2175,7 +2174,6 @@ async function main() {
   initMe();
   initTooltips();
   const touch = initTouch({ placeInk }); // 2.0: press, the dock's slide, the top pill (src/touch.js)
-  initLiquid(); // 2.3: the chrome's lens, its light and the scroll edges (src/liquid.js)
   const loader = startLoader();
   // 2.4: the browser's install offer can come at any moment, so the listener starts first; the sheet waits for a
   // device's second day (src/buzz/install.js)
