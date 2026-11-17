@@ -47,6 +47,7 @@ export function PlayoffPath({ D, me, h }) {
   const [pickRid, setRid] = useState(null);
   const [picks, setPicks] = useState({});
   const [bw, setBw] = useState(null); // the builder's week
+  const [wdir, setWdir] = useState(''); // which way the last week change went, so the games slide in from that side
   const [taught, setTaught] = useState(() => { try { return localStorage.getItem('ph-pth-picked') === '1'; } catch { return false; } });
   const rid = pickRid ?? me ?? bubble;
   // a tap paints its pressed button at once; the seasons are read again in a render React can drop if another tap comes
@@ -244,13 +245,13 @@ export function PlayoffPath({ D, me, h }) {
                 </div>
                 <div className="pth-weeks" role="tablist" aria-label="Week">
                   {S.weeks.map((w) => (
-                    <button key={w} type="button" role="tab" aria-selected={w === wk} onClick={() => setBw(w)}>
+                    <button key={w} type="button" role="tab" aria-selected={w === wk} onClick={() => { if (w !== wk) setWdir(w > wk ? 'go-next' : 'go-prev'); setBw(w); }}>
                       {`Wk ${w}`}{inWeek(w) ? <i className="pth-wcount">{inWeek(w)}</i> : null}
                     </button>
                   ))}
                 </div>
               </div>
-              <ul className="pth-games">{others.map((g) => {
+              <ul key={wk} className={`pth-games${wdir ? ` ${wdir}` : ''}`}>{others.map((g) => {
                 const [lvl, said] = impact(g.i);
                 return (
                   <li key={g.i} className={`imp-${lvl}${g.i in picks ? ' picked' : ''}`}>

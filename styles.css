@@ -1884,7 +1884,7 @@ h3 { font: 800 17px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   @keyframes grow-x { from { transform: scaleX(0); } }
   @keyframes grow-y { from { transform: scaleY(0); } }
   @keyframes draw { from { stroke-dashoffset: 1; } }
-  @keyframes pop { from { opacity: 0; transform: scale(0.4); } }
+  @keyframes pop { from { opacity: 0; transform: scale(0.97); } } /* an entrance settles in from 0.97, never pops from small */
   /* out from under whatever sits above it */
   @keyframes emerge { from { opacity: 0; transform: translateY(-20px) scale(0.97); } }
 
@@ -5028,3 +5028,27 @@ html.on-scenarios .tx-top { display: none; }
   .pth-mine-who { flex-wrap: wrap; }
   .pth-mine .pth-flag { order: -1; }
 }
+
+/* ---------- motion details (Nov 17, from Charles Liu's animation notes) ---------- */
+/* 2. every tap gets press feedback: buttons, tabs and chips shrink a hair while held. The individual scale property, so
+   it never fights a control's own transform (the blocks also sink 3px); zero specificity, so a control's own transition
+   list still wins and the press simply lands at once there */
+:where(button, [role='tab'], [role='button'], .tabs a, .chip, .lab-tabs a, .filters a) { transition: scale 150ms var(--ease-out); }
+:where(button, [role='tab'], [role='button'], .tabs a, .chip, .lab-tabs a, .filters a):active:not(:disabled) { scale: 0.97; }
+/* 3. a wrong password shakes as well as turning red: red is easy to miss, a shake isn't */
+@keyframes shake { 0%, 100% { transform: translateX(0); } 15% { transform: translateX(-10px); } 30% { transform: translateX(10px); } 50% { transform: translateX(-6px); } 70% { transform: translateX(6px); } 85% { transform: translateX(-3px); } }
+@media (prefers-reduced-motion: no-preference) { .shake { animation: shake 360ms var(--ease-out); } }
+/* 4. the scenario builder's weeks slide in from the side you're heading: forward from the right, back from the left */
+@media (prefers-reduced-motion: no-preference) {
+  .pth-games.go-next { animation: step-next 260ms var(--ease-out); }
+  .pth-games.go-prev { animation: step-prev 260ms var(--ease-out); }
+  @keyframes step-next { from { opacity: 0; transform: translateX(28px); } }
+  @keyframes step-prev { from { opacity: 0; transform: translateX(-28px); } }
+}
+/* 7. while the theme flips, nothing transitions, so every colour changes in one frame instead of fading unevenly */
+html.theme-switching *, html.theme-switching *::before, html.theme-switching *::after { transition: none !important; }
+/* 10. at the first or last tab the swipe chip still follows the finger, against growing resistance, and never arms */
+.tx-swipe.end { color: var(--ink-3); }
+/* the sign-in after a wrong password: the box's rule and the field turn the desk's red as it shakes */
+.adm-signin.bad { box-shadow: inset 0 0 0 2px var(--np-red); }
+.adm-signin.bad input { outline: 2px solid var(--np-red); outline-offset: 1px; }

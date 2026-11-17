@@ -90,7 +90,7 @@ const Check = () => (
 
 // the gate on #admin: the admin password or key signs this device in as Dan for a year.
 function SignIn() {
-  const [pw, setPw] = useState(''), [msg, setMsg] = useState(''), [busy, setBusy] = useState(false);
+  const [pw, setPw] = useState(''), [msg, setMsg] = useState(''), [busy, setBusy] = useState(false), [shake, setShake] = useState(false);
   const go = async (e) => {
     e.preventDefault();
     const v = pw.trim();
@@ -99,11 +99,11 @@ function SignIn() {
     try {
       await adminAuthCall({ password: v });
       await loadPosts();
-    } catch (x) { setMsg(x.message); setPw(''); }
+    } catch (x) { setMsg(x.message); setPw(''); setShake(true); }
     setBusy(false);
   };
   return (
-    <form className="adm-signin adm-panel" onSubmit={go}>
+    <form className={`adm-signin adm-panel${shake ? ' shake bad' : ''}`} onSubmit={go} onAnimationEnd={() => setShake(false)}>
       <h2>Editor sign-in</h2>
       <p>The headline desk is password protected. Sign in once and this device stays signed in.</p>
       <label className="adm-field"><span>Password</span>

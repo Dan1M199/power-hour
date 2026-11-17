@@ -280,7 +280,10 @@ const headshot = (t, cls) => {
 function initTheme() {
   const html = document.documentElement, btn = $('#theme-btn'), dark = matchMedia('(prefers-color-scheme: dark)');
   const paint = (t) => {
+    // nothing transitions while the theme flips, so every colour changes in the same frame instead of fading unevenly
+    html.classList.add('theme-switching');
     html.dataset.theme = t;
+    setTimeout(() => html.classList.remove('theme-switching'), 60); // a timer, not frames: a background tab runs none
     $('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#0A1630' : '#4FBDF2');
     btn?.setAttribute('aria-label', t === 'dark' ? 'Switch to the day game (light mode)' : 'Switch to the night game (dark mode)');
   };
@@ -2108,7 +2111,15 @@ function initTooltips() {
   const tip = $('#tip');
   // the tip is measured only when it gets new text, and follows the mouse with a transform, so moving costs no layout
   let shownFor = null, w = 0, h = 0;
-  const show = (el, x, y) => {
+  // on a mouse the first tip waits a beat, so passing over a chart doesn't flash one; once a tip is up (or was a moment
+  // ago) the next shows at once, so scanning across marks stays quick
+  const FIRST = 350, WARM = 500;
+  let warmUntil = 0, wait = 0, waitFor = null;
+  const show = (el, x, y, now = false) => {
+    if (!now && tip.hidden && performance.now() > warmUntil) {
+      if (waitFor !== el) { clearTimeout(wait); waitFor = el; wait = setTimeout(() => { waitFor = null; show(el, lastX, lastY, true); }, FIRST); }
+      return;
+    }
     if (el !== shownFor || tip.hidden) {
       tip.textContent = el.dataset.tip;
       tip.hidden = false;
@@ -2118,7 +2129,8 @@ function initTooltips() {
     const left = Math.min(innerWidth - w - 8, Math.max(8, x + 14)), top = Math.min(innerHeight - h - 8, y + 16);
     tip.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
   };
-  const hide = () => { if (!tip.hidden) { tip.hidden = true; shownFor = null; } };
+  const hide = () => { clearTimeout(wait); waitFor = null; if (!tip.hidden) { tip.hidden = true; shownFor = null; warmUntil = performance.now() + WARM; } };
+  let lastX = 0, lastY = 0;
   let touch = false, moved = null;
   document.addEventListener('pointerdown', (e) => (touch = e.pointerType !== 'mouse'), { passive: true });
   // at most one update per frame, however fast the mouse reports
@@ -2126,7 +2138,7 @@ function initTooltips() {
     if (e.pointerType !== 'mouse') return; // a finger dragging over marks would flash tips mid-scroll
     if (!moved) requestAnimationFrame(() => {
       const { target, x, y } = moved;
-      moved = null;
+      moved = null; lastX = x; lastY = y;
       const el = target.closest?.('[data-tip]');
       if (el && el.dataset.tip) show(el, x, y); else hide();
     });
@@ -2136,7 +2148,7 @@ function initTooltips() {
   document.addEventListener('click', (e) => {
     if (!touch) return;
     const el = e.target.closest?.('[data-tip]');
-    if (el && el.dataset.tip && !el.closest('button')) show(el, e.clientX, e.clientY); else hide();
+    if (el && el.dataset.tip && !el.closest('button')) show(el, e.clientX, e.clientY, true); else hide();
   });
   window.addEventListener('scroll', hide, { passive: true });
   document.documentElement.addEventListener('pointerleave', hide); // the mouse left the window

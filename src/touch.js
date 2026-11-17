@@ -190,11 +190,21 @@ function initSwipe() {
       const tabs = [...document.querySelectorAll('.tabs a')].filter((a) => !a.hidden), i = tabs.findIndex((a) => a.hasAttribute('aria-current'));
       g.dir = dx < 0 ? 1 : -1; // a swipe to the left is the next tab
       g.next = i < 0 ? null : tabs[i + g.dir];
-      if (!g.next) { g = null; return; }
       g.lock = true;
-      label.textContent = g.next.querySelector('.ts, .tn')?.textContent || g.next.textContent.trim();
+      // at the first or last tab there's nowhere to go: the chip still comes out with the finger, against resistance
+      // that grows the further you pull, and slides back when you let go (iOS's rubber band; it never arms)
+      g.end = !g.next;
+      label.textContent = g.end ? (g.dir > 0 ? 'Last tab' : 'First tab') : g.next.querySelector('.ts, .tn')?.textContent || g.next.textContent.trim();
       chip.classList.toggle('back', g.dir < 0);
+      chip.classList.toggle('end', g.end);
       chip.classList.add('on');
+    }
+    if (g.end) {
+      const pull = Math.max(0, -dx * g.dir), give = 1 - 1 / (1 + pull / 160); // 0 at rest, approaching 1 the harder you pull
+      const out = 105 - give * 70;
+      chip.style.transform = `translateX(${g.dir > 0 ? out : -out}%)`;
+      ring.style.strokeDasharray = '0 100';
+      return;
     }
     const pull = Math.max(0, -dx * g.dir), p = Math.min(1, pull / NEED), armed = p >= 1;
     // the chip comes out of the edge with the finger, and gives a little more past the point of no return
@@ -204,7 +214,7 @@ function initSwipe() {
     if (armed !== g.armed) { g.armed = armed; chip.classList.toggle('go', armed); haptic(); }
   }, { passive: true });
   addEventListener('touchend', () => {
-    if (g?.lock && g.armed) { swipeDir = g.dir; location.hash = g.next.getAttribute('href'); }
+    if (g?.lock && g.armed && !g.end) { swipeDir = g.dir; location.hash = g.next.getAttribute('href'); }
     hide();
   }, { passive: true });
   addEventListener('touchcancel', hide, { passive: true });
