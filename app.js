@@ -563,47 +563,134 @@ function closeGames(wk) {
   return { type: 'nailbiter', kicker: 'Down to the wire', tone: 'neutral', stamp: 'Phew', rids: [g1.W.rid, g1.L.rid], headline, deck, tick };
 }
 
-// ---------- week 8's final call ----------
-// Dan's headlines once week 8 is final (from the final call, then Sleeper's own scoring, until Thursday's kickoff):
-// the overnight blockbuster on top, then Chubbs swearing he's better than Jalal (the deck checks his claim against the
-// numbers), then the week's closest finish. Headlines are Dan's words; every number comes from the snapshot. Null drops it.
+// ---------- the week's final call ----------
+// Dan's headlines once a week is final (from the final call, then Sleeper's own scoring, until Thursday's kickoff). The
+// headlines are Dan's words; every number in the decks comes from the snapshot. Null drops them all.
+// Week 10 (Nov 16): Gibbs in Munich and McCaffrey mogging him, Chubbs waving bye to Hamza, Que Rico nearly caught by
+// Operation Sneak In, Shahan in Germany, and Ashton Jeanty.
 const FINALS = {
-  week: 8,
-  wallahi: { by: '1004099157217685504', vs: '1005154707439980544' }, // Chubbs, Jalal
+  week: 10,
+  mog: { early: '9221', late: '4034', city: 'Munich' }, // Jahmyr Gibbs (Lions, in Munich), Christian McCaffrey
+  bye: { by: '1004099157217685504', on: '1004101328819351552' }, // Chubbs, Hamza
+  sneak: { chased: '1004111276118761472', by: '964343481231593472' }, // Tarek (QUE RICO), Dan (Operation: Sneak In)
+  demon: { owner: '1236096188118204416', teams: ['DET', 'NE'] }, // Shahan; the Munich game was Patriots at Lions
+  trash: { player: '12527' }, // Ashton Jeanty
 };
 const finalsOn = () => !!FINALS && DATA.meta.lastScored === FINALS.week && !DATA.liveMode;
 const weekOf = (t, w) => t?.weeks.find((x) => x.week === w);
+// a final week's box score: who started whom and what each scored (weekPlayers), and a player's rank among them
+const finalPts = (id) => weekPlayers(FINALS.week).find((p) => p.id === id);
+const finalRank = (id) => weekPlayers(FINALS.week).findIndex((p) => p.id === id) + 1;
+const gameSaid = (t) => {
+  const g = weekOf(t, FINALS.week), o = g && team(g.opp);
+  return g && o ? `${firstName(t)} ${g.result === 'W' ? 'beat' : g.result === 'L' ? 'lost to' : 'tied'} ${firstName(o)} ${f1(g.pts)} to ${f1(g.oppPts)}` : '';
+};
+const playerCard = (id, t, label) => {
+  const info = DATA.helpers.player(id) || {}, P = nameOf(id);
+  return { id, name: P, short: shortName(info.name ? info : { name: P }), line: `${info.pos || posOf(id)}, ${nfl(info.team)}`, pin: t ? { team: t, label: label || firstName(t) } : null };
+};
 
-// Chubbs lost, and he swears he's better than Jalal: the numbers get a say
-function wallahiStory() {
-  const C = ownerTeam(FINALS.wallahi.by), J = ownerTeam(FINALS.wallahi.vs);
-  if (!C || !J) return null;
-  const g = weekOf(C, FINALS.week), jg = weekOf(J, FINALS.week), opp = g && team(g.opp);
-  const head = g && g.opp === J.rid;
-  const claims = [
-    ['power rank', C.powerRank < J.powerRank, `${ordinal(C.powerRank)} vs ${ordinal(J.powerRank)}`],
-    ['points per game', C.pfPerGame > J.pfPerGame, `${f1(C.pfPerGame)} vs ${f1(J.pfPerGame)}`],
-    ['record', C.wins > J.wins || (C.wins === J.wins && C.pf > J.pf), `${record(C)} vs ${record(J)}`],
-    ['playoff odds', C.playoffPct > J.playoffPct, `${pct(C.playoffPct)} vs ${pct(J.playoffPct)}`],
-  ];
-  const won = claims.filter((c) => c[1]).length;
-  const verdict = won >= 3 ? 'The numbers back him up. Wallahi checks out.'
-    : won === 2 ? 'The numbers call it a split. The group chat will have to settle it.'
-    : 'The numbers are not on his side. Jalal would like a word.';
+// Gibbs went off in Munich in the morning; McCaffrey came along later in the day and topped him
+function mogStory() {
+  const { early, late, city } = FINALS.mog;
+  const a = finalPts(early), b = finalPts(late);
+  if (!a || !b || b.pts <= a.pts) return null;
+  const A = team(a.rid), B = team(b.rid), G = nameOf(early), C = nameOf(late);
   return {
-    type: 'wallahi', kicker: 'Sore loser desk', tone: 'neutral', stamp: 'Wallahi', rids: [C.rid, J.rid],
-    drain: g?.result === 'L' ? C.rid : undefined,
-    headline: 'Chubbs lost, but he says wallahi he is better than Jalal',
-    tick: { hook: 'Wallahi', line: `Chubbs lost but swears he's better than Jalal, and the numbers give him ${['none', 'one', 'two', 'three', 'all four'][won]} of four.` },
+    type: 'mog', group: 'players', kicker: 'Box score', tone: 'good', stamp: 'Mogged', rids: [B.rid, A.rid],
+    player: playerCard(late, B), mark: [G, C],
+    headline: `${G} dropped ${f1(a.pts)} in ${city}. Then ${C} woke up and mogged him`,
     deck: [
-      g?.result === 'L' ? `${C.name} went down ${f1(g.pts)} to ${f1(g.oppPts)}${head ? `, head to head against Jalal's ${J.name}` : opp ? ` against ${opp.name}` : ''} in week ${FINALS.week}.` : '',
-      !head && jg?.result ? `Jalal ${jg.result === 'W' ? 'won' : jg.result === 'L' ? 'lost' : 'tied'}, ${f1(jg.pts)} to ${f1(jg.oppPts)}.` : '',
-      `The tale of the tape, Chubbs first: ${claims.map((c) => `${c[0]} ${c[2]}`).join('; ')}.`,
-      `Chubbs takes ${['none', 'one', 'two', 'three', 'all four'][won]} of four. ${verdict}`,
-    ].filter(Boolean).join(' '),
+      `${G} put up ${f1(a.pts)} for ${firstName(A)} in the breakfast game and had the week to himself for a few hours.`,
+      `Then ${C} logged ${f1(b.pts)} for ${firstName(B)} later that day, ${finalRank(late) === 1 ? `the most points of any rostered player in week ${FINALS.week}` : `the ${ordinal(finalRank(late))}-most in week ${FINALS.week}`}${finalRank(early) === 2 ? `, and ${G} settles for second` : ''}. Flew to Germany for nothing.`,
+      `${[gameSaid(A), gameSaid(B)].filter(Boolean).join('; ')}.`,
+    ].join(' '),
+    tick: { hook: 'Mogged', line: `${G} scored ${f1(a.pts)} in ${city}. ${C} scored ${f1(b.pts)} later that day.` },
   };
 }
 
+// they called Chubbs a bye week; he waved bye to Hamza instead
+function byeStory() {
+  const C = ownerTeam(FINALS.bye.by), H = ownerTeam(FINALS.bye.on), g = weekOf(C, FINALS.week);
+  if (!C || !H || !g || g.opp !== H.rid || g.result !== 'W') return null;
+  const best = weekPlayers(FINALS.week).find((p) => p.rid === C.rid && p.started);
+  return {
+    type: 'byeweek', group: 'week', kicker: 'Final', tone: 'good', stamp: 'Bye bye', rids: [C.rid, H.rid], drain: H.rid,
+    headline: 'They called Chubbs a bye week. He waved bye to Hamza instead',
+    deck: [
+      `${C.name} put up ${f1(g.pts)} to ${poss(H.name)} ${f1(g.oppPts)}, a ${f1(g.pts - g.oppPts)}-point win.`,
+      best ? `${nameOf(best.id)} led the way with ${f1(best.pts)}.` : '',
+      `Some bye week. Chubbs is ${record(C)} with ${pct(C.playoffPct)} playoff odds; Hamza is ${record(H)} with ${pct(H.playoffPct)}.`,
+    ].filter(Boolean).join(' '),
+    tick: { hook: 'Bye bye', line: `Chubbs beat Hamza ${f1(g.pts)} to ${f1(g.oppPts)}. Not a bye week after all.` },
+  };
+}
+
+// Que Rico lost and Operation Sneak In came within one Monday night of catching him in the standings
+function sneakStory() {
+  const T = ownerTeam(FINALS.sneak.chased), D = ownerTeam(FINALS.sneak.by);
+  const gt = weekOf(T, FINALS.week), gd = weekOf(D, FINALS.week);
+  if (!T || !D || !gt || !gd || gt.result !== 'L' || gd.result !== 'L') return null;
+  const gap = gd.oppPts - gd.pts, opp = team(gd.opp);
+  // a Dan win would have tied the records; the standings tiebreaker is points for
+  const tied = D.wins + 1 === T.wins && D.losses - 1 === T.losses, passes = tied && D.pf > T.pf;
+  return {
+    type: 'sneak', group: 'week', kicker: 'Standings watch', tone: 'neutral', stamp: 'Close call', rids: [T.rid, D.rid],
+    headline: 'Que Rico almost got caught: Operation Sneak In had him shaking in his boots',
+    deck: [
+      `${T.name} went down ${f1(gt.pts)} to ${f1(gt.oppPts)} against ${firstName(team(gt.opp))}, leaving the door wide open.`,
+      `Operation Sneak In needed one Monday night to get through it and came up ${f1(gap)} short against ${firstName(opp)}, ${f1(gd.pts)} to ${f1(gd.oppPts)}.`,
+      passes ? `A win would have tied them at ${D.wins + 1}-${D.losses - 1}, and Dan has ${f1(D.pf - T.pf)} more points for, the tiebreaker. Tarek was ${f1(gap)} points from being passed.` : '',
+      `Tarek is ${record(T)} with ${pct(T.playoffPct)} playoff odds; Dan is ${record(D)} with ${pct(D.playoffPct)}. The operation continues.`,
+    ].filter(Boolean).join(' '),
+    tick: { hook: 'Close call', line: `Operation Sneak In came up ${f1(gap)} points short of catching Que Rico.` },
+  };
+}
+
+// the German demon made a splash in Munich
+function demonStory() {
+  const S = ownerTeam(FINALS.demon.owner), g = weekOf(S, FINALS.week);
+  if (!S || !g || g.result !== 'W') return null;
+  const box = weekPlayers(FINALS.week).filter((p) => p.rid === S.rid && p.started);
+  const munich = box.filter((p) => FINALS.demon.teams.includes(DATA.helpers.player(p.id)?.team));
+  const best = box[0], O = team(g.opp);
+  return {
+    type: 'demon', group: 'week', kicker: 'International series', tone: 'bad', stamp: 'German demon', rids: [S.rid, O.rid], drain: O.rid,
+    headline: 'German demon Shahan makes a splash, the second worst thing to ever happen in Germany',
+    deck: [
+      `Shahan beat ${firstName(O)} ${f1(g.pts)} to ${f1(g.oppPts)}.`,
+      munich.length ? `In Munich he had ${listOf(munich.map((p) => `${nameOf(p.id)} (${f1(p.pts)})`))}.` : '',
+      best ? `${nameOf(best.id)} topped his lineup with ${f1(best.pts)}.` : '',
+      `He is ${record(S)} with ${pct(S.playoffPct)} playoff odds. Germany will be talking about this one for a while.`,
+    ].filter(Boolean).join(' '),
+    tick: { hook: 'German demon', line: `Shahan beat ${firstName(O)} ${f1(g.pts)} to ${f1(g.oppPts)} and made a splash in Germany.` },
+  };
+}
+
+// Ashton Jeanty is a pile of garbage
+function trashStory() {
+  const id = FINALS.trash.player, me = finalPts(id), t = me && team(me.rid);
+  if (!me || !t) return null;
+  const P = nameOf(id), pos = posOf(id);
+  // his season so far, from every week's box score
+  const weeks = pointWeeks().filter((w) => w <= FINALS.week).map((w) => weekPlayers(w).find((p) => p.id === id)).filter(Boolean);
+  const avg = weeks.length ? weeks.reduce((a, p) => a + p.pts, 0) / weeks.length : 0;
+  const posRank = weekPlayers(FINALS.week).filter((p) => p.pos === pos && p.started).findIndex((p) => p.id === id) + 1;
+  const r = RAW.ros?.values?.[id] || {}, carry = weekPlayers(FINALS.week).find((p) => p.rid === t.rid && p.started);
+  return {
+    type: 'trash', group: 'players', kicker: 'Box score', tone: 'bad', stamp: 'Garbage', rids: [t.rid],
+    player: playerCard(id, t, `Still ${firstName(t)}'s`), mark: [P],
+    headline: `${P} is a pile of garbage`,
+    deck: [
+      `${f1(me.pts)} points for ${firstName(t)} in week ${FINALS.week}${posRank ? `, the ${ordinal(posRank)}-best score among started ${SLOT_WORD[pos] || pos}s` : ''}.`,
+      weeks.length > 1 ? `He is averaging ${f1(avg)} a week.` : '',
+      r.prk ? (r.prk <= 12 ? `The experts still have him as the ${ordinal(r.prk)}-ranked ${SLOT_WORD[pos] || pos} for the rest of the season. The experts have not been watching.`
+        : `The experts have him down to the ${ordinal(r.prk)}-ranked ${SLOT_WORD[pos] || pos} for the rest of the season, and that feels generous.`) : '',
+      carry && carry.id !== id ? `${firstName(t)} won anyway, carried by ${nameOf(carry.id)} with ${f1(carry.pts)}. ${gameSaid(t)}.` : gameSaid(t) ? `${gameSaid(t)}.` : '',
+    ].filter(Boolean).join(' '),
+    tick: { hook: 'Garbage', line: `${P}: ${f1(me.pts)} points. The team is literally named after him.` },
+  };
+}
 // Dan's lead for Nov 3: a huge trade went down overnight (pulled in with an extra snapshot, EXTRA_PULLS in
 // lib/newsclock.js). The biggest trade since `since` by value moved, told with shock: its biggest name on the player card,
 // the full deal, who won it on consensus value, the position groups after and both sides' odds. Null drops it.
@@ -831,8 +918,8 @@ function tradeWaveStories() {
 }
 
 function finalsStories() {
-  // Mo and Khalil's trade, then the JT trade, then this week's key games (raceStory: the two games with the most playoff odds on them), then last week
-  const sel = [MO_KHALIL && moKhalilStory(), (SMASH && smashStory()) || (BLOCKBUSTER && blockbusterStory()), raceStory(), wallahiStory(), closeGames(FINALS.week)].filter(Boolean);
+  // week 10's five, in Dan's order
+  const sel = [mogStory(), byeStory(), sneakStory(), demonStory(), trashStory()].filter(Boolean);
   return sel.length ? { lead: sel[0], more: sel.slice(1), size: sel.length } : null;
 }
 
@@ -1751,7 +1838,7 @@ const PAGES = {
   wire: () => [WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x), since: wireSeen(DATA.now) }],
   matchups: () => [GamesPage, { calm: calm(), lite: lite() }],
   admin: () => [AdminShell, {
-    home: liveHome() ? '#live' : '#rankings',
+    home: liveHome() ? '#live' : '#rankings', demo: !!RAW.isDemo,
     draft: draftFor, draftPlayers, draftGames, weekPlayers, weekGames, preview: (list) => postedStories(list).map(withTrade), tradeStyles: TRADE_STYLES,
     weeks: { scored: pointWeeks().filter((w) => w <= DATA.meta.lastScored).slice(0, 4), live: DATA.live ? DATA.meta.lastScored + 1 : null, ahead: DATA.previews[0]?.week ?? null }, order: () => carouselProps({ all: true })?.stories || [], groups: GROUPS, groupOf, week: headlineWeek(), now: AT ? +AT : Date.now(),
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
@@ -2076,7 +2163,10 @@ function startLoader() {
 }
 
 // The week used for headline overrides, reactions and the editor's running order.
-const headlineWeek = () => (RAW.league.settings?.last_scored_leg ?? DATA.meta.lastScored) + 1;
+// the week the desk keys its headlines by (w{week}:{type}, storyKeys): the same week the carousel uses. It turns over at the
+// final call, when the headlines change, and Sleeper scoring the week on Tuesday morning doesn't move it, so Dan's edits,
+// hides and running order, and everyone's reactions, last as long as the headlines they're on.
+const headlineWeek = () => DATA.meta.lastScored + 1;
 
 async function main() {
   initAvatarFallback();

@@ -266,7 +266,7 @@ const TRADE_LOOKS = [
 const SOURCES = [['moves', 'Moves'], ['players', 'Players'], ['games', 'Matchups']];
 const tog = (set, k) => set((x) => (x.includes(k) ? x.filter((y) => y !== k) : [...x, k]));
 
-export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPlayers, weekGames, weeks, preview, order, groups, groupOf, week, now, date, tradeStyles }) {
+export function AdminPage({ home, demo, D, h, draft, draftPlayers, draftGames, weekPlayers, weekGames, weeks, preview, order, groups, groupOf, week, now, date, tradeStyles }) {
   const P = usePosts();
   const [source, setSource] = useState('moves');
   const [range, setRange] = useState('week'), [kind, setKind] = useState(null);
@@ -309,6 +309,8 @@ export function AdminPage({ home, D, h, draft, draftPlayers, draftGames, weekPla
     return [...ids].map(([id, rid]) => ({ id, rid, v: D.helpers.valueOf(id) })).sort((a, b) => b.v - a.v);
   }, [form?.tx, form?.player, form?.pinRid, picked, pPicked, D]);
 
+  // the demo never loads the desk (main skips loadPosts), so it says so instead of waiting forever
+  if (demo) return <><Head home={home} week={week} date={date} /><p className="adm-note">The headline desk is off in the demo. Open it on the live site to post.</p></>;
   if (P.enabled === null) return <Head home={home} week={week} date={date} />;
   if (!P.enabled) return <><Head home={home} week={week} date={date} /><p className="adm-note">Posting needs the headline store, which isn't connected here. It works on the live site.</p></>;
   if (!P.admin) return <><Head home={home} week={week} date={date} /><SignIn /></>;
