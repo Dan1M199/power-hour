@@ -1307,10 +1307,7 @@ function upsetStory() {
 // Dan's request Nov 9: Tarek finished Ironman Florida. A photo headline (assets/tarek-ironman.jpg, the finish line with
 // his training partner) that leads every carousel, the final-scores page included, until the week after turns over
 // (Tuesday Nov 17, 6am Central). Set IRONMAN to null to drop it.
-const IRONMAN = {
-  owner: '1004111276118761472', until: Date.parse('2026-11-17T06:00:00-06:00'),
-  src: 'assets/tarek-ironman.jpg', label: 'Tarek crossing the Ironman Florida finish line in Panama City Beach',
-};
+const IRONMAN = null; // Tarek's Ironman headline (Nov 15) was taken down Nov 16 at Dan's request; { owner, until, src, label } brings one back
 function ironmanStory() {
   if (!IRONMAN || (AT ? +AT : Date.now()) >= IRONMAN.until) return null;
   const t = ownerTeam(IRONMAN.owner);
@@ -1609,16 +1606,20 @@ function siteStories() {
 function carouselProps({ all = false, only = false } = {}) {
   const s = DATA.stories, own = only ? [] : postedStories(), cel = ironmanStory();
   // Dan's edits and hides from the headline desk (api/headlines.js, by desk key); all: keep the hidden ones, marked
-  const site = only ? [] : siteStories().flatMap((st) => {
+  const desk = (st) => {
     const o = posts.site[st.key];
     if (o?.hide) return all ? [{ ...st, hidden: true }] : [];
     return [o?.story ? { ...st, ...hydrate(o.story), edited: true } : st];
-  });
-  if (!site.length && !own.length && !cel) return null;
+  };
+  const site = only ? [] : siteStories().flatMap(desk);
+  // a celebration (ironmanStory) leads, unless Dan has hidden it or placed it in his running order like any other
+  const party = cel ? desk(cel) : [], placed = posts.arrange?.[`w${headlineWeek()}`] || [];
+  const lead = party.filter((st) => !placed.includes(st.key)), mixed = party.filter((st) => placed.includes(st.key));
+  if (!site.length && !own.length && !party.length) return null;
   return {
     // Dan's own headlines from the admin portal lead, ahead of everything the desk writes, and every headline sits in
-    // its section (the dots group them); a celebration (ironmanStory) goes ahead of them all
-    stories: [...(cel ? [cel] : []), ...arrangeStories([...own, ...site].map((st) => withTrade({ ...st, group: groupOf(st) })))],
+    // its section (the dots group them)
+    stories: [...lead, ...arrangeStories([...mixed, ...own, ...site].map((st) => withTrade({ ...st, group: groupOf(st) })))],
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
     hold: onHold() ? NEWS_CLOCK.holdNote : null, night: !!s?.night, groups: GROUPS,
   };

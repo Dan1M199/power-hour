@@ -336,7 +336,8 @@ export function AdminPage({ home, demo, D, h, draft, draftPlayers, draftGames, w
   const call = async (body, done) => {
     setBusy(true); setErr('');
     let r = null;
-    try { r = await postCall(body); if (done) setToast(done); } catch (x) { setErr(x.message); setToast(null); }
+    // a failure shows in the form when one is open, and always as a toast, so a hide or a move never fails silently
+    try { r = await postCall(body); if (done) setToast(done); } catch (x) { setErr(x.message); setToast(`Didn't save: ${x.message}`); }
     setBusy(false);
     return r;
   };
