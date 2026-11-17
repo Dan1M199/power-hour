@@ -156,7 +156,7 @@ function initDock(placeInk) {
 // finger in from the edge and turns amber once letting go will change the page. Touch events, all passive: the
 // browser decides between a scroll and this in the first few pixels, the same way we do. Starts within 24px of an
 // edge are left to Safari's own back and forward swipe.
-const OWN_DRAG = '.lead-car, .tabs, .me, .rxn, .stk, .pull, .adm-page, .unveil, .share-sheet, .lockout, .vf, input, select, textarea, [contenteditable]';
+const OWN_DRAG = '.lead-car, .tabs, .me, .rxn, .stk, .adm-page, .unveil, .share-sheet, .lockout, .vf, input, select, textarea, [contenteditable]';
 const scrollsSideways = (n) => {
   for (; n && n !== document.body; n = n.parentElement) {
     if (n.scrollWidth > n.clientWidth + 4) { const o = getComputedStyle(n).overflowX; if (o === 'auto' || o === 'scroll') return true; }
@@ -220,34 +220,8 @@ export function pageIn(dir) {
   app.animate([{ opacity: 0, translate: `${d * 36}px 0` }, { opacity: 1, translate: '0 0' }], { duration: 340, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
 }
 
-// ---------- the scouting report's pull ----------
-// A ranking card's pull is a handle: drag it down and the report opens, drag it up on an open one and it shuts. The
-// words give with the finger (a paused Web Animation on `translate`, scrubbed by the drag) and the row's own button
-// does the opening, so the drawer's animation is exactly a tap's.
-function initPull() {
-  const NEED = 30;
-  let p = null;
-  const drop = () => { p?.give?.cancel(); p = null; };
-  addEventListener('touchstart', (e) => {
-    drop();
-    const pull = e.touches.length === 1 && e.target.closest?.('.pull'), btn = pull && pull.closest('.rank-btn');
-    if (!btn) return;
-    const open = !!pull.closest('.rank.open'), way = open ? -1 : 1;
-    p = { btn, y: e.touches[0].clientY, way, done: false, give: null };
-    if (!calm()) { p.give = pull.animate([{ translate: '0 0' }, { translate: `0 ${way * 9}px` }], { duration: 100, fill: 'both' }); p.give.pause(); }
-  }, { passive: true });
-  addEventListener('touchmove', (e) => {
-    if (!p || p.done) return;
-    const d = (e.touches[0].clientY - p.y) * p.way;
-    if (p.give) p.give.currentTime = Math.max(0, Math.min(1, d / NEED)) * 100;
-    if (d < NEED) return;
-    p.done = true;
-    haptic();
-    p.give?.cancel();
-    p.btn.click();
-  }, { passive: true });
-  for (const type of ['touchend', 'touchcancel']) addEventListener(type, drop, { passive: true });
-}
+// The scouting report opens with a tap only (Dan's request Nov 16): its old drag-to-open handle took over any scroll
+// that started on it, so the page felt stuck. The row's own button does the opening.
 
 // ---------- shine ----------
 // A band of light crosses a featured glass card once as it comes on screen: only the cards that stand out (the front
@@ -338,6 +312,5 @@ export function initTouch({ placeInk }) {
   initTopPill();
   if (!calm()) initPress();
   initSwipe();
-  initPull();
   return { hello };
 }

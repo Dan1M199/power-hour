@@ -4336,8 +4336,6 @@ h2, .sec-title, .team-name, .mu-team .tn { letter-spacing: -0.005em; }
     .seeds i { transform-origin: bottom; animation: grow-y 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both; }
     .chart .line, .spark path { stroke-dasharray: 1; animation: draw 1.1s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both; }
     .rank.pending .track i, .rv:not(.rv-in) :is(.track i, .wp-bar i, .seeds i, .chart .line, .spark path) { animation-play-state: paused; }
-    /* the scouting report's pull is a handle: a finger drags it, the page doesn't scroll under it */
-    .pull { touch-action: none; }
   }
 }
 
