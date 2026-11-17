@@ -8,6 +8,8 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { restOfSeason, playoffPath } from '../../lib/labmodels.js';
 import { TeamAvatar } from '../shared.jsx';
+import { scenarioFiles } from './scenarioCard.js';
+import { shareFile, canShareFiles } from '../dashboard/share.js';
 
 const p0 = (x) => (x == null ? '–' : x > 0 && x < 0.005 ? '<1%' : x < 1 && x > 0.995 ? '>99%' : `${Math.round(x * 100)}%`);
 const pts = (x) => `${Math.round(x * 100)}%`;
@@ -52,6 +54,19 @@ export function PlayoffPath({ D, me, h }) {
   const stale = dRid !== rid || dPicks !== picks;
   const base = useMemo(() => S && playoffPath(S, D, dRid), [S, D, dRid]);
   const P = useMemo(() => S && (Object.keys(dPicks).length ? playoffPath(S, D, dRid, { picks: dPicks }) : base), [S, D, dRid, dPicks, base]);
+  // the scenario receipt: drawn a beat after the picks settle, as a JPEG and a PDF made ahead of the tap (Safari only
+  // opens the share sheet within a few seconds of it)
+  const [files, setFiles] = useState(null), [said, setSaid] = useState('');
+  useEffect(() => {
+    if (!S || !P || !base || !Object.keys(dPicks).length || !P.matches) { setFiles(null); return undefined; }
+    let live = true;
+    const id = setTimeout(() => {
+      scenarioFiles({ D, base, P, picks: dPicks, rid: dRid, games: S.games, sims: S.sims, weeks: S.weeks, spots: S.P })
+        .then((f) => { if (live) setFiles(f); else URL.revokeObjectURL(f.url); }).catch(() => { if (live) setFiles(null); });
+    }, 250);
+    return () => { live = false; clearTimeout(id); };
+  }, [S, D, P, base, dPicks, dRid]);
+  useEffect(() => () => { if (files) URL.revokeObjectURL(files.url); }, [files]);
   if (!S || !P) return (
     <section ref={box} id="playoff-scenarios" className="panel glass span-12 pth pth-wait" aria-busy="true">
       <h2>What needs to happen</h2>
@@ -90,23 +105,11 @@ export function PlayoffPath({ D, me, h }) {
       <i className="pth-db-hi" style={{ left: `${hi * 100}%` }} />
     </span>
   );
-  const Pick = ({ x, a, b, labelA, labelB }) => {
-    const v = picks[x.i];
-    return (
-      <span className="pth-pick" role="group" aria-label={`Pick the winner, week ${x.week}`}>
-        <button type="button" aria-pressed={v === winnerSide(x, a)} onClick={() => pick(x.i, winnerSide(x, a))}>{labelA}</button>
-        <button type="button" aria-pressed={v === winnerSide(x, b)} onClick={() => pick(x.i, winnerSide(x, b))}>{labelB}</button>
-      </span>
-    );
-  };
-  // a game you've already decided reads back as a result, with the odds it was worth
-  const pickedBadge = (x) => <span className="pth-done">{`${nm(picks[x.i] ? x.ra : x.rb, 14)} win`}</span>;
 
   // the lists hold still while you pick: which games and rivals show comes from the read without your picks, the
   // numbers from the current one, so a tapped row stays where it was and turns into its result
   // in week order (the biggest swing first within a week)
   const byWeek = (a, b) => a.week - b.week || b.swing - a.swing;
-  const watchRows = [...base.watch].sort(byWeek).map((x) => ({ x: { ...x, picked: x.i in dPicks }, b: P.games[x.i] }));
   // this week's game to watch: the result outside your own game that moves your odds most
   const wk0 = S.weeks[0];
   const spot = base.games.filter((x) => x.week === wk0 && x.ra !== dRid && x.rb !== dRid && x.swing >= 0.005).sort((a, b) => b.swing - a.swing)[0] || null;
@@ -177,103 +180,113 @@ export function PlayoffPath({ D, me, h }) {
         <div className="pth-stat"><small>Wins you need</small><b>{P.need == null ? 'Help' : P.need === 0 ? 'None' : `${P.need} of ${P.left}`}</b><span>{P.need == null ? 'no win total is 90% safe' : 'for 9 in 10 to get in'}</span></div>
       </div>
 
-      {spot ? (() => {
-        const on = spot.i in picks, up = oddsIf(spot.i, spot.root), down = oddsIf(spot.i, spot.against);
-        return (
-          <div className="pth-spot">
-            <div className="pth-spot-text">
-              <small>{`Week ${spot.week}: the game to watch`}</small>
-              <b>{`Root for ${nm(spot.root, 22)} over ${nm(spot.against, 22)}`}</b>
-              <span>{`The result outside your own game that moves your odds most this week. ${team(spot.root).name} win it ${p0(spot.pGood)} of the time.`}</span>
-            </div>
-            <div className="pth-spot-odds">
-              {on ? pickedBadge(spot) : <>
-                <span className="up"><em>{`If ${h.first(team(spot.root))} win`}</em><b>{p0(up)}</b><i>{signed(move(up))}</i></span>
-                <span className="down"><em>{`If ${h.first(team(spot.against))} win`}</em><b>{p0(down)}</b><i>{signed(move(down))}</i></span>
-              </>}
-              {Pick({ x: spot, a: spot.root, b: spot.against, labelA: h.first(team(spot.root)), labelB: h.first(team(spot.against)) })}
-            </div>
-          </div>
-        );
-      })() : null}
-
       {(() => {
         const wk = bw ?? S.weeks[0];
-        const list = P.games.filter((g) => g.week === wk);
-        const inWeek = (w) => Object.keys(picks).filter((i) => game(Number(i)).week === w).length;
+        const swingOf = (i) => base.games[i]?.swing ?? 0;
+        const others = P.games.filter((g) => g.week === wk && g.ra !== dRid && g.rb !== dRid).sort((a, b) => swingOf(b.i) - swingOf(a.i));
+        const inWeek = (w) => Object.keys(picks).filter((i) => { const g = game(Number(i)); return g.week === w && g.ra !== dRid && g.rb !== dRid; }).length;
+        const impact = (i) => { const w = swingOf(i); return w >= 0.05 ? ['big', 'Big for you'] : w >= 0.015 ? ['some', 'Matters'] : ['low', 'Barely moves you']; };
         const side = (g, r) => {
           const a = r === g.ra, v = a ? 1 : 0, on = picks[g.i] === v, off = g.i in picks && !on;
-          const win = a ? g.pA : 1 - g.pA, yours = a ? g.oA : g.oB, d = move(yours), mine = r === dRid;
+          const win = a ? g.pA : 1 - g.pA, yours = a ? g.oA : g.oB, d = move(yours), root = base.games[g.i]?.root === r && swingOf(g.i) >= 0.015;
           return (
-            <button type="button" className={`pth-side${on ? ' on' : ''}${off ? ' off' : ''}${mine ? ' mine' : ''}`} aria-pressed={on} onClick={() => pick(g.i, v)}
+            <button type="button" className={`pth-side${on ? ' on' : ''}${off ? ' off' : ''}`} aria-pressed={on} onClick={() => pick(g.i, v)}
               aria-label={`${team(r).name} win week ${g.week}${yours != null ? `: your odds ${p0(yours)}` : ''}`}>
               <TeamAvatar t={team(r)} cls="avatar xs" />
-              <span className="pth-side-name"><b>{nm(r, 18)}</b><small>{on ? 'Wins in your scenario' : off ? 'Loses in your scenario' : `Wins ${p0(win)} of the time`}</small></span>
-              {mine ? null : <span className={`pth-side-odds${d == null ? '' : d > 0.004 ? ' up' : d < -0.004 ? ' down' : ''}`}><b>{p0(yours)}</b><small>{d == null || Math.abs(d) < 0.005 ? 'your odds' : signed(d)}</small></span>}
+              <span className="pth-side-name"><b>{team(r).name}</b><small>{on ? 'Wins in your scenario' : off ? 'Loses in your scenario' : root ? 'Root for them' : `Wins ${p0(win)} of the time`}</small></span>
+              {off ? null : <span className={`pth-side-odds${d == null ? '' : d > 0.004 ? ' up' : d < -0.004 ? ' down' : ''}`}><b>{p0(yours)}</b><small>{d == null || Math.abs(d) < 0.005 ? 'your odds' : signed(d)}</small></span>}
+            </button>
+          );
+        };
+        // your own games: win or lose, and your odds either way
+        const wl = (x, win) => {
+          const v = winnerSide(game(x.i), win ? dRid : x.opp), on = picks[x.i] === v, off = x.i in picks && !on;
+          const o = P.games[x.i] ? (v === 1 ? P.games[x.i].oA : P.games[x.i].oB) : null, d = move(o);
+          return (
+            <button type="button" className={`pth-wl ${win ? 'win' : 'loss'}${on ? ' on' : ''}${off ? ' off' : ''}`} aria-pressed={on} onClick={() => pick(x.i, v)}
+              aria-label={`${win ? 'Win' : 'Lose'} week ${x.week} against ${team(x.opp).name}${o != null ? `: your odds ${p0(o)}` : ''}`}>
+              <b>{win ? 'Win' : 'Lose'}</b>
+              {off ? null : <span><b>{p0(o)}</b><small>{d == null || Math.abs(d) < 0.005 ? 'your odds' : signed(d)}</small></span>}
             </button>
           );
         };
         return (
-          <div className="pth-box pth-build" id="pth-build">
-            <div className="pth-build-head">
-              <div>
-                <h3>Build your scenario</h3>
-                <p className="pth-cap">{`Every game left, week by week. Tap a team to make them win; tap again to take it back. The numbers beside each team are ${first}'s playoff odds if that happens.`}</p>
+          <section className="pth-build" id="pth-build" aria-labelledby="pth-build-t">
+            <header className="pth-build-top">
+              <h3 id="pth-build-t">Build your scenario</h3>
+              <p className="pth-cap">{`Pick results and every number on this card is read again from only the seasons where they happen. Start with ${first}'s games, then the rest of the league.`}</p>
+            </header>
+
+            <div className="pth-part">
+              <div className="pth-part-head">
+                <h4>{`${first}'s games`}</h4>
+                <p className="pth-cap">Win or lose each one. The two that swing your odds the most are marked.</p>
               </div>
-              <div className="pth-weeks" role="tablist" aria-label="Week">
-                {S.weeks.map((w) => (
-                  <button key={w} type="button" role="tab" aria-selected={w === wk} onClick={() => setBw(w)}>
-                    {`Wk ${w}`}{inWeek(w) ? <i className="pth-wcount">{inWeek(w)}</i> : null}
-                  </button>
-                ))}
-              </div>
+              <ul className="pth-mine">{P.yours.map((x, k) => (
+                <li key={x.i} className={`${crit.has(x.i) ? 'crit' : ''}${x.i in picks ? ' picked' : ''}`.trim() || undefined}>
+                  <span className="pth-mine-who">
+                    <span className="pth-wk">{`Wk ${x.week}`}</span>
+                    <TeamAvatar t={team(x.opp)} cls="avatar xs" />
+                    <span className="pth-mine-name"><b>{`vs ${nm(x.opp, 20)}`}</b><small>{`You win it ${p0(x.pGood)} of the time`}</small></span>
+                    {crit.has(x.i) ? <em className="pth-flag">Critical</em> : null}
+                  </span>
+                  <span className="pth-wl-pair">{wl(x, true)}{wl(x, false)}</span>
+                  {!taught && k === 0 ? <span className="pth-coach" aria-hidden="true">Tap to pick a result</span> : null}
+                </li>
+              ))}</ul>
             </div>
-            <ul className="pth-games">{list.map((g, k) => (
-              <li key={g.i} className={`${g.ra === dRid || g.rb === dRid ? 'yours' : ''}${g.i in picks ? ' picked' : ''}`.trim() || undefined}>
-                {g.ra === dRid || g.rb === dRid ? <em className="pth-flag">{`${first}'s game`}</em> : null}
-                {side(g, g.ra)}
-                <span className="pth-vs" aria-hidden="true">vs</span>
-                {side(g, g.rb)}
-                {!taught && k === 0 ? <span className="pth-coach" aria-hidden="true">Tap a team</span> : null}
-              </li>
-            ))}</ul>
-          </div>
+
+            <div className="pth-part">
+              <div className="pth-part-head">
+                <div>
+                  <h4>The rest of the league</h4>
+                  <p className="pth-cap">{`Biggest effect on ${first} first. Tap the team you want to win; the number beside it is your odds if they do.`}</p>
+                </div>
+                <div className="pth-weeks" role="tablist" aria-label="Week">
+                  {S.weeks.map((w) => (
+                    <button key={w} type="button" role="tab" aria-selected={w === wk} onClick={() => setBw(w)}>
+                      {`Wk ${w}`}{inWeek(w) ? <i className="pth-wcount">{inWeek(w)}</i> : null}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <ul className="pth-games">{others.map((g) => {
+                const [lvl, said] = impact(g.i);
+                return (
+                  <li key={g.i} className={`imp-${lvl}${g.i in picks ? ' picked' : ''}`}>
+                    <span className={`pth-imp ${lvl}`}>{spot && g.i === spot.i ? 'Biggest this week' : said}</span>
+                    {side(g, g.ra)}
+                    <span className="pth-vs" aria-hidden="true">vs</span>
+                    {side(g, g.rb)}
+                  </li>
+                );
+              })}</ul>
+            </div>
+          </section>
         );
       })()}
 
-      <div className="pth-cols">
-        <div className="pth-box">
-          <h3>Critical weeks to win</h3>
-          <p className="pth-cap">Your games in order. The bar runs from your odds if you lose to your odds if you win.</p>
-          <ul className="pth-list">{P.yours.map((x) => (
-            <li key={x.i} className={crit.has(x.i) ? 'crit' : undefined}>
-              <span className="pth-wk">{`Wk ${x.week}`}</span>
-              <span className="pth-who"><TeamAvatar t={team(x.opp)} cls="avatar xs" /><span>{`vs ${nm(x.opp)}`}</span>{crit.has(x.i) ? <em className="pth-flag">Critical</em> : null}</span>
-              {x.picked ? pickedBadge(x) : <span className="pth-sw" data-tip={`Week ${x.week} vs ${team(x.opp).name}: ${p0(x.ifGood)} if you win, ${p0(x.ifBad)} if you lose. You win it ${p0(x.pGood)} of the time.`}>
-                {Bar({ lo: x.ifBad ?? 0, hi: x.ifGood ?? 0 })}<b>{`+${pts(x.swing)}`}</b>
-              </span>}
-              {Pick({ x: x, a: dRid, b: x.opp, labelA: "W", labelB: "L" })}
-            </li>
-          ))}</ul>
-        </div>
-        <div className="pth-box">
-          <h3>Matchups to watch</h3>
-          <p className="pth-cap">Other games that move your odds most, in week order. Root for the first team.</p>
-          {watchRows.length ? <ul className="pth-list">{watchRows.map(({ x, b }) => (
-            <li key={x.i} className={`${x.picked ? 'done' : ''}${spot && x.i === spot.i ? ' crit' : ''}`.trim() || undefined}>
-              <span className="pth-wk">{`Wk ${x.week}`}</span>
-              <span className="pth-who"><TeamAvatar t={team(x.root)} cls="avatar xs" /><span><b>{nm(x.root, 13)}</b>{` over ${nm(x.against, 13)}`}</span>{spot && x.i === spot.i ? <em className="pth-flag">This week</em> : null}</span>
-              {x.picked ? pickedBadge(x) : <span className="pth-sw" data-tip={`Week ${x.week}: ${p0(b.ifGood)} if ${team(x.root).name} win, ${p0(b.ifBad)} if ${team(x.against).name} do. ${team(x.root).name} win it ${p0(b.pGood)} of the time.`}>
-                {Bar({ lo: b.ifBad ?? 0, hi: b.ifGood ?? 0 })}<b>{`+${pts(b.swing)}`}</b>
-              </span>}
-              {Pick({ x: x, a: x.root, b: x.against, labelA: h.first(team(x.root)), labelB: h.first(team(x.against)) })}
-            </li>
-          ))}</ul> : <p className="pth-cap">Nobody else's games move you by much.</p>}
-        </div>
-      </div>
+      {nPicks ? (
+        <section className="pth-receipt" aria-labelledby="pth-receipt-t">
+          <div className="pth-receipt-text">
+            <h3 id="pth-receipt-t">Your scenario receipt</h3>
+            <p className="pth-cap">{`Everything ${first} needs, and where the odds go if it all happens. Share it to the group chat.`}</p>
+            <div className="pth-receipt-acts">
+              <button type="button" className="pth-share" disabled={!files} onClick={async () => { try { setSaid(await shareFile(files.jpg, `power-hour-scenario-${dRid}.jpg`, 'Playoff scenario') === 'saved' ? 'Saved' : ''); } catch { setSaid('Could not share it'); } }}>
+                {canShareFiles() ? 'Share image' : 'Save image'}
+              </button>
+              <button type="button" className="pth-share alt" disabled={!files} onClick={async () => { try { setSaid(await shareFile(files.pdf, `power-hour-scenario-${dRid}.pdf`, 'Playoff scenario') === 'saved' ? 'Saved' : ''); } catch { setSaid('Could not share it'); } }}>
+                {canShareFiles() ? 'Share PDF' : 'Save PDF'}
+              </button>
+              {said ? <span className="pth-said" role="status">{said}</span> : null}
+            </div>
+          </div>
+          <div className="pth-receipt-img">{files ? <img src={files.url} alt={`The scenario receipt for ${t.name}: playoff odds ${p0(base.odds)} today, ${p0(P.odds)} in this scenario`} /> : <span className="pth-spin" aria-hidden="true" />}</div>
+        </section>
+      ) : null}
 
       <div className="pth-box">
-        <h3>Who needs to lose</h3>
+        <h3>Shortcuts: who needs to lose</h3>
         <p className="pth-cap">The rival losses that help you most, in week order, with what each one does to your playoff odds. Tap one to pick it.</p>
         {losses.length ? <ul className="pth-lose">{losses.map((w) => {
           const side = winnerSide(game(w.i), w.vs), on = picks[w.i] === side, other = w.i in picks && !on;
@@ -320,7 +333,10 @@ export function PlayoffPath({ D, me, h }) {
           })}</ul>
           <div className="pth-bar-end">
             <small>{`${P.matches.toLocaleString('en-US')} of ${S.sims.toLocaleString('en-US')} seasons${thin ? ', thin sample' : ''}`}</small>
-            <button type="button" className="chip" onClick={() => setPicks({})}>Clear</button>
+            <span className="pth-bar-btns">
+              <button type="button" className="chip pth-bar-share" disabled={!files} onClick={() => document.querySelector('.pth-receipt')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' })}>Receipt</button>
+              <button type="button" className="chip" onClick={() => setPicks({})}>Clear</button>
+            </span>
           </div>
         </div>
       ) : null}

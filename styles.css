@@ -4944,3 +4944,87 @@ h2, .sec-title { letter-spacing: -0.02em; }
 .pth-pick button { color: var(--ink); background: var(--paper); box-shadow: 0 2px 0 var(--slab-soft); touch-action: manipulation; transition: transform 0.1s var(--ease-out), box-shadow 0.1s var(--ease-out); }
 .pth-pick button:active { transform: translateY(2px); box-shadow: none; }
 .pth-pick button[aria-pressed='true'] { color: var(--ink-day); background: var(--amber); box-shadow: 0 2px 0 var(--pop); }
+/* the scenario builder's page has no back-to-top button: it sat over the builder and its bar (Dan's request Nov 17) */
+html.on-scenarios .tx-top { display: none; }
+
+/* --- the scenario builder, sectioned (Nov 17): your games, then the rest of the league, then the receipt --- */
+.pth-build { display: grid; gap: 14px; margin: 0 0 16px; padding: 18px; border-radius: var(--r-card); background: var(--tile); scroll-margin-top: 90px; }
+.pth-build-top h3 { margin: 0; font: 800 22px/1.15 var(--display); letter-spacing: -0.02em; }
+.pth-build-top .pth-cap { margin: 4px 0 0; max-width: 66ch; }
+.pth-part { display: grid; gap: 10px; padding: 14px; border-radius: var(--r-mid); background: var(--face); }
+.pth-part-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 18px; }
+.pth-part-head h4 { margin: 0; font: 800 17px/1.2 var(--display); letter-spacing: -0.015em; color: var(--ink); }
+.pth-part-head .pth-cap { margin: 2px 0 0; max-width: 60ch; }
+.pth-mine { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pth-mine li { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px 14px; padding: 10px 12px; border-radius: var(--r-ctl); background: var(--well); }
+.pth-mine li.crit { box-shadow: inset 0 0 0 2px var(--amber); }
+.pth-mine-who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.pth-mine-name { display: grid; gap: 2px; min-width: 0; }
+.pth-mine-name b { font: 800 15px/1.15 var(--display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pth-mine-name small { font-size: 12px; font-weight: 600; color: var(--ink-3); }
+.pth-mine .pth-flag { margin-left: 0; }
+.pth-wl-pair { display: flex; gap: 8px; }
+.pth-wl { display: grid; grid-template-columns: auto auto; align-items: center; gap: 10px; min-width: 128px; min-height: 52px; padding: 6px 12px; border: 0; border-radius: var(--r-ctl);
+  cursor: pointer; font: inherit; text-align: left; color: var(--ink); background: var(--paper); box-shadow: 0 4px 0 var(--slab-soft); touch-action: manipulation;
+  transition: transform 0.12s var(--ease-out), box-shadow 0.12s var(--ease-out), background-color 0.15s, opacity 0.15s; }
+.pth-wl:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--slab-soft); }
+.pth-wl > b { font: 800 15px/1 var(--display); }
+.pth-wl > span { display: grid; justify-items: end; gap: 1px; }
+.pth-wl > span b { font: 800 16px/1 var(--display); letter-spacing: -0.02em; }
+.pth-wl > span small { font-size: 11.5px; font-weight: 700; color: var(--ink-3); white-space: nowrap; }
+.pth-wl.win > span small { color: var(--good); }
+.pth-wl.loss > span small { color: var(--bad); }
+.pth-wl.on { color: var(--ink-day); background: var(--amber); box-shadow: 0 4px 0 var(--slab-gold); }
+.pth-wl.on > span small { color: var(--ink-day); }
+.pth-wl.off { opacity: 0.5; }
+.pth-mine .pth-coach { left: auto; right: 20px; }
+.pth-mine .pth-coach::after { left: auto; right: 40px; }
+.pth-games li { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); row-gap: 8px; background: var(--well); }
+.pth-games li.imp-low { opacity: 0.82; }
+.pth-games .pth-side { background: var(--paper); }
+.pth-imp { grid-column: 1 / -1; justify-self: start; padding: 3px 9px; border-radius: var(--r-tag); font: 800 11.5px/1.3 var(--body); color: var(--ink-2); background: var(--tile-2); }
+.pth-imp.big { color: var(--ink-day); background: var(--amber); }
+.pth-imp.some { color: var(--ink); background: var(--paper); }
+
+.pth-receipt { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 360px); align-items: start; gap: 18px; margin: 0 0 16px; padding: 18px; border-radius: var(--r-card); background: var(--tile); }
+.pth-receipt-text h3 { margin: 0; font: 800 22px/1.15 var(--display); letter-spacing: -0.02em; }
+.pth-receipt-text .pth-cap { margin: 4px 0 14px; }
+.pth-receipt-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.pth-share { min-height: 44px; padding: 0 18px; border: 0; border-radius: var(--r-ctl); cursor: pointer; font: 800 15px/1 var(--body); color: var(--ink-day); background: var(--amber);
+  box-shadow: var(--press); touch-action: manipulation; transition: transform 0.12s var(--ease-out), box-shadow 0.12s var(--ease-out); }
+.pth-share:active { transform: translateY(3px); box-shadow: var(--press-down); }
+.pth-share.alt { color: var(--ink); background: var(--paper); box-shadow: var(--soft); }
+.pth-share.alt:active { box-shadow: var(--soft-down); }
+.pth-share:disabled { cursor: not-allowed; color: var(--ink-3); background: var(--tile-2); box-shadow: none; }
+.pth-said { font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.pth-receipt-img { display: grid; place-items: center; min-height: 160px; border-radius: var(--r-mid); }
+.pth-receipt-img img { display: block; width: 100%; height: auto; border-radius: var(--r-mid); box-shadow: 0 6px 0 var(--slab), 0 16px 24px -10px var(--cast); }
+.pth-bar-btns { display: flex; gap: 6px; }
+.pth-bar-share { color: var(--ink-day); background: var(--amber); }
+@media (max-width: 760px) {
+  .pth-build, .pth-receipt { padding: 12px; }
+  .pth-part { padding: 12px; }
+  .pth-mine li { grid-template-columns: minmax(0, 1fr); }
+  .pth-wl-pair > .pth-wl { flex: 1 1 0; min-width: 0; }
+  .pth-games li { grid-template-columns: minmax(0, 1fr); }
+  .pth-receipt { grid-template-columns: minmax(0, 1fr); }
+  .pth-receipt-img { order: -1; }
+}
+/* the league's games: room for whole team names, two lines at most */
+.pth-games { grid-template-columns: repeat(auto-fill, minmax(min(100%, 500px), 1fr)); }
+.pth-side-name b { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.pth-games .pth-side.on { background: var(--amber); }
+/* the scenario bar stays short on phones: odds and buttons on one row, the picks one sideways-scrolling row under it */
+.pth-bar-picks button { white-space: nowrap; }
+@media (max-width: 760px) {
+  .pth-bar { gap: 8px 10px; padding: 10px 12px; }
+  .pth-bar-odds { grid-template-columns: auto auto; align-items: baseline; column-gap: 8px; }
+  .pth-bar-odds small { grid-column: 1 / -1; }
+  .pth-bar-odds b { font-size: 24px; }
+  .pth-bar-end small { display: none; }
+  .pth-bar-end { align-self: center; }
+  .pth-bar-btns .chip { min-height: 40px; }
+  .pth-bar-picks { -webkit-mask-image: linear-gradient(90deg, var(--island) 85%, transparent); mask-image: linear-gradient(90deg, var(--island) 85%, transparent); padding-right: 24px; }
+  .pth-mine-who { flex-wrap: wrap; }
+  .pth-mine .pth-flag { order: -1; }
+}

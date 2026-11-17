@@ -2038,6 +2038,8 @@ function route({ fresh = false } = {}) {
   const render = () => {
     // the headline desk is its own flat workspace: no site header, sky, field or footer (styles.css, html.admin-mode)
     document.documentElement.classList.toggle('admin-mode', key === 'admin');
+    // the Lab's League section holds the scenario builder and its sticky bar: no back-to-top button over it (Nov 17)
+    document.documentElement.classList.toggle('on-scenarios', key === 'lab' && labState.sub === 'league');
     document.querySelectorAll('.tabs a').forEach((a) => (a.dataset.view === key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
     placeInk();
     paintMe();
