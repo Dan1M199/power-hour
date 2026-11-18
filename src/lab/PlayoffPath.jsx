@@ -245,7 +245,13 @@ export function PlayoffPath({ D, me, h }) {
                 </div>
                 <div className="pth-weeks" role="tablist" aria-label="Week">
                   {S.weeks.map((w) => (
-                    <button key={w} type="button" role="tab" aria-selected={w === wk} onClick={() => { if (w !== wk) setWdir(w > wk ? 'go-next' : 'go-prev'); setBw(w); }}>
+                    <button key={w} type="button" role="tab" aria-selected={w === wk} onClick={(e) => {
+                      if (w !== wk) setWdir(w > wk ? 'go-next' : 'go-prev');
+                      setBw(w);
+                      // bring the tapped week to the middle of the tray, so the weeks either side of it can be reached
+                      const b = e.currentTarget, tray = b.parentElement;
+                      tray.scrollTo({ left: b.offsetLeft - (tray.clientWidth - b.offsetWidth) / 2, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+                    }}>
                       {`Wk ${w}`}{inWeek(w) ? <i className="pth-wcount">{inWeek(w)}</i> : null}
                     </button>
                   ))}

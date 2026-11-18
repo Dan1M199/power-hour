@@ -305,10 +305,10 @@ function initTopPill() {
 // ---------- hello ----------
 // Once per device: a glass note above the dock that names the update and the one gesture nobody would guess.
 function hello() {
-  const KEY = 'ph-hello-23';
+  const KEY = 'ph-hello-30';
   if (root.classList.contains('admin-mode') || root.classList.contains('locked')) return;
   try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, '1'); } catch { return; }
-  const note = el('div', 'tx-hello', `<b>2.3</b><span><strong>The Power Hour 2.3.</strong> ${phone() ? 'Liquid glass: slide a finger along the tab bar and the pill turns to a drop of glass.' : 'Liquid glass: the bars bend the page under them, and their edge catches your pointer.'}</span>`);
+  const note = el('div', 'tx-hello', `<b>3.0</b><span><strong>The Power Hour 3.0.</strong> ${phone() ? 'A new look in flat blocks. Swipe sideways on any page to change tabs.' : 'A new look in flat blocks, on every page.'}</span>`);
   note.setAttribute('role', 'status');
   document.body.append(note);
   const close = () => { note.classList.remove('on'); setTimeout(() => note.remove(), 500); };

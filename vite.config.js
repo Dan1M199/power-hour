@@ -9,7 +9,7 @@
 // - api/ isn't part of this: Vercel builds those functions from the repo, as before.
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { cpSync } from 'node:fs';
+import { cpSync, readFileSync, writeFileSync } from 'node:fs';
 
 const COPY = ['assets', 'demo'];
 function copyRuntimeFiles() {
@@ -22,6 +22,22 @@ function copyRuntimeFiles() {
   };
 }
 
+// Link previews need the share picture's full address. Vercel names the production domain at build time.
+function absoluteShareCard() {
+  const host = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  let out = 'dist';
+  return {
+    name: 'absolute-share-card',
+    apply: 'build',
+    configResolved(c) { out = c.build.outDir; },
+    closeBundle() {
+      if (!host) return;
+      const page = `${out}/index.html`;
+      writeFileSync(page, readFileSync(page, 'utf8').replace(/content="(\/bundle\/share-card-[^"]+)"/g, `content="https://${host}$1"`));
+    },
+  };
+}
+
 export default defineConfig({
   build: {
     outDir: 'dist',
@@ -30,5 +46,5 @@ export default defineConfig({
     cssTarget: 'esnext',
     assetsInlineLimit: 0, // keep every picture and font a file of its own, as before
   },
-  plugins: [react(), copyRuntimeFiles()],
+  plugins: [react(), copyRuntimeFiles(), absoluteShareCard()],
 });
