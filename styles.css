@@ -5627,13 +5627,13 @@ html.silk-on .sky :is(.cloud), html.silk-on .sky::before { display: none; }
    Drawn as SVG (no picture to download), lying tilted off the card's right edge behind the type. The page underneath
    goes turf green. */
 :root {
-  --hero-ball: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 440 300'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.34'/%3E%3Cstop offset='.45' stop-color='%23fff' stop-opacity='.08'/%3E%3Cstop offset='1' stop-color='%23E6F7B0' stop-opacity='.2'/%3E%3C/linearGradient%3E%3CradialGradient id='core' cx='.42' cy='.55' r='.5'%3E%3Cstop offset='0' stop-color='%23DDEB95' stop-opacity='.28'/%3E%3Cstop offset='1' stop-color='%23DDEB95' stop-opacity='0'/%3E%3C/radialGradient%3E%3ClinearGradient id='hi' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.85'/%3E%3Cstop offset='1' stop-color='%23fff' stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient id='rim' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23A8E3EE' stop-opacity='0'/%3E%3Cstop offset='.5' stop-color='%23A8E3EE' stop-opacity='.9'/%3E%3Cstop offset='1' stop-color='%23FFE48A' stop-opacity='0'/%3E%3C/linearGradient%3E%3CclipPath id='c'%3E%3Cpath d='M30 150C100 38 340 38 410 150C340 262 100 262 30 150Z'/%3E%3C/clipPath%3E%3C/defs%3E%3Cg transform='rotate(-24 220 150)'%3E%3Cpath d='M30 150C100 38 340 38 410 150C340 262 100 262 30 150Z' fill='url(%23b)'/%3E%3Cg clip-path='url(%23c)'%3E%3Crect width='440' height='300' fill='url(%23core)'/%3E%3Cpath d='M30 150C100 38 340 38 410 150' fill='none' stroke='%23fff' stroke-opacity='.22' stroke-width='22'/%3E%3Cpath d='M90 112C150 66 290 66 350 112C300 92 140 92 90 112Z' fill='url(%23hi)'/%3E%3Cpath d='M70 198C140 246 300 246 370 198' fill='none' stroke='url(%23rim)' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M92 70C76 110 76 190 92 230M112 62C94 106 94 194 112 238' fill='none' stroke='%23fff' stroke-opacity='.3' stroke-width='3'/%3E%3Cpath d='M348 70C364 110 364 190 348 230M328 62C346 106 346 194 328 238' fill='none' stroke='%23fff' stroke-opacity='.3' stroke-width='3'/%3E%3C/g%3E%3Cpath d='M30 150C100 38 340 38 410 150C340 262 100 262 30 150Z' fill='none' stroke='%23fff' stroke-opacity='.7' stroke-width='2'/%3E%3Cg stroke-linecap='round'%3E%3Cpath d='M160 112H280' stroke='%23FFE01A' stroke-opacity='.35' stroke-width='9'/%3E%3Cpath d='M160 112H280' stroke='%23fff' stroke-opacity='.95' stroke-width='2.6'/%3E%3Cpath d='M172 101v22M188 101v22M204 101v22M220 101v22M236 101v22M252 101v22M268 101v22' stroke='%23FFE01A' stroke-opacity='.3' stroke-width='7'/%3E%3Cpath d='M172 101v22M188 101v22M204 101v22M220 101v22M236 101v22M252 101v22M268 101v22' stroke='%23fff' stroke-opacity='.9' stroke-width='2.2'/%3E%3C/g%3E%3Ccircle cx='120' cy='96' r='4' fill='%23fff' fill-opacity='.9'/%3E%3C/g%3E%3C/svg%3E");
+  --hero-ball: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-10 -40 460 380'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.34'/%3E%3Cstop offset='.45' stop-color='%23fff' stop-opacity='.08'/%3E%3Cstop offset='1' stop-color='%23E6F7B0' stop-opacity='.2'/%3E%3C/linearGradient%3E%3CradialGradient id='core' cx='.42' cy='.55' r='.5'%3E%3Cstop offset='0' stop-color='%23DDEB95' stop-opacity='.28'/%3E%3Cstop offset='1' stop-color='%23DDEB95' stop-opacity='0'/%3E%3C/radialGradient%3E%3ClinearGradient id='hi' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.85'/%3E%3Cstop offset='1' stop-color='%23fff' stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient id='rim' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23A8E3EE' stop-opacity='0'/%3E%3Cstop offset='.5' stop-color='%23A8E3EE' stop-opacity='.9'/%3E%3Cstop offset='1' stop-color='%23FFE48A' stop-opacity='0'/%3E%3C/linearGradient%3E%3CclipPath id='c'%3E%3Cpath d='M30 150C100 38 340 38 410 150C340 262 100 262 30 150Z'/%3E%3C/clipPath%3E%3C/defs%3E%3Cg transform='rotate(-24 220 150)' opacity='.6'%3E%3Cpath d='M30 150C100 38 340 38 410 150C340 262 100 262 30 150Z' fill='url(%23b)'/%3E%3Cg clip-path='url(%23c)'%3E%3Crect width='440' height='300' fill='url(%23core)'/%3E%3Cpath d='M30 150C100 38 340 38 410 150' fill='none' stroke='%23fff' stroke-opacity='.22' stroke-width='22'/%3E%3Cpath d='M90 112C150 66 290 66 350 112C300 92 140 92 90 112Z' fill='url(%23hi)'/%3E%3Cpath d='M70 198C140 246 300 246 370 198' fill='none' stroke='url(%23rim)' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M92 70C76 110 76 190 92 230M112 62C94 106 94 194 112 238' fill='none' stroke='%23fff' stroke-opacity='.3' stroke-width='3'/%3E%3Cpath d='M348 70C364 110 364 190 348 230M328 62C346 106 346 194 328 238' fill='none' stroke='%23fff' stroke-opacity='.3' stroke-width='3'/%3E%3C/g%3E%3Cpath d='M30 150C100 38 340 38 410 150C340 262 100 262 30 150Z' fill='none' stroke='%23fff' stroke-opacity='.7' stroke-width='2'/%3E%3Cg stroke-linecap='round'%3E%3Cpath d='M160 112H280' stroke='%23FFE01A' stroke-opacity='.35' stroke-width='9'/%3E%3Cpath d='M160 112H280' stroke='%23fff' stroke-opacity='.95' stroke-width='2.6'/%3E%3Cpath d='M172 101v22M188 101v22M204 101v22M220 101v22M236 101v22M252 101v22M268 101v22' stroke='%23FFE01A' stroke-opacity='.3' stroke-width='7'/%3E%3Cpath d='M172 101v22M188 101v22M204 101v22M220 101v22M236 101v22M252 101v22M268 101v22' stroke='%23fff' stroke-opacity='.9' stroke-width='2.2'/%3E%3C/g%3E%3Ccircle cx='120' cy='96' r='4' fill='%23fff' fill-opacity='.9'/%3E%3C/g%3E%3C/svg%3E");
 }
 .car-card, .gotw, .ag-hero { background-image: var(--hero-ball), var(--hero-ribbon), var(--hero-grad); }
-.car-card, .gotw { background-size: 540px auto, 100% 100%, 100% 100%; background-position: calc(100% + 230px) calc(100% + 40px), 0 0, 0 0; }
-.ag-hero { background-size: 460px auto, 100% 100%, 100% 100%; background-position: calc(100% + 120px) 50%, 0 0, 0 0; }
+.car-card, .gotw { background-size: 340px auto, 100% 100%, 100% 100%; background-position: right 16px bottom 74px, 0 0, 0 0; }
+.ag-hero { background-size: 320px auto, 100% 100%, 100% 100%; background-position: right 18px center, 0 0, 0 0; }
 @media (max-width: 760px) {
-  .car-card, .gotw { background-size: 300px auto, 100% 100%, 100% 100%; background-position: calc(100% + 150px) calc(100% + 125px), 0 0, 0 0; }
+  .car-card, .gotw { background-size: 200px auto, 100% 100%, 100% 100%; background-position: right 10px bottom 86px, 0 0, 0 0; }
 }
 /* the sample page draws its own dial over the hero; the ball replaces it there too */
 .ag-hero .ag-dial svg { display: none; }
@@ -5644,3 +5644,32 @@ html.silk-on .sky :is(.cloud), html.silk-on .sky::before { display: none; }
 /* words that sit straight on the turf wear full ink (the muted inks fail on green) */
 .view-head p, .view-head :is(h1, .page-title) { color: var(--ink); }
 :root[data-theme='dark'] .view-head p { color: var(--ink); }
+
+/* ---------- 4.3: light diffusion, edge to edge, the ball in frame (Dan's requests Nov 19) ----------
+   More light through the glass: the silk (src/silk.js) now pours a soft stadium light in from the top and floats three
+   wide pools of light through it, its crests and mowing stripes are diffused instead of drawn as lines, and every glass
+   card carries the light it catches as a soft wash from its top corner with a deeper blur behind it.
+   Edge to edge on phones: the Home Screen app's status bar is black-translucent (index.html), so the page draws under
+   it; main already pads by the safe-area inset. The browser tints its own bar from the theme colour, which is now the
+   silk's own colour at the top of the screen in both themes.
+   The glass football: its picture had the ball's tips cut flat by its own frame (the viewBox), and it sat half off the
+   card's corner. The frame now holds the whole tilted ball, and it lies wholly inside the card, right of centre over the
+   cast rows, at a size that fits each width (4.2's positions above are replaced). */
+:root { --glass-blur: blur(34px) saturate(170%);
+  --glass-light: radial-gradient(130% 90% at 12% -8%, rgba(255, 255, 255, 0.42) 0, rgba(255, 255, 255, 0.12) 38%, rgba(255, 255, 255, 0) 66%),
+    radial-gradient(90% 70% at 100% 110%, rgba(255, 246, 205, 0.18) 0, rgba(255, 246, 205, 0) 60%); }
+:root[data-theme='dark'] { --aurora-base: #1A3A20;
+  --glass-light: radial-gradient(130% 90% at 12% -8%, rgba(255, 255, 255, 0.1) 0, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0) 66%),
+    radial-gradient(90% 70% at 100% 110%, rgba(220, 240, 160, 0.06) 0, rgba(220, 240, 160, 0) 60%); }
+.glass, .ag-card { background-image: var(--glass-light); }
+/* a faint haze of light over the whole sky, screened on, so the silk reads as lit from above rather than painted */
+html.silk-on .sky::after { content: ''; position: absolute; inset: 0; mix-blend-mode: screen; pointer-events: none;
+  background: radial-gradient(120% 60% at 50% -10%, rgba(255, 252, 230, 0.32) 0, rgba(255, 252, 230, 0) 70%); }
+:root[data-theme='dark'].silk-on .sky::after {
+  background: radial-gradient(120% 60% at 50% -10%, rgba(200, 240, 190, 0.08) 0, rgba(200, 240, 190, 0) 70%); }
+
+/* the bar the browser draws and the overscroll match the lit top of the silk (the theme colour in index.html and app.js) */
+:root { --aurora-top: #C2DAA6; }
+:root[data-theme='dark'] { --aurora-top: #33532E; }
+html { background: var(--aurora-top); }
+html.admin-mode { background: var(--np-paper); }

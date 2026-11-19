@@ -16,7 +16,7 @@
   <meta property="og:image:alt" content="The Power Hour logo on a mowed football field">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="/assets/share-card.jpg">
-  <meta name="theme-color" content="#55A653">
+  <meta name="theme-color" content="#C2DAA6">
   <!-- the theme, before the first paint: a choice kept on this device (ph-theme) wins, else the device's own setting.
        app.js keeps it in step afterwards (the header's sun and moon button, a change in the device's setting). -->
   <script>
@@ -26,7 +26,7 @@
       if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       document.documentElement.dataset.theme = t;
       document.documentElement.classList.add('js'); // hidden-until-shown states only apply once scripts run
-      if (t === 'dark') document.querySelector('meta[name="theme-color"]').content = '#0A1A0F';
+      if (t === 'dark') document.querySelector('meta[name="theme-color"]').content = '#33532E';
     })();
   </script>
   <link rel="icon" type="image/png" href="assets/favicon.png">
@@ -36,7 +36,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Power Hour">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <!-- everything the first screen needs starts downloading here, in parallel: the stylesheet, both typefaces (served
        from this site) and the connection to Sleeper's picture CDN for the team avatars. The build (vite.config.js)
        bundles app.js and lib/ and adds a modulepreload for each piece of the bundle itself. -->

@@ -20,7 +20,7 @@ const FRAG = `
 precision mediump float;
 uniform vec2 uRes;uniform float uT;uniform vec2 uPtr;uniform float uScroll;
 uniform vec3 uC0;uniform vec3 uC1;uniform vec3 uC2;uniform vec3 uC3;uniform vec3 uWarm;uniform vec3 uBase;
-uniform float uAmt;uniform float uSheen;uniform float uDrift;uniform float uStripe;
+uniform float uAmt;uniform float uSheen;uniform float uDrift;uniform float uStripe;uniform float uBloom;
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
   return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
@@ -37,15 +37,28 @@ void main(){
   c=mix(c,uC3,smoothstep(.45,.95,f));
   /* the folds: bands along the warped field, with a sharper sheen on each crest */
   float b=sin((p.y*2.4+p.x*.9+r.x*3.6+q.y*1.8-t*.22)*3.14159);
-  float sheen=pow(max(b,0.),14.)*.9+smoothstep(.6,1.,b)*.25;
-  float shade=smoothstep(-.2,-1.,b)*.1;
+  /* 4.3: the crests are diffused, wide and soft, so the light spreads through the silk instead of drawing lines */
+  float sheen=pow(max(b,0.),5.)*.55+smoothstep(.2,1.,b)*.3;
+  float shade=smoothstep(-.1,-1.,b)*.07;
   /* the warm streak, sweeping in from the left */
   float d=dot(p-vec2(-.1,.62),normalize(vec2(.5,1.)))+.18*(r.x-.5);
   c=mix(c,uWarm,exp(-d*d*38.)*.42);
   c+=sheen*uSheen;c-=shade;
   /* the mowing: wide stripes a shade apart, bent a little by the silk, as if the field were under it */
-  float mow=step(.5,fract(p.x*2.2+r.y*.18));
-  c*=1.+(mow-.5)*.08*uStripe;
+  float mw=fract(p.x*2.2+r.y*.18);
+  float mow=smoothstep(.36,.64,mw)-smoothstep(.86,1.,mw);
+  c*=1.+(mow-.5)*.07*uStripe;
+  /* 4.3, light diffusion: stadium light pouring in from the top and spreading down, plus three slow pools of light
+     drifting through the silk, each a wide gaussian, screened on so they lift the colour without washing it out */
+  vec2 a=vec2(uRes.x/uRes.y,1.);
+  float top=pow(uv.y,2.2)*.55+exp(-pow((uv.x-.5-.12*sin(t*.07))*1.6,2.))*pow(uv.y,4.)*.45;
+  vec2 l1=vec2(.22+.12*sin(t*.11),.78+.06*cos(t*.09))*a;
+  vec2 l2=vec2(.8+.1*cos(t*.08),.42+.1*sin(t*.12))*a;
+  vec2 l3=vec2(.45+.2*sin(t*.05+2.),.12+.06*cos(t*.1))*a;
+  float pool=exp(-dot(p-l1,p-l1)*4.5)+exp(-dot(p-l2,p-l2)*5.5)*.8+exp(-dot(p-l3,p-l3)*6.)*.6;
+  float light=clamp((top*.8+pool*.65)*uBloom,0.,1.);
+  vec3 tint=mix(vec3(1.,.99,.9),uC3,.25);
+  c=1.-(1.-c)*(1.-tint*light);
   c=mix(c,vec3(1.),.03*uAmt);
   c=mix(uBase,c,uAmt);
   c+=(h(gl_FragCoord.xy+t)-.5)/128.;
@@ -62,8 +75,8 @@ const MOODS = {
   lab: { c: ['#3A9E55', '#4FB06A', '#7FC35E', '#A6D16A'], warm: '#FFE01A', speed: 0.85, drift: 0.6 },
 };
 const THEMES = {
-  light: { base: '#55A653', amt: 1, sheen: 0.12, stripe: 1 },
-  dark: { base: '#0A1A0F', amt: 0.4, sheen: 0.05, stripe: 0.7 },
+  light: { base: '#55A653', amt: 1, sheen: 0.12, stripe: 1, bloom: 0.62 },
+  dark: { base: '#0A1A0F', amt: 0.4, sheen: 0.05, stripe: 0.7, bloom: 0.2 },
 };
 
 export function initSilk() {
@@ -87,7 +100,7 @@ export function initSilk() {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const U = {};
-  for (const k of ['uRes', 'uT', 'uPtr', 'uScroll', 'uC0', 'uC1', 'uC2', 'uC3', 'uWarm', 'uBase', 'uAmt', 'uSheen', 'uDrift', 'uStripe']) U[k] = gl.getUniformLocation(prog, k);
+  for (const k of ['uRes', 'uT', 'uPtr', 'uScroll', 'uC0', 'uC1', 'uC2', 'uC3', 'uWarm', 'uBase', 'uAmt', 'uSheen', 'uDrift', 'uStripe', 'uBloom']) U[k] = gl.getUniformLocation(prog, k);
 
   sky.prepend(canvas);
   const root = document.documentElement;
@@ -98,7 +111,7 @@ export function initSilk() {
   const theme = () => (root.dataset.theme === 'dark' ? 'dark' : 'light');
 
   // the live state of the silk: colours ease toward the mood's, the clock runs at the mood's speed plus any surge
-  const cur = { c: MOODS.rankings.c.map(hex), warm: hex(MOODS.rankings.warm), base: hex(THEMES[theme()].base), amt: THEMES[theme()].amt, sheen: THEMES[theme()].sheen, stripe: THEMES[theme()].stripe, speed: 1, drift: 1 };
+  const cur = { c: MOODS.rankings.c.map(hex), warm: hex(MOODS.rankings.warm), base: hex(THEMES[theme()].base), amt: THEMES[theme()].amt, sheen: THEMES[theme()].sheen, stripe: THEMES[theme()].stripe, bloom: THEMES[theme()].bloom, speed: 1, drift: 1 };
   let goal = { ...cur, c: cur.c.map((x) => [...x]) };
   let mood = 'rankings', live = false, surge = 0, t = Math.random() * 40, ptr = [0, 0], ptrGoal = [0, 0];
   let raf = 0, last = 0, paused = false;
@@ -110,7 +123,7 @@ export function initSilk() {
   };
   const setGoal = () => {
     const m = MOODS[mood] || MOODS.rankings, th = THEMES[theme()];
-    goal = { c: m.c.map(hex), warm: hex(m.warm), base: hex(th.base), amt: th.amt, sheen: th.sheen, stripe: th.stripe, speed: m.speed * (live ? 1.5 : 1), drift: m.drift };
+    goal = { c: m.c.map(hex), warm: hex(m.warm), base: hex(th.base), amt: th.amt, sheen: th.sheen, stripe: th.stripe, bloom: th.bloom, speed: m.speed * (live ? 1.5 : 1), drift: m.drift };
   };
   const ease = (a, b, k) => a + (b - a) * k;
   const draw = () => {
@@ -125,6 +138,7 @@ export function initSilk() {
     gl.uniform1f(U.uSheen, cur.sheen);
     gl.uniform1f(U.uDrift, cur.drift);
     gl.uniform1f(U.uStripe, cur.stripe);
+    gl.uniform1f(U.uBloom, cur.bloom);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
   const step = (now) => {
@@ -141,6 +155,7 @@ export function initSilk() {
     cur.amt = ease(cur.amt, goal.amt, k * 2);
     cur.sheen = ease(cur.sheen, goal.sheen, k * 2);
     cur.stripe = ease(cur.stripe, goal.stripe, k * 2);
+    cur.bloom = ease(cur.bloom, goal.bloom, k * 2);
     cur.speed = ease(cur.speed, goal.speed, k);
     cur.drift = ease(cur.drift, goal.drift, k);
     surge *= Math.exp(-dt * 2.4);
@@ -155,7 +170,7 @@ export function initSilk() {
       paused = true;
       cancelAnimationFrame(raf); raf = 0;
       if (still() && !stop) { // one settled frame for the mood, no motion
-        cur.c = goal.c.map((x) => [...x]); Object.assign(cur, { warm: [...goal.warm], base: [...goal.base], amt: goal.amt, sheen: goal.sheen, stripe: goal.stripe, drift: goal.drift });
+        cur.c = goal.c.map((x) => [...x]); Object.assign(cur, { warm: [...goal.warm], base: [...goal.base], amt: goal.amt, sheen: goal.sheen, stripe: goal.stripe, bloom: goal.bloom, drift: goal.drift });
         draw();
       }
       return;
@@ -174,7 +189,7 @@ export function initSilk() {
 
   size();
   setGoal();
-  cur.base = [...goal.base]; cur.amt = goal.amt; cur.sheen = goal.sheen; cur.stripe = goal.stripe;
+  cur.base = [...goal.base]; cur.amt = goal.amt; cur.sheen = goal.sheen; cur.stripe = goal.stripe; cur.bloom = goal.bloom;
   draw();
   run();
 
