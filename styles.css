@@ -32,8 +32,15 @@
 @font-face { font-family: 'Geist Mono'; font-style: normal; font-weight: 400 500; font-display: swap;
   src: url('assets/fonts/geist-mono-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap;
-  src: url('assets/fonts/inter-latin.woff2') format('woff2');
+/* 4.0, aurora glass: Inter is the site's one face now (variable, 400 to 700, roman and italic, SIL OFL), preloaded */
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url('assets/fonts/inter-var-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url('assets/fonts/inter-var-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Inter'; font-style: italic; font-weight: 400 700; font-display: swap;
+  src: url('assets/fonts/inter-var-italic-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 /* the headline desk's newspaper faces (Nov 6, src/admin): only fetched once the desk is open */
 @font-face { font-family: 'Source Serif 4'; font-style: normal; font-weight: 200 900; font-display: swap;
@@ -5060,3 +5067,526 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 /* the sign-in after a wrong password: the box's rule and the field turn the desk's red as it shakes */
 .adm-signin.bad { box-shadow: inset 0 0 0 2px var(--np-red); }
 .adm-signin.bad input { outline: 2px solid var(--np-red); outline-offset: 1px; }
+
+/* ---------- 4.0: aurora glass (Dan's request Nov 19) ----------
+   A redesign, not a coat of paint. The sky and the mowed field are gone: the page floats over a slow, blurred aurora in
+   the league's own colours (sky blue, cyan, mint, lime and the first-down yellow, with one warm streak of yellow into
+   amber sweeping in from the left), and every surface is frosted glass over it. Colour lives in the background;
+   surfaces are clear, text is near-black (white on the one saturated card a page gets: the headline carousel, the game
+   of the week). Corners are generous: 30px cards, 24px tiles, pills for every control. Depth is layering, not
+   shadows: a white hairline, a bright inner top edge and one faint ambient shadow. One face, Inter, 400 to 600.
+   Yellow still means you. The rank numbers stay beside their cards as big soft numerals. The headline desk keeps its
+   newspaper. The team dashboard comes along (its --p-* tokens are re-pointed at the glass). Kept last, so it wins. */
+:root {
+  /* 4.0's constant colours (the same in both themes), kept with the rest of the literals */
+  --tone-shade: #1E463C; --tone-hero: #134A47; --tone-hero-night: #0F3A3A; --tone-night: #141A26;
+  --tone-field-27: #1E6B2A; --tone-field-45: #2F8A4A; --tone-field-66: #7FCF8F; --tone-field-71: #8EDC92;
+  --tone-sky-38: #1D6AA8; --tone-sky-72: #7EC2F2; --tone-teal-27: #1D6E6A; --tone-teal-35: #2C8580;
+  --tone-grey-56: #8A8C94; --tone-clay-49: #C2503A; --tone-clay-76: #FF9C85;
+}
+:root {
+  /* the aurora: the base and its five blobs, plus the warm ribbon */
+  --aurora-base: #EEF3F0;
+  --aurora-sky: #9FD3F6;
+  --aurora-cyan: #A8E3EE;
+  --aurora-mint: #B4E4AE;
+  --aurora-lime: #DDEB95;
+  --aurora-sun: #FFE48A;
+  --aurora-warm-1: #FFE01A;
+  --aurora-warm-2: #F9B000;
+  --aurora-o: 1;
+  /* glass */
+  --glass-bg: rgba(255, 255, 255, 0.46);
+  --glass-bg-strong: rgba(255, 255, 255, 0.7);
+  --glass-solid: rgba(255, 255, 255, 0.86);      /* where backdrop-filter is missing */
+  --glass-fill: rgba(255, 255, 255, 0.34);       /* a panel inside a glass card: a hair whiter, never blurred */
+  --glass-border: rgba(255, 255, 255, 0.62);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  --glass-blur: blur(24px) saturate(160%);
+  --shadow-soft: 0 8px 32px rgba(30, 70, 60, 0.09);
+  --shadow-lift: 0 14px 40px rgba(30, 70, 60, 0.14);
+  --radius-card: 30px;
+  --radius-tile: 24px;
+  --text-primary: #111216;
+  --text-secondary: #5A5D68;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* the one saturated card a page gets: deep grass into teal into deep sky, so white type clears 4.5:1 everywhere */
+  --hero-grad: linear-gradient(128deg, #1F7A45 0%, #16787A 48%, #2A6CAE 100%);
+  --hero-ribbon: radial-gradient(120% 70% at 18% 108%, rgba(255, 228, 138, 0.34) 0, rgba(255, 228, 138, 0) 55%),
+    radial-gradient(90% 60% at 92% -10%, rgba(168, 227, 238, 0.34) 0, rgba(168, 227, 238, 0) 60%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0) 62%);
+  /* the dial on the hero card: two translucent rings and a ring of ticks, drawn once */
+  --hero-dial: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Cg fill='none' stroke='%23fff'%3E%3Ccircle cx='150' cy='150' r='138' stroke-opacity='.5' stroke-width='9' stroke-dasharray='1.6 6.2'/%3E%3Ccircle cx='150' cy='150' r='110' stroke-opacity='.28' stroke-width='1.5'/%3E%3Ccircle cx='150' cy='150' r='76' stroke-opacity='.22' stroke-width='14'/%3E%3Cpath d='M62 186L36 197M220 222l18 22' stroke-opacity='.4' stroke-width='1.2' stroke-dasharray='3 4'/%3E%3C/g%3E%3C/svg%3E");
+  /* the shimmer a press sends through a button */
+  --iris: linear-gradient(115deg, #FFE48A 0%, #DDEB95 18%, #B4E4AE 36%, #A8E3EE 54%, #9FD3F6 72%, #FFD27A 88%, #FFE48A 100%);
+  /* selected things (the pressed filter, the picked team): solid ink, so they never depend on the colour behind */
+  --sel-bg: #111216;
+  --sel-ink: #FFFFFF;
+
+  /* the older layers' tokens, pointed at the glass */
+  --display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --hand: var(--body);
+  --ink: #111216;
+  --ink-2: #33363F;
+  --ink-3: #5A5D68;
+  --ink-day: #111216;
+  --outline-day: #111216;
+  --chalk: #FFFFFF;
+  --face: var(--glass-bg);
+  --paper: var(--glass-bg-strong);
+  --header: var(--glass-bg);
+  --tile: var(--glass-fill);
+  --tile-2: rgba(17, 18, 22, 0.08);
+  --well: var(--glass-fill);
+  --line: rgba(17, 18, 22, 0.1);
+  --drawer: rgba(255, 255, 255, 0.24);
+  --in-tile: var(--glass-bg-strong);
+  --in-tile-2: var(--glass-fill);
+  --in-line: rgba(17, 18, 22, 0.1);
+  --hover: rgba(255, 255, 255, 0.78);
+  --good: #1E6B2A;
+  --bad: #B3261E;
+  --good-bg: rgba(180, 228, 174, 0.62);
+  --bad-bg: rgba(255, 196, 190, 0.62);
+  --info-bg: rgba(159, 211, 246, 0.55);
+  --notice-bg: rgba(255, 228, 138, 0.6);
+  --mine-bg: rgba(255, 236, 140, 0.62);
+  --mine-edge: #E8B800;
+  --board: #134A47;
+  --turf: #134A47;
+  --r-card: var(--radius-card); --r-xl: var(--radius-card); --r-lg: var(--radius-card); --r-md: var(--radius-tile);
+  --r-mid: var(--radius-tile); --r-ctl: 999px; --r-tag: 999px;
+  /* no slabs, ledges or hard shadows any more: depth is the glass */
+  --slab: transparent; --slab-gold: transparent; --slab-soft: transparent; --slab-board: transparent;
+  --ledge: transparent; --ledge-gold: transparent; --ledge-c: transparent;
+  --cast: rgba(30, 70, 60, 0.1);
+  --edge: 0px; --sheen: none; --gloss: none; --rim: 0 0 0 0 transparent; --chip-shade: none; --tray-edge: 0 0 0 0 transparent;
+  --outline: rgba(255, 255, 255, 0.62);
+  --press: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft);
+  --press-down: inset 0 0 0 1px var(--glass-border);
+  --soft: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 4px 16px rgba(30, 70, 60, 0.06);
+  --soft-down: inset 0 0 0 1px var(--glass-border);
+  --in-tray: inset 0 0 0 1px var(--glass-border);
+  --chrome: var(--glass-bg); --frost: var(--glass-blur); --frost-s: var(--glass-blur); --frost-paper: var(--glass-bg-strong); --chrome-rim: var(--glass-hi);
+  --dock-glass: var(--glass-bg); --dock-frost: var(--glass-blur);
+  --page: min(1180px, calc(100% - 32px));
+}
+:root[data-theme='dark'] {
+  --aurora-base: #0B1322;
+  --aurora-o: 0.42;
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg-strong: rgba(255, 255, 255, 0.14);
+  --glass-solid: rgba(22, 30, 44, 0.92);
+  --glass-fill: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.28);
+  --shadow-lift: 0 14px 40px rgba(0, 0, 0, 0.4);
+  --text-primary: #F3F5F9;
+  --text-secondary: #B7BCC8;
+  --hero-grad: linear-gradient(128deg, #145233 0%, #105752 46%, #194B7C 100%);
+  --sel-bg: #F3F5F9;
+  --sel-ink: #111216;
+  --ink: #F3F5F9;
+  --ink-2: #D4D8E1;
+  --ink-3: #B7BCC8;
+  --face: var(--glass-bg);
+  --paper: var(--glass-bg-strong);
+  --header: var(--glass-bg);
+  --tile: var(--glass-fill);
+  --tile-2: rgba(255, 255, 255, 0.12);
+  --well: var(--glass-fill);
+  --line: rgba(255, 255, 255, 0.12);
+  --drawer: rgba(255, 255, 255, 0.04);
+  --in-tile: var(--glass-bg-strong);
+  --in-tile-2: var(--glass-fill);
+  --in-line: rgba(255, 255, 255, 0.12);
+  --hover: rgba(255, 255, 255, 0.18);
+  --good: #8EDC92;
+  --bad: #FF9C92;
+  --good-bg: rgba(110, 200, 120, 0.2);
+  --bad-bg: rgba(255, 120, 110, 0.2);
+  --info-bg: rgba(120, 190, 240, 0.2);
+  --notice-bg: rgba(255, 220, 110, 0.18);
+  --mine-bg: rgba(255, 224, 26, 0.18);
+  --board: #0F3A3A;
+  --turf: #0F3A3A;
+  --slab: transparent; --slab-gold: transparent; --slab-soft: transparent; --slab-board: transparent;
+  --ledge: transparent; --ledge-gold: transparent; --ledge-c: transparent;
+  --cast: rgba(0, 0, 0, 0.3);
+  --sheen: none; --gloss: none; --rim: 0 0 0 0 transparent; --chip-shade: none; --tray-edge: 0 0 0 0 transparent;
+  --outline: rgba(255, 255, 255, 0.14);
+  --press: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft);
+  --press-down: inset 0 0 0 1px var(--glass-border);
+  --soft: inset 0 0 0 1px var(--glass-border), var(--glass-hi);
+  --soft-down: inset 0 0 0 1px var(--glass-border);
+  --in-tray: inset 0 0 0 1px var(--glass-border);
+  --chrome: var(--glass-bg); --frost: var(--glass-blur); --frost-s: var(--glass-blur); --frost-paper: var(--glass-bg-strong); --chrome-rim: var(--glass-hi);
+  --dock-glass: var(--glass-bg); --dock-frost: var(--glass-blur);
+}
+
+/* --- the base: Inter, crisp, and the browser's own parts in the palette --- */
+body { background: var(--aurora-base); color: var(--ink); font: 400 16px/1.55 var(--body); font-variant-numeric: tabular-nums lining-nums;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+::selection { color: var(--text-primary); background: var(--aurora-sun); }
+/* focus: a 2px white ring and a soft sky glow. The glow is a drop-shadow filter, so it never replaces a surface's own
+   glass edge (its box-shadow) and appears at once, never faded in by a transition */
+:focus-visible { outline: 2px solid var(--chalk); outline-offset: 2px; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--aurora-sky) 90%, transparent)); }
+:root[data-theme='dark'] :focus-visible { filter: drop-shadow(0 0 6px color-mix(in srgb, var(--aurora-sky) 60%, transparent)); }
+a { color: inherit; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+input, select, textarea { caret-color: var(--good); accent-color: var(--good); }
+html { scrollbar-color: color-mix(in srgb, var(--ink) 22%, transparent) transparent; }
+
+/* --- the aurora: the old sky's box, now a base and five soft blobs drifting very slowly, with one warm ribbon.
+   Radial gradients, not blurred boxes: already soft, and nothing to re-blur while they move. Transform only. --- */
+.sky { background: var(--aurora-base); }
+.sky::after { content: none; }
+.sky::before, .sky .cloud, .sky .cloud::before, .sky .cloud::after { content: ''; position: absolute; border-radius: 50%; box-shadow: none; opacity: var(--aurora-o); }
+.sky .cloud { display: block; inset: auto; width: 70vmax; height: 70vmax; transform: none; background: none; }
+.sky .cloud.c1 { left: -22vmax; top: -26vmax; background: radial-gradient(closest-side, var(--aurora-sky), transparent); }
+.sky .cloud.c1::before { left: 62vmax; top: 6vmax; width: 60vmax; height: 60vmax; background: radial-gradient(closest-side, var(--aurora-cyan), transparent); }
+.sky .cloud.c1::after { left: 10vmax; top: 48vmax; width: 56vmax; height: 56vmax; background: radial-gradient(closest-side, var(--aurora-mint), transparent); }
+.sky .cloud.c2 { left: auto; right: -24vmax; top: 30vh; background: radial-gradient(closest-side, var(--aurora-lime), transparent); opacity: calc(var(--aurora-o) * 0.9); }
+.sky .cloud.c2::before { left: -10vmax; top: 40vmax; width: 64vmax; height: 64vmax; background: radial-gradient(closest-side, var(--aurora-sky), transparent); }
+.sky .cloud.c2::after { display: none; }
+.sky .cloud.c3 { left: 18vw; top: 34vh; width: 56vmax; height: 56vmax; background: radial-gradient(closest-side, var(--aurora-sun), transparent); opacity: calc(var(--aurora-o) * 0.8); }
+.sky .cloud.c3::before, .sky .cloud.c3::after { display: none; }
+/* the warm ribbon: a long soft streak of yellow into amber sweeping in from the left edge */
+.sky::before { left: -30vw; top: 46vh; width: 95vw; height: 26vmax; border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--aurora-warm-2) 55%, transparent), color-mix(in srgb, var(--aurora-warm-1) 30%, transparent) 55%, transparent);
+  transform: rotate(-28deg); opacity: calc(var(--aurora-o) * 0.75); }
+@media (prefers-reduced-motion: no-preference) {
+  .sky .cloud.c1 { animation: aurora-a 34s ease-in-out infinite alternate; }
+  .sky .cloud.c2 { animation: aurora-b 40s ease-in-out infinite alternate; }
+  .sky .cloud.c3 { animation: aurora-c 28s ease-in-out infinite alternate; }
+  .sky::before { animation: aurora-r 36s ease-in-out infinite alternate; }
+  @keyframes aurora-a { to { transform: translate(6vw, 4vh) scale(1.06); } }
+  @keyframes aurora-b { to { transform: translate(-7vw, -5vh) scale(0.94); } }
+  @keyframes aurora-c { to { transform: translate(-5vw, 6vh) scale(1.1); } }
+  @keyframes aurora-r { from { transform: rotate(-28deg); } to { transform: translate(4vw, -3vh) rotate(-24deg); } }
+}
+/* the field is gone */
+main::before, main::after, :root[data-theme='dark'] main::before, :root[data-theme='dark'] main::after { display: none; }
+
+/* --- the glass card: every .glass, and the surfaces that were cards without the class --- */
+.glass, .ag-card {
+  background-color: var(--glass-bg); background-image: none;
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 0 0 var(--ring-w, 0px) var(--yellow), var(--shadow-soft);
+}
+.glass.rim { --lift: 0px; box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 0 0 var(--ring-w, 0px) var(--yellow), var(--shadow-lift); }
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .glass, .ag-card, .topbar, .tabs, .me-btn, .me-panel, .tip, .tx-top { background-color: var(--glass-solid) !important; }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .mu:hover, .idea:hover, .wire-team:hover, .trade:hover, .rank-card:hover { transform: translateY(-2px);
+    box-shadow: inset 0 0 0 1px var(--chalk), var(--glass-hi), 0 0 0 var(--ring-w, 0px) var(--yellow), var(--shadow-lift); }
+  :is(.mu, .idea, .wire-team, .trade, .rank-card) { transition: transform 0.35s var(--ease-spring), box-shadow 0.3s var(--ease-out); }
+}
+/* panels inside a card: a hair whiter, a white hairline, never blurred again (no glass in glass in glass) */
+:is(.mini, .mgr, .trade-side, .idea-swap > div, .bd-side, .line > span, .fan, .fut, .h2h-row .slot, .pth-part, .pth-stat, .pth-list li, .pth-mine li, .pth-games li) {
+  background-color: var(--glass-fill); box-shadow: inset 0 0 0 1px var(--glass-border); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.pth-build, .pth-receipt { background: var(--glass-bg); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft); }
+
+/* --- the hero card: the one saturated card on a page (the headlines, the game of the week). The deep end of the
+   palette as a gradient, a soft ribbon of light through it, and a dial of rings and ticks behind the type --- */
+.car-card, .gotw, .ag-hero {
+  color: var(--chalk);
+  background-color: var(--board);
+  background-image: var(--hero-dial), var(--hero-ribbon), var(--hero-grad);
+  background-repeat: no-repeat; background-size: 360px 360px, 100% 100%, 100% 100%; background-position: calc(100% + 110px) -120px, 0 0, 0 0;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chalk) 22%, transparent), inset 0 1px 0 color-mix(in srgb, var(--chalk) 35%, transparent), 0 18px 48px -12px color-mix(in srgb, var(--tone-hero) 45%, transparent);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.car-card { border-radius: var(--radius-card); }
+.gotw { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chalk) 22%, transparent), inset 0 1px 0 color-mix(in srgb, var(--chalk) 35%, transparent), 0 0 0 var(--ring-w, 0px) var(--yellow), 0 18px 48px -12px color-mix(in srgb, var(--tone-hero) 45%, transparent); }
+.car-dim { background: var(--aurora-base); opacity: calc(var(--dim, 0) * 0.32); }
+.lead-car { --deck-1: var(--tone-teal-27); --deck-2: var(--tone-teal-35); }
+/* glass pills on the saturated card: 20% white, a white hairline, white words */
+:root :is(.car-card, .gotw, .ag-hero) :is(.car-arrow, .car-pause, .gotw-more, .drive-pick button, .clip-sound, .ag-btn) {
+  color: var(--chalk); background: color-mix(in srgb, var(--chalk) 18%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chalk) 70%, transparent); }
+:root :is(.car-card, .gotw) :is(.car-pause, .drive-pick button)[aria-pressed='true'] { color: var(--text-primary); background: var(--chalk); box-shadow: none; }
+/* the frame around the deck carries its own pills */
+.car-nav { background: var(--glass-bg); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft); color: var(--ink); }
+.car-nav :is(.car-arrow, .car-pause) { color: var(--ink); background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border); }
+.car-nav .car-pause[aria-pressed='true'] { color: var(--sel-ink); background: var(--sel-bg); }
+
+/* --- controls: glass pills. Selected is solid ink. Hover lifts 1px; a press shrinks to 0.97 and springs back (the
+   shimmer itself is the press lens in src/touch.js, so no control's own ::before or ::after is touched) --- */
+:root :is(.filters :is(button, a), .pick, .cta, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip:is(.to-again, .rank-pdf), .to-skip, .xp, .theme-btn,
+  .pth-weeks button, .pth-side, .pth-wl, .pth-pick button, .pth-share, .lab-tabs a, .ag-btn) {
+  border: 0; border-radius: 999px; color: var(--ink); background: var(--glass-bg-strong);
+  box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 2px 10px color-mix(in srgb, var(--tone-shade) 6%, transparent);
+  transition: transform 0.35s var(--ease-spring), box-shadow 0.3s var(--ease-out), background-color 0.2s var(--ease-out), scale 0.35s var(--ease-spring); }
+@media (hover: hover) {
+  :root :is(.filters :is(button, a), .pick, .cta, .odds-more, .poll-pick, .unveil-team, .chip:is(.to-again, .rank-pdf), .to-skip, .theme-btn,
+    .pth-weeks button, .pth-side, .pth-wl, .pth-pick button, .pth-share, .lab-tabs a, .ag-btn):not(:disabled):hover {
+    transform: translateY(-1px); box-shadow: inset 0 0 0 1px var(--chalk), var(--glass-hi), 0 6px 20px color-mix(in srgb, var(--aurora-sky) 45%, transparent); }
+}
+:root :is(.filters :is(button, a), .pick, .cta, .odds-more, .poll-pick, .unveil-team, .chip:is(.to-again, .rank-pdf), .to-skip, .theme-btn,
+  .pth-weeks button, .pth-side, .pth-wl, .pth-pick button, .pth-share, .lab-tabs a, .ag-btn):active:not(:disabled) {
+  transform: none; scale: 0.97; transition: scale 0.12s var(--ease-out), background-color 0.2s; }
+:root :is(.filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .pick.on, .pth-weeks button[aria-selected='true'], .pth-side.on, .pth-wl.on,
+  .pth-pick button[aria-pressed='true'], .lab-tabs a[aria-current='page'], .poll-pick[aria-pressed='true'], .ag-btn.on) {
+  color: var(--sel-ink); background: var(--sel-bg); box-shadow: 0 6px 18px color-mix(in srgb, var(--ink-day) 18%, transparent); }
+.pth-side.on :is(.pth-side-name small, .pth-side-odds small), .pth-wl.on > span small { color: color-mix(in srgb, var(--sel-ink) 78%, transparent); }
+:root :is(.filters :is(button, a), .pth-share, .ag-btn):disabled { color: var(--ink-3); background: var(--glass-fill); box-shadow: inset 0 0 0 1px var(--glass-border); cursor: not-allowed; opacity: 0.7; }
+/* the actions that matter on a page (a call to action, the scenario invite, share): solid ink pills */
+:root :is(.cta, .pth-share:not(.alt), .pth-invite, .ag-btn.primary) { color: var(--sel-ink); background: var(--sel-bg); box-shadow: 0 8px 22px color-mix(in srgb, var(--ink-day) 18%, transparent); }
+.pth-invite { border-radius: var(--radius-tile); }
+.pth-invite-go { color: var(--text-primary); background: var(--chalk); box-shadow: none; border-radius: 999px; }
+.pth-invite-dots i { background: color-mix(in srgb, var(--chalk) 30%, transparent); box-shadow: inset 0 0 0 1.5px var(--chalk); }
+:root[data-theme='dark'] .pth-invite-go { color: var(--chalk); background: var(--text-primary); }
+.xp { background: var(--glass-bg-strong); }
+.pull .xp { background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border); }
+.chip { border-radius: 999px; background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border); }
+:is(.tier, .move, .you, .pos, .stamp, .st, .st-chip, .odds-tag, .bull-tag, .pth-imp, .pth-flag, .lo-tag) { border-radius: 999px; }
+.you { box-shadow: none; }
+.tier.elite { background: var(--aurora-sun); }
+.tier.good { background: var(--aurora-mint); }
+.tier.mid { background: var(--aurora-cyan); }
+.tier.low { background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border); }
+:is(.track, .gtrack, .poll-bar) { border-radius: 999px; background: var(--tile-2); }
+.track .ros { background: var(--grass); }
+
+/* --- the press lens (src/touch.js): the aurora shimmering through whatever is pressed. An iridescent layer brightens
+   and slides across, a diagonal sheen sweeps left to right, and a bloom spreads from the finger or the pointer --- */
+.tx-lens { overflow: hidden; isolation: isolate; mix-blend-mode: multiply; }
+.tx-lens.light { mix-blend-mode: screen; }
+.tx-lens::before { content: ''; position: absolute; inset: -50%; background: var(--iris); background-size: 300% 300%; opacity: 0; }
+.tx-lens::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, color-mix(in srgb, var(--chalk) 75%, transparent) 50%, transparent 70%); transform: translateX(-120%); }
+.tx-lens.go::before { animation: iris-shift 0.7s var(--ease-out); }
+.tx-lens.go::after { animation: iris-sheen 0.6s var(--ease-out); }
+.tx-lens i { background: radial-gradient(closest-side, color-mix(in srgb, var(--aurora-sun) 90%, transparent), color-mix(in srgb, var(--aurora-cyan) 60%, transparent) 60%, transparent); }
+@keyframes iris-shift { 0% { opacity: 0; background-position: 0% 50%; } 25% { opacity: 0.6; } 100% { opacity: 0; background-position: 100% 50%; } }
+@keyframes iris-sheen { to { transform: translateX(120%); } }
+@media (prefers-reduced-motion: reduce) { .tx-lens::before, .tx-lens::after { animation: none !important; } }
+
+/* --- the header (desktop): a floating glass pill. Tabs are glass pills with their icons; the one you're on is a
+   brighter pill with a glowing orb behind its icon --- */
+.topbar { top: 14px; margin-top: 14px; border-radius: 999px; background-color: var(--glass-bg); background-image: none;
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft); }
+.topbar::before, .topbar::after { display: none; }
+.brand-text strong { font-weight: 600; letter-spacing: -0.02em; }
+.tabs, :root[data-theme='dark'] .tabs { background: transparent; box-shadow: none; gap: 6px; }
+.tabs a { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); font-weight: 500; font-size: 14.5px; letter-spacing: -0.01em; border-radius: 999px; transition: color 0.2s; }
+.tabs a:hover, .tabs a[aria-current='page'], :root[data-theme='dark'] .tabs a[aria-current='page'] { color: var(--ink); }
+.tabs .ti { display: block; position: relative; width: 18px; height: 18px; flex: none; }
+.tabs a[aria-current='page'] { font-weight: 600; }
+.tab-ink, .tabs.dragging .tab-ink { background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--chalk), var(--glass-hi), 0 4px 14px color-mix(in srgb, var(--tone-shade) 10%, transparent); border-radius: 999px; }
+:root[data-theme='dark'] .tab-ink { background: color-mix(in srgb, var(--chalk) 16%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chalk) 22%, transparent); }
+/* the orb: a glowing yellow-to-amber light behind the active tab's icon */
+.tabs a::before { content: ''; position: absolute; z-index: -1; left: var(--orb-x, 7px); top: 50%; width: 34px; height: 34px; margin-top: -17px; border-radius: 50%;
+  background: radial-gradient(closest-side, var(--aurora-warm-1), color-mix(in srgb, var(--aurora-warm-2) 70%, transparent) 55%, transparent);
+  filter: blur(4px); opacity: 0; transform: scale(0.4); transition: opacity 0.3s var(--ease-out), transform 0.45s var(--ease-spring); }
+.tabs a[aria-current='page']::before { opacity: 0.9; transform: none; }
+.tabs a { isolation: isolate; }
+.theme-btn { border-radius: 50%; }
+.team-pick select { border-radius: 999px; background-color: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border); border: 0; color: var(--ink); font-weight: 500; }
+
+/* --- phones: the dock is a glass pill bar of round glass buttons; the tab you're on widens into a pill with its label
+   and the orb behind its icon. The circle beside it is the same glass --- */
+@media (max-width: 760px) {
+  :root { --page: calc(100% - 32px); --bar-w: min(540px, calc(100% - 32px)); }
+  .tabs { background: var(--glass-bg); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+    box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 12px 36px color-mix(in srgb, var(--tone-shade) 16%, transparent); border-radius: 999px; padding: 6px; gap: 6px; }
+  :root[data-theme='dark'] .tabs { background: var(--glass-bg); }
+  .tabs::before, .tabs::after, .me-btn::before, .me-btn::after, .me-panel::before, .me-panel::after { display: none; }
+  .tabs a { flex: 0 0 auto; width: calc(var(--dock-h) - 12px); display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 8px; padding: 0;
+    border-radius: 999px; font-size: 14px; font-weight: 600; background: color-mix(in srgb, var(--chalk) 34%, transparent); box-shadow: inset 0 0 0 1px var(--glass-border); }
+  :root[data-theme='dark'] .tabs a { background: color-mix(in srgb, var(--chalk) 6%, transparent); }
+  .tabs a[aria-current='page'] { flex: 1 1 auto; width: auto; padding: 0 16px 0 10px; justify-content: flex-start; background: transparent; box-shadow: none; }
+  .tabs a :is(.tn, .tl, .ts) { display: none; }
+  .tabs a[aria-current='page'] :is(.tn, .ts) { display: inline; }
+  .tabs .ti, .tabs a[aria-current='page'] .ti { width: 22px; height: 22px; transform: none; margin: 0 1px; }
+  .tabs a::before { --orb-x: 3px; width: 42px; height: 42px; margin-top: -21px; filter: blur(5px); }
+  .tab-ink { top: 6px; bottom: 6px; }
+  .tabs.dragging a.hot { color: var(--ink); }
+  .me-btn, .me-panel { background: var(--glass-bg); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+    box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 12px 36px color-mix(in srgb, var(--tone-shade) 16%, transparent); }
+  .me-btn-face { box-shadow: 0 0 0 3px var(--yellow); }
+  .me.open .me-btn-face { box-shadow: 0 0 0 3px var(--chalk); }
+  .me-panel { border-radius: var(--radius-card); }
+  .me-head { font-weight: 600; letter-spacing: -0.01em; }
+  .me-panel .theme-btn { border-radius: 999px; }
+}
+
+/* --- type: Inter at 400 to 600, tight on the big sizes, the brief's scale --- */
+.view-head :is(h1, .page-title) { font: 600 clamp(38px, 5.4vw, 64px)/1.02 var(--display); letter-spacing: -0.035em; color: var(--ink); }
+.view-head :is(h1, .page-title) .wk { font: 600 14px/1 var(--body); letter-spacing: 0; padding: 7px 12px; border-radius: 999px; color: var(--ink); background: var(--glass-bg-strong);
+  box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi); }
+.view-head p { color: var(--ink-2); font-size: 16.5px; }
+h2, h3, .sec-title { font-weight: 600; letter-spacing: -0.02em; }
+:is(.team-name, .mu-team .tn, .lead-hed, .gotw h2, .gotw h3, .me-head, .pth-build-top h3, .pth-part-head h4, .pth-receipt-text h3, .pth-invite b, .pth-side-name b, .pth-mine-name b) { font-weight: 600; letter-spacing: -0.02em; }
+.lead-hed { font-weight: 600; letter-spacing: -0.03em; }
+:is(.score, .odds b, .mu-team .pr, .wp-labels.odds, .gotw-score b, .cast-odds b, .odds-tag, .wr-num b, .wire-stats b, .pth-bar-odds b, .pth-side-odds b, .pth-wl > span b, .pth-stat b) { font-weight: 600; letter-spacing: -0.025em; }
+:is(.tier, .move, .chip, .kicker, .pth-imp, .pth-flag, .you, .tabs a, .filters :is(button, a)) { letter-spacing: 0; }
+.you { font-weight: 600; }
+
+/* --- section signs: a glass pill (text never sits on the raw aurora) --- */
+.sec-title, :is(.sec-title, .day > h3) { border-radius: 999px; background-color: var(--glass-bg-strong); background-image: none;
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi); font-weight: 600; }
+
+/* --- the rank numbers: big soft numerals in ink beside each card, the top three on a glowing yellow orb (yellow
+   means you, and it's also the line everyone is chasing) --- */
+.rank .jersey { font-weight: 600; letter-spacing: -0.06em; color: color-mix(in srgb, var(--ink) 82%, transparent); text-shadow: 0 2px 18px color-mix(in srgb, var(--chalk) 70%, transparent); }
+:root[data-theme='dark'] .rank .jersey { text-shadow: 0 2px 22px color-mix(in srgb, var(--island) 50%, transparent); }
+.rank:nth-child(-n + 3) .jersey { color: var(--ink); font-size: 128px; }
+.rank:nth-child(-n + 3) .jersey::before { content: ''; position: absolute; z-index: -1; left: 50%; top: 52%; width: 1.1em; height: 1.1em; border-radius: 50%;
+  transform: translate(-50%, -50%); background: radial-gradient(closest-side, color-mix(in srgb, var(--aurora-warm-1) 75%, transparent), color-mix(in srgb, var(--aurora-sun) 40%, transparent) 55%, transparent); }
+.rank-card, .rank:nth-child(-n + 3) .rank-card { border-radius: var(--radius-card); }
+.mine .rank-card { --ring-w: 3px; }
+
+/* --- the footer: no end zone, a glass card on the aurora --- */
+.footer { margin-top: 40px; color: var(--ink-2); }
+.footer::after, :root[data-theme='dark'] .footer::after { background: var(--glass-bg); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft); border-radius: var(--radius-card); }
+.footer .fine, :root[data-theme='dark'] .footer .fine { color: var(--ink-3); }
+.footer::before, :root[data-theme='dark'] .footer::before { display: none; }
+:is(.footer, :root[data-theme='dark'] .footer) :is(.sponsor p, .masthead) { color: var(--ink); }
+.footer .sponsor b, .footer .masthead b { color: var(--ink); font-weight: 600; }
+.footer .version, :root[data-theme='dark'] .footer .version { color: var(--ink-3); border-top-color: var(--line); }
+:root[data-theme='dark'] .footer { color: var(--ink-2); }
+.footer .masthead img { box-shadow: 0 0 0 3px var(--chalk); }
+
+/* --- the tooltip and the dark pills: deep teal glass with white words --- */
+.tip { background: color-mix(in srgb, var(--text-primary) 88%, transparent); color: var(--chalk); border-radius: 16px; box-shadow: 0 10px 30px color-mix(in srgb, var(--ink-day) 24%, transparent);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
+:root[data-theme='dark'] .tip { background: color-mix(in srgb, var(--tone-night) 90%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chalk) 14%, transparent); }
+.tx-top { background: var(--glass-bg); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft); }
+.pth-bar { background-color: var(--board); background-image: var(--hero-ribbon), var(--hero-grad); border-radius: var(--radius-tile);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chalk) 22%, transparent), 0 18px 40px -12px color-mix(in srgb, var(--tone-hero) 50%, transparent); }
+.pth-bar-picks button { border-radius: 999px; color: var(--text-primary); background: var(--chalk); box-shadow: none; }
+:is(.pth-coach, .pth-wcount) { background: var(--text-primary); color: var(--chalk); box-shadow: none; }
+.pth-coach { border-radius: 999px; }
+
+/* --- the base components on their own, for new work (the sample page, design/aurora.html, uses only these) --- */
+.ag-card { border-radius: var(--radius-card); padding: 24px; }
+.ag-hero { position: relative; border-radius: var(--radius-card); padding: 28px; overflow: hidden; }
+.ag-hero .ag-label { margin: 0; font-size: 15px; color: color-mix(in srgb, var(--chalk) 85%, transparent); }
+.ag-hero .ag-big { margin: 6px 0 22px; font: 500 clamp(32px, 4.4vw, 44px)/1.05 var(--display); letter-spacing: -0.03em; }
+.ag-dial { position: relative; display: grid; place-items: center; width: 220px; aspect-ratio: 1; flex: none; }
+.ag-dial svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ag-dial-core { position: relative; display: grid; place-items: center; text-align: center; width: 92px; height: 92px; border-radius: 50%; color: var(--text-primary);
+  background: var(--chalk); box-shadow: 0 0 0 12px color-mix(in srgb, var(--chalk) 32%, transparent), 0 10px 26px color-mix(in srgb, var(--tone-hero) 25%, transparent); }
+.ag-dial-core b { font: 600 22px/1 var(--display); letter-spacing: -0.03em; }
+.ag-dial-core small { font-size: 11.5px; color: var(--text-secondary); }
+.ag-chip { display: inline-grid; place-items: center; width: 48px; height: 48px; flex: none; border-radius: 50%; color: var(--text-primary);
+  background: color-mix(in srgb, var(--chalk) 40%, transparent); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi); }
+:root[data-theme='dark'] .ag-chip { color: var(--ink); background: color-mix(in srgb, var(--chalk) 10%, transparent); }
+.ag-chip svg { width: 20px; height: 20px; }
+.ag-tile { display: grid; grid-template-rows: auto 1fr auto; gap: 10px; min-height: 168px; padding: 16px 18px 18px; border-radius: var(--radius-tile); }
+.ag-tile .ag-stat { margin: 0; font: 600 clamp(26px, 3vw, 32px)/1.05 var(--display); letter-spacing: -0.03em; }
+.ag-tile .ag-sub { margin: 2px 0 0; font-size: 15px; color: var(--ink-3); }
+.ag-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 26px; font: 500 16px/1 var(--body); cursor: pointer; }
+
+/* --- 4.0, the second pass: what the first look turned up --- */
+/* the active tab and the Lab's section: the glass pill, not the old amber (the 3.0 list outranked a bare class) */
+.topbar .tabs .tab-ink, .topbar .tabs.dragging .tab-ink { background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--chalk), var(--glass-hi), 0 4px 14px color-mix(in srgb, var(--tone-shade) 10%, transparent); }
+:root[data-theme='dark'] .topbar .tabs .tab-ink { background: color-mix(in srgb, var(--chalk) 16%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chalk) 22%, transparent); }
+@media (max-width: 760px) { .topbar .tabs .tab-ink { box-shadow: inset 0 0 0 1px var(--chalk), var(--glass-hi), 0 4px 14px color-mix(in srgb, var(--tone-shade) 12%, transparent); } }
+.lab-tabs { background: var(--glass-bg); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft); border-radius: var(--radius-tile); }
+.lab-tabs a, .lab-tabs a[aria-current='page'] { border-radius: 18px; }
+.lab-tabs a[aria-current='page'] { color: var(--sel-ink); background: var(--sel-bg); box-shadow: 0 6px 18px color-mix(in srgb, var(--ink-day) 18%, transparent); }
+.lab-tabs a[aria-current='page'] * { color: inherit; }
+:root[data-theme='dark'] .lab-tabs a[aria-current='page'] { color: var(--sel-ink); }
+/* the rank-1 chalk ring was drawn for the grass */
+.rank:first-child .jersey::after { content: none; }
+/* the playoff-odds ring: a glass disc with ink type and a green arc (yellow when it's yours) */
+.aring { --aring-c: var(--good); color: var(--ink); background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi); }
+:root[data-theme='dark'] .aring { --aring-c: var(--good); box-shadow: inset 0 0 0 1px var(--glass-border); }
+.aring.you { --aring-c: var(--mine-edge); }
+.aring-n b, .odds .aring-n b, .ys-odds .aring-n b { color: var(--ink); font-weight: 600; }
+/* the headline frame's dots and labels sit on glass now: ink, not chalk */
+.car-nav { color: var(--ink); }
+.car-nav .cg-label { color: var(--ink-3); }
+.car-nav .car-group:has(.car-dot[aria-current='true']) .cg-label { color: var(--ink); }
+.car-nav .car-dot { background: color-mix(in srgb, var(--ink) 18%, transparent); }
+@media (pointer: coarse), (max-width: 760px) {
+  .car-nav .car-dot { background: transparent; }
+  .car-nav .car-dot::before { background: color-mix(in srgb, var(--ink) 18%, transparent); }
+}
+/* the dial sits lower on the card, clear of the headline photos, and fainter on a phone */
+.car-card { background-position: calc(100% + 140px) 46%, 0 0, 0 0; }
+@media (max-width: 760px) { .car-card { background-size: 300px 300px, 100% 100%, 100% 100%; background-position: calc(100% + 150px) 52%, 0 0, 0 0; } }
+.car-nav .car-dot i { background: var(--ink); }
+@media (max-width: 760px) { .car-nav .car-group:has(.car-dot[aria-current='true']) .cg-label::before { box-shadow: 0 0 0 2px var(--ink); } }
+/* charts: soft plates, rounded bars, no gloss strip or ledge */
+.chart .plate { fill: color-mix(in srgb, var(--chalk) 34%, transparent); stroke: var(--glass-border); stroke-width: 1; }
+.chart .plate.light, :root[data-theme='dark'] .chart .plate.light { fill: var(--glass-bg-strong); stroke: var(--glass-border); }
+:root[data-theme='dark'] .chart .plate { fill: color-mix(in srgb, var(--chalk) 4%, transparent); stroke: var(--glass-border); }
+.chart .bar { stroke: none; }
+.chart .bar-ledge, .chart .bar-gloss { display: none; }
+/* the face-off: the two sides as tinted glass, the matchup colours kept as tints */
+.fo-side.a { background: color-mix(in srgb, var(--a) 42%, var(--glass-bg-strong)); }
+.fo-side.b { background: color-mix(in srgb, var(--b) 48%, var(--glass-bg-strong)); }
+/* the first-open nudge: a yellow-tinted glass pull, not a slab of amber */
+.rank.nudge:not(.open) .pull { background: color-mix(in srgb, var(--aurora-sun) 72%, var(--glass-bg-strong)); color: var(--text-primary); box-shadow: inset 0 0 0 1px var(--glass-border); }
+.pull, .rank-card .pull { background: color-mix(in srgb, var(--chalk) 22%, transparent); }
+
+/* --- the team dashboard comes along (Dan, Nov 19): the Paper Widgets shapes stay, its colours and type move to the
+   aurora. The sheet is a clear tray, each tile a glass pane; clay became grass, violet the deep sky, apricot amber --- */
+.paper, :root[data-theme='dark'] .paper {
+  --p-bg: transparent; --p-tile: var(--glass-bg); --p-ink: var(--ink); --p-muted: var(--ink-3); --p-white: var(--glass-bg-strong);
+  --p-accent: var(--tone-field-45); --p-accent-ink: var(--tone-field-27); --p-hot: var(--tone-sky-38); --p-hot-ink: var(--tone-sky-38); --p-hot-ledge: transparent;
+  --p-sun: var(--aurora-warm-2); --p-lilac: var(--aurora-cyan);
+  --p-easy: var(--tone-field-45); --p-easy-bg: var(--good-bg); --p-easy-ink: var(--good);
+  --p-toss: var(--tone-grey-56); --p-toss-bg: color-mix(in srgb, var(--chalk) 50%, transparent); --p-toss-ink: var(--ink-2);
+  --p-hard: var(--tone-clay-49); --p-hard-bg: var(--bad-bg); --p-hard-ink: var(--bad);
+  --p-line: var(--line); --p-wash: var(--glass-fill); --p-track: var(--tile-2); --p-hair: var(--line); --p-marker: color-mix(in srgb, var(--ink) 18%, transparent);
+  --p-dotted: color-mix(in srgb, var(--ink) 30%, transparent);
+  --p-sans: var(--body); --p-mono: var(--body);
+  --p-label: 500 14px var(--body);
+  --p-edge: 0px; --p-edge-c: transparent; --p-ledge: transparent;
+  --p-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft);
+  --p-chip: inset 0 0 0 1px var(--glass-border);
+  --p-well: inset 0 0 0 1px var(--glass-border);
+  --p-dark: var(--tone-hero); --p-dark-text: var(--chalk); --p-dark-muted: color-mix(in srgb, var(--chalk) 78%, transparent);
+  border-radius: var(--radius-card); background-color: var(--glass-fill); box-shadow: inset 0 0 0 1px var(--glass-border);
+}
+:root[data-theme='dark'] .paper { --p-accent: var(--tone-field-66); --p-accent-ink: var(--tone-field-71); --p-hot: var(--tone-sky-72); --p-hot-ink: var(--tone-sky-72); --p-hard: var(--tone-clay-76); --p-dark: var(--tone-hero-night); }
+.pp-tile { border-radius: var(--radius-card); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
+.pp-tile.pp-val, .pv-card { background-image: var(--hero-ribbon), var(--hero-grad); }
+.pp-face-img, .pp-face .ph { box-shadow: 0 0 0 3px var(--chalk), var(--shadow-soft); }
+.pp-id p:first-child::before { box-shadow: none; }
+.pp-id h2 { font-weight: 500; letter-spacing: -0.035em; }
+.pp-pick select { background-color: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border); color: var(--ink); }
+.pp-share { color: var(--sel-ink); background: var(--sel-bg); box-shadow: 0 8px 22px color-mix(in srgb, var(--ink-day) 18%, transparent); }
+.ag-hero { background-image: var(--hero-ribbon), var(--hero-grad); background-size: 100% 100%; background-position: 0 0; }
+/* the primary action wears the hero card's gradient; selected stays solid ink, so the two never read the same */
+:root :is(.cta, .pth-share:not(.alt), .pth-invite, .ag-btn.primary) { color: var(--chalk); background-color: var(--board); background-image: var(--hero-ribbon), var(--hero-grad);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chalk) 25%, transparent), 0 10px 26px -8px color-mix(in srgb, var(--tone-hero) 45%, transparent); }
+
+/* --- what floats over the page (sheets, panels, notes, overlays' cards) is a stronger glass, so its words never sit
+   over the busy cards scrolling behind it: 84% white under the same blur (the night: a deep navy at 88%) --- */
+:root { --glass-float: rgba(250, 252, 250, 0.84); }
+:root[data-theme='dark'] { --glass-float: rgba(16, 24, 38, 0.88); }
+:is(.bz-install, .tx-hello, .share-sheet > :first-child, .unveil-card, .me-panel, .lockout .glass, .takeover .glass, .adm-toast) {
+  background-color: var(--glass-float) !important; background-image: none;
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 18px 50px color-mix(in srgb, var(--tone-shade) 20%, transparent); }
+.unveil { background: color-mix(in srgb, var(--aurora-base) 55%, transparent); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); }
+.unveil-team { border-radius: var(--radius-tile); background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border); }
+.unveil-team:active { transform: none; box-shadow: inset 0 0 0 1px var(--glass-border); }
+.unveil-team.mine { box-shadow: 0 0 0 3px var(--yellow); }
+.unveil-card h2 { font-weight: 600; letter-spacing: -0.025em; }
+/* a live week puts six tabs in the dock: the round buttons share the width, and the one you're on keeps only its orb */
+@media (max-width: 760px) {
+  .tabs a { flex: 0 1 50px; min-width: 36px; width: auto; }
+  .tabs a[aria-current='page'] { flex: 1 0 auto; }
+  .tabs:has(a[data-view='live']:not([hidden])) a { flex: 1 1 0; }
+  .tabs:has(a[data-view='live']:not([hidden])) a[aria-current='page'] { justify-content: center; padding: 0; }
+  .tabs:has(a[data-view='live']:not([hidden])) a[aria-current='page'] :is(.tn, .ts) { display: none; }
+  .tabs:has(a[data-view='live']:not([hidden])) a::before { left: 50%; margin-left: -21px; }
+}
+/* the front page's way into the playoff scenarios: the primary action's gradient, its sweep of light kept, no gloss half */
+:root .pth-cta { color: var(--chalk); background-color: var(--board); background-image: var(--hero-ribbon), var(--hero-grad);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chalk) 25%, transparent), 0 10px 26px -8px color-mix(in srgb, var(--tone-hero) 45%, transparent); }
+.pth-cta::before { display: none; }
+:root .pth-cta:active { transform: none; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chalk) 25%, transparent); }
+.pth-cta-new { color: var(--text-primary); background: var(--aurora-sun); box-shadow: none; }
+.pth-cta-label { font-weight: 600; letter-spacing: -0.01em; }
+.pth-cta .spk { filter: none; }

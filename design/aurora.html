@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Aurora Glass: the 4.0 system</title>
+  <!-- A sample page for the 4.0 design system (styles.css, "4.0: aurora glass"). It uses only the base components:
+       the aurora (.sky), .ag-card, .ag-hero with .ag-dial, .ag-chip, .ag-tile, .ag-btn and the site's own dock.
+       Not part of the build (vite only bundles index.html); open it with `npm run dev` at /design/aurora.html. -->
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    body { display: block; }
+    .demo { width: min(1040px, calc(100% - 32px)); margin: 0 auto; padding: 40px 0 140px; display: grid; gap: 18px; }
+    .demo-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 14px 12px 12px; }
+    .hello { display: flex; align-items: center; gap: 14px; }
+    .hello img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 3px var(--chalk), var(--shadow-soft); }
+    .hello p { margin: 0; font-size: 17px; line-height: 1.35; color: var(--ink-2); }
+    .hello p em { color: var(--ink); }
+    .row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .ag-tile header { display: flex; align-items: center; gap: 12px; font-size: 17px; font-weight: 500; }
+    .ag-hero { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 300px; }
+    .ag-hero .ag-btn { margin-right: 8px; }
+    .btns { display: flex; flex-wrap: wrap; gap: 12px; padding: 22px; }
+    .demo h2 { margin: 18px 4px 0; font-size: 15px; font-weight: 500; color: var(--ink-3); }
+    .demo .tabs { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); display: flex; height: 62px; padding: 6px; gap: 6px; border-radius: 999px; z-index: 20;
+      background: var(--glass-bg); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 12px 36px rgba(30, 70, 60, 0.16); }
+    .demo .tabs a { width: 50px; justify-content: center; padding: 0; background: color-mix(in srgb, var(--chalk) 34%, transparent); box-shadow: inset 0 0 0 1px var(--glass-border); }
+    .demo .tabs a[aria-current='page'] { width: auto; padding: 0 18px 0 12px; background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--chalk), var(--glass-hi); }
+    .demo .tabs a::before { --orb-x: 5px; width: 40px; height: 40px; margin-top: -20px; }
+    .demo .tabs .ti { width: 22px; height: 22px; }
+    .demo .tabs a:not([aria-current='page']) span { display: none; }
+    @media (max-width: 760px) { .row3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ag-hero { flex-direction: column; align-items: flex-start; } .ag-dial { align-self: center; } }
+    @media (max-width: 480px) { .row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="sky" aria-hidden="true"><span class="cloud c1"></span><span class="cloud c2"></span><span class="cloud c3"></span></div>
+  <main class="demo">
+    <div class="demo-top">
+      <div class="hello">
+        <img src="../assets/heads/daniyal.jpg" alt="">
+        <p>Hey, Dan<br><em>Welcome to The Power Hour.</em></p>
+      </div>
+      <button class="ag-chip" type="button" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5a6 6 0 0 0-6 6v3.6l-1.7 3.1A1.2 1.2 0 0 0 5.4 17h13.2a1.2 1.2 0 0 0 1.1-1.8L18 12.1V8.5a6 6 0 0 0-6-6Zm-2.6 16a2.7 2.7 0 0 0 5.2 0Z"/></svg></button>
+    </div>
+
+    <div class="row">
+      <article class="ag-card ag-tile">
+        <header><span class="ag-chip"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 21v-8h5v8Zm6 0V4h5v17Zm6 0V9h5v12Z"/></svg></span>Power rank</header>
+        <span></span>
+        <div><p class="ag-stat">No. 7</p><p class="ag-sub">Up one since last week</p></div>
+      </article>
+      <article class="ag-card ag-tile">
+        <header><span class="ag-chip"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 3h10v3a5 5 0 0 1-4 4.9V14h3v3H8v-3h3v-3.1A5 5 0 0 1 7 6Zm-4 1h3v2a3 3 0 0 1-3-2Zm15 0h3a3 3 0 0 1-3 2ZM6 19h12v2H6Z"/></svg></span>Playoff odds</header>
+        <span></span>
+        <div><p class="ag-stat">44%</p><p class="ag-sub">20,000 seasons played out</p></div>
+      </article>
+    </div>
+
+    <section class="ag-hero">
+      <div>
+        <p class="ag-label">Your next game</p>
+        <p class="ag-big">Week 8 against Akrm</p>
+        <button class="ag-btn" type="button">See the breakdown</button>
+      </div>
+      <div class="ag-dial" aria-label="55% to win">
+        <svg viewBox="0 0 220 220" aria-hidden="true">
+          <g fill="none" stroke="#fff">
+            <circle cx="110" cy="110" r="102" stroke-opacity=".55" stroke-width="10" stroke-dasharray="1.4 5.6"/>
+            <circle cx="110" cy="110" r="80" stroke-opacity=".38" stroke-width="1.5"/>
+            <circle cx="110" cy="110" r="80" stroke-opacity=".95" stroke-width="3" stroke-linecap="round" stroke-dasharray="276 503" transform="rotate(-90 110 110)"/>
+            <path d="M30 150 12 158M168 176l14 18" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="3 4"/>
+          </g>
+        </svg>
+        <div class="ag-dial-core"><div><b>55%</b><br><small>to win</small></div></div>
+      </div>
+    </section>
+
+    <div class="row3">
+      <article class="ag-card ag-tile"><header><span class="ag-chip"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 7h14l-3-3 1.4-1.4L21 8l-5.6 5.4L14 12l3-3H3Zm18 10H7l3 3-1.4 1.4L3 16l5.6-5.4L10 12l-3 3h14Z"/></svg></span></header><span></span><p class="ag-stat" style="font-size:18px;font-weight:500">The Wire</p></article>
+      <article class="ag-card ag-tile"><header><span class="ag-chip"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3.5c1.3 5.9-.1 11-3.3 14.1S9.3 22.1 3.5 20.8C2.2 14.9 3.6 9.8 6.8 6.7S14.6 2.2 20.5 3.5Zm-6.7 5.3-5 5 1.4 1.4 5-5Z"/></svg></span></header><span></span><p class="ag-stat" style="font-size:18px;font-weight:500">Games</p></article>
+      <article class="ag-card ag-tile"><header><span class="ag-chip"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 2h6v2h-1v5.2l5.7 9.6A2.1 2.1 0 0 1 17.9 22H6.1a2.1 2.1 0 0 1-1.8-3.2L10 9.2V4H9Z"/></svg></span></header><span></span><p class="ag-stat" style="font-size:18px;font-weight:500">The Lab</p></article>
+    </div>
+
+    <h2>Buttons: press one to see the aurora shimmer through it</h2>
+    <div class="ag-card btns">
+      <button class="ag-btn" type="button">Glass pill</button>
+      <button class="ag-btn on" type="button" aria-pressed="true">Selected</button>
+      <button class="ag-btn primary" type="button">Primary action</button>
+      <button class="ag-btn" type="button" disabled>Not yet</button>
+    </div>
+
+    <nav class="tabs" aria-label="Sample navigation">
+      <a href="#" aria-current="page"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20v-7h5v7M9.5 20V5h5v15M15 20V10h5v10M2.5 20h19"/></svg><span>Rankings</span></a>
+      <a href="#"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h15l-3.5-3.5M20 16H5l3.5 3.5"/></svg><span>Wire</span></a>
+      <a href="#"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20c-1.2-5.6.2-10.4 3.2-13.2S14.4 2.8 20 4c1.2 5.6-.2 10.4-3.2 13.2S9.6 21.2 4 20Z"/><path d="M9.3 14.7l5.4-5.4M10.5 11l2.5 2.5"/></svg><span>Games</span></a>
+      <a href="#"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5.5 9.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3M7.6 15h8.8"/></svg><span>Lab</span></a>
+    </nav>
+  </main>
+  <script type="module">
+    import { initTouch } from '../src/touch.js';
+    initTouch({ placeInk() {} });
+    // a sample nav: tapping a tab moves the orb and the label
+    const tabs = [...document.querySelectorAll('.demo .tabs a')];
+    tabs.forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); tabs.forEach((t) => t.removeAttribute('aria-current')); a.setAttribute('aria-current', 'page'); }));
+  </script>
+</body>
+</html>

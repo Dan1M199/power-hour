@@ -12,7 +12,7 @@ const C = {
   grass: '#3E9F46', stripe: '#359A3F', slab: '#1D5F28', face: '#F7FAF3', well: '#E6EEDC', ink: '#0B2412', ink3: '#47604C',
   good: '#28702C', bad: '#C62828', line: '#BFD2AE',
 };
-const FONT = "'Albert Sans', 'Segoe UI', system-ui, sans-serif";
+const FONT = "'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif";
 const rr = (ctx, x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); };
 const pct = (x) => (x == null ? '–' : x > 0 && x < 0.005 ? '<1%' : x < 1 && x > 0.995 ? '>99%' : `${Math.round(x * 100)}%`);
 const signed = (d) => `${d >= 0 ? '+' : '−'}${Math.abs(Math.round(d * 100))}%`;

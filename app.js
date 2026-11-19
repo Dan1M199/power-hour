@@ -284,7 +284,7 @@ function initTheme() {
     html.classList.add('theme-switching');
     html.dataset.theme = t;
     setTimeout(() => html.classList.remove('theme-switching'), 60); // a timer, not frames: a background tab runs none
-    $('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#0A1630' : '#4FBDF2');
+    $('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#0B1322' : '#EEF3F0');
     btn?.setAttribute('aria-label', t === 'dark' ? 'Switch to the day game (light mode)' : 'Switch to the night game (dark mode)');
   };
   paint(html.dataset.theme === 'dark' ? 'dark' : 'light');

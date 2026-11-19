@@ -59,7 +59,8 @@ function initPress() {
   };
 
   document.addEventListener('pointerdown', (e) => {
-    if (e.pointerType === 'mouse' || calm() || !e.isPrimary) return;
+    if (calm() || !e.isPrimary || e.button > 0) return;
+    const mouse = e.pointerType === 'mouse';
     const hit = e.target.closest?.(PRESSABLE);
     if (!hit || hit.closest(HANDS_OFF)) return;
     // a ranking row's button is its whole card's face, so the card is what dips
@@ -67,12 +68,22 @@ function initPress() {
     const r = node.getBoundingClientRect();
     if (!r.width || !r.height) return;
     release();
-    held = node;
-    // the dip: about 5px off the longer side, so a pill visibly gives and a card barely breathes
-    const s = Math.max(0.93, 1 - 5 / Math.max(r.width, r.height));
-    dip = node.animate([{ scale: '1' }, { scale: String(s) }], { duration: 110, easing: 'ease-out', fill: 'forwards' });
-    // the light: a box the shape of the thing pressed, a bubble growing in it from under the finger
+    // the dip: about 5px off the longer side, so a pill visibly gives and a card barely breathes. A mouse gets the
+    // stylesheet's own 0.97 press instead (4.0), so only a finger or a pen dips here
+    if (!mouse) {
+      held = node;
+      const s = Math.max(0.93, 1 - 5 / Math.max(r.width, r.height));
+      dip = node.animate([{ scale: '1' }, { scale: String(s) }], { duration: 110, easing: 'ease-out', fill: 'forwards' });
+    }
+    // the light (4.0, aurora glass): a box the shape of the thing pressed, the aurora shimmering through it (an
+    // iridescent sweep and a sheen, .go) and a bloom growing from the pointer. Light words mean a dark or saturated
+    // fill, where the shimmer is screened on; on glass it's multiplied, so dark words stay crisp
     const cs = getComputedStyle(node);
+    const rgb = (cs.color.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+    lens.classList.toggle('light', rgb.length === 3 && 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2] > 150);
+    lens.classList.remove('go');
+    void lens.offsetWidth;
+    lens.classList.add('go');
     lens.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;border-radius:${cs.borderRadius}`;
     const reach = Math.hypot(Math.max(e.clientX - r.left, r.right - e.clientX), Math.max(e.clientY - r.top, r.bottom - e.clientY));
     const d = Math.min(2 * reach, 520);
@@ -305,10 +316,10 @@ function initTopPill() {
 // ---------- hello ----------
 // Once per device: a glass note above the dock that names the update and the one gesture nobody would guess.
 function hello() {
-  const KEY = 'ph-hello-30';
+  const KEY = 'ph-hello-40';
   if (root.classList.contains('admin-mode') || root.classList.contains('locked')) return;
   try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, '1'); } catch { return; }
-  const note = el('div', 'tx-hello', `<b>3.0</b><span><strong>The Power Hour 3.0.</strong> ${phone() ? 'A new look in flat blocks. Swipe sideways on any page to change tabs.' : 'A new look in flat blocks, on every page.'}</span>`);
+  const note = el('div', 'tx-hello', `<b>4.0</b><span><strong>The Power Hour 4.0.</strong> ${phone() ? 'A new look in frosted glass. Swipe sideways on any page to change tabs.' : 'A new look in frosted glass, on every page.'}</span>`);
   note.setAttribute('role', 'status');
   document.body.append(note);
   const close = () => { note.classList.remove('on'); setTimeout(() => note.remove(), 500); };
