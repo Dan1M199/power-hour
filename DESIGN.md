@@ -147,6 +147,9 @@ The rules live in the last block of `styles.css` ("4.0: aurora glass"), which re
 - `--glass-blur`: `blur(24px) saturate(160%)`. Without `backdrop-filter`, glass falls back to `--glass-solid` (86% white).
 - Night: glass at 8% / 14% / 6% white, borders 14%.
 
+### The living silk (4.1)
+Since Nov 19 the aurora is a live WebGL silk (`src/silk.js`, `initSilk()` from `main()`): one sheet of colour folding over itself with a sheen along the folds and the warm streak, drawn at about 40% of the screen's resolution behind everything, at most 30 fps on phones and 45 elsewhere. It has a mood per page, all in the league's colours: Rankings green and gold, Live hot yellow and amber (and faster while games are on), Wire cool cyan and mint drifting sideways, Games sky blue folding into amber (the two sides of a matchup), the Lab mint, lime and cyan. A tab change crossfades the mood over about a second and a half and sends a surge through the silk on the pill's beat. The mouse leans on it, scrolling slides it slowly. It pauses when the tab is hidden, the page is locked or the desk is open; reduced motion and Save-Data draw one still frame per mood; without WebGL the CSS blobs above stay. Night: the same silk at a third of its strength on navy.
+
 ### The hero
 `--hero-grad`: deep grass #1F7A45 → teal #16787A → deep sky #2A6CAE, with `--hero-ribbon` (soft light through it) and `--hero-dial` (two translucent rings and a ring of ticks, drawn behind the type). White type clears 4.5:1 across the whole gradient. Glass pills on it are 18% white with a white hairline and white words.
 
@@ -178,7 +181,9 @@ Glass pills (`--glass-bg-strong`, hairline, top edge). Hover lifts 1px and the h
 `src/touch.js` `initPress`: one lens on `<body>` takes the shape of whatever is pressed (mouse, finger or pen), and on each press an iridescent sweep (`--iris`: yellow, lime, mint, cyan, sky, gold) brightens and slides across in 0.7 s, a diagonal sheen crosses in 0.6 s, and a bloom grows from the pointer. Multiplied over glass so dark words stay crisp; screened over dark or saturated fills (picked from the pressed element's text colour). No control's own `::before`/`::after` is touched. Off under reduced motion.
 
 ### Navigation
-Desktop: tabs with their icons in the glass header; the active tab is a brighter glass pill (`.tab-ink`) with a glowing yellow-to-amber orb behind its icon. Phones: the dock is a glass pill bar of round glass buttons; the tab you're on widens into a pill with its label and the orb. In a live week (six tabs) the buttons share the width and the active one keeps only its orb.
+Desktop: tabs with their icons in the glass header. Phones: the dock is a glass pill bar of round glass buttons; the tab you're on widens into a pill with its label (in a live week, six tabs, the labels drop). The active tab is lit all the way across (4.1): `--tab-glow`, a warm light from yellow into amber with a bright top edge, and `--tab-halo`, a soft amber glow around it; its words are dark ink in both themes.
+
+**The glide.** A tab change stretches the pill: its leading edge sets off at once and the trailing edge catches up (`worm` in `app.js`, 560 ms), so it reaches toward the new tab and gathers itself there. On phones the dock's tabs slide to their new places on the same clock (a FLIP) and the new label fades in a beat behind. On desktop the page change is a view transition, so the same keyframes drive the transition's own pill (`::view-transition-group(tab-ink)`, drawn as real CSS and multiplied over the header so the names show through). Interrupted mid-glide, it starts from where it is. Reduced motion snaps.
 
 ### Cards and tiles
 Cards 30px, tiles and nested panels 24px, controls and tags full pills, faces circles. Icon chips are 48px glass circles with solid 20px glyphs.

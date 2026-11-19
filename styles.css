@@ -5590,3 +5590,33 @@ h2, h3, .sec-title { font-weight: 600; letter-spacing: -0.02em; }
 .pth-cta-new { color: var(--text-primary); background: var(--aurora-sun); box-shadow: none; }
 .pth-cta-label { font-weight: 600; letter-spacing: -0.01em; }
 .pth-cta .spk { filter: none; }
+
+/* ---------- 4.1: the glowing tab, the glide, and the living silk (Dan's request Nov 19) ---------- */
+:root {
+  /* the active tab is lit all the way across: a warm light from yellow into amber, a bright top edge, a soft halo */
+  --tab-glow: radial-gradient(90% 140% at 26% 18%, color-mix(in srgb, var(--chalk) 72%, transparent) 0, transparent 46%),
+    linear-gradient(100deg, var(--aurora-warm-1) 0%, var(--aurora-sun) 46%, color-mix(in srgb, var(--aurora-warm-2) 78%, var(--aurora-sun)) 100%);
+  --tab-halo: inset 0 0 0 1px color-mix(in srgb, var(--chalk) 65%, transparent), inset 0 1px 0 var(--chalk),
+    0 0 22px color-mix(in srgb, var(--aurora-warm-2) 42%, transparent), 0 6px 16px -4px color-mix(in srgb, var(--aurora-warm-2) 55%, transparent);
+}
+/* the orb behind the icon is gone: the whole pill is the light now */
+.tabs a::before { content: none; }
+:root .topbar .tabs .tab-ink, :root .topbar .tabs.dragging .tab-ink, :root[data-theme='dark'] .topbar .tabs .tab-ink {
+  background: var(--tab-glow); box-shadow: var(--tab-halo); transition: none; }
+/* a finger sliding along the dock still gets its quick follow */
+:root .topbar .tabs.dragging .tab-ink { transition: transform 0.22s var(--ease-out); }
+.tabs a[aria-current='page'], :root[data-theme='dark'] .tabs a[aria-current='page'], .tabs.dragging a.hot { color: var(--ink-day); }
+/* phones: the label arrives with the pill, a beat behind it */
+@media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
+  .tabs a[aria-current='page'] :is(.tn, .ts) { animation: tab-label 0.42s var(--ease-out) 0.12s both; }
+  @keyframes tab-label { from { opacity: 0; transform: translateX(-6px); } }
+}
+/* desktop page changes: the transition draws its own pill (the glide's keyframes come from placeInk in app.js), as real
+   CSS rather than a stretched picture, multiplied over the header so the tab names stay readable through it */
+::view-transition-group(tab-ink) { border-radius: 999px; background: var(--tab-glow); box-shadow: var(--tab-halo); mix-blend-mode: multiply; animation-duration: 0.56s; }
+:root[data-theme='dark']::view-transition-group(tab-ink) { mix-blend-mode: screen; }
+::view-transition-old(tab-ink), ::view-transition-new(tab-ink) { animation: none; opacity: 0; }
+/* the silk (src/silk.js): a low-resolution canvas stretched over the sky, softened by its own upscaling. While it runs
+   the CSS blobs step aside; without WebGL they stay */
+.sky .silk { position: absolute; inset: 0 auto auto 0; width: 100%; height: 100lvh; display: block; }
+html.silk-on .sky :is(.cloud), html.silk-on .sky::before { display: none; }
