@@ -5655,7 +5655,7 @@ html.silk-on .sky :is(.cloud), html.silk-on .sky::before { display: none; }
    The glass football: its picture had the ball's tips cut flat by its own frame (the viewBox), and it sat half off the
    card's corner. The frame now holds the whole tilted ball, and it lies wholly inside the card, right of centre over the
    cast rows, at a size that fits each width (4.2's positions above are replaced). */
-:root { --glass-blur: blur(34px) saturate(170%);
+:root { --glass-blur: blur(34px) saturate(170%); --haze: rgba(255, 252, 230, 0.32);
   --glass-light: radial-gradient(130% 90% at 12% -8%, rgba(255, 255, 255, 0.42) 0, rgba(255, 255, 255, 0.12) 38%, rgba(255, 255, 255, 0) 66%),
     radial-gradient(90% 70% at 100% 110%, rgba(255, 246, 205, 0.18) 0, rgba(255, 246, 205, 0) 60%); }
 :root[data-theme='dark'] { --aurora-base: #1A3A20;
@@ -5664,12 +5664,51 @@ html.silk-on .sky :is(.cloud), html.silk-on .sky::before { display: none; }
 .glass, .ag-card { background-image: var(--glass-light); }
 /* a faint haze of light over the whole sky, screened on, so the silk reads as lit from above rather than painted */
 html.silk-on .sky::after { content: ''; position: absolute; inset: 0; mix-blend-mode: screen; pointer-events: none;
-  background: radial-gradient(120% 60% at 50% -10%, rgba(255, 252, 230, 0.32) 0, rgba(255, 252, 230, 0) 70%); }
+  background: radial-gradient(120% 60% at 50% -10%, var(--haze) 0, transparent 70%); }
 :root[data-theme='dark'].silk-on .sky::after {
-  background: radial-gradient(120% 60% at 50% -10%, rgba(200, 240, 190, 0.08) 0, rgba(200, 240, 190, 0) 70%); }
+  --haze: rgba(200, 240, 190, 0.08); }
 
 /* the bar the browser draws and the overscroll match the lit top of the silk (the theme colour in index.html and app.js) */
 :root { --aurora-top: #C2DAA6; }
 :root[data-theme='dark'] { --aurora-top: #33532E; }
 html { background: var(--aurora-top); }
 html.admin-mode { background: var(--np-paper); }
+
+/* ---------- 4.3: the new sponsor (Dan's request Nov 19) ----------
+   Grand Slam Car Wash & Lube, its logo set in glass at the foot of the page: a frosted tile, the logo floating on it,
+   a gloss and a slow band of light masked to the logo's own shape (transform only), so the light sits on the badge, not
+   the tile. TTP is crossed out and banned, its logo greyed under a red slash. */
+.footer .gs-sponsor { display: flex; align-items: center; gap: 18px; margin: 12px 0 14px; }
+.gs-glass { flex: none; position: relative; display: block; width: 168px; padding: 14px 14px 12px; border-radius: 26px; isolation: isolate;
+  background-color: var(--glass-bg-strong); background-image: var(--glass-light);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), inset 0 -10px 24px -14px color-mix(in srgb, var(--aurora-cyan) 70%, transparent), var(--shadow-soft); }
+/* a soft reflection of the badge pooling on the tile's floor */
+.gs-glass::after { content: ''; position: absolute; z-index: -1; left: 18%; right: 18%; bottom: 8px; height: 18px; border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--aurora-cyan) 55%, transparent), transparent); filter: blur(4px); }
+.gs-logo { position: relative; display: block; }
+.footer .sponsor .gs-logo img { display: block; width: 100%; height: auto; filter: drop-shadow(0 6px 10px color-mix(in srgb, var(--island) 22%, transparent)) saturate(1.06); }
+.gs-shine { position: absolute; inset: 0; overflow: hidden; pointer-events: none; mix-blend-mode: screen;
+  -webkit-mask: url("assets/grand-slam-logo.webp") center / 100% 100% no-repeat; mask: url("assets/grand-slam-logo.webp") center / 100% 100% no-repeat; }
+.gs-shine::before { content: ''; position: absolute; inset: 0;
+  background: linear-gradient(168deg, color-mix(in srgb, var(--chalk) 55%, transparent) 0, color-mix(in srgb, var(--chalk) 18%, transparent) 34%, rgba(255, 255, 255, 0) 48%),
+    radial-gradient(60% 40% at 30% 18%, color-mix(in srgb, var(--chalk) 35%, transparent), rgba(255, 255, 255, 0) 70%); }
+.gs-shine::after { content: ''; position: absolute; top: -20%; bottom: -20%; left: 0; width: 34%;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0, color-mix(in srgb, var(--chalk) 70%, transparent) 50%, rgba(255, 255, 255, 0) 100%);
+  transform: translateX(-120%) skewX(-16deg); }
+@media (prefers-reduced-motion: no-preference) {
+  .gs-shine::after { animation: gs-sweep 5.2s var(--ease-out) 1.2s infinite; }
+  @keyframes gs-sweep { 0% { transform: translateX(-120%) skewX(-16deg); } 38%, 100% { transform: translateX(320%) skewX(-16deg); } }
+}
+.gs-words p { margin: 0 0 6px; }
+.gs-words p:last-child { margin: 0; }
+.footer .sponsor .gs-words b { color: var(--ink); font-weight: 700; }
+.gs-ban { display: flex; align-items: center; gap: 10px; }
+.ttp-banned { flex: none; position: relative; display: block; width: 34px; }
+.footer .sponsor .ttp-banned img { display: block; width: 100%; height: auto; filter: grayscale(1); opacity: 0.55; }
+.ttp-banned::after { content: ''; position: absolute; left: -4px; right: -4px; top: 50%; height: 3px; border-radius: 3px;
+  background: var(--bad); transform: rotate(-32deg); }
+@media (max-width: 760px) {
+  .footer .gs-sponsor { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .gs-glass { width: 150px; }
+}
