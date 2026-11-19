@@ -148,9 +148,13 @@ The rules live in the last block of `styles.css` ("4.0: aurora glass"), which re
 - Night: glass at 8% / 14% / 6% white, borders 14%.
 
 ### The living silk (4.1)
+4.2: the silk and the page are turf green now (base #55A653 by day, #0A1A0F at night), woven from field greens with faint mowing stripes bent through the silk; each page's mood keeps its accent (Games still folds sky blue into amber, Live still runs warm). Words that sit straight on the turf (page intros) wear full ink.
+
 Since Nov 19 the aurora is a live WebGL silk (`src/silk.js`, `initSilk()` from `main()`): one sheet of colour folding over itself with a sheen along the folds and the warm streak, drawn at about 40% of the screen's resolution behind everything, at most 30 fps on phones and 45 elsewhere. It has a mood per page, all in the league's colours: Rankings green and gold, Live hot yellow and amber (and faster while games are on), Wire cool cyan and mint drifting sideways, Games sky blue folding into amber (the two sides of a matchup), the Lab mint, lime and cyan. A tab change crossfades the mood over about a second and a half and sends a surge through the silk on the pill's beat. The mouse leans on it, scrolling slides it slowly. It pauses when the tab is hidden, the page is locked or the desk is open; reduced motion and Save-Data draw one still frame per mood; without WebGL the CSS blobs above stay. Night: the same silk at a third of its strength on navy.
 
 ### The hero
+Since 4.2 (Nov 19) the hero card's decoration is a neo-future glass football (`--hero-ball`, an inline SVG: frosted translucent body, lit rim, a bright crown highlight, end stripes, a cyan-to-gold reflection under its belly, glowing laces), tilted and cropped off the card's lower right so it never sits behind the headline or deck. It replaced the rings-and-ticks dial below.
+
 `--hero-grad`: deep grass #1F7A45 → teal #16787A → deep sky #2A6CAE, with `--hero-ribbon` (soft light through it) and `--hero-dial` (two translucent rings and a ring of ticks, drawn behind the type). White type clears 4.5:1 across the whole gradient. Glass pills on it are 18% white with a white hairline and white words.
 
 ### Text
