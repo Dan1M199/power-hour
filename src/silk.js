@@ -84,8 +84,9 @@ const MOODS = {
 // the themes: the pitch's top and bottom, how much the pools show, how bright the light is, the floodlights, and how much
 // the pools dim (night keeps the ribbons vivid, like a real aurora, and sinks the rest)
 const THEMES = {
-  light: { top: '#1CC977', bot: '#036039', pool: 1, glow: 0.72, flood: 0.45, dim: 1 },
-  dark: { top: '#063A24', bot: '#010C07', pool: 0.7, glow: 0.62, flood: 0.16, dim: 0.32 },
+  // 4.7 (Dan's request Nov 20): a deeper turf, so the cards and the words stand off it
+  light: { top: '#0F6B3E', bot: '#02341F', pool: 0.62, glow: 0.34, flood: 0.16, dim: 0.66 },
+  dark: { top: '#042818', bot: '#010805', pool: 0.6, glow: 0.5, flood: 0.1, dim: 0.26 },
 };
 
 export function initSilk() {
