@@ -285,7 +285,7 @@ function initTheme() {
     html.classList.add('theme-switching');
     html.dataset.theme = t;
     setTimeout(() => html.classList.remove('theme-switching'), 60); // a timer, not frames: a background tab runs none
-    $('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#08391F' : '#2FD388');
+    $('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#1B1C1F' : '#CDD3DC');
     btn?.setAttribute('aria-label', t === 'dark' ? 'Switch to the day game (light mode)' : 'Switch to the night game (dark mode)');
   };
   paint(html.dataset.theme === 'dark' ? 'dark' : 'light');
@@ -1891,29 +1891,37 @@ function placeInk({ settle = false } = {}) {
   if (ink && !a) { ink.style.width = '0px'; return; } // no tab to mark
   if (!ink || !a) return;
   const nav = ink.parentElement;
+  // 5.0: on wide desktops the tabs are the sidebar's menu, a column, so the pill glides up and down instead (the same
+  // keyframes, read as top and height)
+  const vert = getComputedStyle(nav).flexDirection.startsWith('column');
+  const T = vert ? 'translateY' : 'translateX', size = vert ? 'height' : 'width';
   // where the pill is right now, mid-glide or mid-drag included
-  const from = { x: new DOMMatrixReadOnly(getComputedStyle(ink).transform).m41, w: ink.getBoundingClientRect().width };
+  const m = new DOMMatrixReadOnly(getComputedStyle(ink).transform), box = ink.getBoundingClientRect();
+  const from = { x: vert ? m.m42 : m.m41, w: vert ? box.height : box.width };
   ink.getAnimations().forEach((x) => x.cancel());
-  const to = { x: a.offsetLeft, w: a.offsetWidth };
-  ink.style.width = `${to.w}px`;
-  ink.style.transform = `translateX(${to.x}px)`;
+  const to = vert ? { x: a.offsetTop, w: a.offsetHeight } : { x: a.offsetLeft, w: a.offsetWidth };
+  ink.style[vert ? 'width' : 'height'] = '';
+  ink.style[size] = `${to.w}px`;
+  ink.style.transform = `${T}(${to.x}px)`;
   const tabs = [...nav.querySelectorAll('a')].filter((t) => !t.hidden);
-  const centers = new Map(tabs.map((t) => [t, t.offsetLeft + t.offsetWidth / 2]));
-  const before = tabCenters;
-  tabCenters = centers;
+  const centers = new Map(tabs.map((t) => [t, vert ? null : t.offsetLeft + t.offsetWidth / 2]));
+  const before = vert ? null : tabCenters;
+  tabCenters = vert ? null : centers;
   if (settle || calm() || !from.w || (Math.abs(from.x - to.x) < 0.5 && Math.abs(from.w - to.w) < 0.5)) return;
   const frames = worm(from, to);
   if (activeVT) {
     // desktop: the page is a snapshot until the transition ends, so the transition's own pill does the glide
     const vt = activeVT;
     vt.ready.then(() => {
-      const r = nav.getBoundingClientRect(), y = r.top + ink.offsetTop;
-      document.documentElement.animate(frames.map((k) => ({ transform: `translate(${r.left + k.x}px, ${y}px)`, width: `${k.w}px` })),
-        { duration: GLIDE_MS, easing: 'linear', pseudoElement: '::view-transition-group(tab-ink)' });
+      const r = nav.getBoundingClientRect();
+      document.documentElement.animate(frames.map((k) => (vert
+        ? { transform: `translate(${r.left + ink.offsetLeft}px, ${r.top + k.x}px)`, height: `${k.w}px` }
+        : { transform: `translate(${r.left + k.x}px, ${r.top + ink.offsetTop}px)`, width: `${k.w}px` })),
+      { duration: GLIDE_MS, easing: 'linear', pseudoElement: '::view-transition-group(tab-ink)' });
     }).catch(() => {});
     return;
   }
-  ink.animate(frames.map((k) => ({ transform: `translateX(${k.x}px)`, width: `${k.w}px` })), { duration: GLIDE_MS, easing: 'linear' });
+  ink.animate(frames.map((k) => ({ transform: `${T}(${k.x}px)`, [size]: `${k.w}px` })), { duration: GLIDE_MS, easing: 'linear' });
   // the tabs themselves: each slides from its old place to its new one, on the same clock
   if (before) for (const t of tabs) {
     const was = before.get(t), now = centers.get(t);

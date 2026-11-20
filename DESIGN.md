@@ -1,216 +1,179 @@
 ---
 name: The Power Hour
-description: Aurora glass. Frosted translucent panels floating over a slow, blurred aurora in the league's greens, yellows and sky blues; one saturated card per page.
+description: Aura. Warm frosted glass in soft morning light, near-black type in Outfit, charcoal for what's selected, one butter yellow for the accent, and one golden-hour picture card per page.
 colors:
-  aurora-base: "#EEF3F0"
-  aurora-sky: "#9FD3F6"
-  aurora-cyan: "#A8E3EE"
-  aurora-mint: "#B4E4AE"
-  aurora-lime: "#DDEB95"
-  aurora-sun: "#FFE48A"
-  aurora-warm-1: "#FFE01A"
-  aurora-warm-2: "#F9B000"
-  glass-bg: "rgba(255, 255, 255, 0.46)"
-  glass-bg-strong: "rgba(255, 255, 255, 0.70)"
-  glass-fill: "rgba(255, 255, 255, 0.34)"
-  glass-float: "rgba(250, 252, 250, 0.84)"
-  glass-border: "rgba(255, 255, 255, 0.62)"
-  text-primary: "#111216"
-  text-secondary: "#5A5D68"
-  ink-2: "#33363F"
-  hero-1: "#1F7A45"
-  hero-2: "#16787A"
-  hero-3: "#2A6CAE"
-  yellow: "#FFE01A"
-  amber: "#F9B000"
-  good: "#1E6B2A"
-  bad: "#B3261E"
-  side-a: "#0FA0E8"
-  side-b: "#F9B000"
-  night-base: "#0B1322"
-  night-text: "#F3F5F9"
+  haze-top: "#CDD3DC"
+  haze-mid: "#DFDDD8"
+  haze-foot: "#E6D2A8"
+  sun: "#F6C978"
+  glass-bg: "rgba(248, 246, 242, 0.62)"
+  glass-bg-strong: "rgba(252, 250, 247, 0.84)"
+  glass-fill: "rgba(255, 255, 255, 0.50)"
+  glass-float: "rgba(250, 248, 244, 0.90)"
+  glass-border: "rgba(255, 255, 255, 0.78)"
+  ink: "#1E1D1B"
+  ink-2: "#47443F"
+  ink-3: "#686359"
+  charcoal: "#2B2A27"
+  charcoal-2: "#3B3A36"
+  yellow: "#F2CF5B"
+  yellow-hi: "#F8E08E"
+  yellow-deep: "#E2B83A"
+  butter: "#F6E5A6"
+  butter-ink: "#5A4508"
+  cream: "#F4F1EB"
+  slate: "#6A7A90"
+  good: "#3D7349"
+  bad: "#B0472F"
+  side-a: "#6A7A90"
+  side-b: "#F2CF5B"
+  night-top: "#1B1C1F"
+  night-foot: "#2A2219"
+  night-text: "#F3F0EA"
 typography:
   display:
-    fontFamily: "Inter, -apple-system, Segoe UI, system-ui, sans-serif"
-    fontSize: "clamp(38px, 5.4vw, 64px)"
-    fontWeight: 600
-    lineHeight: 1.02
-    letterSpacing: "-0.035em"
-  hero:
-    fontFamily: "Inter, -apple-system, Segoe UI, system-ui, sans-serif"
-    fontSize: "clamp(32px, 4.4vw, 44px)"
-    fontWeight: 500
-    lineHeight: 1.05
-    letterSpacing: "-0.03em"
-  headline:
-    fontFamily: "Inter, -apple-system, Segoe UI, system-ui, sans-serif"
-    fontSize: "22px"
-    fontWeight: 600
-    lineHeight: 1.15
-    letterSpacing: "-0.02em"
-  stat:
-    fontFamily: "Inter, -apple-system, Segoe UI, system-ui, sans-serif"
-    fontSize: "30px"
-    fontWeight: 600
-    lineHeight: 1
+    fontFamily: "Outfit, -apple-system, Segoe UI, system-ui, sans-serif"
+    fontSize: "clamp(34px, 4.2vw, 50px)"
+    fontWeight: 400
+    lineHeight: 1.04
     letterSpacing: "-0.025em"
+  hero:
+    fontFamily: "Outfit, -apple-system, Segoe UI, system-ui, sans-serif"
+    fontSize: "clamp(25.5px, 10.5cqi, 53px)"
+    fontWeight: 400
+    lineHeight: 1.02
+    letterSpacing: "-0.025em"
+  stat:
+    fontFamily: "Outfit, -apple-system, Segoe UI, system-ui, sans-serif"
+    fontWeight: 300
+    letterSpacing: "-0.02em"
     fontFeature: "'tnum' 1"
+  name:
+    fontFamily: "Outfit, -apple-system, Segoe UI, system-ui, sans-serif"
+    fontWeight: 500
+    letterSpacing: "-0.015em"
   body:
-    fontFamily: "Inter, -apple-system, Segoe UI, system-ui, sans-serif"
+    fontFamily: "Outfit, -apple-system, Segoe UI, system-ui, sans-serif"
     fontSize: "16px"
     fontWeight: 400
-    lineHeight: 1.55
+    lineHeight: 1.5
     fontFeature: "'tnum' 1"
-  label:
-    fontFamily: "Inter, -apple-system, Segoe UI, system-ui, sans-serif"
-    fontSize: "14px"
+  overline:
+    fontFamily: "Outfit, -apple-system, Segoe UI, system-ui, sans-serif"
+    fontSize: "11.5px"
     fontWeight: 500
-    lineHeight: 1.2
+    letterSpacing: "0.12em"
+    textTransform: "uppercase"
 rounded:
   pill: "999px"
-  tile: "24px"
-  card: "30px"
-spacing:
-  xs: "8px"
-  sm: "14px"
-  md: "18px"
-  lg: "24px"
-  xl: "44px"
+  tile: "20px"
+  card: "26px"
+  hero: "28px"
 components:
   glass-card:
     backgroundColor: "{colors.glass-bg}"
-    textColor: "{colors.text-primary}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.card}"
-    padding: "24px"
   hero-card:
-    backgroundColor: "{colors.hero-2}"
+    backgroundColor: "golden-hour scene (--hero-grad)"
     textColor: "#FFFFFF"
-    rounded: "{rounded.card}"
-    padding: "28px"
-  tile:
-    backgroundColor: "{colors.glass-bg}"
-    textColor: "{colors.text-primary}"
-    rounded: "{rounded.tile}"
-    padding: "16px 18px 18px"
-  icon-chip:
-    backgroundColor: "rgba(255, 255, 255, 0.4)"
-    textColor: "{colors.text-primary}"
-    rounded: "{rounded.pill}"
-    size: "48px"
+    rounded: "{rounded.hero}"
   button:
     backgroundColor: "{colors.glass-bg-strong}"
-    textColor: "{colors.text-primary}"
+    textColor: "{colors.ink-2}"
     rounded: "{rounded.pill}"
-    padding: "0 26px"
   button-selected:
-    backgroundColor: "{colors.text-primary}"
+    backgroundColor: "{colors.charcoal}"
     textColor: "#FFFFFF"
     rounded: "{rounded.pill}"
   button-primary:
-    backgroundColor: "{colors.hero-2}"
+    backgroundColor: "{colors.charcoal}"
     textColor: "#FFFFFF"
     rounded: "{rounded.pill}"
-  you-tag:
+  button-accent:
     backgroundColor: "{colors.yellow}"
-    textColor: "{colors.text-primary}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+  chip-good-news:
+    backgroundColor: "{colors.butter}"
+    textColor: "{colors.butter-ink}"
     rounded: "{rounded.pill}"
 ---
 
-# Design System: The Power Hour, 4.0 aurora glass
+# Design System: The Power Hour, 5.0 Aura
 
 ## Overview
 
-**Creative North Star: "Aurora Glass"** (Dan's brief, Nov 19). Airy, weightless, calm. Frosted translucent panels float over a slow, heavily blurred aurora, and the colour lives in the background, not on the surfaces. Text stays near-black and crisp. Depth comes from layering glass over colour, never from heavy shadows. Corners are generous everywhere; nothing is sharp.
+**Creative North Star: "Aura"** (Dan's brief, Nov 20: a calm wellness dashboard on an iPad, "copy this, copy the colours, copy it perfectly"). Morning light through frosted glass. Almost everything is neutral: warm off-white glass, near-black warm ink, warm greys. Two things carry colour: a charcoal for what's selected and what's done, and one butter yellow for the accent (rings, today's bar, the progress fill, the pale good-news chip). One picture card per page carries the warmth: a golden-hour scene with white type.
 
-The aurora is the league's own palette, not the brief's pastel pinks: sky blue, cyan, mint, lime and the first-down yellow, with one warm streak of yellow into amber sweeping in from the left edge. The mowed field, the sky bands and the chalk lines are gone.
-
-The rules live in the last block of `styles.css` ("4.0: aurora glass"), which redefines the older layers' tokens and wins over them. The base components also stand alone (`.ag-card`, `.ag-hero`, `.ag-dial`, `.ag-chip`, `.ag-tile`, `.ag-btn`), shown on the sample page `design/aurora.html` (open it with `npm run dev`; the build doesn't ship it).
+The rules live in the last block of `styles.css` ("5.0: Aura"), which redefines the older layers' tokens and wins over them. Its constant colours are the `--au-*` tokens at its top; literals lifted out of rules are the `--au-t-<hex>` block beside them, used through `color-mix` for translucency.
 
 **Key characteristics**
-- One saturated card per page: the headline carousel (rankings, Live), the game of the week (Games), the team value tile (the dashboard). Everything else is clear glass.
-- Selected is solid ink; primary is the hero gradient; everything else is a glass pill.
-- Every press shimmers: the aurora sweeps through the thing pressed.
-- Yellow still means you.
-- Light (the day) and dark (the night) themes, the same aurora at lower strength at night.
+- One picture card per page: the headline carousel (rankings, Live), the game of the week (Games). The team value tile is the sheet's one charcoal card.
+- Selected is a charcoal pill; the call to action is charcoal; the accent action ("Playoff scenarios") is a butter-yellow pill.
+- Wide desktops (1280px and up) have the reference's left sidebar; narrower desktops keep the bar along the top; phones keep the dock.
+- Yellow still means you: the ring on your card, your row's butter wash.
+- Day and night themes: the night is the same room with the lights down, warm charcoal under a low amber glow.
 
 ## Colors
 
-### The aurora
-`--aurora-base` #EEF3F0 under five radial-gradient blobs (`--aurora-sky`, `--aurora-cyan`, `--aurora-mint`, `--aurora-lime`, `--aurora-sun`) and the warm ribbon (`--aurora-warm-1` → `--aurora-warm-2`). Drawn on the old `.sky` box (its three spans and their pseudo-elements are the blobs): radial gradients, already soft, so nothing is re-blurred while they drift. Each drifts on a 28–40 s loop, transform only, and stands still under reduced motion. Night: base #0B1322, blobs at 42%.
+### The haze
+`src/silk.js` draws it (WebGL, about a third of the screen's resolution, 30 fps on phones and 45 elsewhere): cool pearl blue-grey at the top of the screen (#CBD2DC), linen through the middle, sand at the foot (#E6D2A8), a wide golden sunrise glow low on the right with a peach halo, breathing slowly, three soft haze pools on minute-long paths, and a pale bloom of daylight from the top. Each page leans a little (`MOODS`): the rankings a plain morning, Live warmer and quicker, the Wire cooler, Games peach, the Lab a lilac pearl. Night (`THEMES.dark`): #1B1C1F to #2A2219, the moods dimmed to 16%, the sun at 42%. The colour at the top of the screen is read back into `--aurora-top` (the status bar). Without WebGL the CSS blobs show the same palette.
 
 ### Glass
-- `--glass-bg` 46% white: cards, the header, the dock, section signs.
-- `--glass-bg-strong` 70%: controls, chips, inputs.
-- `--glass-fill` 34%: a panel inside a card (a hair whiter, never blurred again).
-- `--glass-float` 84%: whatever floats over the page (sheets, the circle's panel, notes, overlay cards), so its words never sit over busy cards.
-- `--glass-border` (62% white hairline, drawn as an inset shadow, so it costs no layout) and `--glass-hi` (a 1px bright inner top edge).
-- `--glass-blur`: `blur(24px) saturate(160%)`. Without `backdrop-filter`, glass falls back to `--glass-solid` (86% white).
-- Night: glass at 8% / 14% / 6% white, borders 14%.
+- `--glass-bg` 62% warm white (#F8F6F2): cards, the sidebar, the dock, section signs.
+- `--glass-bg-strong` 84%: controls, chips, inputs.
+- `--glass-fill` 50% white: a panel inside a card, never blurred again.
+- `--glass-float` 90%: anything floating over the page.
+- `--glass-border` 78% white hairline (an inset shadow) and `--glass-hi` (a bright 1px top edge); `--glass-light` a faint wash down the first 120px.
+- `--glass-blur`: `blur(28px) saturate(130%)`.
+- Shadows are warm (`rgba(70, 58, 40, …)`), soft and low: `--shadow-soft`, `--shadow-lift`.
+- Night: warm charcoal glass (#2C2A26 at 60%, #36342F at 88%), 10% white borders.
 
-### The living silk (4.1)
-4.2: the silk and the page are turf green now (base #55A653 by day, #0A1A0F at night), woven from field greens with faint mowing stripes bent through the silk; each page's mood keeps its accent (Games still folds sky blue into amber, Live still runs warm). Words that sit straight on the turf (page intros) wear full ink.
-
-Since Nov 19 the aurora is a live WebGL silk (`src/silk.js`, `initSilk()` from `main()`): one sheet of colour folding over itself with a sheen along the folds and the warm streak, drawn at about 40% of the screen's resolution behind everything, at most 30 fps on phones and 45 elsewhere. It has a mood per page, all in the league's colours: Rankings green and gold, Live hot yellow and amber (and faster while games are on), Wire cool cyan and mint drifting sideways, Games sky blue folding into amber (the two sides of a matchup), the Lab mint, lime and cyan. A tab change crossfades the mood over about a second and a half and sends a surge through the silk on the pill's beat. The mouse leans on it, scrolling slides it slowly. It pauses when the tab is hidden, the page is locked or the desk is open; reduced motion and Save-Data draw one still frame per mood; without WebGL the CSS blobs above stay. Night: the same silk at a third of its strength on navy.
-
-### The hero
-Since 4.2 (Nov 19) the hero card's decoration is a neo-future glass football (`--hero-ball`, an inline SVG: frosted translucent body, lit rim, a bright crown highlight, end stripes, a cyan-to-gold reflection under its belly, glowing laces), tilted and cropped off the card's lower right so it never sits behind the headline or deck. It replaced the rings-and-ticks dial below.
-
-`--hero-grad`: deep grass #1F7A45 → teal #16787A → deep sky #2A6CAE, with `--hero-ribbon` (soft light through it) and `--hero-dial` (two translucent rings and a ring of ticks, drawn behind the type). White type clears 4.5:1 across the whole gradient. Glass pills on it are 18% white with a white hairline and white words.
+### The picture card
+`--hero-grad` is one SVG (so every card can size it 100% by 100%): a warm sky from dusk umber to apricot, the sun low on the right, three dunes in amber, tan and umber with lit ridges, and scrims (darker from the left and at the foot, a touch from the top) so white type holds. Stat rows on it are dark translucent pills with a white hairline (`.cast-team`), the reference's "4.2 km" pills; small words on it carry a soft caption shadow. The glass football (4.2) still lies on the headline cards. Night: the same dunes at dusk.
 
 ### Text
-`--text-primary` #111216 (`--ink`), `--ink-2` #33363F, `--text-secondary` #5A5D68 (`--ink-3`). Never light grey on glass: over a bright blob, glass gets whiter, text never gets lighter. Night: #F3F5F9, #D4D8E1, #B7BCC8.
+`--ink` #1E1D1B, `--ink-2` #47443F, `--ink-3` #686359 (4.5:1 on the glass). Night: #F3F0EA, #D2CDC4, #A9A399.
 
-### Signals (kept)
-- **Yellow means you.** The 3px ring on your card, the You tag, your row, your arc on a playoff ring.
-- Matchup sides stay blue (`--a`) and amber (`--b`), as tints of glass on the face-off.
-- Good / bad stay green / red, with tinted glass chips (`--good-bg`, `--bad-bg`).
+### Signals
+- **Yellow means you**: your card's 2.5px yellow ring, your row's butter wash (`--mine-bg`).
+- Matchup sides: slate (`--a`, #6A7A90) and gold (`--b`, #F2CF5B), the haze's cool top and warm foot, colour-blind safe.
+- Good / bad: muted sage and terracotta.
+- Tiers: Team to beat on butter, then sand, pearl, and clear glass.
 
 ## Typography
-One face: **Inter** (variable, 400–700, roman and italic, self-hosted in `assets/fonts`, SIL OFL; the Latin file is preloaded). Headings 500–600 with -0.02em tracking (page titles -0.035em), big stats 26–32px at 600, body and labels 15–17px at 400–500, tabular numbers everywhere. Nothing under 11.5px. The headline desk keeps its newspaper faces.
+One face: **Outfit** (geometric, variable 100–900, self-hosted `assets/fonts/outfit-var-latin*.woff2`, SIL OFL `OFL-Outfit.txt`, the Latin file preloaded). Page titles 400 at -0.025em, headlines on the picture card 400, big numbers light (300 to 400: the reference's "82"), names and labels 500, body 400 at 16px. The kicker and the sidebar's section labels ("Menu", "General") are the reference's small spaced capitals (11.5px, 500, 0.12–0.14em): the one deliberate exception to the house rule against tracked uppercase labels, at Dan's request to copy the reference exactly; everything else stays sentence case. Nothing under 11.5px. The headline desk keeps its newspaper faces.
 
 ## Layout
-`--page` is 16px gutters on phones, at most 1180px wide. The header is a floating glass pill 14px from the top (desktop); phones have the dock and the circle at the foot. Everything stays usable at 390, 360 and 320px with no page-level sideways scroll.
-
-## Elevation
-No slabs, ledges or hard offset shadows: every `--slab*`, `--ledge*` and `--cast` token is transparent or faint. A card is glass + hairline + bright top edge + `--shadow-soft` (0 8px 32px at 9%). Featured cards and hover use `--shadow-lift`. Only the hero card carries a coloured shadow, under itself.
-
-**Glass rule.** At most one blurred layer under any word: cards blur, panels inside them don't, and floating overlays use `--glass-float`.
+- **Sidebar (1280px and up)**: `.topbar` becomes a fixed glass panel 20px from the left, top and bottom (`--side-w` 236px), and `body` pads left to make room. Top to bottom: the logo and name, "Menu" with the tabs as 48px rows (icon and full label; the tab you're on is the charcoal pill with a yellow dot, gliding up and down: `placeInk` reads the column direction), "General" with the theme switch as a row (Night game / Day game), and your team as a golden picture card at the foot (your face, "Your team", the picker as a yellow pill). Empty you cards say "at the foot of the menu" (`.where-s`) and drop the "Start up there" sketch.
+- **761–1279px**: the floating glass bar along the top, the tab you're on a charcoal pill with a yellow dot.
+- **Phones**: the dock (a glass pill bar of round buttons; the tab you're on widens into the charcoal pill with its label) and the circle beside it. No sideways scroll at 390, 360 or 320px.
 
 ## Components
 
 ### Buttons
-Glass pills (`--glass-bg-strong`, hairline, top edge). Hover lifts 1px and the hairline brightens with a faint sky glow. Press: `scale(0.97)`, released on `--ease-spring` (the overshoot is the brief's, the only one outside the dashboard). Selected (pressed filter, picked team, the Lab's section): solid ink with white words (inverted at night). Primary (the call to action, the scenario invite, Share, Playoff scenarios): the hero gradient with white words. Disabled: a fainter glass fill, muted words, `not-allowed`.
+Glass pills with a hairline. Hover lifts 1px. Selected: charcoal with white words (cream with dark words at night). Primary (call to action, scenario invite, Share): charcoal. Accent ("Playoff scenarios"): a butter-yellow gradient pill with a charcoal New tag. The Lab's section switcher is the reference's Week / Month / Year segmented control.
 
-### The shimmer
-`src/touch.js` `initPress`: one lens on `<body>` takes the shape of whatever is pressed (mouse, finger or pen), and on each press an iridescent sweep (`--iris`: yellow, lime, mint, cyan, sky, gold) brightens and slides across in 0.7 s, a diagonal sheen crosses in 0.6 s, and a bloom grows from the pointer. Multiplied over glass so dark words stay crisp; screened over dark or saturated fills (picked from the pressed element's text colour). No control's own `::before`/`::after` is touched. Off under reduced motion.
-
-### Navigation
-Desktop: tabs with their icons in the glass header. Phones: the dock is a glass pill bar of round glass buttons; the tab you're on widens into a pill with its label (in a live week, six tabs, the labels drop). The active tab is lit all the way across (4.1): `--tab-glow`, a warm light from yellow into amber with a bright top edge, and `--tab-halo`, a soft amber glow around it; its words are dark ink in both themes.
-
-**The glide.** A tab change stretches the pill: its leading edge sets off at once and the trailing edge catches up (`worm` in `app.js`, 560 ms), so it reaches toward the new tab and gathers itself there. On phones the dock's tabs slide to their new places on the same clock (a FLIP) and the new label fades in a beat behind. On desktop the page change is a view transition, so the same keyframes drive the transition's own pill (`::view-transition-group(tab-ink)`, drawn as real CSS and multiplied over the header so the names show through). Interrupted mid-glide, it starts from where it is. Reduced motion snaps.
-
-### Cards and tiles
-Cards 30px, tiles and nested panels 24px, controls and tags full pills, faces circles. Icon chips are 48px glass circles with solid 20px glyphs.
+### Charts and bars
+Done in charcoal, the latest or "today" in yellow, planned as pale empty bars (the dashboard's scoring tile is the reference's Activity chart). The live list's bars: banked in charcoal, still to come in butter stripes. The playoff ring is the reference's readiness ring: a cream disc on a pale track with a butter arc (deep gold when it's yours). The tooltip is the reference's charcoal bubble.
 
 ### Rank numbers
-Big soft numerals in ink beside each ranking card, 600 weight, a white halo; the top three larger on a glowing yellow orb. The rank-1 chalk ring and the field are gone.
-
-### Charts
-Plates are faint glass with a white hairline; bars are flat and rounded (no gloss strip or ledge); the playoff ring is a glass disc with an ink number and a green arc (yellow when it's yours).
+Light (300) ink numerals beside each card; the top three on a soft butter disc.
 
 ### The team dashboard
-Converted (Dan, Nov 19): the Paper Widgets shapes stay; its `--p-*` tokens point at the glass. The sheet is a clear tray, each tile a glass pane, clay became grass (`--p-accent`), violet the deep sky (`--p-hot`), apricot amber; the team value tile wears the hero gradient. Inter throughout.
+Its `--p-*` tokens point at Aura: charcoal for done (`--p-accent`), deep gold for the leader (`--p-hot`), yellow for the sun, slate for easy games, terracotta for hard ones; the team value tile is a charcoal brokerage card (its green and orange stock colours kept).
 
 ### Focus
-A 2px white outline offset 2px plus a soft sky glow, drawn with a `drop-shadow` filter so it never replaces a surface's own glass edge.
+A 2px charcoal outline offset 2px (yellow at night).
 
 ## Do's and Don'ts
-- **Do** keep text on glass: no paragraph sits on the raw aurora (page intros sit high on the pale base; section titles are glass pills).
-- **Do** give a page at most one hero card.
-- **Do** use tokens: every colour literal lives in a `:root` token block.
-- **Do** animate only transform and opacity (plus the shimmer's background position).
+- **Do** keep colour scarce: charcoal and one yellow; everything else neutral glass.
+- **Do** give a page at most one picture card.
+- **Do** keep every colour literal in a `:root` token block (`node <hallmark>/scripts/sloplint.mjs styles.css --genre modern-minimal --scope app` shows 0 colour fails).
+- **Do** animate only transform and opacity.
 - **Don't** stack blurs: no glass inside glass inside glass.
-- **Don't** bring back slabs, ledges, gloss strips or hard offset shadows.
+- **Don't** bring back the turf, slabs, gloss or hard offset shadows.
 - **Don't** colour chart labels with their series; labels wear ink.
-- **Don't** use emoji or ALL-CAPS labels; sentence case, plain verbs.
-- The headline desk (`#admin`) keeps its newspaper look; none of this reaches it.
+- **Don't** use emoji; sentence case everywhere but the kicker and the sidebar's two labels.
+- The headline desk (`#admin`) keeps its newspaper look.
