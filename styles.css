@@ -6313,7 +6313,8 @@ h2, h3, .sec-title { font-weight: 500; letter-spacing: -0.015em; }
 
 /* the result */
 .wi-auto { margin: 0 0 12px; padding: 8px 14px; border-radius: 14px; font-size: 13.5px; color: var(--ink-2); background: var(--glass-fill); box-shadow: inset 0 0 0 1px var(--glass-border); }
-.wi-swap { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; color: var(--ink-3); }
+.wi-swaps { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.wi-swaps li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; color: var(--ink-3); }
 .wi-p { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .wi-p .wi-face { width: 46px; height: 46px; }
 .wi-p.out .wi-face { filter: grayscale(1); opacity: 0.7; }
@@ -6335,21 +6336,36 @@ h2, h3, .sec-title { font-weight: 500; letter-spacing: -0.015em; }
 .wi-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
 .wi-chart figcaption { margin-top: 8px; font-size: 12.5px; color: var(--ink-3); max-width: 75ch; }
 .wi-plate { fill: var(--glass-fill); stroke: var(--glass-border); }
-.wi-zero { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 4; }
-.wi-was { fill: none; stroke: var(--ink-3); stroke-width: 1.5; }
-.wi-now { fill: var(--ink-3); }
-.wi-now.win { fill: var(--au-char); }
-.wi-now.loss { fill: var(--bad); }
-:root[data-theme='dark'] .wi-now.win { fill: var(--ink-2); }
-.wi-flipband { fill: var(--au-butter); opacity: 0.75; }
-:root[data-theme='dark'] .wi-flipband { fill: var(--au-yellow); opacity: 0.22; }
+.wi-grid { stroke: var(--line); stroke-width: 1; }
+.wi-gl { font: 400 11.5px var(--body); fill: var(--ink-3); }
+.wi-band { fill: var(--tile-2); }
+.wi-band.flip { fill: var(--au-butter); }
+:root[data-theme='dark'] .wi-band.flip { fill: color-mix(in srgb, var(--au-yellow) 22%, transparent); }
+.wi-bar-was { fill: color-mix(in srgb, var(--ink-3) 38%, transparent); }
+.wi-bar-now { fill: var(--au-char); }
+.wi-bar-now.loss { fill: var(--bad); }
+:root[data-theme='dark'] .wi-bar-now:not(.loss) { fill: var(--ink-2); }
+.wi-opp { stroke: var(--ink); stroke-width: 2.5; stroke-linecap: round; }
+.wi-fl { font: 600 12.5px var(--body); fill: var(--ink); }
 .wi-axis { font: 400 12px var(--body); fill: var(--ink-3); }
-.wi-chart g.flip .wi-axis { font-weight: 600; fill: var(--ink); }
+.wi-chart g.moved .wi-axis { font-weight: 600; fill: var(--ink); }
+.wi-legend { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--ink-2); }
+.wi-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.wi-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.wi-legend .k-was { background: color-mix(in srgb, var(--ink-3) 38%, transparent); }
+.wi-legend .k-now { background: var(--au-char); }
+:root[data-theme='dark'] .wi-legend .k-now { background: var(--ink-2); }
+.wi-legend .k-loss { background: var(--bad); }
+.wi-legend .k-opp { height: 3px; width: 16px; border-radius: 2px; background: var(--ink); }
+.wi-legend .k-moved { background: var(--tile-2); box-shadow: inset 0 0 0 1px var(--line); }
+.wi-legend .k-flip { background: var(--au-butter); }
+:root[data-theme='dark'] .wi-legend .k-flip { background: color-mix(in srgb, var(--au-yellow) 40%, transparent); }
 
 /* week by week */
 .wi-weeks ol { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
 .wi-weeks li { padding: 12px 16px; border-radius: 18px; background: var(--glass-fill); box-shadow: inset 0 0 0 1px var(--glass-border); }
 .wi-weeks li.flip { background: var(--mine-bg); box-shadow: inset 0 0 0 1.5px var(--mine-edge); }
+.wi-weeks li.moved { background: var(--glass-bg-strong); }
 .wi-weeks p { margin: 6px 0 0; font-size: 14.5px; line-height: 1.5; color: var(--ink-2); max-width: 70ch; }
 .wi-wk-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
 .wi-wk { font-weight: 500; font-size: 15.5px; color: var(--ink); }
@@ -6394,6 +6410,51 @@ h2, h3, .sec-title { font-weight: 500; letter-spacing: -0.015em; }
   .wi-alt-rec b { font-size: 21px; }
 }
 @media (prefers-reduced-motion: reduce) { .wi-spin { animation: none; } }
+
+/* your changes (Nov 20, Dan's requests): a swapped row shows the new player with the old one crossed out under him and
+   his face tucked behind, on your butter with an X beside it to undo; a bar over the list counts the changes and
+   clears them; in Anyone mode a player you drafted gets a green wash for those still on the board at that pick and a
+   red one for those already gone */
+.wi-rows li { position: relative; }
+.wi-rows li.swapped { display: grid; grid-template-columns: minmax(0, 1fr) 48px; column-gap: 8px; align-items: start; }
+.wi-rows li.swapped > .wi-drawer { grid-column: 1 / -1; }
+.wi-rows li.swapped:not(.open) .wi-row { background-color: var(--mine-bg); box-shadow: inset 0 0 0 2px var(--mine-edge); }
+.wi-row-face { position: relative; display: block; width: 48px; height: 48px; }
+.wi-row-face .wi-face.was { position: absolute; left: -6px; bottom: -6px; width: 24px; height: 24px; filter: grayscale(1); opacity: 0.85;
+  box-shadow: 0 0 0 2px var(--glass-bg-strong); }
+.wi-row-who small s { text-decoration: line-through; text-decoration-thickness: 1.5px; text-decoration-color: var(--bad); color: var(--ink-3); }
+.wi-rows li.open .wi-row-who small s { color: color-mix(in srgb, var(--sel-ink) 65%, transparent); }
+.wi-x { display: grid; place-items: center; width: 48px; height: 48px; margin-top: 12px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; color: var(--ink-2);
+  background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border), 0 1px 2px color-mix(in srgb, var(--au-t-463a28) 8%, transparent); touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+@media (hover: hover) { .wi-x:hover { color: var(--bad); background: var(--bad-bg); } }
+.wi-x:focus-visible, .wi-clear:focus-visible { outline: 2px solid var(--au-char); outline-offset: 2px; }
+.wi-changes { position: sticky; top: calc(10px + env(safe-area-inset-top)); z-index: 3; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 16px; padding: 10px 10px 10px 16px;
+  border-radius: 20px; background: linear-gradient(var(--mine-bg), var(--mine-bg)), var(--glass-solid); box-shadow: inset 0 0 0 1.5px var(--mine-edge), 0 8px 20px -12px color-mix(in srgb, var(--au-t-463a28) 40%, transparent); }
+.wi-changes p { flex: 1 1 180px; margin: 0; font-size: 15px; line-height: 1.35; color: var(--ink); }
+.wi-changes b { font-weight: 600; }
+.wi-changes em { margin-left: 8px; font-style: normal; font-weight: 500; font-size: 13.5px; }
+.wi-changes em.up { color: var(--good); }
+.wi-changes em.down { color: var(--bad); }
+.wi-clear { min-height: 44px; padding: 10px 18px; border: 0; border-radius: 999px; cursor: pointer; font: 500 15px/1 var(--body); color: var(--sel-ink); background: var(--sel-bg); touch-action: manipulation; }
+@media (min-width: 1100px) { .wi-changes { top: 96px; } }
+@media (min-width: 1280px) { .wi-changes { top: 24px; } }
+.wi-search { position: relative; margin: 12px 0 0; }
+.wi-search-icon { position: absolute; left: 16px; top: 50%; margin-top: -9px; color: var(--ink-3); pointer-events: none; }
+.wi-search input { padding-left: 44px; }
+.wi-alt.av:not([aria-pressed='true']) { background-color: color-mix(in srgb, var(--good-bg) 70%, var(--glass-bg-strong)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--good) 28%, transparent); }
+.wi-alt.na:not([aria-pressed='true']) { background-color: color-mix(in srgb, var(--bad-bg) 60%, var(--glass-bg-strong)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 24%, transparent); }
+.wi-avail { justify-self: start; margin-top: 2px; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 500; line-height: 1.2; }
+.wi-alt.av .wi-avail { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+.wi-alt.na .wi-avail { color: var(--bad); background: color-mix(in srgb, var(--bad) 13%, transparent); }
+@media (max-width: 760px) {
+  .wi-rows li.swapped { grid-template-columns: minmax(0, 1fr) 44px; column-gap: 6px; }
+  .wi-x { width: 44px; height: 44px; margin-top: 13px; }
+  .wi-row-face { width: 44px; height: 44px; }
+  .wi-changes { flex-wrap: nowrap; padding: 8px 8px 8px 14px; gap: 10px; }
+  .wi-changes p { flex: 1 1 auto; min-width: 0; font-size: 14px; }
+  .wi-changes em { display: block; margin: 2px 0 0; }
+  .wi-clear { flex: none; padding: 10px 14px; font-size: 14px; }
+}
 
 /* ---------- What if's ways in (Nov 20): the front page's shiny pill beside the playoff scenarios, and the same pill on
    the launch headline's card. Charcoal (the Aura's call to action; cream at night, where the selected colour turns),

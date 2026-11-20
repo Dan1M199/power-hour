@@ -62,8 +62,9 @@ for (const t of D.teams) {
   const W = r.table.reduce((a, x) => a + x.w + x.t / 2, 0);
   if (Math.abs(W - games) > 1e-9) fail(`${t.name}: ${W} wins for ${games} games`);
   for (const wk of r.weeks) {
-    if (wk.how === 'swap' && wk.now[0] < wk.was[0] - 1e-9) fail(`${t.name} week ${wk.w}: swap lost points`);
-    if (wk.how === 'swap' && Math.abs(wk.now[0] - wk.was[0] - (40 - wk.outPts)) > 0.011) fail(`${t.name} week ${wk.w}: swap moved ${wk.now[0] - wk.was[0]}, expected ${40 - wk.outPts}`);
+    const st = wk.steps[0];
+    if (st.how === 'swap' && wk.now[0] < wk.was[0] - 1e-9) fail(`${t.name} week ${wk.w}: swap lost points`);
+    if (st.how === 'swap' && Math.abs(wk.now[0] - wk.was[0] - (40 - st.outPts)) > 0.011) fail(`${t.name} week ${wk.w}: swap moved ${wk.now[0] - wk.was[0]}, expected ${40 - st.outPts}`);
   }
   if (r.after.w < r.before.w) fail(`${t.name}: a 40-a-week WR cost wins`);
   console.log(`${t.name.padEnd(24).slice(0, 24)} ${book.nameOf(out).padEnd(22).slice(0, 22)} -> ghost: ${rec(r.before)} (${r.before.seed}) -> ${rec(r.after)} (${r.after.seed}), PF ${r.before.pf} -> ${r.after.pf}, ${r.flips.length} flipped, started ${r.inStarted}/${r.weeks.length}`);
@@ -88,6 +89,23 @@ if (best.list.some((x, i) => i && (x.dw > best.list[i - 1].dw + 1e-9))) fail('be
 if (best.list[0]?.id !== ghost) fail(`the 40-a-week ghost should top the board (top: ${best.list[0]?.id})`);
 console.log(`\n${me.name}, round 3 pick ${myPick.no} (${book.nameOf(myPick.id)}), ${best.pool} replays:`);
 for (const x of best.list) console.log(`  ${book.nameOf(x.id).padEnd(24).slice(0, 24)} ${book.posOf(x.id).padEnd(3)} ${String(x.tot).padStart(7)} pts  ${rec(x.after)}  ${x.dw >= 0 ? '+' : ''}${x.dw} W  ${x.dpf >= 0 ? '+' : ''}${x.dpf} PF  seed ${x.after.seed}`);
+
+// 4b. two swaps at once: the second player never comes back as an option, each swap gets its own step, the order of
+// the swaps doesn't change the record when they touch different weeks' slots, and one swap on its own matches the
+// single-swap call
+const wrs = book.rows[L][me.rid].starters.filter((id) => book.posOf(id) === 'WR');
+const rbs = book.rows[L][me.rid].starters.filter((id) => book.posOf(id) === 'RB');
+const pickA = best.list[0].id;
+const second = bestSwaps(book, { rid: me.rid, out: rbs[0], board, others: [{ out: wrs[0], inn: pickA }] });
+if (second.list.some((x) => x.id === pickA)) fail('a player already swapped in was offered again');
+const two = whatIf(book, { rid: me.rid, swaps: [{ out: wrs[0], inn: pickA }, { out: rbs[0], inn: second.list[0].id }] });
+if (two.weeks.some((x) => x.steps.length !== 2)) fail('two swaps should give two steps a week');
+const one = whatIf(book, { rid: me.rid, swaps: [{ out: wrs[0], inn: pickA }] }), single = whatIf(book, { rid: me.rid, out: wrs[0], inn: pickA });
+if (JSON.stringify(one.after) !== JSON.stringify(single.after)) fail('swaps: [one] differs from out/inn');
+if (Math.abs(second.base.pf - one.after.pf) > 1e-9) fail('the second swap\'s base is not the first swap\'s record');
+const W2 = two.table.reduce((a, x) => a + x.w + x.t / 2, 0);
+if (Math.abs(W2 - games) > 1e-9) fail(`two swaps: ${W2} wins for ${games} games`);
+console.log(`\ntwo swaps: ${rec(two.before)} -> ${rec(one.after)} -> ${rec(two.after)}, PF ${two.before.pf} -> ${two.after.pf}`);
 
 // 5. deterministic
 const t0 = Date.now();
