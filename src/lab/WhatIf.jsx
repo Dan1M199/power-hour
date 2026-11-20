@@ -103,12 +103,50 @@ function Tool({ D, raw, me, h, hs }) {
   };
   const ready = (id) => cache.best.has(keyOf(id));
 
-  // with no changes yet, the page shows your first player's best alternative, labelled as a preview
+  // the most costly pick (Dan's request Nov 20): every draft pick (every player, without a draft board) against the
+  // best player still on the board at that pick, on your real season, so the label never moves as you make changes.
+  // The biggest gain in wins, then points for, is flagged on its row. Worked out in idle time; the results warm the
+  // rows' own cache while there are no changes.
+  const scanMode = (id) => (ownPick(id) ? 'board' : 'any');
+  const scanKey = (id) => `${me}|${id}|${scanMode(id)}|`;
+  const scanOf = (id) => {
+    const k = scanKey(id);
+    if (!cache.best.has(k)) cache.best.set(k, bestSwaps(book, { rid: me, out: id, board, beforePick: ownPick(id)?.no ?? null, limit: 8 }));
+    return cache.best.get(k);
+  };
+  const scanRows = useMemo(() => (board ? mine.filter((x) => ownPick(x.id)) : mine), [mine]);
+  const pickCostly = () => {
+    let top = null;
+    for (const x of scanRows) {
+      const b = cache.best.get(scanKey(x.id))?.list[0];
+      if (b && (b.dw > 0 || b.dpf > 0) && (!top || b.dw > top.dw || (b.dw === top.dw && b.dpf > top.dpf))) top = { id: x.id, inn: b.id, dw: b.dw, dpf: b.dpf };
+    }
+    return top;
+  };
+  const [costly, setCostly] = useState(() => (scanRows.every((x) => cache.best.has(scanKey(x.id))) ? pickCostly() : undefined));
+  useEffect(() => {
+    if (costly !== undefined) return undefined;
+    const todo = scanRows.map((x) => x.id).filter((id) => !cache.best.has(scanKey(id)));
+    let hnd = null, alive = true;
+    const next = () => {
+      if (!alive) return;
+      const id = todo.shift();
+      if (!id) { setCostly(pickCostly()); return; }
+      scanOf(id);
+      hnd = idle(next);
+    };
+    hnd = idle(next);
+    return () => { alive = false; unidle(hnd); };
+  }, [scanRows]);
+
+  // with no changes yet, the page shows the most costly pick's best alternative (your first player's until the scan is
+  // done), labelled as a preview
   const preview = useMemo(() => {
     if (swaps.length || !mine[0]) return null;
+    if (costly) return [{ out: costly.id, inn: costly.inn }];
     const b = bestFor(mine[0].id).list[0];
     return b ? [{ out: mine[0].id, inn: b.id }] : null;
-  }, [swaps.length, mine]);
+  }, [swaps.length, mine, costly]);
   const shown = swaps.length ? swaps : preview;
   const res = useMemo(() => (shown ? whatIf(book, { rid: me, swaps: shown }) : null), [book, me, sig(shown || [])]);
   // what each change adds on its own, against the rest of them
@@ -191,11 +229,12 @@ function Tool({ D, raw, me, h, hs }) {
           const b = !sw && ready(x.id) ? bestFor(x.id).list[0] : null;
           const shownId = sw ? sw.inn : x.id, dw = sw ? worth[x.id] ?? 0 : b?.dw;
           return (
-            <li key={x.id} className={`${isOpen ? 'open' : ''}${sw ? ' swapped' : ''}`}>
+            <li key={x.id} className={`${isOpen ? 'open' : ''}${sw ? ' swapped' : ''}${costly?.id === x.id ? ' costly' : ''}`}>
               <button type="button" className="wi-row" ref={(el) => (rowRefs.current[x.id] = el)} aria-expanded={isOpen} aria-controls={phone ? undefined : `wi-tray-${x.id}`} onClick={() => toggle(x.id)}
                 aria-label={sw ? `${name(sw.inn)} in place of ${name(x.id)}. Change the pick` : undefined}>
                 <span className="wi-row-face"><Face id={shownId} />{sw ? <Face id={x.id} cls="wi-face was" /> : null}</span>
                 <span className="wi-row-who">
+                  {costly?.id === x.id ? <span className="wi-costly">{'Most costly pick'}</span> : null}
                   <b>{name(shownId)}</b>
                   <small>{sw ? <><PosTag pos={pos(sw.inn)} /><s>{name(x.id)}</s>{x.pick ? `, ${ordinal(x.pick.no)} pick` : ''}</>
                     : <><PosTag pos={pos(x.id)} />{`${x.pick ? `Round ${x.pick.round}, ${ordinal(x.pick.no)}` : 'Picked up'}${x.now ? '' : ', gone'}`}</>}</small>
@@ -223,7 +262,7 @@ function Tool({ D, raw, me, h, hs }) {
       </ul>
       {passing.length ? <button type="button" className="wi-more" aria-expanded={all} onClick={() => setAll(!all)}>{all ? 'Show fewer players' : `Show ${passing.length} more who came and went`}</button> : null}
     </section>
-    {res ? <Summary D={D} book={book} res={res} h={h} auto={!swaps.length} pick={ownPick(res.out)} mode={modeOf(res.out)} />
+    {res ? <Summary D={D} book={book} res={res} h={h} auto={!swaps.length} costly={!!costly && costly.id === res.out} pick={ownPick(res.out)} mode={swaps.length ? modeOf(res.out) : scanMode(res.out)} />
       : <section className="panel glass wi-res" id="wi-result"><h2>{'Your replay shows up here'}</h2><p className="sub">{'Tap a player, then pick someone to put in his place.'}</p></section>}
     {res ? <Detail D={D} book={book} res={res} h={h} /> : null}
     {phone ? <Sheet open={open != null} onClose={close} returnTo={() => rowRefs.current[sheetFor]} label={sheetFor ? `Instead of ${name(sheetFor)}` : ''}>
@@ -394,7 +433,7 @@ function Sheet({ open, onClose, returnTo, label, children }) {
 const STARTS = ['swap', 'start', 'nofit-start'];
 
 // the replay at a glance: who for whom, the record before and after, what moved, and each week's score real and what if
-function Summary({ D, book, res, h, auto, pick, mode }) {
+function Summary({ D, book, res, h, auto, costly, pick, mode }) {
   const { f1, ordinal } = h;
   const name = book.nameOf, team = (rid) => D.byRid[rid];
   const b = res.before, a = res.after, n = res.swaps.length;
@@ -425,7 +464,7 @@ function Summary({ D, book, res, h, auto, pick, mode }) {
 
   return (
     <section className="panel glass wi-res" id="wi-result">
-      {auto ? <p className="wi-auto">{'A preview with your first pick. Tap any player to make your own changes.'}</p> : null}
+      {auto ? <p className="wi-auto">{costly ? `A preview with your most costly pick, ${name(res.out)}. Tap any player to make your own changes.` : 'A preview with your first pick. Tap any player to make your own changes.'}</p> : null}
       <ul className="wi-swaps">
         {res.swaps.map((s) => (
           <li key={s.out}>

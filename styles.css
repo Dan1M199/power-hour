@@ -6496,3 +6496,11 @@ h2, h3, .sec-title { font-weight: 500; letter-spacing: -0.015em; }
   .wi-cta-label { font-size: 15.5px; }
 }
 @media (max-width: 359px) { .wi-cta-label { white-space: normal; } }
+
+/* the most costly pick (Nov 20): the draft pick whose best alternative on the board gains the most, flagged on its row
+   with a clay pill and a clay edge (not butter: yellow means you, and this is a regret) */
+.wi-costly { justify-self: start; margin-bottom: 2px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; line-height: 1.25;
+  color: var(--chalk); background: var(--bad); }
+.wi-rows li.costly:not(.open):not(.swapped) .wi-row { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--bad) 55%, transparent); background-color: color-mix(in srgb, var(--bad-bg) 45%, var(--glass-fill)); }
+.wi-rows li.open .wi-costly { color: var(--ink-day); background: var(--au-butter); }
+:root[data-theme='dark'] .wi-costly { color: var(--ink-day); }
