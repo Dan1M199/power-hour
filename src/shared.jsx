@@ -46,16 +46,33 @@ export const LoadError = ({ message }) => (
 
 /**
  * The front page's way into "What needs to happen" (Lab, League, Playoff race): a shiny amber pill. It leaves a note
- * for the card (window.__toPaths) so the card scrolls itself into view once the Lab has opened.
+ * for the card (window.__toPaths) so the card scrolls itself into view once the Lab has opened. Its New tag moved to
+ * What if on Nov 20.
  */
 export const ScenariosLink = () => (
   <a className="pth-cta" href="#lab/league" onClick={() => { window.__toPaths = true; }}>
-    <span className="pth-cta-new">New</span>
     <span className="pth-cta-label">Playoff scenarios</span>
     <svg className="pth-cta-go" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4l4 4-4 4" stroke="currentColor" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
     <i className="spk a" aria-hidden="true" /><i className="spk b" aria-hidden="true" />
   </a>
 );
+
+/**
+ * The front page's way into What if (Lab, #lab/whatif; Dan's request Nov 20): a charcoal pill with a band of gold
+ * light crossing it, a replay mark and the New tag. cls: extra classes (the headline card's copy sits on the scene).
+ */
+export const WhatIfLink = ({ cls = '', label = 'What if: redo your draft' }) => (
+  <a className={`wi-cta ${cls}`} href="#lab/whatif">
+    <span className="wi-cta-glint" aria-hidden="true" />
+    <span className="wi-cta-new">New</span>
+    <svg className="wi-cta-icon" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.2 7.4A6.5 6.5 0 1 1 3.5 11" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" /><path d="M3.6 3.6v4.2h4.2" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    <span className="wi-cta-label">{label}</span>
+    <i className="spk a" aria-hidden="true" /><i className="spk b" aria-hidden="true" />
+  </a>
+);
+
+/** The page head's two shiny ways into the Lab, side by side (wrapping on a phone). */
+export const HeadLinks = () => <div className="head-ctas"><WhatIfLink /><ScenariosLink /></div>;
 
 // An activity ring (Nov 11, the soft-futurism pass): a black disc with one bright arc for a share from 0 to 1 and the
 // number set inside it. The arc draws itself in once its card is on screen (styles.css, "2.2"); yellow when it's yours.

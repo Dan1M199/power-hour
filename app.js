@@ -1325,6 +1325,24 @@ function ironmanStory() {
   };
 }
 
+// ---------- a news release ----------
+// Dan's request Nov 20: the What if tool (the Lab, #lab/whatif) gets a launch headline that leads the carousel, with a
+// button to it on the card (st.cta). It runs a week, through Friday Nov 27, 6am Central, and goes through the desk's
+// hides, edits and running order like the site's own. Set LAUNCH to null to drop it.
+const LAUNCH = { until: Date.UTC(2026, 10, 27, 12) };
+function launchStory() {
+  if (!LAUNCH || (AT ? +AT : Date.now()) >= LAUNCH.until) return null;
+  const weeks = DATA.meta.lastScored, me = myTeam && team(myTeam);
+  return {
+    type: 'launch', key: `w${headlineWeek()}:launch`, group: 'league', tone: 'good', kicker: 'New in the Lab', stamp: 'New tool',
+    rids: me ? [me.rid] : [],
+    headline: 'What if you had drafted someone else? The Lab now replays your whole season to find out.',
+    deck: `Tap any player on your roster and What if lists who was still on the board at that pick, with the record each one would have given you. Pick one and all ${say(weeks)} weeks get played again: he takes your guy's spot whenever your guy started, the team that really had him plays without him, and the standings follow. Waiver weeks count too.`,
+    tick: { hook: 'New tool', line: 'What if you had drafted someone else? The Lab now replays your season.' },
+    cta: { href: '#lab/whatif', label: me ? `Replay ${me.name.length > 18 ? 'your' : `${me.name}'s`} draft` : 'Try What if' },
+  };
+}
+
 // ---------- the video headline ----------
 // Dan's request after week 7: Tony Pollard scored the most points in the league for Mo the week after Akrm traded him
 // there, and the headline card plays the "Tony ya Tony" clip. Every number comes from the snapshot: his points and
@@ -1616,7 +1634,7 @@ function carouselProps({ all = false, only = false } = {}) {
   };
   const site = only ? [] : siteStories().flatMap(desk);
   // a celebration (ironmanStory) leads, unless Dan has hidden it or placed it in his running order like any other
-  const party = cel ? desk(cel) : [], placed = posts.arrange?.[`w${headlineWeek()}`] || [];
+  const party = [cel, launchStory()].filter(Boolean).flatMap(desk), placed = posts.arrange?.[`w${headlineWeek()}`] || [];
   const lead = party.filter((st) => !placed.includes(st.key)), mixed = party.filter((st) => placed.includes(st.key));
   if (!site.length && !own.length && !party.length) return null;
   return {

@@ -1,21 +1,31 @@
-// What would have happened (the Lab's What if section, #lab/whatif; Dan's request Nov 20): take one player off your
-// roster, put someone else in his place for the whole season, and replay every week. Two ways to pick the someone
-// else: anyone still on the board when you drafted him, or anyone at all. The numbers are lib/whatif.js; the draft
-// board and the waiver-week points come from /api/history (src/lab/history.js), fetched when the section opens.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+// What would have happened (the Lab's What if section, #lab/whatif; Dan's requests Nov 20): tap a player on your
+// roster and a tray slides out with the players you could have had instead (anyone still on the board at that pick, or
+// anyone at all), each with the record he'd have given you. Pick one and every week is replayed. On a phone the tray is a
+// sheet from the bottom of the screen (transform only, swipe it down to close); from 761px it opens under the row.
+// The numbers are lib/whatif.js; the draft board and the waiver-week points come from /api/history
+// (src/lab/history.js), fetched when the section opens.
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { seasonBook, draftBoard, whatIf, bestSwaps, candidatePool, swapRow, everRostered } from '../../lib/whatif.js';
 import { historyStore, loadHistory } from './history.js';
 import { PosTag, TeamAvatar } from '../shared.jsx';
 
 const ORDER = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DEF: 5 };
-const keep = {}; // the picks, per team, for the visit: { out, mode, inn }
+const keep = {}; // per team, for the visit: { choice: {out, inn, auto}, modes: {out: mode} }
 const rec = (x) => `${x.w}-${x.l}${x.t ? `-${x.t}` : ''}`;
 const signed = (x, f) => `${x > 0 ? '+' : x < 0 ? '−' : ''}${f(Math.abs(x))}`;
+const winsSaid = (dw) => (dw ? `${signed(dw, String)} ${Math.abs(dw) === 1 ? 'win' : 'wins'}` : 'Same record');
+const PHONE = '(max-width: 760px)';
+const usePhone = () => useSyncExternalStore((f) => { const m = matchMedia(PHONE); m.addEventListener('change', f); return () => m.removeEventListener('change', f); }, () => matchMedia(PHONE).matches);
+const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const idle = (f) => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 400 }) : setTimeout(f, 40));
+const unidle = (hnd) => (window.cancelIdleCallback ? cancelIdleCallback(hnd) : clearTimeout(hnd));
 
-function Face({ id }) {
+function Face({ id, cls = 'wi-face' }) {
   const [bad, setBad] = useState(false);
-  if (bad || !/^\d+$/.test(id)) return <span className="wi-face ph" aria-hidden="true">{/^\d+$/.test(id) ? '' : id}</span>;
-  return <img className="wi-face" src={`https://sleepercdn.com/content/nfl/players/thumb/${id}.jpg`} alt="" loading="lazy" decoding="async" onError={() => setBad(true)} />;
+  const num = /^\d+$/.test(id);
+  if (bad || !num) return <span className={`${cls} ph`} aria-hidden="true">{num ? '' : id}</span>;
+  return <img className={cls} src={`https://sleepercdn.com/content/nfl/players/thumb/${id}.jpg`} alt="" loading="lazy" decoding="async" onError={() => setBad(true)} />;
 }
 
 // the chart is drawn at the width it's shown, so its type and bars keep their size on a phone
@@ -32,32 +42,32 @@ function useWidth(fallback) {
   return [ref, w];
 }
 
-// the book (every scored week, indexed) is built once per league and history
-function bookFor(D, raw, body) {
+// the book (every scored week, indexed) is built once per league and history, and so is each player's list of
+// alternatives (`best`, by team, player and mode), so a tray that has been worked out opens at once
+function cacheFor(D, raw, body) {
   const c = D._whatif;
-  if (c && c.body === body) return c.book;
+  if (c && c.body === body) return c;
   const book = seasonBook(D, raw, body);
-  D._whatif = { body, book, board: draftBoard(book, raw) };
-  return book;
+  return (D._whatif = { body, book, board: draftBoard(book, raw), best: new Map() });
 }
 
 export function WhatIf({ D, raw, me, h, demo }) {
   const hs = historyStore.use();
   useEffect(() => { loadHistory({ demo }); }, [demo]);
-  if (!me) return <section className="panel glass span-12 wi-empty"><h2>Pick your team first</h2><p className="sub">{'Choose your team in the box above and the tool lines up your roster: every player you drafted or picked up this season.'}</p></section>;
+  if (!me) return <section className="panel glass span-12 wi-empty"><h2>Pick your team first</h2><p className="sub">{'Choose your team in the box above and your roster lines up here: every player you drafted or picked up this season.'}</p></section>;
   if (!hs) return <section className="panel glass span-12 wi-wait" aria-busy="true"><span className="wi-spin" aria-hidden="true" /><p>{'Getting the draft board and every week of stats.'}</p></section>;
   return <Tool D={D} raw={raw} me={me} h={h} hs={hs} />;
 }
 
 function Tool({ D, raw, me, h, hs }) {
-  const book = bookFor(D, raw, hs.body);
-  const board = D._whatif.board;
-  const { f1, ordinal, short } = h;
+  const cache = cacheFor(D, raw, hs.body);
+  const { book, board } = cache;
+  const { ordinal, short } = h;
   const t = D.byRid[me];
   const name = book.nameOf, pos = book.posOf;
-  const rosterOf = (id) => D.teams.find((x) => x.players.includes(id));
+  const phone = usePhone();
 
-  // your players: everyone you drafted, then everyone who was ever on your roster
+  // your players: your draft picks in order, then today's pickups; the ones who came and went are a tap away
   const mine = useMemo(() => {
     const ever = everRostered(book, me);
     const drafted = board ? board.picks.filter((p) => p.rid === me) : [];
@@ -66,54 +76,76 @@ function Tool({ D, raw, me, h, hs }) {
       ...drafted.map((p) => ({ id: p.id, pick: p, now: t.players.includes(p.id) })),
       ...[...ever].filter((id) => !draftedIds.has(id) && pos(id)).map((id) => ({ id, pick: null, now: t.players.includes(id) })),
     ];
-    const tot = (id) => book.total(id);
-    return rows.sort((a, b) => (a.pick && b.pick ? a.pick.no - b.pick.no : a.pick ? -1 : b.pick ? 1 : (ORDER[pos(a.id)] ?? 9) - (ORDER[pos(b.id)] ?? 9) || tot(b.id) - tot(a.id)));
+    return rows.sort((a, b) => (a.pick && b.pick ? a.pick.no - b.pick.no : a.pick ? -1 : b.pick ? 1
+      : (ORDER[pos(a.id)] ?? 9) - (ORDER[pos(b.id)] ?? 9) || book.total(b.id) - book.total(a.id)));
   }, [book, board, me]);
-
-  // the list starts with your draft picks and today's roster; players who came and went are one tap away
   const [all, setAll] = useState(false);
   const passing = mine.filter((x) => !x.pick && !x.now);
-  const saved = keep[me] || {};
-  const [out, setOut] = useState(saved.out && mine.some((x) => x.id === saved.out) ? saved.out : mine[0]?.id);
-  const outPick = board?.byId[out]?.rid === me ? board.byId[out] : null;
-  const [modeWanted, setMode] = useState(saved.mode || 'board');
-  const mode = outPick ? modeWanted : 'any';
-  const [inn, setInn] = useState(saved.inn || null);
-  const [q, setQ] = useState('');
-  useEffect(() => { keep[me] = { out, mode: modeWanted, inn }; }, [me, out, modeWanted, inn]);
 
-  const opts = { rid: me, out, board, beforePick: mode === 'board' && outPick ? outPick.no : null };
-  const best = useMemo(() => (out ? bestSwaps(book, { ...opts, limit: 8 }) : null), [book, out, mode]);
-  const pool = useMemo(() => (out ? candidatePool(book, opts) : []), [book, out, mode]);
-  const inPool = (id) => pool.some((x) => x.id === id);
-  const pick = inn && inPool(inn) ? inn : best?.list[0]?.id || null;
-  const res = useMemo(() => (out && pick ? whatIf(book, { rid: me, out, inn: pick }) : null), [book, out, pick]);
+  const saved = (keep[me] ||= { modes: {} });
+  const ownPick = (id) => (board?.byId[id]?.rid === me ? board.byId[id] : null);
+  const [modes, setModes] = useState(saved.modes);
+  const modeOf = (id) => (ownPick(id) ? modes[id] || 'board' : 'any');
+  const bestFor = (id, mode = modeOf(id)) => {
+    const k = `${me}|${id}|${mode}`;
+    if (!cache.best.has(k)) cache.best.set(k, bestSwaps(book, { rid: me, out: id, board, beforePick: mode === 'board' ? ownPick(id)?.no : null, limit: 8 }));
+    return cache.best.get(k);
+  };
+  const ready = (id) => cache.best.has(`${me}|${id}|${modeOf(id)}`);
 
-  const found = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (s.length < 2) return [];
-    return pool.filter((x) => name(x.id).toLowerCase().includes(s)).slice(0, 6).map((x) => swapRow(book, { rid: me, out, inn: x.id }));
-  }, [q, pool]);
+  // the replay on show: the one you picked, or to start with your first player's best alternative
+  const [choice, setChoiceRaw] = useState(() => {
+    if (saved.choice) return saved.choice;
+    const first = mine[0]?.id, b = first && bestFor(first).list[0];
+    return b ? { out: first, inn: b.id, auto: true } : null;
+  });
+  const setChoice = (c) => { saved.choice = c; setChoiceRaw(c); };
+  const res = useMemo(() => (choice ? whatIf(book, { rid: me, out: choice.out, inn: choice.inn }) : null), [book, me, choice?.out, choice?.inn]);
+
+  // each row's best alternative, worked out a player at a time while the page is idle
+  const [, bump] = useState(0);
+  useEffect(() => {
+    const todo = mine.map((x) => x.id).filter((id) => !ready(id));
+    let hnd = null, alive = true;
+    const next = () => {
+      const id = todo.shift();
+      if (!alive || !id) return;
+      bestFor(id);
+      bump((n) => n + 1);
+      hnd = idle(next);
+    };
+    hnd = idle(next);
+    return () => { alive = false; unidle(hnd); };
+  }, [mine, modes]);
+
+  // the tray: one open at a time. On desktop the one closing keeps its words while it folds away.
+  const [open, setOpen] = useState(null);
+  const [closing, setClosing] = useState(null);
+  const [sheetFor, setSheetFor] = useState(null);
+  const rowRefs = useRef({});
+  const toggle = (id) => {
+    if (open === id) { setClosing(id); setOpen(null); return; }
+    setClosing(open); setOpen(id); setSheetFor(id);
+  };
+  const close = () => { setClosing(open); setOpen(null); };
+  const toResult = () => {
+    const go = () => document.getElementById('wi-result')?.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'start' });
+    if (phone && open) { close(); setTimeout(go, 340); } else go();
+  };
 
   const whereFrom = (id) => {
     const p = board?.byId[id];
-    if (p) return `Drafted ${ordinal(p.no)} by ${short(D.byRid[p.rid]?.name || 'someone', 18)}`;
+    if (p) return `Drafted ${ordinal(p.no)} by ${short(D.byRid[p.rid]?.name || 'someone', 16)}`;
     if (board) return 'Undrafted';
-    const now = rosterOf(id);
-    return now ? `On ${short(now.name, 18)} now` : 'Free agent';
+    const now = D.teams.find((x) => x.players.includes(id));
+    return now ? `On ${short(now.name, 16)} now` : 'Free agent';
   };
-  const choose = (id) => { setInn(id); setQ(''); };
+  const lastName = (id) => { const n = name(id); return pos(id) === 'DEF' ? n.split(' ').slice(-1)[0] : n.split(' ').slice(1).join(' ') || n; };
 
-  // called as a function, not a component: a component defined here would remount on every render
-  const option = (x, i) => (
-    <li key={x.id}>
-      <button type="button" className="wi-opt" aria-pressed={x.id === pick} onClick={() => choose(x.id)}>
-        {i != null ? <span className="wi-n">{i + 1}</span> : null}
-        <Face id={x.id} />
-        <span className="wi-who"><b>{name(x.id)}</b><small><PosTag pos={pos(x.id)} />{`${whereFrom(x.id)}, ${f1(x.tot)} pts in ${x.games} ${x.games === 1 ? 'game' : 'games'}`}</small></span>
-        <span className="wi-rec"><b>{rec(x.after)}</b><small className={x.dw > 0 ? 'up' : x.dw < 0 ? 'down' : ''}>{x.dw ? `${signed(x.dw, (v) => String(v))} ${Math.abs(x.dw) === 1 ? 'win' : 'wins'}` : 'same record'}</small></span>
-      </button>
-    </li>
+  const tray = (id) => (
+    <Tray key={`${id}|${modeOf(id)}`} id={id} pick={ownPick(id)} mode={modeOf(id)} best={bestFor(id)} book={book} board={board} me={me} h={h} phone={phone}
+      onMode={(m) => { const x = { ...modes, [id]: m }; saved.modes = x; setModes(x); }}
+      choice={choice} res={res} onPick={(inn) => setChoice({ out: id, inn })} onResult={toResult} whereFrom={whereFrom} />
   );
 
   const missing = hs.error ? `The draft board and waiver-week stats didn't load (${hs.error}), so this runs on the league snapshot alone: a player only scores in weeks someone rostered him.`
@@ -122,52 +154,198 @@ function Tool({ D, raw, me, h, hs }) {
 
   return <>
     {missing ? <div className="notice glass span-12 wi-note">{missing}</div> : null}
-    <section className="panel glass span-12 wi-pick">
-      <div className="wi-step">
-        <h2><span className="wi-num">1</span>{'Take a player off your roster'}</h2>
-        <p className="sub">{board ? 'Your draft picks in order, then the players you picked up.' : 'Your roster this season.'}</p>
-        <ul className="wi-roster">
-          {mine.filter((x) => all || x.pick || x.now || x.id === out).map((x) => (
-            <li key={x.id}>
-              <button type="button" aria-pressed={x.id === out} onClick={() => { setOut(x.id); setInn(null); }}>
-                <PosTag pos={pos(x.id)} />
-                <b>{name(x.id)}</b>
-                <small>{x.pick ? `Rd ${x.pick.round}, ${ordinal(x.pick.no)}` : 'Added'}{x.now ? '' : ', gone'}</small>
+    <section className="panel glass wi-list">
+      <h2>{'Your players'}</h2>
+      <p className="sub">{board ? 'Tap a player to see who you could have drafted with that pick instead.' : 'Tap a player to see who you could have had instead.'}</p>
+      <ul className="wi-rows">
+        {mine.filter((x) => all || x.pick || x.now || x.id === choice?.out).map((x) => {
+          const b = ready(x.id) ? bestFor(x.id).list[0] : null, isOpen = open === x.id, chosen = choice?.out === x.id && !choice.auto;
+          const swap = chosen ? res && { id: choice.inn, dw: res.after.w + res.after.t / 2 - (res.before.w + res.before.t / 2) } : b;
+          return (
+            <li key={x.id} className={`${isOpen ? 'open' : ''}${chosen ? ' chosen' : ''}`}>
+              <button type="button" className="wi-row" ref={(el) => (rowRefs.current[x.id] = el)} aria-expanded={isOpen} aria-controls={phone ? undefined : `wi-tray-${x.id}`} onClick={() => toggle(x.id)}>
+                <Face id={x.id} />
+                <span className="wi-row-who">
+                  <b>{name(x.id)}</b>
+                  <small><PosTag pos={pos(x.id)} />{`${x.pick ? `Round ${x.pick.round}, ${ordinal(x.pick.no)}` : 'Picked up'}${x.now ? '' : ', gone'}`}</small>
+                </span>
+                <span className={`wi-row-best${swap ? '' : ' wait'}`}>
+                  {swap ? <>
+                    <small>{chosen ? 'Replaying with' : 'Best instead'}</small>
+                    <b>{lastName(swap.id)}</b>
+                    <em className={swap.dw > 0 ? 'up' : swap.dw < 0 ? 'down' : ''}>{winsSaid(swap.dw)}</em>
+                  </> : <i aria-hidden="true" />}
+                </span>
+                <span className="wi-chev" aria-hidden="true"><svg width="14" height="9" viewBox="0 0 14 9"><path d="M1.5 1.5l5.5 5.5 5.5-5.5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
               </button>
+              {phone ? null : (
+                <div className="wi-drawer" id={`wi-tray-${x.id}`} data-open={isOpen} onTransitionEnd={(e) => { if (e.target === e.currentTarget && closing === x.id) setClosing(null); }}>
+                  <div className="wi-drawer-in">{isOpen || closing === x.id ? tray(x.id) : null}</div>
+                </div>
+              )}
             </li>
-          ))}
-          {passing.length ? <li><button type="button" className="wi-more" aria-expanded={all} onClick={() => setAll(!all)}>{all ? 'Show fewer' : `${passing.length} more who came and went`}</button></li> : null}
-        </ul>
-      </div>
-      <div className="wi-step">
-        <h2><span className="wi-num">2</span>{`Put someone in ${out ? `${name(out)}'s` : 'his'} place`}</h2>
-        <div className="wi-mode" role="group" aria-label="Who you could have had">
-          <button type="button" aria-pressed={mode === 'board'} disabled={!outPick} onClick={() => { setMode('board'); setInn(null); }}>
-            <b>{'Still on the board'}</b><small>{outPick ? `Anyone not drafted before pick ${outPick.no}` : board ? 'Only for players you drafted' : 'Needs the draft board'}</small>
-          </button>
-          <button type="button" aria-pressed={mode === 'any'} onClick={() => { setMode('any'); setInn(null); }}>
-            <b>{'Anyone'}</b><small>{'Any player in the league, all season'}</small>
-          </button>
-        </div>
-        <label className="wi-search"><span className="sr-only">{'Find a player'}</span>
-          <input type="search" placeholder={mode === 'board' ? 'Find anyone still on the board' : 'Find any player'} value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" />
-        </label>
-        {q.trim().length >= 2 ? (
-          found.length ? <ul className="wi-opts">{found.map((x) => option(x))}</ul>
-            : <p className="wi-none">{mode === 'board' ? 'Nobody by that name was still on the board, or he never played.' : 'No player by that name scored this season.'}</p>
-        ) : best?.list.length ? <>
-          <h3 className="wi-h3">{mode === 'board' ? `Best you could have taken at pick ${outPick.no}` : `Best you could have had instead`}</h3>
-          <ul className="wi-opts">{best.list.map((x, i) => option(x, i))}</ul>
-        </> : null}
-      </div>
+          );
+        })}
+      </ul>
+      {passing.length ? <button type="button" className="wi-more" aria-expanded={all} onClick={() => setAll(!all)}>{all ? 'Show fewer players' : `Show ${passing.length} more who came and went`}</button> : null}
     </section>
-    {res ? <Result D={D} book={book} res={res} t={t} h={h} outPick={mode === 'board' ? outPick : null} /> : null}
+    {res ? <Summary D={D} book={book} res={res} h={h} auto={choice.auto} pick={ownPick(choice.out)} mode={modeOf(choice.out)} />
+      : <section className="panel glass wi-res" id="wi-result"><h2>{'Your replay shows up here'}</h2><p className="sub">{'Tap a player, then pick someone to put in his place.'}</p></section>}
+    {res ? <Detail D={D} book={book} res={res} h={h} /> : null}
+    {phone ? <Sheet open={open != null} onClose={close} returnTo={() => rowRefs.current[sheetFor]} label={sheetFor ? `Instead of ${name(sheetFor)}` : ''}>
+      {sheetFor ? tray(sheetFor) : null}
+    </Sheet> : null}
   </>;
 }
 
-// the week-by-week story of one swap
-function Result({ D, book, res, t, h, outPick }) {
-  const { f1, ordinal, short } = h;
+// the tray's contents: who you'd swap out, the two ways to look, the best three (eight with More, plus a search), and
+// once one is picked, the verdict and the way to the full replay
+function Tray({ id, pick, mode, best, book, board, me, h, phone, onMode, choice, res, onPick, onResult, whereFrom }) {
+  const { f1, ordinal } = h;
+  const name = book.nameOf, pos = book.posOf;
+  const [more, setMore] = useState(false);
+  const [q, setQ] = useState('');
+  const pool = useMemo(() => (more ? candidatePool(book, { rid: me, out: id, board, beforePick: mode === 'board' ? pick?.no : null }) : []), [more, mode]);
+  const found = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (s.length < 2) return null;
+    return pool.filter((x) => name(x.id).toLowerCase().includes(s)).slice(0, 5).map((x) => swapRow(book, { rid: me, out: id, inn: x.id }));
+  }, [q, pool]);
+  const list = found || best.list.slice(0, more ? 8 : 3);
+  const picked = choice?.out === id && !choice.auto ? choice.inn : null;
+  const live = picked && res && res.out === id && res.inn === picked ? res : null;
+  const games = book.games(id);
+
+  return (
+    <div className="wi-tray">
+      <div className="wi-tray-head">
+        <Face id={id} cls="wi-face out" />
+        <div>
+          <h3>{`Instead of ${name(id)}`}</h3>
+          <p>{`${pick ? `Round ${pick.round}, ${ordinal(pick.no)} overall. ` : ''}${f1(book.total(id))} points in ${games} ${games === 1 ? 'game' : 'games'}.`}</p>
+        </div>
+      </div>
+      {pick ? (
+        <div className="wi-seg" role="group" aria-label="Who you could have had">
+          <button type="button" aria-pressed={mode === 'board'} onClick={() => onMode('board')}>{`On the board at ${ordinal(pick.no)}`}</button>
+          <button type="button" aria-pressed={mode === 'any'} onClick={() => onMode('any')}>{'Anyone'}</button>
+        </div>
+      ) : null}
+      {list.length ? (
+        <ul className="wi-alts" aria-label={`Players you could have had instead of ${name(id)}`}>
+          {list.map((x) => (
+            <li key={x.id}>
+              <button type="button" className="wi-alt" aria-pressed={x.id === picked} onClick={() => onPick(x.id)}>
+                <Face id={x.id} />
+                <span className="wi-alt-who"><b>{name(x.id)}</b><small><PosTag pos={pos(x.id)} />{whereFrom(x.id)}</small></span>
+                <span className="wi-alt-rec">
+                  <b>{rec(x.after)}</b>
+                  <em className={x.dw > 0 ? 'up' : x.dw < 0 ? 'down' : ''}>{winsSaid(x.dw)}</em>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : <p className="wi-none">{found ? (mode === 'board' ? 'Nobody by that name was still on the board, or he never played.' : 'No player by that name scored this season.') : 'Nobody here scored this season.'}</p>}
+      {more ? (
+        <label className="wi-search"><span className="sr-only">{'Find a player'}</span>
+          <input type="search" placeholder={mode === 'board' ? 'Find anyone still on the board' : 'Find any player'} value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" enterKeyHint="search" />
+        </label>
+      ) : best.list.length > 3 ? <button type="button" className="wi-more" onClick={() => setMore(true)}>{'More players, or search'}</button> : null}
+      {live ? (
+        <div className="wi-tray-foot" aria-live="polite">
+          <p>{`With ${name(picked)} you'd be `}<b>{`${rec(live.after)} and ${ordinal(live.after.seed)}`}</b>{`, instead of ${rec(live.before)} and ${ordinal(live.before.seed)}.`}</p>
+          <button type="button" className="wi-go" onClick={onResult}>{phone ? 'See every week' : 'See week by week'}</button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// a sheet from the bottom of the screen (phones): slides with a transform, the page behind dims and stops scrolling;
+// swipe it down, tap the dimmed page, tap Close or press Escape to close. Focus goes in on open and back to the row.
+function Sheet({ open, onClose, returnTo, label, children }) {
+  const [mounted, setMounted] = useState(open);
+  const [shown, setShown] = useState(false);
+  const sheet = useRef(null), drag = useRef(null);
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      const a = requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
+      return () => cancelAnimationFrame(a);
+    }
+    setShown(false);
+    if (calm()) setMounted(false); // no transition to wait for
+    return undefined;
+  }, [open]);
+  useEffect(() => {
+    if (!mounted) return undefined;
+    document.documentElement.classList.add('locked');
+    const key = (e) => { if (e.key === 'Escape') onClose(); };
+    addEventListener('keydown', key);
+    return () => { document.documentElement.classList.remove('locked'); removeEventListener('keydown', key); };
+  }, [mounted]);
+  const was = useRef(false);
+  useEffect(() => {
+    if (shown) sheet.current?.focus({ preventScroll: true });
+    else if (was.current) returnTo()?.focus({ preventScroll: true });
+    was.current = shown;
+  }, [shown]);
+
+  // the drag: the sheet follows the finger down (never up past its place) and lets go past a third of its height or on
+  // a quick flick. It starts from the grip, or anywhere once the sheet's own list is scrolled to the top; on a button
+  // a finger has to travel 12px first, so a tap that wobbles is still a tap.
+  const down = (e) => {
+    const body = sheet.current.querySelector('.wi-sheet-body'), grip = e.target.closest('.wi-sheet-grip');
+    if (!grip && body.scrollTop > 0) return;
+    if (e.target.closest('input')) return;
+    drag.current = { y: e.touches[0].clientY, t: performance.now(), dy: 0, soft: !grip && !!e.target.closest('button') };
+  };
+  const move = (e) => {
+    const d = drag.current;
+    if (!d) return;
+    d.dy = Math.max(0, e.touches[0].clientY - d.y);
+    if (!d.on && d.dy < (d.soft ? 12 : 4)) return;
+    d.on = true;
+    if (e.cancelable) e.preventDefault();
+    sheet.current.style.transition = 'none';
+    sheet.current.style.transform = `translateY(${d.dy}px)`;
+  };
+  const up = () => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d?.on) return;
+    const el = sheet.current, fast = d.dy / Math.max(1, performance.now() - d.t) > 0.6;
+    el.style.transition = '';
+    el.style.transform = '';
+    if (d.dy > el.offsetHeight / 3 || (fast && d.dy > 40)) onClose();
+  };
+  // touchmove must be able to stop the page from scrolling while the sheet is dragged, so it's not passive
+  useEffect(() => {
+    const el = sheet.current;
+    if (!el) return undefined;
+    el.addEventListener('touchmove', move, { passive: false });
+    return () => el.removeEventListener('touchmove', move);
+  }, [mounted]);
+
+  if (!mounted) return null;
+  return createPortal(
+    <div className={`wi-sheet-wrap${shown ? ' in' : ''}`}>
+      <div className="wi-scrim" onClick={onClose} aria-hidden="true" />
+      <div className="wi-sheet" ref={sheet} role="dialog" aria-modal="true" aria-label={label} tabIndex={-1}
+        onTouchStart={down} onTouchEnd={up} onTouchCancel={up}
+        onTransitionEnd={(e) => { if (e.target === sheet.current && !shown) setMounted(false); }}>
+        <div className="wi-sheet-grip"><span aria-hidden="true" /><button type="button" className="wi-sheet-x" onClick={onClose}>{'Close'}</button></div>
+        <div className="wi-sheet-body">{children}</div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+// the replay at a glance: who for whom, the record before and after, what moved, and the margin each week
+function Summary({ D, book, res, h, auto, pick, mode }) {
+  const { f1, ordinal } = h;
   const name = book.nameOf, team = (rid) => D.byRid[rid];
   const X = name(res.out), Y = name(res.inn);
   const b = res.before, a = res.after;
@@ -176,20 +354,69 @@ function Result({ D, book, res, t, h, outPick }) {
   const inPts = used.reduce((s, x) => s + (x.inPts || 0), 0);
   const hurt = res.weeks.filter((x) => x.hitOpp && x.lost);
   const cut = D.meta.playoffTeams;
-  const lead = outPick ? `Draft ${Y} instead of ${X} with the ${ordinal(outPick.no)} pick` : `Swap ${X} for ${Y} all season`;
+  const lead = pick && mode === 'board' ? `Draft ${Y} instead of ${X} with the ${ordinal(pick.no)} pick` : `Swap ${X} for ${Y} all season`;
   const verdict = `${lead} and you'd be ${rec(a)} and ${ordinal(a.seed)}${a.seed <= cut && b.seed > cut ? ', in the playoff spots' : a.seed > cut && b.seed <= cut ? ', out of the playoff spots' : ''}, instead of ${rec(b)} and ${ordinal(b.seed)}.`;
   const more = [
     used.length ? `${Y} would have started ${used.length} of ${res.weeks.length} weeks for you, ${f1(inPts)} points in your lineup.` : `${Y} would never have cracked your lineup.`,
     hurt.length ? `${hurt.length === 1 ? 'Once' : `${hurt.length} times`} you'd have played the team that lost him.` : '',
   ].filter(Boolean).join(' ');
 
-  // the margin chart: each week's margin before (outline) and after (filled), the flips marked
-  const [figRef, figW] = useWidth(720);
+  const [figRef, figW] = useWidth(640);
   const W = Math.max(280, figW), H = W < 500 ? 170 : 200, pad = 26, mid = (H - pad) / 2 + 4;
   const ms = res.weeks.filter((x) => x.opp != null);
   const max = Math.max(10, ...ms.flatMap((x) => [Math.abs(x.was[0] - x.was[1]), Math.abs(x.now[0] - x.now[1])])) * 1.1;
   const bw = W / Math.max(1, ms.length), Y0 = (v) => mid - (v / max) * (mid - 8);
 
+  return (
+    <section className="panel glass wi-res" id="wi-result">
+      {auto ? <p className="wi-auto">{'Showing your first pick to start. Tap any player to try another.'}</p> : null}
+      <div className="wi-swap">
+        <span className="wi-p out"><Face id={res.out} /><small>{X}</small></span>
+        <svg className="wi-arrow" width="34" height="16" viewBox="0 0 34 16" aria-hidden="true"><path d="M2 8h28M24 3l6 5-6 5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <span className="wi-p in"><Face id={res.inn} /><small>{Y}</small></span>
+      </div>
+      <div className="wi-score">
+        <div className="wi-big"><small>{'Real record'}</small><b className="was">{rec(b)}</b></div>
+        <svg className="wi-arrow" width="34" height="16" viewBox="0 0 34 16" aria-hidden="true"><path d="M2 8h28M24 3l6 5-6 5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <div className="wi-big"><small>{'What if'}</small><b>{rec(a)}</b></div>
+      </div>
+      <ul className="wi-chips">
+        <li className={dw > 0 ? 'up' : dw < 0 ? 'down' : ''}>{winsSaid(dw)}</li>
+        <li className={dseed > 0 ? 'up' : dseed < 0 ? 'down' : ''}>{`${ordinal(a.seed)} in the standings${dseed ? `, ${dseed > 0 ? 'up' : 'down'} ${Math.abs(dseed)}` : ''}`}</li>
+        <li className={dpf > 0.05 ? 'up' : dpf < -0.05 ? 'down' : ''}>{`${signed(dpf, f1)} points for`}</li>
+        <li>{`${res.flips.length} ${res.flips.length === 1 ? 'game flips' : 'games flip'}`}</li>
+      </ul>
+      <p className="wi-verdict">{verdict}</p>
+      <p className="sub">{more}</p>
+      <figure className="wi-chart" ref={figRef}>
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Your margin each week, real and what if">
+          <rect x="0" y="0" width={W} height={H - pad + 8} rx="16" className="wi-plate" />
+          <line x1="10" x2={W - 10} y1={mid} y2={mid} className="wi-zero" />
+          {ms.map((x, i) => {
+            const m0 = x.was[0] - x.was[1], m1 = x.now[0] - x.now[1], cx = i * bw + bw / 2, w1 = Math.min(30, bw * 0.42);
+            const flip = x.res[0] !== x.res[1], o = team(x.opp);
+            const tip = `Week ${x.w} vs ${o.name}: ${f1(x.was[0])}–${f1(x.was[1])} (${x.res[0]}) for real, ${f1(x.now[0])}–${f1(x.now[1])} (${x.res[1]}) what if`;
+            const top = (m) => Math.min(Y0(m), mid), hgt = (m) => Math.max(1.5, Math.abs(Y0(m) - mid));
+            return <g key={x.w} data-tip={tip} className={flip ? 'flip' : ''}>
+              <rect x={cx - bw / 2} y="0" width={bw} height={H - pad + 8} fill="transparent" />
+              {flip ? <rect x={cx - w1 / 2 - 7} y="6" width={w1 + 14} height={H - pad - 4} rx="12" className="wi-flipband" /> : null}
+              <rect x={cx - w1 / 2} y={top(m0)} width={w1} height={hgt(m0)} rx="5" className="wi-was" />
+              <rect x={cx - w1 / 2 + 5} y={top(m1)} width={Math.max(2, w1 - 10)} height={hgt(m1)} rx="4" className={m1 > 0 ? 'wi-now win' : m1 < 0 ? 'wi-now loss' : 'wi-now'} />
+              <text x={cx} y={H - 6} textAnchor="middle" className="wi-axis">{x.w}</text>
+            </g>;
+          })}
+        </svg>
+        <figcaption>{'Your margin each week: the outline is what happened, the bar inside is the what if (above the line a win, below a loss). Flipped games are shaded. Tap a week for the scores.'}</figcaption>
+      </figure>
+    </section>
+  );
+}
+
+// week by week, the standings what if, and how it works
+function Detail({ D, book, res, h }) {
+  const { f1, short } = h;
+  const name = book.nameOf, team = (rid) => D.byRid[rid];
+  const X = name(res.out), Y = name(res.inn);
   const said = (x) => {
     const p = (id) => f1(book.pts(x.w, id));
     const opp = x.opp != null ? team(x.opp) : null;
@@ -208,70 +435,29 @@ function Result({ D, book, res, t, h, outPick }) {
       default: return lostTxt.trim() || 'No change.';
     }
   };
-
   return <>
-    <section className="panel glass span-12 wi-res">
-      <div className="wi-swap" aria-hidden="true">
-        <span className="wi-p out"><Face id={res.out} /><small>{X}</small></span>
-        <svg className="wi-arrow" width="34" height="16" viewBox="0 0 34 16"><path d="M2 8h28M24 3l6 5-6 5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        <span className="wi-p in"><Face id={res.inn} /><small>{Y}</small></span>
-      </div>
-      <div className="wi-score">
-        <div className="wi-big"><small>{'Real record'}</small><b className="was">{rec(b)}</b></div>
-        <svg className="wi-arrow" width="34" height="16" viewBox="0 0 34 16" aria-hidden="true"><path d="M2 8h28M24 3l6 5-6 5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        <div className="wi-big"><small>{'What if'}</small><b>{rec(a)}</b></div>
-        <ul className="wi-chips">
-          <li className={dw > 0 ? 'up' : dw < 0 ? 'down' : ''}>{dw ? `${signed(dw, String)} ${Math.abs(dw) === 1 ? 'win' : 'wins'}` : 'Same record'}</li>
-          <li className={dseed > 0 ? 'up' : dseed < 0 ? 'down' : ''}>{`${ordinal(a.seed)} in the standings${dseed ? `, ${dseed > 0 ? 'up' : 'down'} ${Math.abs(dseed)}` : ''}`}</li>
-          <li className={dpf > 0.05 ? 'up' : dpf < -0.05 ? 'down' : ''}>{`${signed(dpf, f1)} points for`}</li>
-          <li>{`${res.flips.length} ${res.flips.length === 1 ? 'game flips' : 'games flip'}`}</li>
-        </ul>
-      </div>
-      <p className="wi-verdict">{verdict}</p>
-      <p className="sub">{more}</p>
-      <figure className="wi-chart" ref={figRef}>
-        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Your margin each week, real and what if">
-          <rect x="0" y="0" width={W} height={H - pad + 8} rx="16" className="wi-plate" />
-          <line x1="10" x2={W - 10} y1={mid} y2={mid} className="wi-zero" />
-          {ms.map((x, i) => {
-            const m0 = x.was[0] - x.was[1], m1 = x.now[0] - x.now[1], cx = i * bw + bw / 2, w1 = Math.min(30, bw * 0.42);
-            const flip = x.res[0] !== x.res[1], o = team(x.opp);
-            const tip = `Week ${x.w} vs ${o.name}: ${f1(x.was[0])}–${f1(x.was[1])} (${x.res[0]}) for real, ${f1(x.now[0])}–${f1(x.now[1])} (${x.res[1]}) what if`;
-            const top = (m) => Math.min(Y0(m), mid), hgt = (m) => Math.max(1.5, Math.abs(Y0(m) - mid));
-            return <g key={x.w} data-tip={tip} className={flip ? 'flip' : ''}>
-              <rect x={cx - bw / 2} y="0" width={bw} height={H - pad + 8} fill="transparent" />
-              {flip ? <rect x={cx - w1 / 2 - 7} y="6" width={w1 + 14} height={H - pad - 4} rx="12" className="wi-flipband" /> : null}
-              <rect x={cx - w1 / 2} y={top(m0)} width={w1} height={hgt(m0)} rx="5" className="wi-was" />
-              <rect x={cx - w1 / 2 + 5} y={top(m1)} width={w1 - 10} height={hgt(m1)} rx="4" className={m1 > 0 ? 'wi-now win' : m1 < 0 ? 'wi-now loss' : 'wi-now'} />
-              <text x={cx} y={H - 6} textAnchor="middle" className="wi-axis">{x.w}</text>
-            </g>;
-          })}
-        </svg>
-        <figcaption>{'Your margin each week: the outline is what happened, the bar inside is the what if (above the line a win, below a loss). Flipped games are shaded. Hover or tap a week for the scores.'}</figcaption>
-      </figure>
-    </section>
-
-    <section className="panel glass span-7 wi-weeks">
+    <section className="panel glass wi-weeks">
       <h2>{'Week by week'}</h2>
       <ol>
         {res.weeks.map((x) => {
           const o = x.opp != null ? team(x.opp) : null, flip = x.res[0] !== x.res[1];
+          const moved = flip || x.now[0] !== x.was[0] || x.now[1] !== x.was[1];
           return <li key={x.w} className={flip ? 'flip' : ''}>
             <div className="wi-wk-top">
               <span className="wi-wk">{`Week ${x.w}`}</span>
               <span className="wi-vs">{o ? `vs ${short(o.name, 20)}` : ''}</span>
-              <span className="wi-sc">
-                <span className={`r ${x.res[0]}`}>{`${x.res[0] || ''} ${f1(x.was[0])}–${f1(x.was[1])}`}</span>
-                {flip || x.now[0] !== x.was[0] || x.now[1] !== x.was[1] ? <><span className="to" aria-label="becomes">{'→'}</span><span className={`r ${x.res[1]} now`}>{`${x.res[1] || ''} ${f1(x.now[0])}–${f1(x.now[1])}`}</span></> : null}
-              </span>
+              {flip ? <span className="wi-flip-tag">{x.res[1] === 'W' ? 'Now a win' : x.res[1] === 'L' ? 'Now a loss' : 'Now a tie'}</span> : null}
+            </div>
+            <div className="wi-sc">
+              <span className={`r ${x.res[0]}`}>{`${x.res[0] || ''} ${f1(x.was[0])}–${f1(x.was[1])}`}</span>
+              {moved ? <><span className="to" aria-label="becomes">{'→'}</span><span className={`r ${x.res[1]} now`}>{`${x.res[1] || ''} ${f1(x.now[0])}–${f1(x.now[1])}`}</span></> : null}
             </div>
             <p>{said(x)}</p>
           </li>;
         })}
       </ol>
     </section>
-
-    <section className="panel glass span-5 wi-table">
+    <section className="panel glass wi-table">
       <h2>{'The standings, what if'}</h2>
       <p className="sub">{`Everyone's record with ${Y} on your team all season. Top ${D.meta.playoffTeams} make the playoffs.`}</p>
       <table>
@@ -289,8 +475,7 @@ function Result({ D, book, res, t, h, outPick }) {
         </tbody>
       </table>
     </section>
-
-    <section className="panel glass span-12 wi-how">
+    <section className="panel glass wi-how">
       <h2>{'How it works'}</h2>
       <ul>
         <li>{`In every week ${X} started for you, ${Y} takes his spot (trading places with a starter when he plays another position). If ${Y} was on a bye or hurt, your best benched player who fits fills in.`}</li>

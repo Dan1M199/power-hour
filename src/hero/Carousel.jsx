@@ -7,7 +7,7 @@ import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState }
 import { shortName } from '../../lib/matchup.js';
 import { storyKeys } from './storyKeys.js';
 import { useReactions, loadReactions, react } from './reactions.js';
-import { TeamAvatar, Headshot, ChampTag, ChampBadge } from '../shared.jsx';
+import { TeamAvatar, Headshot, ChampTag, ChampBadge, WhatIfLink } from '../shared.jsx';
 import { TradeGraphic } from './TradeGraphic.jsx';
 import { Card, useRing } from './Ring.jsx';
 import { doubleTap, fireHeadline } from '../buzz/burst.js';
@@ -230,6 +230,7 @@ function Slide({ st, i, n, D, h, groups, runs, date, night, clip, slideRef, hk, 
       {st.clip ? <><div className="clip-head">{top}{hed}</div><ClipPrint st={st} D={D} h={h} clip={clip} /></>
         : st.photo ? <><div className="clip-head">{top}{hed}</div><PhotoPrint st={st} D={D} h={h} /></> : <>{top}{hed}</>}
       <p className="lead-deck"><Marked text={st.deck} marks={st.mark} /></p>
+      {st.cta ? <WhatIfLink cls="on-scene" label={st.cta.label} /> : null}
       {rx.enabled ? <Suspense fallback={<div className="rxn-hold" />}><Reactions hk={hk} label={tickOf(st).hook} rx={rx} react={react} /></Suspense> : null}
       {st.bug ? <ScoreBug bug={st.bug} h={h} /> : st.trade ? <TradeGraphic trade={st.trade} D={D} h={h} /> : <Cast st={st} D={D} h={h} />}
     </article>
