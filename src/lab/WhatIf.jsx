@@ -5,7 +5,7 @@
 // sheet from the bottom of the screen (transform only, swipe it down to close); from 761px it opens under the row.
 // The numbers are lib/whatif.js; the draft board and the waiver-week points come from /api/history
 // (src/lab/history.js), fetched when the section opens.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { seasonBook, draftBoard, whatIf, bestSwaps, candidatePool, swapRow, everRostered, recordWith } from '../../lib/whatif.js';
 import { historyStore, loadHistory } from './history.js';
@@ -27,20 +27,6 @@ function Face({ id, cls = 'wi-face' }) {
   const num = /^\d+$/.test(id);
   if (bad || !num) return <span className={`${cls} ph`} aria-hidden="true">{num ? '' : id}</span>;
   return <img className={cls} src={`https://sleepercdn.com/content/nfl/players/thumb/${id}.jpg`} alt="" loading="lazy" decoding="async" onError={() => setBad(true)} />;
-}
-
-// the chart is drawn at the width it's shown, so its type and bars keep their size on a phone
-function useWidth(fallback) {
-  const ref = useRef(null);
-  const [w, setW] = useState(fallback);
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return undefined;
-    const ro = new ResizeObserver(([e]) => { const x = Math.round(e.contentRect.width); if (x > 0) setW((old) => (Math.abs(old - x) > 1 ? x : old)); });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-  return [ref, w];
 }
 
 // the book (every scored week, indexed) is built once per league and history, and so is each player's list of
@@ -198,7 +184,6 @@ function Tool({ D, raw, me, h, hs }) {
     const now = D.teams.find((x) => x.players.includes(id));
     return now ? `On ${short(now.name, 16)} now` : 'Free agent';
   };
-  const lastName = (id) => { const n = name(id); return pos(id) === 'DEF' ? n.split(' ').slice(-1)[0] : n.split(' ').slice(1).join(' ') || n; };
 
   const tray = (id) => (
     <Tray key={`${id}|${modeOf(id)}`} id={id} pick={ownPick(id)} mode={modeOf(id)} best={bestFor(id)} book={book} board={board} me={me} h={h} phone={phone}
@@ -241,7 +226,7 @@ function Tool({ D, raw, me, h, hs }) {
                 </span>
                 <span className={`wi-row-best${sw || b ? '' : ' wait'}`}>
                   {sw ? <><small>{'This change'}</small><em className={dw > 0 ? 'up' : dw < 0 ? 'down' : ''}>{winsSaid(dw)}</em></>
-                    : b ? <><small>{'Best instead'}</small><b>{lastName(b.id)}</b><em className={b.dw > 0 ? 'up' : b.dw < 0 ? 'down' : ''}>{winsSaid(b.dw)}</em></>
+                    : b ? <><small>{'Best swap'}</small><em className={b.dw > 0 ? 'up' : ''}>{b.dw > 0 ? `Up to ${winsSaid(b.dw)}` : 'No extra wins'}</em></>
                     : <i aria-hidden="true" />}
                 </span>
                 <span className="wi-chev" aria-hidden="true"><svg width="14" height="9" viewBox="0 0 14 9"><path d="M1.5 1.5l5.5 5.5 5.5-5.5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
@@ -452,14 +437,12 @@ function Summary({ D, book, res, h, auto, costly, pick, mode }) {
     hurt ? `${hurt === 1 ? 'Once' : `${hurt} times`} you'd have played a team that lost one of them.` : '',
   ].filter(Boolean).join(' ');
 
-  // the chart: per week your real score (pale) beside the what if (charcoal, red when it's a loss), their score as a
-  // tick across both, weeks that changed lit, flipped results on butter with the old and new result over them
-  const [figRef, figW] = useWidth(640);
-  const W = Math.max(280, figW), H = W < 500 ? 210 : 240, padT = 28, padB = 26;
+  // the chart (redone Nov 20 for phones): a row per week on one shared scale from zero. The pale bar is the score the
+  // week kept, charcoal what the swap added, a red outline what it cost; the black tick is their score, so a bar past
+  // the tick is a win. Only flipped results are lit. On the right, the result and how far your score moved.
   const ms = res.weeks.filter((x) => x.opp != null);
-  const top = Math.max(50, ...ms.flatMap((x) => [x.was[0], x.now[0], x.was[1], x.now[1]])) * 1.06;
-  const Y0 = (v) => padT + (1 - Math.max(0, v) / top) * (H - padT - padB);
-  const bw = W / Math.max(1, ms.length), bar = Math.max(5, Math.min(18, bw * 0.28));
+  const top = Math.max(50, ...ms.flatMap((x) => [x.was[0], x.now[0], x.now[1]])) * 1.04;
+  const at = (v) => `${(Math.max(0, v) / top) * 100}%`;
   const grid = [50, 100, 150, 200].filter((v) => v < top);
 
   return (
@@ -487,39 +470,43 @@ function Summary({ D, book, res, h, auto, costly, pick, mode }) {
       </ul>
       <p className="wi-verdict">{verdict}</p>
       <p className="sub">{more}</p>
-      <figure className="wi-chart" ref={figRef}>
-        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Your score each week, real and what if, with your opponent's">
-          <rect x="0" y="0" width={W} height={H - padB + 6} rx="16" className="wi-plate" />
-          {ms.map((x, i) => {
-            // the weeks that changed, lit first so the grid and the bars draw over them
-            const flip = x.res[0] !== x.res[1], moved = x.now[0] !== x.was[0] || x.now[1] !== x.was[1];
-            return moved ? <rect key={x.w} x={i * bw + 3} y="4" width={bw - 6} height={H - padB - 2} rx="12" className={flip ? 'wi-band flip' : 'wi-band'} /> : null;
+      <figure className="wi-chart">
+        <div className="wi-wkc" role="img" aria-label="Your score each week, real and what if, with your opponent's">
+          <div className="wi-wkc-row wi-wkc-axis" aria-hidden="true">
+            <span />
+            <span className="wi-wkc-track">{grid.map((v) => <i key={v} style={{ left: at(v) }}>{v}</i>)}</span>
+            <span />
+          </div>
+          {ms.map((x) => {
+            const o = team(x.opp), flip = x.res[0] !== x.res[1];
+            const was = x.was[0], now = x.now[0], d = now - was, lo = Math.min(was, now);
+            const tip = `Week ${x.w} vs ${o.name}: ${f1(was)}–${f1(x.was[1])} (${x.res[0]}) for real, ${f1(now)}–${f1(x.now[1])} (${x.res[1]}) what if`;
+            return (
+              <div key={x.w} className={`wi-wkc-row${flip ? ' flip' : ''}`} data-tip={tip}>
+                <span className="wi-wkc-n">{x.w}</span>
+                <span className="wi-wkc-track">
+                  {grid.map((v) => <i key={v} className="g" style={{ left: at(v) }} />)}
+                  <span className="bar base" style={{ width: at(lo) }} />
+                  {d > 0.05 ? <span className="bar gain" style={{ left: at(was), width: at(d) }} /> : null}
+                  {d < -0.05 ? <span className="bar lost" style={{ left: at(now), width: at(-d) }} /> : null}
+                  <span className="opp" style={{ left: at(x.now[1]) }} />
+                </span>
+                <span className="wi-wkc-res">
+                  <b className={x.res[1]}>{flip ? `${x.res[0]}→${x.res[1]}` : x.res[1]}</b>
+                  <small>{Math.abs(d) > 0.05 ? signed(d, f1) : 'Same'}</small>
+                </span>
+              </div>
+            );
           })}
-          {grid.map((v) => <g key={v}><line x1="8" x2={W - 8} y1={Y0(v)} y2={Y0(v)} className="wi-grid" /><text x="12" y={Y0(v) - 4} className="wi-gl">{v}</text></g>)}
-          {ms.map((x, i) => {
-            const cx = i * bw + bw / 2, o = team(x.opp);
-            const flip = x.res[0] !== x.res[1], moved = x.now[0] !== x.was[0] || x.now[1] !== x.was[1];
-            const tip = `Week ${x.w} vs ${o.name}: ${f1(x.was[0])}–${f1(x.was[1])} (${x.res[0]}) for real, ${f1(x.now[0])}–${f1(x.now[1])} (${x.res[1]}) what if`;
-            const base = Y0(0);
-            return <g key={x.w} data-tip={tip} className={`${flip ? 'flip' : ''}${moved ? ' moved' : ''}`}>
-              <rect x={cx - bw / 2} y="0" width={bw} height={H} fill="transparent" />
-              <rect x={cx - bar - 1} y={Y0(x.was[0])} width={bar} height={Math.max(1, base - Y0(x.was[0]))} rx="3" className="wi-bar-was" />
-              <rect x={cx + 1} y={Y0(x.now[0])} width={bar} height={Math.max(1, base - Y0(x.now[0]))} rx="3" className={`wi-bar-now${x.res[1] === 'L' ? ' loss' : ''}`} />
-              <line x1={cx - bar - 4} x2={cx + bar + 4} y1={Y0(x.now[1])} y2={Y0(x.now[1])} className="wi-opp" />
-              {flip ? <text x={cx} y="18" textAnchor="middle" className="wi-fl">{`${x.res[0]}→${x.res[1]}`}</text> : null}
-              <text x={cx} y={H - 7} textAnchor="middle" className="wi-axis">{x.w}</text>
-            </g>;
-          })}
-        </svg>
+        </div>
         <ul className="wi-legend">
-          <li><i className="k-was" />{'Your real score'}</li>
-          <li><i className="k-now" />{'What if'}</li>
-          <li><i className="k-loss" />{'What if, a loss'}</li>
+          <li><i className="k-was" />{'Score kept'}</li>
+          <li><i className="k-gain" />{'Added by the swap'}</li>
+          <li><i className="k-lost" />{'Lost by the swap'}</li>
           <li><i className="k-opp" />{'Their score'}</li>
-          <li><i className="k-moved" />{'Score changed'}</li>
           <li><i className="k-flip" />{'Result flips'}</li>
         </ul>
-        <figcaption>{'Each week, your real score beside the what if. Tap a week for the scores.'}</figcaption>
+        <figcaption>{'Each week from zero: past the black tick is a win. Tap a week for the scores.'}</figcaption>
       </figure>
     </section>
   );
