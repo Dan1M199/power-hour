@@ -75,8 +75,8 @@ const MOODS = {
   lab: { c: ['#3A9E55', '#4FB06A', '#7FC35E', '#A6D16A'], warm: '#FFE01A', speed: 0.85, drift: 0.6 },
 };
 const THEMES = {
-  light: { base: '#55A653', amt: 1, sheen: 0.12, stripe: 1, bloom: 0.62 },
-  dark: { base: '#0A1A0F', amt: 0.4, sheen: 0.05, stripe: 0.7, bloom: 0.2 },
+  light: { base: '#2F7A38', amt: 0.78, sheen: 0.08, stripe: 1, bloom: 0.22 },
+  dark: { base: '#06120A', amt: 0.32, sheen: 0.04, stripe: 0.6, bloom: 0.07 },
 };
 
 export function initSilk() {

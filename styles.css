@@ -5712,3 +5712,56 @@ html.admin-mode { background: var(--np-paper); }
   .footer .gs-sponsor { flex-direction: column; align-items: flex-start; gap: 12px; }
   .gs-glass { width: 150px; }
 }
+
+/* ---------- 4.4: readability (Dan's request Nov 20) ----------
+   4.3's light made the page as bright as the cards, so 46% glass over it read as pale green and the muted greys
+   washed out. The page steps down and the cards step up: the silk is deeper turf with a gentler light (src/silk.js
+   THEMES), and every glass surface is nearly solid, so text sits on a clear, even face in both themes. At night the
+   glass is a smoked dark green instead of a white tint, and the page under it is darker again. */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.84);
+  --glass-bg-strong: rgba(255, 255, 255, 0.92);
+  --glass-fill: rgba(236, 244, 234, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.8);
+  --glass-solid: rgba(255, 255, 255, 0.96);
+  --glass-float: rgba(252, 253, 251, 0.94);
+  --shadow-soft: 0 10px 30px rgba(8, 40, 18, 0.2);
+  --shadow-lift: 0 16px 40px rgba(8, 40, 18, 0.28);
+  --aurora-base: #2F7A38;
+  --aurora-top: #3E8A44;
+  --haze: rgba(255, 252, 230, 0.12);
+  --glass-light: radial-gradient(130% 90% at 12% -8%, rgba(255, 255, 255, 0.5) 0, rgba(255, 255, 255, 0) 60%);
+}
+:root[data-theme='dark'] {
+  --glass-bg: rgba(10, 22, 14, 0.78);
+  --glass-bg-strong: rgba(16, 30, 20, 0.88);
+  --glass-fill: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-solid: rgba(12, 24, 16, 0.96);
+  --glass-float: rgba(12, 24, 16, 0.94);
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --shadow-lift: 0 16px 40px rgba(0, 0, 0, 0.55);
+  --aurora-base: #0A1A0F;
+  --aurora-top: #12281A;
+}
+:root[data-theme='dark'].silk-on .sky::after { --haze: rgba(200, 240, 190, 0.04); }
+/* the muted inks a step darker in the day, a step lighter at night, now that they sit on solid faces */
+:root { --ink-2: #263A2C; --ink-3: #4A5A4E; --text-secondary: #4A5A4E; }
+:root[data-theme='dark'] { --ink-2: #DDE5DF; --ink-3: #BCC8C0; --text-secondary: #BCC8C0; }
+/* the hero-gradient buttons keep white words at night (the dark-ink list had turned them dark) */
+:root[data-theme='dark'] :is(.cta, .pth-share:not(.alt), .pth-invite, .ag-btn.primary, .pth-cta) { color: var(--chalk); }
+/* words straight on the turf: white with a soft shade now that the turf is deeper (dark ink there fell to 3.5:1) */
+:root .view-head :is(h1, .page-title), :root .view-head p, :root .view-head h1 + p { color: var(--chalk); text-shadow: 0 1px 14px color-mix(in srgb, var(--island) 35%, transparent); }
+:root .rank:not(:nth-child(-n + 3)) .jersey { color: color-mix(in srgb, var(--chalk) 88%, transparent); text-shadow: 0 2px 18px color-mix(in srgb, var(--island) 40%, transparent); }
+/* chips and rings that the dark-ink list had turned dark on what are now dark faces */
+:root[data-theme='dark'] .view-head .wk.wk.wk { color: var(--chalk); text-shadow: none; }
+:root .view-head :is(h1, .page-title) .wk { text-shadow: none; }
+:root[data-theme='dark'] :is(.aring, .aring-n b) { color: var(--chalk); }
+:root[data-theme='dark'] :is(.pth-cta-label, .gotw-more) { color: var(--chalk); }
+:root .gotw-more { color: var(--chalk); }
+:root .pth-cta-new { color: var(--ink-day); }
+:root[data-theme='dark'] :is(.pth-invite-go, .pth-coach) { color: var(--sel-ink); }
+:root .lab-tabs a[aria-current='page'], :root[data-theme='dark'] .lab-tabs a[aria-current='page'] { color: var(--sel-ink); }
+:root .lab-tabs a[aria-current='page'] :is(b, small) { color: inherit; }
+:root .tx-hello strong { color: var(--ink); } /* the 2.x yellow sat on what is now a white note */
+:root .needs > .lbl { color: var(--chalk); }
