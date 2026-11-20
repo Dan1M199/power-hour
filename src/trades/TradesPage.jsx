@@ -66,9 +66,9 @@ export function TradesPage({ D, me, h, state, onState }) {
 }
 
 // whose trade ideas: picking a team here picks it for the whole site
-export function TradePicker({ D, me, onTeam }) {
+export function TradePicker({ D, me, onTeam, label = 'Trade ideas for' }) {
   return (
-    <label className="trade-pick"><span>Trade ideas for</span>
+    <label className="trade-pick"><span>{label}</span>
       <select id="trade-team" value={me ? String(me) : ''} onChange={(e) => onTeam(Number(e.target.value))}>
         <option value="">Choose your team</option>
         {[...D.teams].sort((a, b) => a.name.localeCompare(b.name)).map((t) => <option key={t.rid} value={t.rid}>{t.name}</option>)}

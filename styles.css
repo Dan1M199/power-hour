@@ -663,7 +663,7 @@ h3 { font: 800 17px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .filters a { display: inline-block; text-decoration: none; }
 /* the Lab's section switcher: a tray like the header's tabs, a segment per section with a line saying what's in it,
    the active one on the amber pill */
-.lab-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; max-width: 660px; margin: 24px 0 0; padding: 5px;
+.lab-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; max-width: 860px; margin: 24px 0 0; padding: 5px;
   border-radius: var(--r-card); background: var(--tile); box-shadow: var(--tray-edge); }
 .lab-tabs a { display: grid; gap: 3px; min-width: 0; padding: 10px 16px 11px; border-radius: var(--r-card); text-decoration: none; transition: background-color 0.15s; }
 .lab-tabs b { font: 800 16px/1 var(--display); letter-spacing: 0.01em; color: var(--ink-2); }
@@ -6197,3 +6197,153 @@ h2, h3, .sec-title { font-weight: 500; letter-spacing: -0.015em; }
 :root[data-theme='dark'] .aring { --aring-c: var(--au-yellow); }
 :root[data-theme='dark'] .aring.you { --aring-c: var(--au-yellow-hi); }
 :root[data-theme='dark'] .rank.nudge:not(.open) .pull { color: var(--au-butter-ink); background: var(--au-butter); }
+
+/* ---------- What if (Dan's request Nov 20; the Lab's fourth section, src/lab/WhatIf.jsx): take a player off your roster,
+   put someone else in his place all season, replay every week. Built in 5.0's materials: glass panels, wells for the
+   lists, charcoal for what's picked, butter for the flipped games (yellow means you) ---------- */
+.wi-grid { align-items: start; }
+.wi-note { grid-column: span 12; margin: 0; }
+.wi-wait, .wi-empty { display: flex; gap: 14px; align-items: center; }
+.wi-wait p { margin: 0; color: var(--ink-2); }
+.wi-empty { display: block; }
+.wi-spin { width: 22px; height: 22px; flex: none; border-radius: 50%; border: 3px solid var(--tile-2); border-top-color: var(--au-char); animation: wi-spin 0.9s linear infinite; }
+:root[data-theme='dark'] .wi-spin { border-top-color: var(--au-yellow); }
+@keyframes wi-spin { to { transform: rotate(360deg); } }
+
+.wi-pick { display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; }
+@media (min-width: 1100px) { .wi-pick { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; } }
+.wi-step { min-width: 0; }
+.wi-step h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; }
+.wi-num { display: inline-grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 50%; font: 500 15px/1 var(--display); color: var(--ink-day); background: var(--au-yellow); }
+.wi-h3 { font: 500 15px/1.3 var(--display); color: var(--ink-2); margin: 18px 0 8px; }
+
+/* your players: pills that wrap, the picked one charcoal */
+.wi-roster { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.wi-roster button { display: inline-flex; align-items: center; gap: 2px; min-height: 40px; padding: 6px 12px 6px 8px; border: 0; border-radius: 999px; cursor: pointer; font: inherit;
+  color: var(--ink-2); background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border), 0 1px 2px color-mix(in srgb, var(--au-t-463a28) 6%, transparent); }
+.wi-roster b { font-weight: 500; font-size: 14.5px; color: var(--ink); margin-right: 6px; }
+.wi-roster small { font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+.wi-roster button[aria-pressed='true'] { color: var(--sel-ink); background: var(--sel-bg); box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--au-t-2b2a27) 45%, transparent); }
+.wi-roster button[aria-pressed='true'] :is(b, small) { color: inherit; }
+@media (hover: hover) { .wi-roster button:not([aria-pressed='true']):hover { color: var(--ink); background: var(--hover); } }
+
+/* the two ways to pick, a two-part switch */
+.wi-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 12px 0 12px; border-radius: 20px; background: var(--glass-fill); box-shadow: inset 0 0 0 1px var(--glass-border); }
+.wi-mode button { display: grid; gap: 2px; text-align: left; padding: 10px 14px; min-height: 48px; border: 0; border-radius: 16px; cursor: pointer; font: inherit; color: var(--ink-2); background: transparent; }
+.wi-mode b { font-weight: 500; font-size: 15px; color: var(--ink); }
+.wi-mode small { font-size: 12px; line-height: 1.3; color: var(--ink-3); }
+.wi-mode button[aria-pressed='true'] { color: var(--sel-ink); background: var(--sel-bg); }
+.wi-mode button[aria-pressed='true'] :is(b, small) { color: inherit; }
+.wi-mode button[aria-pressed='true'] small { opacity: 0.75; }
+.wi-mode button:disabled { cursor: not-allowed; }
+.wi-mode button:disabled :is(b, small) { color: var(--ink-3); }
+
+.wi-search { display: block; }
+.wi-search input { width: 100%; min-height: 44px; padding: 10px 16px; border: 0; border-radius: 999px; font: 400 16px/1.2 var(--body); color: var(--ink);
+  background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border); }
+.wi-search input::placeholder { color: var(--ink-3); }
+.wi-none { margin: 12px 4px 0; font-size: 14px; color: var(--ink-3); }
+
+/* the options: a row each, best first */
+.wi-opts { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.wi-opt { display: grid; grid-template-columns: auto 40px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; padding: 8px 14px 8px 10px; min-height: 56px; border: 0; border-radius: 18px; cursor: pointer; text-align: left; font: inherit;
+  color: var(--ink); background: var(--glass-fill); box-shadow: inset 0 0 0 1px var(--glass-border); }
+.wi-opt:not(:has(.wi-n)) { grid-template-columns: 40px minmax(0, 1fr) auto; }
+@media (hover: hover) { .wi-opt:not([aria-pressed='true']):hover { background: var(--hover); } }
+.wi-opt[aria-pressed='true'] { background: var(--mine-bg); box-shadow: inset 0 0 0 2px var(--mine-edge); }
+.wi-n { width: 18px; text-align: center; font: 300 15px/1 var(--display); color: var(--ink-3); }
+.wi-who { display: grid; gap: 3px; min-width: 0; }
+.wi-who b { font-weight: 500; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wi-who small { font-size: 12px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wi-rec { display: grid; justify-items: end; gap: 2px; }
+.wi-rec b { font: 300 20px/1 var(--display); font-variant-numeric: tabular-nums; }
+.wi-rec small { font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+.wi-face { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; object-position: center 20%; background: var(--tile-2); }
+.wi-face.ph { display: inline-grid; place-items: center; font: 500 12px/1 var(--display); color: var(--ink-2); }
+:is(.wi-rec, .wi-chips, .wi-table) .up { color: var(--good); }
+:is(.wi-rec, .wi-chips, .wi-table) .down { color: var(--bad); }
+
+/* the result */
+.wi-res { display: grid; gap: 4px; }
+.wi-swap { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; color: var(--ink-3); }
+.wi-p { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.wi-p .wi-face { width: 46px; height: 46px; }
+.wi-p.out .wi-face { filter: grayscale(1); opacity: 0.7; }
+.wi-p.out small { text-decoration: line-through; text-decoration-color: var(--ink-3); }
+.wi-p small { font-size: 14px; font-weight: 500; }
+.wi-score { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.wi-big { display: grid; gap: 2px; }
+.wi-big small { font-size: 12px; color: var(--ink-3); }
+.wi-big b { font: 300 clamp(44px, 9vw, 68px)/1 var(--display); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.wi-big b.was { color: var(--ink-3); }
+.wi-arrow { color: var(--ink-3); flex: none; }
+.wi-chips { list-style: none; margin: 0 0 0 auto; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.wi-chips li { padding: 6px 12px; border-radius: 999px; font-size: 13.5px; font-weight: 500; color: var(--ink-2); background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border); }
+.wi-chips li.up { background: var(--good-bg); }
+.wi-chips li.down { background: var(--bad-bg); }
+.wi-verdict { margin: 14px 0 0; font: 400 clamp(18px, 2.2vw, 22px)/1.35 var(--display); letter-spacing: -0.01em; color: var(--ink); max-width: 60ch; }
+.wi-res > .sub { margin: 6px 0 0; }
+
+.wi-chart { margin: 14px 0 0; }
+.wi-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.wi-chart figcaption { margin-top: 8px; font-size: 12.5px; color: var(--ink-3); max-width: 75ch; }
+.wi-plate { fill: var(--glass-fill); stroke: var(--glass-border); }
+.wi-zero { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 4; }
+.wi-was { fill: none; stroke: var(--ink-3); stroke-width: 1.5; }
+.wi-now { fill: var(--ink-3); }
+.wi-now.win { fill: var(--au-char); }
+.wi-now.loss { fill: var(--bad); }
+:root[data-theme='dark'] .wi-now.win { fill: var(--ink-2); }
+.wi-flipband { fill: var(--au-butter); opacity: 0.75; }
+:root[data-theme='dark'] .wi-flipband { fill: var(--au-yellow); opacity: 0.22; }
+.wi-axis { font: 400 12px var(--body); fill: var(--ink-3); }
+.wi-chart g.flip .wi-axis { font-weight: 600; fill: var(--ink); }
+
+/* week by week */
+.wi-weeks ol { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.wi-weeks li { padding: 10px 14px; border-radius: 16px; background: var(--glass-fill); box-shadow: inset 0 0 0 1px var(--glass-border); }
+.wi-weeks li.flip { background: var(--mine-bg); box-shadow: inset 0 0 0 1.5px var(--mine-edge); }
+.wi-weeks p { margin: 4px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
+.wi-wk-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.wi-wk { font-weight: 500; font-size: 14.5px; color: var(--ink); }
+.wi-vs { font-size: 14px; color: var(--ink-2); }
+.wi-sc { margin-left: auto; display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: baseline; font-size: 13.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.wi-sc .r { color: var(--ink-3); }
+.wi-sc .r.now { color: var(--ink); font-weight: 500; }
+.wi-sc .r.now.W { color: var(--good); }
+.wi-sc .r.now.L { color: var(--bad); }
+.wi-sc .to { color: var(--ink-3); }
+
+/* the standings, what if */
+.wi-table table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.wi-table th { text-align: left; font-size: 12px; font-weight: 500; color: var(--ink-3); padding: 0 8px 6px; }
+.wi-table td { padding: 8px; border-top: 1px solid var(--line); white-space: nowrap; }
+.wi-table td:first-child { width: 22px; color: var(--ink-3); }
+.wi-table tr.mine td { background: var(--mine-bg); }
+.wi-table tr.mine td:first-child { box-shadow: inset 2px 0 0 var(--mine-edge); }
+.wi-table tr.cut td { border-bottom: 2px dashed var(--ink-3); }
+.wi-tm { display: inline-flex; align-items: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.wi-table td:nth-child(4) { color: var(--ink-3); font-size: 13px; }
+
+.wi-how ul { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; color: var(--ink-2); max-width: 90ch; }
+
+@media (max-width: 1099px) { .wi-weeks, .wi-table { grid-column: span 12; } }
+@media (max-width: 760px) {
+  .lab-tabs b { font-size: 15px; }
+  .lab-tabs a { padding: 11px 2px; }
+  .wi-chips { margin: 4px 0 0; width: 100%; }
+  .wi-opt { padding: 8px 12px 8px 8px; gap: 8px; }
+  .wi-mode button { padding: 9px 10px; }
+  .wi-table td { padding: 7px 4px; }
+  .wi-table th { padding: 0 4px 6px; }
+}
+@media (prefers-reduced-motion: reduce) { .wi-spin { animation: none; } }
+.wi-roster .wi-more { padding: 6px 14px; color: var(--ink-2); background: transparent; box-shadow: inset 0 0 0 1px var(--ink-3); font-size: 13.5px; font-weight: 500; }
+@media (max-width: 760px) {
+  /* phones: your players in a three-row strip that slides sideways, so the list stays a thumb's height */
+  .wi-roster { display: grid; grid-auto-flow: column; grid-template-rows: repeat(3, auto); grid-auto-columns: max-content; gap: 8px;
+    overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; padding: 2px 2px 8px; margin: 0 -2px; scrollbar-width: none; }
+  .wi-roster::-webkit-scrollbar { display: none; }
+  .wi-roster li { scroll-snap-align: start; }
+  .wi-roster button { min-height: 44px; }
+}

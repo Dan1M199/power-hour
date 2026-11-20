@@ -1848,7 +1848,7 @@ const PAGES = {
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
   }],
   lab: () => [Lab, {
-    sub: labState.sub, raw: DATA.raw, ros: RAW.ros?.values || {}, calm: calm(), team: dashTeam(), onTeam: (rid) => (labState.team = rid),
+    sub: labState.sub, raw: DATA.raw, ros: RAW.ros?.values || {}, calm: calm(), demo: !!RAW.isDemo, team: dashTeam(), onTeam: (rid) => (labState.team = rid),
     trade: { state: tradeState, onState: (x) => Object.assign(tradeState, x), onTeam: setMyTeam },
   }],
 };

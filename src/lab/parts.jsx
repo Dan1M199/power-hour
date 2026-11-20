@@ -2,8 +2,8 @@
 // right (the Trades section's team picker).
 import { tradeIdeas } from '../../lib/trades.js';
 
-// the three sections, personal to league-wide; the route is #lab/<key>
-export const SECTIONS = ['team', 'trades', 'league'];
+// the four sections, personal to league-wide; the route is #lab/<key>
+export const SECTIONS = ['team', 'trades', 'whatif', 'league'];
 
 // the switcher: one segment per section, each with a line saying what's behind it (phones show the labels only)
 function LabTabs({ sub, D, me }) {
@@ -11,6 +11,7 @@ function LabTabs({ sub, D, me }) {
   const items = [
     ['team', 'Your team', 'Nine cards, any team'],
     ['trades', 'Trades', !D.meta.hasRos ? 'Needs the rankings' : !me ? 'Pick your team' : `${ideas.length} ${ideas.length === 1 ? 'idea' : 'ideas'} for ${D.byRid[me].name}`],
+    ['whatif', 'What if', 'Replay your season'],
     ['league', 'League', 'Playoff race, form, roster moves'],
   ];
   return (
