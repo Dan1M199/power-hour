@@ -5761,3 +5761,439 @@ body { background: transparent; }
 html.silk-on .sky { background: var(--aurora-top); }
 .glass, .ag-card { box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--glass-catch), 0 0 0 var(--ring-w, 0px) var(--yellow), var(--shadow-soft); }
 .glass.rim { box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--glass-catch), 0 0 0 var(--ring-w, 0px) var(--yellow), var(--shadow-lift); }
+
+/* ---------- 5.0: Aura (Dan's request Nov 20: "the maximum style overhaul; copy this, copy the colours, copy it
+   perfectly", a calm wellness dashboard on an iPad) ----------
+   What the reference does, and what this layer does with it:
+   - the page is a soft morning haze: cool pearl blue-grey at the top warming to sand, with a golden sunrise glow low on
+     the screen (src/silk.js draws it; the CSS blobs below are the fallback)
+   - every card is warm frosted glass, almost white, with a white hairline, a 26px corner and one soft warm shadow;
+     panels inside a card are a whiter well, never blurred again
+   - one face, Outfit (geometric, variable 100 to 900, SIL OFL, self-hosted): titles at 400, big numerals light (300),
+     labels 500; kickers are small spaced capitals, like the reference's "Today's session"
+   - colour is almost all neutral: near-black warm ink, warm greys, a charcoal (#2B2A27) for what's selected and for the
+     bars that are done, and one butter yellow (#F2CF5B) for the accent: rings, today's bar, the progress fill, the
+     pale "well recovered" chip. Yellow still means you (the ring on your card, your row's wash)
+   - the one picture-card a page gets (the headline carousel, the game of the week) is a golden-hour scene: a warm sky,
+     the sun low on the right, dunes in amber and umber, a soft scrim from the left for the type, white words, dark
+     translucent stat pills with a white hairline
+   - wide desktops get the reference's left sidebar: a tall glass panel with the logo, a "Menu" label, the tabs as rows
+     (the one you're on is a charcoal pill with a yellow dot), then "General" with the theme switch and your team as the
+     golden card at the foot. Narrower desktops keep the bar along the top, in the same materials; phones keep the dock
+   Kept last, so it wins over 4.x wherever they disagree. The headline desk keeps its newspaper. */
+@font-face { font-family: 'Outfit'; font-style: normal; font-weight: 100 900; font-display: swap;
+  src: url('assets/fonts/outfit-var-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Outfit'; font-style: normal; font-weight: 100 900; font-display: swap;
+  src: url('assets/fonts/outfit-var-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+:root {
+  /* 5.0's constant colours, the same in both themes */
+  --au-char: #2B2A27; --au-char-2: #3B3A36; --au-char-3: #55524C;
+  --au-yellow: #F2CF5B; --au-yellow-hi: #F8E08E; --au-yellow-deep: #E2B83A; --au-butter: #F6E5A6; --au-butter-ink: #5A4508;
+  --au-cream: #F4F1EB; --au-pearl: #CFD5DE; --au-sand: #E8D5AC; --au-gold: #F0C677;
+  --au-slate: #6A7A90; --au-slate-ink: #3F4E63; --au-gold-ink: #7A5A08;
+  --au-umber: #3A2614; --au-dash: #CFCBC3;
+}
+:root {
+  /* 5.0's other constants, lifted out of the rules below (Hallmark 48); translucent uses are color-mix of these */
+  --au-t-121110: #121110; --au-t-1e1208: #1E1208; --au-t-20140a: #20140A; --au-t-281608: #281608; --au-t-2b2a27: #2B2A27; --au-t-34322e: #34322E; --au-t-463a28: #463A28; --au-t-503014: #503014; --au-t-8c6440: #8C6440; --au-t-8fa2bc: #8FA2BC; --au-t-9ccb9f: #9CCB9F; --au-t-a07814: #A07814; --au-t-a9794c: #A9794C; --au-t-a9a399: #A9A399; --au-t-afc0d8: #AFC0D8; --au-t-c0623f: #C0623F; --au-t-d2cdc4: #D2CDC4; --au-t-d9d4ca: #D9D4CA; --au-t-e2e6eb: #E2E6EB; --au-t-ece3cf: #ECE3CF; --au-t-f0a08c: #F0A08C; --au-t-f2cf5b: #F2CF5B; --au-t-f3f0ea: #F3F0EA; --au-t-ffecc8: #FFECC8; --au-t-fff4e0: #FFF4E0; --au-t-fff8ec: #FFF8EC;
+}
+:root {
+  /* the haze */
+  --aurora-base: #DCDCD9; --aurora-top: #CDD3DC;
+  --aurora-sky: #C9D2DE; --aurora-cyan: #D6DCE3; --aurora-mint: #E6DECC; --aurora-lime: #EBD9B0; --aurora-sun: #F2CF86;
+  --aurora-warm-1: #F4D08A; --aurora-warm-2: #E9B866; --aurora-o: 1;
+  /* glass, warm and nearly white */
+  --glass-bg: rgba(248, 246, 242, 0.62);
+  --glass-bg-strong: rgba(252, 250, 247, 0.84);
+  --glass-solid: rgba(246, 244, 240, 0.96);
+  --glass-fill: rgba(255, 255, 255, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.78);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --glass-catch: inset 0 0 0 0 transparent;
+  --glass-light: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0, rgba(255, 255, 255, 0) 120px);
+  --glass-blur: blur(28px) saturate(130%);
+  --glass-float: rgba(250, 248, 244, 0.9);
+  --shadow-soft: 0 1px 2px rgba(70, 58, 40, 0.05), 0 12px 32px -10px rgba(70, 58, 40, 0.16);
+  --shadow-lift: 0 2px 4px rgba(70, 58, 40, 0.06), 0 20px 44px -12px rgba(70, 58, 40, 0.24);
+  --radius-card: 26px; --radius-tile: 20px;
+  --text-primary: #1E1D1B; --text-secondary: #686359;
+  --ease-spring: cubic-bezier(0.32, 1.28, 0.58, 1);
+  --sel-bg: var(--au-char); --sel-ink: #FFFFFF;
+  /* the golden-hour scene: sky, low sun, three dunes and a scrim from the left for the type, one picture so every card
+     that wears it can size it 100% by 100% */
+  --hero-grad: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 500' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='s' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2393684A'/%3E%3Cstop offset='.38' stop-color='%23C98E58'/%3E%3Cstop offset='.6' stop-color='%23E8AE6C'/%3E%3Cstop offset='1' stop-color='%23C98848'/%3E%3C/linearGradient%3E%3CradialGradient id='u' cx='.76' cy='.46' r='.46'%3E%3Cstop offset='0' stop-color='%23FFF4D8'/%3E%3Cstop offset='.12' stop-color='%23FFE2A8' stop-opacity='.95'/%3E%3Cstop offset='.4' stop-color='%23F7BE74' stop-opacity='.5'/%3E%3Cstop offset='1' stop-color='%23F2A85E' stop-opacity='0'/%3E%3C/radialGradient%3E%3ClinearGradient id='a' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23EDB676'/%3E%3Cstop offset='1' stop-color='%23BF7E44'/%3E%3C/linearGradient%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23D29457'/%3E%3Cstop offset='1' stop-color='%238C5530'/%3E%3C/linearGradient%3E%3ClinearGradient id='c' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23A26A3A'/%3E%3Cstop offset='1' stop-color='%234F2E17'/%3E%3C/linearGradient%3E%3ClinearGradient id='k' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%233A2412' stop-opacity='.62'/%3E%3Cstop offset='.5' stop-color='%233A2412' stop-opacity='.34'/%3E%3Cstop offset='1' stop-color='%233A2412' stop-opacity='.16'/%3E%3C/linearGradient%3E%3ClinearGradient id='f' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='.5' stop-color='%233A2412' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%233A2412' stop-opacity='.42'/%3E%3C/linearGradient%3E%3ClinearGradient id='t' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%233A2412' stop-opacity='.3'/%3E%3Cstop offset='.35' stop-color='%233A2412' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='800' height='500' fill='url(%23s)'/%3E%3Crect width='800' height='500' fill='url(%23u)'/%3E%3Cpath d='M0 282C110 262 210 228 330 246C450 264 560 206 800 222V500H0Z' fill='url(%23a)' opacity='.85'/%3E%3Cpath d='M330 246C450 264 560 206 800 222' fill='none' stroke='%23FFE9BC' stroke-opacity='.6' stroke-width='2'/%3E%3Cpath d='M0 352C140 314 270 322 390 344C530 370 650 296 800 312V500H0Z' fill='url(%23b)' opacity='.92'/%3E%3Cpath d='M390 344C530 370 650 296 800 312' fill='none' stroke='%23FFD69A' stroke-opacity='.4' stroke-width='2'/%3E%3Cpath d='M0 424C170 396 310 414 470 436C610 455 712 404 800 414V500H0Z' fill='url(%23c)'/%3E%3Crect width='800' height='500' fill='url(%23k)'/%3E%3Crect width='800' height='500' fill='url(%23t)'/%3E%3Crect width='800' height='500' fill='url(%23f)'/%3E%3C/svg%3E");
+  --hero-ribbon: linear-gradient(180deg, rgba(255, 240, 210, 0.1) 0, rgba(255, 240, 210, 0) 40%);
+  --iris: linear-gradient(115deg, #F8E08E 0%, #F4F1EB 30%, #F2CF5B 55%, #F6E5A6 80%, #F8E08E 100%);
+  --tab-glow: var(--au-char);
+  --tab-halo: 0 6px 16px -6px rgba(43, 42, 39, 0.45);
+
+  /* the older layers' tokens, re-pointed */
+  --display: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --body: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --hand: var(--body);
+  --ink: #1E1D1B; --ink-2: #47443F; --ink-3: #686359; --ink-day: #1E1D1B; --outline-day: #1E1D1B;
+  --face: var(--glass-bg); --paper: var(--glass-bg-strong); --header: var(--glass-bg);
+  --tile: var(--glass-fill); --tile-2: rgba(43, 42, 39, 0.08); --well: var(--glass-fill);
+  --line: rgba(43, 42, 39, 0.09); --in-line: rgba(43, 42, 39, 0.09);
+  --drawer: rgba(255, 255, 255, 0.3); --in-tile: var(--glass-bg-strong); --in-tile-2: var(--glass-fill);
+  --hover: rgba(255, 255, 255, 0.86);
+  --yellow: #F2CF5B; --amber: #EBC04E; --lime: #F2CF5B; --grass: var(--au-char-2); --grass-2: #DCD6C9; --pop: var(--au-yellow-deep);
+  --good: #3D7349; --bad: #B0472F; --flag: #B0472F;
+  --good-bg: rgba(200, 222, 196, 0.72); --bad-bg: rgba(244, 206, 194, 0.72); --info-bg: rgba(207, 213, 222, 0.8);
+  --notice-bg: rgba(246, 229, 166, 0.8); --mine-bg: rgba(246, 229, 166, 0.66); --mine-edge: #E2B83A;
+  --a: var(--au-slate); --a-ink: var(--au-slate-ink); --b: var(--au-yellow); --b-ink: var(--au-gold-ink);
+  --board: #6E4B2C; --turf: #6E4B2C;
+  --cast: rgba(70, 58, 40, 0.1);
+  --outline: rgba(255, 255, 255, 0.78);
+  --press: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft);
+  --soft: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 2px 8px rgba(70, 58, 40, 0.06);
+  --chrome: var(--glass-bg); --frost: var(--glass-blur); --frost-s: var(--glass-blur); --frost-paper: var(--glass-bg-strong);
+  --dock-glass: var(--glass-bg); --dock-frost: var(--glass-blur);
+  --side-w: 236px;
+}
+:root[data-theme='dark'] {
+  /* the night: the same room with the lights down, warm charcoal under a dim amber glow */
+  --aurora-base: #1A1917; --aurora-top: #1C1C1E;
+  --aurora-sky: #23262C; --aurora-cyan: #26272A; --aurora-mint: #2A2620; --aurora-lime: #33291A; --aurora-sun: #4A3718; --aurora-o: 1;
+  --glass-bg: rgba(44, 42, 38, 0.6);
+  --glass-bg-strong: rgba(54, 52, 47, 0.88);
+  --glass-solid: rgba(36, 35, 32, 0.96);
+  --glass-fill: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --glass-light: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0, rgba(255, 255, 255, 0) 120px);
+  --glass-blur: blur(28px) saturate(120%);
+  --glass-float: rgba(38, 37, 34, 0.94);
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 32px -10px rgba(0, 0, 0, 0.5);
+  --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.24), 0 20px 44px -12px rgba(0, 0, 0, 0.6);
+  --text-primary: #F3F0EA; --text-secondary: #A9A399;
+  --sel-bg: #F3F0EA; --sel-ink: #1E1D1B;
+  --tab-glow: #F3F0EA; --tab-halo: 0 6px 16px -6px rgba(0, 0, 0, 0.5);
+  --ink: #F3F0EA; --ink-2: #D2CDC4; --ink-3: #A9A399;
+  --tile-2: rgba(255, 255, 255, 0.1); --line: rgba(255, 255, 255, 0.1); --in-line: rgba(255, 255, 255, 0.1);
+  --drawer: rgba(255, 255, 255, 0.03); --hover: rgba(255, 255, 255, 0.14);
+  --grass: #D9D4CA; --grass-2: #4A463F;
+  --good: #9CCB9F; --bad: #F0A08C; --flag: #C9573B;
+  --good-bg: rgba(120, 180, 125, 0.18); --bad-bg: rgba(230, 120, 100, 0.18); --info-bg: rgba(160, 175, 195, 0.18);
+  --notice-bg: rgba(242, 207, 91, 0.16); --mine-bg: rgba(242, 207, 91, 0.16);
+  --a: #8FA2BC; --a-ink: #AFC0D8; --b: var(--au-yellow); --b-ink: #F2CF5B;
+  --board: #3C2918; --turf: #3C2918;
+  --outline: rgba(255, 255, 255, 0.1);
+  --cast: rgba(0, 0, 0, 0.3);
+  --hero-grad: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 500' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='s' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23302130'/%3E%3Cstop offset='.45' stop-color='%23744A3A'/%3E%3Cstop offset='.66' stop-color='%23B46F45'/%3E%3Cstop offset='1' stop-color='%23744628'/%3E%3C/linearGradient%3E%3CradialGradient id='u' cx='.74' cy='.56' r='.4'%3E%3Cstop offset='0' stop-color='%23FFD49A'/%3E%3Cstop offset='.2' stop-color='%23F2A35E' stop-opacity='.8'/%3E%3Cstop offset='.6' stop-color='%23C2683C' stop-opacity='.3'/%3E%3Cstop offset='1' stop-color='%23C2683C' stop-opacity='0'/%3E%3C/radialGradient%3E%3ClinearGradient id='a' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23A8693E'/%3E%3Cstop offset='1' stop-color='%23683E22'/%3E%3C/linearGradient%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23804E2E'/%3E%3Cstop offset='1' stop-color='%23452814'/%3E%3C/linearGradient%3E%3ClinearGradient id='c' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23573420'/%3E%3Cstop offset='1' stop-color='%23241309'/%3E%3C/linearGradient%3E%3ClinearGradient id='k' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%231E120A' stop-opacity='.7'/%3E%3Cstop offset='.45' stop-color='%231E120A' stop-opacity='.4'/%3E%3Cstop offset='1' stop-color='%231E120A' stop-opacity='.28'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='800' height='500' fill='url(%23s)'/%3E%3Crect width='800' height='500' fill='url(%23u)'/%3E%3Cpath d='M0 282C110 262 210 228 330 246C450 264 560 206 800 222V500H0Z' fill='url(%23a)' opacity='.8'/%3E%3Cpath d='M330 246C450 264 560 206 800 222' fill='none' stroke='%23FFC98A' stroke-opacity='.4' stroke-width='2'/%3E%3Cpath d='M0 352C140 314 270 322 390 344C530 370 650 296 800 312V500H0Z' fill='url(%23b)' opacity='.9'/%3E%3Cpath d='M0 424C170 396 310 414 470 436C610 455 712 404 800 414V500H0Z' fill='url(%23c)'/%3E%3Crect width='800' height='500' fill='url(%23k)'/%3E%3C/svg%3E");
+  --press: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft);
+  --soft: inset 0 0 0 1px var(--glass-border), var(--glass-hi);
+}
+
+/* --- the base --- */
+body { font: 400 16px/1.5 var(--body); letter-spacing: -0.005em; }
+html { background: var(--aurora-top); }
+html.silk-on .sky { background: var(--aurora-top); }
+::selection { color: var(--ink-day); background: var(--au-butter); }
+:focus-visible { outline: 2px solid var(--au-char); outline-offset: 2px; filter: none; }
+:root[data-theme='dark'] :focus-visible { outline-color: var(--au-yellow); filter: none; }
+input, select, textarea { caret-color: var(--au-yellow-deep); accent-color: var(--au-char); }
+/* the CSS haze, for screens without WebGL: pearl above, sand below, a sunrise glow low on the right */
+.sky { background: linear-gradient(180deg, var(--aurora-top) 0%, var(--aurora-base) 55%, var(--aurora-lime) 100%); }
+.sky .cloud.c1 { background: radial-gradient(closest-side, var(--aurora-sky), transparent); }
+.sky .cloud.c1::before { background: radial-gradient(closest-side, var(--aurora-cyan), transparent); }
+.sky .cloud.c1::after { background: radial-gradient(closest-side, var(--aurora-mint), transparent); }
+.sky .cloud.c2 { background: radial-gradient(closest-side, var(--aurora-lime), transparent); }
+.sky .cloud.c2::before { background: radial-gradient(closest-side, var(--aurora-sky), transparent); }
+.sky .cloud.c3 { background: radial-gradient(closest-side, var(--aurora-sun), transparent); }
+.sky::before { background: radial-gradient(closest-side, color-mix(in srgb, var(--aurora-warm-2) 45%, transparent), color-mix(in srgb, var(--aurora-warm-1) 25%, transparent) 55%, transparent); }
+
+/* --- type: Outfit throughout. Titles 400, big numbers light, names and labels 500 --- */
+.view-head :is(h1, .page-title) { font: 400 clamp(34px, 4.2vw, 50px)/1.04 var(--display); letter-spacing: -0.025em; color: var(--ink); }
+.view-head :is(h1, .page-title) .wk { font: 500 13.5px/1 var(--body); letter-spacing: 0; padding: 7px 13px; color: var(--ink-2); background: var(--glass-bg-strong); }
+.view-head p, :root[data-theme='dark'] .view-head p { color: var(--ink-3); font-size: 15.5px; }
+h2, h3, .sec-title { font-weight: 500; letter-spacing: -0.015em; }
+:is(.team-name, .mu-team .tn, .gotw h2, .gotw h3, .me-head, .pth-build-top h3, .pth-part-head h4, .pth-receipt-text h3, .pth-invite b, .pth-side-name b, .pth-mine-name b,
+  .wt-head b, .cast-name b, .lab-tabs b, .unveil-card h2) { font-weight: 500; letter-spacing: -0.015em; }
+:root .lead-hed { font-weight: 400; letter-spacing: -0.025em; line-height: 1.02; }
+:is(.score, .odds b, .mu-team .pr, .wp-labels.odds, .gotw-score b, .cast-odds b, .odds-tag, .wr-num b, .wire-stats b, .pth-bar-odds b, .pth-side-odds b, .pth-wl > span b, .pth-stat b,
+  .wt-head .net, .aring-n b) { font-weight: 400; letter-spacing: -0.02em; }
+:is(.tabs a, .filters :is(button, a), .chip, .tier, .move, .you, .st-chip, .pick, .cta) { font-weight: 500; }
+/* the reference's small spaced capitals ("Today's session", "Menu"): the kicker and the sidebar's labels only */
+.kicker { font: 500 11.5px/1 var(--body); letter-spacing: 0.12em; text-transform: uppercase; }
+.kicker > span:first-child { color: var(--au-butter-ink); background: var(--au-butter); }
+.kicker .k { color: color-mix(in srgb, var(--chalk) 86%, transparent); box-shadow: none; padding-left: 2px; }
+.kicker small { letter-spacing: 0.04em; }
+
+/* --- cards --- */
+.glass, .ag-card { background-color: var(--glass-bg); background-image: var(--glass-light);
+  box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 0 0 var(--ring-w, 0px) var(--au-yellow), var(--shadow-soft); }
+.glass.rim { box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 0 0 var(--ring-w, 0px) var(--au-yellow), var(--shadow-lift); }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .mu:hover, .idea:hover, .wire-team:hover, .trade:hover, .rank-card:hover { transform: translateY(-2px);
+    box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 0 0 var(--ring-w, 0px) var(--au-yellow), var(--shadow-lift); }
+}
+:is(.mini, .mgr, .trade-side, .idea-swap > div, .bd-side, .line > span, .fan, .fut, .h2h-row .slot, .pth-part, .pth-stat, .pth-list li, .pth-mine li, .pth-games li) {
+  background-color: var(--glass-fill); box-shadow: inset 0 0 0 1px var(--glass-border); border-radius: var(--radius-tile); }
+.pth-build, .pth-receipt { background: var(--glass-bg); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft); }
+
+/* --- the picture card: the golden-hour scene. White words; the stat rows are dark translucent pills --- */
+.car-card, .gotw, .ag-hero { color: var(--chalk); background-color: var(--board);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--au-t-ffecc8) 22%, transparent), 0 20px 44px -16px color-mix(in srgb, var(--au-t-503014) 50%, transparent); }
+.gotw { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--au-t-ffecc8) 22%, transparent), 0 0 0 var(--ring-w, 0px) var(--au-yellow), 0 20px 44px -16px color-mix(in srgb, var(--au-t-503014) 50%, transparent); }
+:root[data-theme='dark'] :is(.car-card, .gotw, .ag-hero) { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--au-t-ffecc8) 12%, transparent), 0 20px 44px -16px color-mix(in srgb, var(--island) 70%, transparent); }
+.car-card { border-radius: 28px; }
+.lead-hed { text-shadow: 0 1px 18px color-mix(in srgb, var(--au-t-281608) 25%, transparent); }
+.lead-deck { color: color-mix(in srgb, var(--au-t-fff8ec) 86%, transparent); }
+.cast-team { background: color-mix(in srgb, var(--au-t-20140a) 30%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--au-t-fff4e0) 28%, transparent); border-radius: 999px; padding: 7px 16px 7px 8px;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.cast-odds b { color: var(--chalk); }
+.cast-name small, .cast-odds small { color: color-mix(in srgb, var(--au-t-fff4e0) 74%, transparent); }
+.car-dim { background: var(--aurora-base); }
+.lead-car { --deck-1: var(--au-t-8c6440); --deck-2: var(--au-t-a9794c); }
+:root :is(.car-card, .gotw, .ag-hero) :is(.car-arrow, .car-pause, .gotw-more, .drive-pick button, .clip-sound, .ag-btn) {
+  color: var(--chalk); background: color-mix(in srgb, var(--au-t-fff4e0) 18%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--au-t-fff4e0) 50%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+:root :is(.car-card, .gotw) :is(.car-pause, .drive-pick button)[aria-pressed='true'] { color: var(--ink-day); background: var(--au-cream); box-shadow: none; }
+/* the frame's pills sit on the page's glass */
+.car-nav { background: var(--glass-bg); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft); color: var(--ink); }
+.car-nav :is(.car-arrow, .car-pause) { color: var(--ink); background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border); }
+.car-nav .car-pause[aria-pressed='true'] { color: var(--sel-ink); background: var(--sel-bg); }
+.car-nav .car-dot i { background: var(--au-char); }
+:root[data-theme='dark'] .car-nav .car-dot i { background: var(--au-yellow); }
+
+/* --- controls: frosted pills; selected is a charcoal pill; the call to action is charcoal too, its arrow on yellow --- */
+:root :is(.filters :is(button, a), .pick, .cta, .odds-more, .poll-pick, .unveil-team, .unveil-x, .chip:is(.to-again, .rank-pdf), .to-skip, .xp, .theme-btn,
+  .pth-weeks button, .pth-side, .pth-wl, .pth-pick button, .pth-share, .lab-tabs a, .ag-btn) {
+  color: var(--ink-2); background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border), 0 1px 2px color-mix(in srgb, var(--au-t-463a28) 6%, transparent); }
+@media (hover: hover) {
+  :root :is(.filters :is(button, a), .pick, .cta, .odds-more, .poll-pick, .unveil-team, .chip:is(.to-again, .rank-pdf), .to-skip, .theme-btn,
+    .pth-weeks button, .pth-side, .pth-wl, .pth-pick button, .pth-share, .lab-tabs a, .ag-btn):not(:disabled):hover {
+    transform: translateY(-1px); color: var(--ink); box-shadow: inset 0 0 0 1px var(--glass-border), 0 6px 18px -6px color-mix(in srgb, var(--au-t-463a28) 22%, transparent); }
+}
+:root :is(.filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .pick.on, .pth-weeks button[aria-selected='true'], .pth-side.on, .pth-wl.on,
+  .pth-pick button[aria-pressed='true'], .lab-tabs a[aria-current='page'], .poll-pick[aria-pressed='true'], .ag-btn.on) {
+  color: var(--sel-ink); background: var(--sel-bg); box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--au-t-2b2a27) 45%, transparent); }
+:root :is(.cta, .pth-share:not(.alt), .pth-invite, .ag-btn.primary) { color: var(--sel-ink); background-color: var(--sel-bg); background-image: none;
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--au-t-2b2a27) 50%, transparent); }
+.pth-invite-go { color: var(--ink-day); background: var(--au-yellow); }
+:root[data-theme='dark'] .pth-invite-go { color: var(--ink-day); background: var(--au-yellow); }
+/* "Upgrade now": the front page's way into the scenarios is the reference's butter-yellow pill */
+:root .pth-cta { color: var(--ink-day); background-color: var(--au-yellow); background-image: linear-gradient(180deg, var(--au-yellow-hi), var(--au-yellow));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--chalk) 55%, transparent), 0 8px 20px -8px color-mix(in srgb, var(--au-t-a07814) 55%, transparent); }
+:root .pth-cta:active { box-shadow: inset 0 1px 0 color-mix(in srgb, var(--chalk) 55%, transparent); }
+.pth-cta-new { color: var(--chalk); background: var(--au-char); }
+.pth-cta .spk { color: var(--chalk); }
+/* chips */
+.chip { background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border); color: var(--ink-2); }
+.tier.elite { color: var(--au-butter-ink); background: var(--au-butter); }
+.tier.good { color: var(--ink-2); background: var(--au-t-ece3cf); }
+.tier.mid { color: var(--ink-2); background: var(--au-t-e2e6eb); }
+.tier.low { color: var(--ink-3); background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border); }
+:root[data-theme='dark'] .tier:is(.good, .mid) { color: var(--ink-2); background: color-mix(in srgb, var(--chalk) 10%, transparent); }
+:root[data-theme='dark'] .tier.elite { color: var(--ink-day); background: var(--au-yellow); }
+:is(.track, .gtrack, .poll-bar) { background: var(--tile-2); }
+.track .ros { background: var(--au-char-2); }
+:root[data-theme='dark'] .track .ros { background: var(--ink-2); }
+.st-chip.won { color: var(--au-butter-ink); background: var(--au-butter); }
+.st-chip.lost { color: var(--chalk); background: var(--au-char-3); }
+.xp, .pull .xp { background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border); }
+.rank.nudge:not(.open) .pull { color: var(--au-butter-ink); background: var(--au-butter); box-shadow: none; }
+.pull, .rank-card .pull { background: color-mix(in srgb, var(--chalk) 28%, transparent); }
+:root[data-theme='dark'] :is(.pull, .rank-card .pull) { background: color-mix(in srgb, var(--chalk) 4%, transparent); }
+
+/* --- the press lens: a butter shimmer --- */
+.tx-lens i { background: radial-gradient(closest-side, color-mix(in srgb, var(--au-yellow-hi) 85%, transparent), color-mix(in srgb, var(--au-cream) 50%, transparent) 60%, transparent); }
+
+/* --- section signs: small frosted pills --- */
+.sec-title, :is(.sec-title, .day > h3) { background-color: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border), var(--shadow-soft); font-weight: 500; color: var(--ink); }
+.sec-title small { font-weight: 400; color: var(--ink-3); }
+
+/* --- the rank numbers: light numerals, the reference's "82"; the top three on a butter disc --- */
+.rank .jersey { font-weight: 300; letter-spacing: -0.05em; color: color-mix(in srgb, var(--ink) 78%, transparent); text-shadow: none; }
+:root[data-theme='dark'] .rank .jersey { text-shadow: none; }
+.rank:nth-child(-n + 3) .jersey { color: var(--ink); font-weight: 300; }
+.rank:nth-child(-n + 3) .jersey::before { width: 1.02em; height: 1.02em; background: radial-gradient(circle at 50% 38%, var(--au-yellow-hi), var(--au-yellow) 62%, color-mix(in srgb, var(--au-yellow) 0%, transparent) 72%); opacity: 0.85; }
+:root[data-theme='dark'] .rank:nth-child(-n + 3) .jersey { color: var(--chalk); }
+:root[data-theme='dark'] .rank:nth-child(-n + 3) .jersey::before { opacity: 0.35; }
+.mine .rank-card { --ring-w: 2.5px; }
+
+/* --- the readiness ring: a white disc on a pale track, the arc in butter yellow (charcoal when it's yours, so your own
+   reads apart from the accent) --- */
+.aring { --aring-c: var(--au-yellow); color: var(--ink); background: radial-gradient(circle, var(--au-cream) 54%, transparent 55%), var(--glass-fill);
+  box-shadow: inset 0 0 0 1px var(--glass-border), 0 4px 12px -6px color-mix(in srgb, var(--au-t-463a28) 25%, transparent); }
+.aring-track { stroke: var(--tile-2); opacity: 1; }
+.aring svg { stroke-width: 5; }
+.aring.you { --aring-c: var(--au-yellow-deep); }
+:root[data-theme='dark'] .aring { color: var(--ink); background: radial-gradient(circle, var(--au-t-34322e) 54%, transparent 55%), var(--glass-fill); }
+.aring-n b, .odds .aring-n b, .ys-odds .aring-n b { color: var(--ink); font-weight: 500; }
+
+/* --- the live list: rank badges like the reference's date blocks --- */
+.wr-n { font-weight: 400; color: var(--ink); background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border), 0 2px 6px -2px color-mix(in srgb, var(--au-t-463a28) 18%, transparent); }
+.wr:nth-child(-n + 3) .wr-n { color: var(--ink-day); background: var(--au-butter); }
+
+/* --- the Lab's switcher: the reference's Week / Month / Year --- */
+.lab-tabs { background: var(--glass-bg); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft); border-radius: 22px; }
+.lab-tabs a, .lab-tabs a[aria-current='page'] { border-radius: 17px; }
+.lab-tabs a:not([aria-current]) { background: transparent; box-shadow: none; }
+.lab-tabs b { font-weight: 500; }
+.lab-tabs a[aria-current='page'] small { color: color-mix(in srgb, var(--sel-ink) 70%, transparent); }
+
+/* --- charts: the reference's bars. Done in charcoal, the latest in yellow, plates in white glass --- */
+.chart .plate { fill: color-mix(in srgb, var(--chalk) 36%, transparent); stroke: var(--glass-border); }
+:root[data-theme='dark'] .chart .plate { fill: color-mix(in srgb, var(--chalk) 3%, transparent); }
+
+/* --- the tooltip and the dark notes: the reference's charcoal "64 min" bubble --- */
+.tip { background: var(--au-char); color: var(--chalk); border-radius: 12px; box-shadow: 0 10px 24px -8px color-mix(in srgb, var(--au-t-2b2a27) 50%, transparent); -webkit-backdrop-filter: none; backdrop-filter: none; }
+:root[data-theme='dark'] .tip { background: var(--au-cream); color: var(--ink-day); box-shadow: 0 10px 24px -8px color-mix(in srgb, var(--island) 60%, transparent); }
+.pth-bar { background-color: var(--au-char); background-image: radial-gradient(80% 140% at 100% 0%, color-mix(in srgb, var(--au-t-f2cf5b) 16%, transparent), transparent 60%); border-radius: var(--radius-tile);
+  box-shadow: 0 18px 40px -14px color-mix(in srgb, var(--au-t-2b2a27) 60%, transparent); }
+.pth-bar-picks button { color: var(--ink-day); background: var(--au-butter); }
+:is(.pth-coach, .pth-wcount) { background: var(--au-char); color: var(--chalk); }
+
+/* --- the matchup sides: slate and gold, the reference's cool top and warm foot --- */
+.fo-side.a { background: color-mix(in srgb, var(--a) 26%, var(--glass-bg-strong)); }
+.fo-side.b { background: color-mix(in srgb, var(--b) 40%, var(--glass-bg-strong)); }
+
+/* --- the team dashboard: its tiles become the reference's widgets. Charcoal for done, yellow for the leader and the
+   sun, slate for the cool side; the value tile is a charcoal brokerage card --- */
+.paper, :root[data-theme='dark'] .paper {
+  --p-accent: var(--au-char-2); --p-accent-ink: var(--au-char); --p-hot: var(--au-yellow-deep); --p-hot-ink: var(--au-gold-ink);
+  --p-sun: var(--au-yellow); --p-lilac: var(--au-pearl);
+  --p-easy: var(--au-slate); --p-easy-bg: var(--info-bg); --p-easy-ink: var(--au-slate-ink);
+  --p-hard: var(--au-t-c0623f); --p-hard-bg: var(--bad-bg); --p-hard-ink: var(--bad);
+  --p-dark: var(--au-char); --p-dark-text: var(--chalk); --p-dark-muted: color-mix(in srgb, var(--chalk) 66%, transparent);
+  --p-sans: var(--body); --p-mono: var(--body); --p-label: 500 14px var(--body);
+}
+:root[data-theme='dark'] .paper { --p-accent: var(--au-t-d9d4ca); --p-accent-ink: var(--au-t-f3f0ea); --p-hot: var(--au-yellow); --p-hot-ink: var(--au-yellow); --p-easy: var(--au-t-8fa2bc); --p-easy-ink: var(--au-t-afc0d8); --p-dark: var(--au-t-121110); }
+.pp-tile.pp-val, .pv-card { background-color: var(--au-char); background-image: radial-gradient(90% 120% at 100% 0%, color-mix(in srgb, var(--au-t-f2cf5b) 14%, transparent), transparent 55%); }
+:root[data-theme='dark'] :is(.pp-tile.pp-val, .pv-card) { background-color: var(--au-t-121110); }
+.pp-share { color: var(--sel-ink); background: var(--sel-bg); }
+.pp-id h2 { font-weight: 400; letter-spacing: -0.025em; }
+
+/* --- the floating pieces --- */
+:is(.bz-install, .tx-hello, .share-sheet > :first-child, .unveil-card, .me-panel, .lockout .glass, .takeover .glass, .adm-toast) {
+  box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 24px 60px -16px color-mix(in srgb, var(--au-t-463a28) 35%, transparent); }
+.unveil { background: color-mix(in srgb, var(--aurora-base) 60%, transparent); }
+.unveil-team.mine { box-shadow: 0 0 0 2.5px var(--au-yellow); }
+
+/* --- the footer --- */
+.footer .version, :root[data-theme='dark'] .footer .version { color: var(--ink-3); }
+.gs-glass { box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft); }
+.gs-glass::after { background: radial-gradient(closest-side, color-mix(in srgb, var(--au-gold) 50%, transparent), transparent); }
+
+/* --- the bar along the top (761px up to the sidebar): one frosted pill, the tab you're on a charcoal pill --- */
+.topbar { border-radius: 999px; background-color: var(--glass-bg); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft); }
+.brand-text strong { font-weight: 500; letter-spacing: -0.02em; font-size: 19px; }
+.brand-text small { color: var(--ink-3); }
+.tabs a { font-weight: 500; color: var(--ink-3); }
+.tabs a:hover { color: var(--ink); }
+.tabs a[aria-current='page'], :root[data-theme='dark'] .tabs a[aria-current='page'], .tabs.dragging a.hot { color: var(--sel-ink); }
+:root .topbar .tabs .tab-ink, :root .topbar .tabs.dragging .tab-ink, :root[data-theme='dark'] .topbar .tabs .tab-ink { background: var(--tab-glow); box-shadow: var(--tab-halo); }
+::view-transition-group(tab-ink) { background: var(--tab-glow); box-shadow: var(--tab-halo); mix-blend-mode: normal; border-radius: 999px; }
+:root[data-theme='dark']::view-transition-group(tab-ink) { mix-blend-mode: normal; }
+.theme-btn { color: var(--ink-2); }
+.team-pick select { background-color: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--glass-border); font-weight: 500; color: var(--ink); }
+/* the yellow dot on the tab you're on (the reference's menu) */
+.tabs a::after { content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--au-yellow); opacity: 0; transform: scale(0.4);
+  transition: opacity 0.25s var(--ease-out), transform 0.3s var(--ease-out); pointer-events: none; }
+.tabs a[aria-current='page']::after { opacity: 1; transform: none; }
+:root[data-theme='dark'] .tabs a::after { background: var(--au-yellow-deep); }
+@media (min-width: 761px) { .tabs a::after { right: 7px; top: 7px; } }
+
+/* --- phones: the dock is a frosted pill; the tab you're on is the charcoal pill with its label --- */
+@media (max-width: 760px) {
+  .tabs { background: var(--glass-bg); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 14px 36px -10px color-mix(in srgb, var(--au-t-463a28) 35%, transparent); }
+  :root[data-theme='dark'] .tabs { background: var(--glass-bg); }
+  .tabs a { color: var(--ink-2); background: color-mix(in srgb, var(--chalk) 40%, transparent); box-shadow: inset 0 0 0 1px var(--glass-border); }
+  :root[data-theme='dark'] .tabs a { background: color-mix(in srgb, var(--chalk) 5%, transparent); }
+  .tabs a[aria-current='page'] { background: transparent; box-shadow: none; }
+  .tabs a::after { display: none; }
+  .topbar .tabs .tab-ink { box-shadow: var(--tab-halo); }
+  .me-btn, .me-panel { background: var(--glass-bg); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 14px 36px -10px color-mix(in srgb, var(--au-t-463a28) 35%, transparent); }
+  .me-btn-face { box-shadow: 0 0 0 2.5px var(--au-yellow); }
+}
+
+/* --- wide desktops: the reference's sidebar. The header becomes a tall glass panel pinned to the left; the page and the
+   footer move over to make room --- */
+@media (min-width: 1280px) {
+  body { padding-left: calc(var(--side-w) + 40px); }
+  :root { --page: min(1180px, calc(100% - 40px)); }
+  .topbar { position: fixed; z-index: 30; top: 20px; bottom: 20px; left: 20px; width: var(--side-w); margin: 0;
+    display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 26px 16px 16px; border-radius: 28px; overflow: hidden auto; scrollbar-width: none; }
+  .brand { padding: 0 8px 26px; }
+  .brand-logo { height: 40px; }
+  .brand-text { display: flex; }
+  .brand-text strong { font-size: 19px; }
+  .brand-text small { font-size: 12px; white-space: normal; }
+  /* the menu: rows with their icons; the pill glides up and down (placeInk reads the direction) */
+  .tabs { flex-direction: column; align-items: stretch; gap: 4px; margin: 0; padding: 26px 0 0; }
+  .tabs::before { content: 'Menu'; position: absolute; top: 0; left: 12px; font: 500 11.5px/1 var(--body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+  .tabs a { display: flex; align-items: center; gap: 12px; padding: 0 14px; height: 48px; border-radius: 999px; font-size: 15.5px; color: var(--ink-2); }
+  .tabs .ti { display: block; width: 19px; height: 19px; }
+  .tabs a :is(.tl, .tn) { display: inline; }
+  .tabs a .ts { display: none; }
+  .tabs a::after { left: auto; right: 18px; top: 50%; margin-top: -3px; }
+  .tabs a:hover:not([aria-current]) { background: color-mix(in srgb, var(--chalk) 42%, transparent); }
+  :root[data-theme='dark'] .tabs a:hover:not([aria-current]) { background: color-mix(in srgb, var(--chalk) 5%, transparent); }
+  .tab-ink { top: 0; bottom: auto; left: 0; right: 0; width: auto !important; height: 48px; }
+  /* general: the theme switch as a row, then your team as the golden card at the foot */
+  .me { display: flex !important; flex-direction: column; gap: 6px; margin-top: 28px; flex: 1 0 auto; }
+  .me::before { content: 'General'; display: block; padding: 0 12px 8px; font: 500 11.5px/1 var(--body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+  .me-panel { display: flex !important; flex-direction: column; gap: 6px; flex: 1 0 auto; }
+  .me-btn, .me-head { display: none !important; }
+  .me-panel .theme-btn { display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; height: 48px; padding: 0 14px; border-radius: 999px;
+    background: transparent; box-shadow: none; color: var(--ink-2); font: 500 15.5px/1 var(--body); }
+  .me-panel .theme-btn::after { content: 'Night game'; }
+  :root[data-theme='dark'] .me-panel .theme-btn::after { content: 'Day game'; }
+  .me-panel .theme-btn svg { width: 19px; height: 19px; }
+  @media (hover: hover) { :root .me-panel .theme-btn:hover { background: color-mix(in srgb, var(--chalk) 42%, transparent); transform: none; box-shadow: none; } }
+  .team-pick { position: relative; margin-top: auto; display: grid; gap: 12px; padding: 18px 14px 14px; min-height: 176px; align-content: end; border-radius: 22px; overflow: hidden;
+    background-color: var(--board); background-image: var(--hero-grad); background-size: 100% 100%; color: var(--chalk);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--au-t-ffecc8) 22%, transparent), 0 14px 30px -14px color-mix(in srgb, var(--au-t-503014) 60%, transparent); }
+  .team-pick::before { content: 'Your team'; font: 500 17px/1.1 var(--display); letter-spacing: -0.01em; }
+  .team-pick .me-face { position: absolute; top: 14px; left: 14px; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2.5px var(--au-yellow); }
+  :root .topbar .team-pick select { max-width: none; width: 100%; color: var(--ink-day); background-color: var(--au-yellow); box-shadow: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231E1D1B' stroke-width='1.8' fill='none'/%3E%3C/svg%3E"); }
+  /* things that stretched to the window's edge now stop at the sidebar */
+  .footer { width: var(--page); }
+}
+
+/* --- 5.0, the second pass: what the first look turned up --- */
+.lockout { background: color-mix(in srgb, var(--aurora-base) 58%, transparent); -webkit-backdrop-filter: blur(16px) saturate(120%); backdrop-filter: blur(16px) saturate(120%); }
+.lo-tag { color: var(--au-butter-ink); background-color: var(--au-butter); box-shadow: none; }
+.lo-card h2 { font-weight: 500; letter-spacing: -0.02em; }
+.tx-hello b { font-weight: 500; color: var(--ink-day); background: var(--au-yellow); box-shadow: none; }
+@media (min-width: 1280px) {
+  :root .me-panel { background: transparent !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; padding: 0; border-radius: 0; transform: none; opacity: 1; visibility: visible; position: static; }
+}
+
+/* the hint names where the picker is: the foot of the menu on a sidebar desktop, where the sketch's arrow points nowhere */
+.where-s { display: none; }
+@media (min-width: 1280px) {
+  .where-d { display: none; } .where-s { display: inline; }
+  .you-card.empty::before, .you-card.empty::after { display: none; }
+  :root .me-panel .theme-btn { background: transparent; box-shadow: none; color: var(--ink-2); }
+}
+/* small words on the scene keep a soft shadow under them, like captions on a photograph */
+.lead-deck, .cast-name small, .gotw p { text-shadow: 0 1px 2px color-mix(in srgb, var(--au-t-281608) 45%, transparent), 0 0 14px color-mix(in srgb, var(--au-t-281608) 30%, transparent); }
+/* the live list's bars: banked in charcoal, what's still to come in butter stripes (the reference's done and today) */
+.wr-bar { height: 12px; padding: 0; box-shadow: none; background: var(--tile-2); }
+.wr-bar .bk { background: var(--au-char-2); }
+.wr-bar .rs { background: repeating-linear-gradient(135deg, var(--au-yellow) 0 6px, var(--au-yellow-hi) 6px 12px); }
+:root[data-theme='dark'] .wr-bar .bk { background: var(--ink-2); }
+/* the stories' unwatched rings: butter to gold, turning slowly */
+:root { --bz-ring: conic-gradient(from 210deg, var(--au-yellow-hi), var(--au-yellow) 30%, var(--au-yellow-deep) 55%, var(--au-yellow) 80%, var(--au-yellow-hi)); }
+/* the game of the week is a .glass too, whose light wash had replaced its scene: the scene again, without the ball (the
+   playoff drive sits where it would lie) */
+.gotw.glass { background-image: var(--hero-ribbon), var(--hero-grad); background-size: 100% 100%, 100% 100%; background-position: 0 0, 0 0; }
+.gotw-chart { background: color-mix(in srgb, var(--au-t-20140a) 26%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--au-t-fff4e0) 20%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+/* the playoff drive: a field mown in umber, the end zone in butter */
+.drive-field { background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--au-t-1e1208) 42%, transparent) 0 12.5%, color-mix(in srgb, var(--au-t-1e1208) 26%, transparent) 12.5% 25%); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--au-t-fff4e0) 40%, transparent); }
+.drive-field .endzone { color: var(--ink-day); background: var(--au-yellow); }
+.drive-pick button[aria-pressed='true'] { color: var(--ink-day); background: var(--au-cream); box-shadow: none; }
+:root .lab-tabs a[aria-current='page'] b { color: var(--sel-ink); }
+:root .lab-tabs a[aria-current='page'] small { color: color-mix(in srgb, var(--sel-ink) 72%, transparent); }
+/* the night's dark-ink list was written for bright fills; in 5.0 several of those are glass now, so they take the night's
+   light ink back */
+:root[data-theme='dark'] :is(.view-head .wk, .tier.good, .tier.mid, .chip:is(.to-again, .rank-pdf), .fo-side, .aring, .gotw-more) {
+  --ink: var(--au-t-f3f0ea); --ink-2: var(--au-t-d2cdc4); --ink-3: var(--au-t-a9a399); --good: var(--au-t-9ccb9f); --bad: var(--au-t-f0a08c); color: var(--ink); }
+:root[data-theme='dark'] .aring { --aring-c: var(--au-yellow); }
+:root[data-theme='dark'] .aring.you { --aring-c: var(--au-yellow-hi); }
+:root[data-theme='dark'] .rank.nudge:not(.open) .pull { color: var(--au-butter-ink); background: var(--au-butter); }

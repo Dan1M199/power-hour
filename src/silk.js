@@ -1,16 +1,12 @@
-// 4.5, floodlit aurora (Dan's request Nov 20: the 4.4 sky barely moved and read as a pale mint wash; make it aurora
-// glass again, lively, with personality, in an eye-catching green). One WebGL shader behind everything:
-//  - the pitch: a vivid emerald (#14D77F, "floodlight green") falling to deep turf at the foot of the screen
-//  - pools: four wide clouds of colour on domain-warped paths, plus a screened breath of rose (green's complement and
-//    the site's --pop), so overlaps glow instead of going muddy
-//  - curtains: three aurora ribbons hanging over the upper half, each with a crisp lower hem, a long glow rising off it
-//    and streaming rays, their colour sliding lime to aqua along their length; they wave on a 10 to 20 second beat,
-//    quick enough to see
-//  - floodlights: two soft stadium beams from the top corners, sweeping slowly, the game-day touch
-// It has a mood per page (the ribbons' colours and pace), crossfades on a tab change with a surge on the tab pill's beat,
-// leans toward the pointer and slides with the scroll.
-// The colour at the top of the screen is read back twice a second into --aurora-top: <html>'s background, the sky's own
-// background colour (iPhone Safari tints its bar from a fixed element at the top) and the theme colour.
+// 5.0, Aura (Dan's request Nov 20: copy the calm wellness dashboard he sent, its colours exactly). One WebGL shader
+// behind everything, a soft morning haze rather than an aurora:
+//  - the sky: cool pearl blue-grey at the top of the screen, a warm linen through the middle, sand at the foot
+//  - the sunrise: a wide golden glow low on the right, breathing and drifting very slowly, with a peach halo around it
+//  - haze: three soft pools (a cool one up top, cream, and a pale gold) on slow domain-warped paths, so the light never
+//    sits still but never draws the eye either
+//  - a pale bloom of daylight from the top, and a whisper of grain so the gradient never bands
+// It has a mood per page (the pools' colours and pace), crossfades on a tab change, leans toward the pointer and slides
+// with the scroll. The colour at the top of the screen is read back twice a second into --aurora-top (the status bar).
 // Costs: drawn at about a third of the screen's resolution, at most 30 fps on phones and 45 elsewhere, paused while the tab
 // is hidden, an overlay locks the page or the headline desk is open. Reduced motion or Save-Data draw one still frame.
 
@@ -25,67 +21,53 @@ float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
   return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
 float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*n(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}
 float pool(vec2 p,vec2 c,float s){vec2 d=p-c;return exp(-dot(d,d)*s);}
-float beam(vec2 v,float ctr){float a=atan(v.x,-v.y);float d=(a-ctr)/.13;return exp(-d*d)*smoothstep(1.9,.1,length(v));}
 void main(){
   vec2 uv=gl_FragCoord.xy/uRes;float asp=uRes.x/uRes.y;
-  vec2 p=vec2(uv.x*asp,uv.y+uScroll)+uPtr*.06;
+  vec2 p=vec2(uv.x*asp,uv.y+uScroll)+uPtr*.04;
   float t=uT;
-  /* the pitch: bright up top, deep turf at the foot */
-  vec3 c=mix(uBot,uTop,smoothstep(.0,1.,uv.y));
-  /* the warp, so everything bends and merges */
-  vec2 w=vec2(fbm(p*1.3+vec2(t*.09*uDrift,t*.05)),fbm(p*1.3+vec2(5.2,1.3)-t*.07))-.5;
-  vec2 q=p+w*.6;
-  /* pools of colour on lissajous paths, about half a minute a lap */
-  float a0=pool(q,vec2((.18+.26*sin(t*.16))*asp,.24+.18*cos(t*.13)),3.4);
-  float a1=pool(q,vec2((.82+.18*cos(t*.14))*asp,.52+.22*sin(t*.17+1.)),4.2);
-  float a2=pool(q,vec2((.5+.36*sin(t*.11+2.))*asp,.04+.12*sin(t*.15)),2.6);
-  float a3=pool(q,vec2((.34+.3*cos(t*.12+4.))*asp,.86+.1*sin(t*.19)),4.6);
-  c=mix(c,uC2,a2*uPool*.8);
-  c=mix(c,uC0,a0*uPool*.7);
-  c=mix(c,uC3,a3*uPool*.5);
-  c=1.-(1.-c)*(1.-uRose*a1*a1*uPool*.22);
-  /* the curtains */
-  float x=q.x;vec3 L=vec3(0.);
-  for(int i=0;i<3;i++){float fi=float(i);
-    float y=.8-fi*.17+.07*sin(x*(2.2+fi*.7)+t*(.5-fi*.1)+fi*2.1)+.035*sin(x*(5.3-fi)-t*.7+fi)
-      +.14*(fbm(vec2(x*1.1+t*.12+fi*3.7,t*.08+fi))-.5);
-    float d=q.y-y;
-    float band=d>0.?exp(-d/(.11+fi*.04)):exp(-d*d/.0016);
-    float rays=pow(fbm(vec2(x*11.+t*.25*(fi+1.),q.y*.8-t*.3)),1.6)*2.2;
-    vec3 col=mix(uC0,uC1,.5+.5*sin(x*1.6+t*.27+fi*1.9));
-    col=mix(col,uC3,fi*.28);
-    L+=col*band*(.25+rays)*(1.-fi*.22);
-  }
-  /* floodlights from the top corners, sweeping */
-  vec2 f=vec2(uv.x*asp,uv.y);
-  float fl=beam(f-vec2(-.04*asp,1.1),.55+.16*sin(t*.21))+beam(f-vec2(1.04*asp,1.1),-.55-.16*sin(t*.19+1.3));
-  L+=uWarm*fl*uFlood;
-  /* where a pool is thickest it turns to light */
-  L+=vec3(1.,1.,.94)*(a0*a0*.14+a3*a3*.2);
-  c=1.-(1.-c)*(1.-clamp(L*uGlow,0.,1.));
-  /* jewel tones: pushed away from grey so the green rings out */
-  float g=dot(c,vec3(.299,.587,.114));c=clamp(mix(vec3(g),c,1.35),0.,1.);
-  /* depth: the corners fall away a touch */
-  c*=1.-.12*smoothstep(.5,1.2,length((uv-vec2(.5,.6))*vec2(1.,1.25)));
-  c+=(h(gl_FragCoord.xy+fract(t))-.5)/80.;
+  /* the sky: pearl above, linen through the middle (c1), sand below */
+  float y=uv.y;
+  vec3 c=mix(uBot,uC1,smoothstep(.0,.55,y));
+  c=mix(c,uTop,smoothstep(.45,1.,y));
+  /* a slow warp, so the haze breathes */
+  vec2 w=vec2(fbm(p*1.1+vec2(t*.05*uDrift,t*.03)),fbm(p*1.1+vec2(5.2,1.3)-t*.04))-.5;
+  vec2 q=p+w*.5;
+  /* haze pools: cool up top (c0), cream (c3), pale gold (c2), each on a lap of a minute or more */
+  float a0=pool(q,vec2((.22+.2*sin(t*.07))*asp,.86+.08*cos(t*.06)),3.);
+  float a3=pool(q,vec2((.55+.25*cos(t*.05+2.))*asp,.55+.12*sin(t*.08)),3.6);
+  float a2=pool(q,vec2((.2+.22*sin(t*.06+4.))*asp,.12+.1*sin(t*.07)),3.2);
+  c=mix(c,uC0,a0*uPool*.75);
+  c=mix(c,uC3,a3*uPool*.45);
+  c=mix(c,uC2,a2*uPool*.55);
+  /* the sunrise: a wide golden glow low on the right, a peach halo round it, breathing */
+  vec2 sp=vec2((.8+.06*sin(t*.045))*asp,.1+.05*sin(t*.06));
+  float br=1.+.08*sin(t*.23);
+  float sun=pool(q,sp,1.6/br);
+  float core=pool(p,sp+vec2(.02,.06),7.);
+  c=mix(c,uRose,sun*uGlow*.55);
+  c=1.-(1.-c)*(1.-uWarm*(sun*.38+core*.42)*uGlow);
+  /* daylight from the top */
+  c=1.-(1.-c)*(1.-vec3(1.,.99,.97)*pool(vec2(uv.x*asp,uv.y),vec2(.5*asp,1.18),1.4)*uFlood);
+  c+=(h(gl_FragCoord.xy+fract(t))-.5)/120.;
   gl_FragColor=vec4(c,1.);
 }`;
 
 const hex = (s) => [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16) / 255);
-// the moods: c0 and c1 are the ribbons' two ends (and c0 a pool), c2 the deep pool, c3 the high ribbon and a light pool,
-// warm the floodlights, rose the complement's breath, then pace and drift
+// the moods: c0 the cool haze up top, c1 the linen middle, c2 the pale gold pool low left, c3 the cream pool, warm the
+// sun's light, rose its peach halo, then pace and drift. Each page leans a little: the rankings a plain morning, Live
+// warmer and quicker, the Wire cooler, Games peach, the Lab a lilac pearl
 const MOODS = {
-  rankings: { c: ['#A8F55A', '#3DE6C4', '#047A4C', '#8CF5B4'], warm: '#FFF1C2', rose: '#FF9CC8', speed: 1, drift: 1 },
-  live: { c: ['#D2F54A', '#5CF08A', '#08804A', '#FFE066'], warm: '#FFE29A', rose: '#FFA98A', speed: 1.6, drift: 1.4 },
-  wire: { c: ['#7DF5C8', '#38D6F0', '#056E66', '#B6F7E6'], warm: '#E8FBFF', rose: '#C7A8FF', speed: 1.15, drift: 2.2 },
-  matchups: { c: ['#A8F55A', '#4FC8FF', '#05704E', '#FFE066'], warm: '#FFF1C2', rose: '#FF9CC8', speed: 1.1, drift: -1 },
-  lab: { c: ['#B4F07A', '#5EE8B0', '#0A7A50', '#E2F59A'], warm: '#F6FFD8', rose: '#F2A8E0', speed: 0.85, drift: 0.6 },
+  rankings: { c: ['#C7D0DC', '#DFDDD8', '#EFDDB5', '#F1ECE3'], warm: '#F6C978', rose: '#EFC08C', speed: 1, drift: 1 },
+  live: { c: ['#CDD2D9', '#E3DCD0', '#F2D9A6', '#F4EADA'], warm: '#F8C468', rose: '#F0B880', speed: 1.5, drift: 1.3 },
+  wire: { c: ['#C2CEDC', '#DCDEDF', '#E9DCC0', '#EEF0F0'], warm: '#F2CE8C', rose: '#E8C9A6', speed: 1.1, drift: 1.8 },
+  matchups: { c: ['#CAD0DA', '#E1DBD3', '#F0D8B4', '#F3E9DE'], warm: '#F6C37A', rose: '#F0B394', speed: 1.1, drift: -1 },
+  lab: { c: ['#CCCCDA', '#DEDBDB', '#EBDDC0', '#EFEAE6'], warm: '#F2CC88', rose: '#E8C0B0', speed: 0.85, drift: 0.6 },
 };
-// the themes: the pitch's top and bottom, how much the pools show, how bright the light is, the floodlights, and how much
-// the pools dim (night keeps the ribbons vivid, like a real aurora, and sinks the rest)
+// the themes: the sky's top and foot, how much the pools show, the sun's strength, the daylight, and how far the moods'
+// colours sink (night: the same room with the lights down, warm charcoal with an amber glow low on the right)
 const THEMES = {
-  light: { top: '#1CC977', bot: '#036039', pool: 1, glow: 0.72, flood: 0.45, dim: 1 },
-  dark: { top: '#063A24', bot: '#010C07', pool: 0.7, glow: 0.62, flood: 0.16, dim: 0.32 },
+  light: { top: '#CBD2DC', bot: '#E6D2A8', pool: 1, glow: 0.85, flood: 0.35, dim: 1 },
+  dark: { top: '#1B1C1F', bot: '#2A2219', pool: 0.9, glow: 0.7, flood: 0.04, dim: 0.16 },
 };
 
 export function initSilk() {
@@ -124,8 +106,8 @@ export function initSilk() {
   const target = (mood, th, live) => {
     const m = MOODS[mood] || MOODS.rankings, T = THEMES[th];
     const dim = (c) => hex(c).map((v) => v * T.dim);
-    // at night the ribbons stay bright and everything else sinks into the dark
-    return { c: m.c.map((c, i) => (i === 2 ? dim(c) : hex(c))), warm: hex(m.warm), rose: dim(m.rose), top: hex(T.top), bot: hex(T.bot), pool: T.pool, glow: T.glow, flood: T.flood,
+    // at night the haze sinks into the dark and the sun burns low
+    return { c: m.c.map((c) => dim(c)), warm: hex(m.warm).map((v) => v * (th === 'dark' ? 0.42 : 1)), rose: hex(m.rose).map((v) => v * (th === 'dark' ? 0.34 : 1)), top: hex(T.top), bot: hex(T.bot), pool: T.pool, glow: T.glow, flood: T.flood,
       speed: m.speed * (live ? 1.5 : 1), drift: m.drift };
   };
   const clone = (o) => ({ ...o, c: o.c.map((x) => [...x]), warm: [...o.warm], rose: [...o.rose], top: [...o.top], bot: [...o.bot] });
@@ -135,7 +117,7 @@ export function initSilk() {
   let raf = 0, last = 0, paused = false, lastRead = -1e9, lastTop = '';
 
   const size = () => {
-    const scale = small() ? 0.4 : 0.34;
+    const scale = small() ? 0.34 : 0.28; // the haze is soft, so it can be drawn smaller
     const w = Math.max(1, Math.round(canvas.clientWidth || innerWidth) * scale), hgt = Math.max(1, Math.round((canvas.clientHeight || innerHeight) * scale));
     if (canvas.width !== Math.round(w) || canvas.height !== Math.round(hgt)) { canvas.width = Math.round(w); canvas.height = Math.round(hgt); gl.viewport(0, 0, canvas.width, canvas.height); }
   };
