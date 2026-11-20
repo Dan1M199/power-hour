@@ -1,92 +1,59 @@
-// 4.5, floodlit aurora (Dan's request Nov 20: the 4.4 sky barely moved and read as a pale mint wash; make it aurora
-// glass again, lively, with personality, in an eye-catching green). One WebGL shader behind everything:
-//  - the pitch: a vivid emerald (#14D77F, "floodlight green") falling to deep turf at the foot of the screen
-//  - pools: four wide clouds of colour on domain-warped paths, plus a screened breath of rose (green's complement and
-//    the site's --pop), so overlaps glow instead of going muddy
-//  - curtains: three aurora ribbons hanging over the upper half, each with a crisp lower hem, a long glow rising off it
-//    and streaming rays, their colour sliding lime to aqua along their length; they wave on a 10 to 20 second beat,
-//    quick enough to see
-//  - floodlights: two soft stadium beams from the top corners, sweeping slowly, the game-day touch
-// It has a mood per page (the ribbons' colours and pace), crossfades on a tab change with a surge on the tab pill's beat,
-// leans toward the pointer and slides with the scroll.
+// 4.8, diffused light (Dan's request Nov 20: a new design language, the background a very slow moving diffused light
+// gradient). One WebGL shader behind everything, calm on purpose:
+//  - the field: a deep green gradient, lighter at the top
+//  - light: four very wide, soft pools of light (mint, teal, a warm lime-gold and a cool sky) drifting on long, slow paths
+//    (one lap takes one and a half to three minutes), blended in so they diffuse into each other with no edges; a soft
+//    glow from the top keeps the upper screen lit
+// No curtains, beams, stripes or noise: just light moving slowly through colour. A mood per page shifts the colours a
+// little and crossfades over a few seconds; a tab change no longer surges. The pointer leans on it a touch on desktop.
 // The colour at the top of the screen is read back twice a second into --aurora-top: <html>'s background, the sky's own
 // background colour (iPhone Safari tints its bar from a fixed element at the top) and the theme colour.
-// Costs: drawn at about a third of the screen's resolution, at most 30 fps on phones and 45 elsewhere, paused while the tab
-// is hidden, an overlay locks the page or the headline desk is open. Reduced motion or Save-Data draw one still frame.
+// Costs: drawn at about a third of the screen's resolution (the light is soft, so nobody sees it), at most 24 fps (the
+// motion is slow, so more frames buy nothing), paused while the tab is hidden, an overlay locks the page or the headline
+// desk is open. Reduced motion or Save-Data draw one still frame.
 
 const VERT = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
 const FRAG = `
 precision mediump float;
 uniform vec2 uRes;uniform float uT;uniform vec2 uPtr;uniform float uScroll;
-uniform vec3 uC0;uniform vec3 uC1;uniform vec3 uC2;uniform vec3 uC3;uniform vec3 uWarm;uniform vec3 uRose;
-uniform vec3 uTop;uniform vec3 uBot;uniform float uPool;uniform float uGlow;uniform float uDrift;uniform float uFlood;
+uniform vec3 uC0;uniform vec3 uC1;uniform vec3 uC2;uniform vec3 uC3;
+uniform vec3 uTop;uniform vec3 uBot;uniform float uAmt;
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
-  return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
-float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*n(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}
 float pool(vec2 p,vec2 c,float s){vec2 d=p-c;return exp(-dot(d,d)*s);}
-float beam(vec2 v,float ctr){float a=atan(v.x,-v.y);float d=(a-ctr)/.13;return exp(-d*d)*smoothstep(1.9,.1,length(v));}
 void main(){
   vec2 uv=gl_FragCoord.xy/uRes;float asp=uRes.x/uRes.y;
-  vec2 p=vec2(uv.x*asp,uv.y+uScroll)+uPtr*.06;
+  vec2 p=vec2(uv.x*asp,uv.y+uScroll)+uPtr*.04;
   float t=uT;
-  /* the pitch: bright up top, deep turf at the foot */
-  vec3 c=mix(uBot,uTop,smoothstep(.0,1.,uv.y));
-  /* the warp, so everything bends and merges */
-  vec2 w=vec2(fbm(p*1.3+vec2(t*.09*uDrift,t*.05)),fbm(p*1.3+vec2(5.2,1.3)-t*.07))-.5;
-  vec2 q=p+w*.6;
-  /* pools of colour on lissajous paths, about half a minute a lap */
-  float a0=pool(q,vec2((.18+.26*sin(t*.16))*asp,.24+.18*cos(t*.13)),3.4);
-  float a1=pool(q,vec2((.82+.18*cos(t*.14))*asp,.52+.22*sin(t*.17+1.)),4.2);
-  float a2=pool(q,vec2((.5+.36*sin(t*.11+2.))*asp,.04+.12*sin(t*.15)),2.6);
-  float a3=pool(q,vec2((.34+.3*cos(t*.12+4.))*asp,.86+.1*sin(t*.19)),4.6);
-  c=mix(c,uC2,a2*uPool*.8);
-  c=mix(c,uC0,a0*uPool*.7);
-  c=mix(c,uC3,a3*uPool*.5);
-  c=1.-(1.-c)*(1.-uRose*a1*a1*uPool*.22);
-  /* the curtains */
-  float x=q.x;vec3 L=vec3(0.);
-  for(int i=0;i<3;i++){float fi=float(i);
-    float y=.8-fi*.17+.07*sin(x*(2.2+fi*.7)+t*(.5-fi*.1)+fi*2.1)+.035*sin(x*(5.3-fi)-t*.7+fi)
-      +.14*(fbm(vec2(x*1.1+t*.12+fi*3.7,t*.08+fi))-.5);
-    float d=q.y-y;
-    float band=d>0.?exp(-d/(.11+fi*.04)):exp(-d*d/.0016);
-    float rays=pow(fbm(vec2(x*11.+t*.25*(fi+1.),q.y*.8-t*.3)),1.6)*2.2;
-    vec3 col=mix(uC0,uC1,.5+.5*sin(x*1.6+t*.27+fi*1.9));
-    col=mix(col,uC3,fi*.28);
-    L+=col*band*(.25+rays)*(1.-fi*.22);
-  }
-  /* floodlights from the top corners, sweeping */
-  vec2 f=vec2(uv.x*asp,uv.y);
-  float fl=beam(f-vec2(-.04*asp,1.1),.55+.16*sin(t*.21))+beam(f-vec2(1.04*asp,1.1),-.55-.16*sin(t*.19+1.3));
-  L+=uWarm*fl*uFlood;
-  /* where a pool is thickest it turns to light */
-  L+=vec3(1.,1.,.94)*(a0*a0*.14+a3*a3*.2);
-  c=1.-(1.-c)*(1.-clamp(L*uGlow,0.,1.));
-  /* jewel tones: pushed away from grey so the green rings out */
-  float g=dot(c,vec3(.299,.587,.114));c=clamp(mix(vec3(g),c,1.35),0.,1.);
-  /* depth: the corners fall away a touch */
-  c*=1.-.12*smoothstep(.5,1.2,length((uv-vec2(.5,.6))*vec2(1.,1.25)));
-  c+=(h(gl_FragCoord.xy+fract(t))-.5)/80.;
+  /* the field: deep at the foot, a touch lighter at the top */
+  vec3 c=mix(uBot,uTop,smoothstep(-.1,1.1,uv.y));
+  /* four wide pools of light on slow paths: periods of about 90 to 180 seconds */
+  float a0=pool(p,vec2((.22+.2*sin(t*.041))*asp,.78+.12*cos(t*.035)),1.6);
+  float a1=pool(p,vec2((.8+.16*cos(t*.033+1.))*asp,.5+.2*sin(t*.045+2.)),1.9);
+  float a2=pool(p,vec2((.5+.3*sin(t*.027+4.))*asp,.16+.12*cos(t*.038)),1.4);
+  float a3=pool(p,vec2((.3+.24*cos(t*.049+3.))*asp,.42+.18*sin(t*.03+1.)),2.2);
+  /* screened on, so where they meet they diffuse into a brighter light rather than a muddy mix */
+  vec3 L=uC0*a0*.75+uC1*a1*.6+uC2*a2*.5+uC3*a3*.45;
+  /* a soft glow from the top keeps the upper screen lit */
+  L+=mix(uC0,uC3,.5)*pow(uv.y,3.)*.18;
+  c=1.-(1.-c)*(1.-clamp(L*uAmt,0.,1.));
+  /* dither, so the gradient never bands */
+  c+=(h(gl_FragCoord.xy+fract(t))-.5)/96.;
   gl_FragColor=vec4(c,1.);
 }`;
 
 const hex = (s) => [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16) / 255);
-// the moods: c0 and c1 are the ribbons' two ends (and c0 a pool), c2 the deep pool, c3 the high ribbon and a light pool,
-// warm the floodlights, rose the complement's breath, then pace and drift
+// the moods: four lights (mint, teal, warm, cool) shifted a little per page, and the pace
 const MOODS = {
-  rankings: { c: ['#A8F55A', '#3DE6C4', '#047A4C', '#8CF5B4'], warm: '#FFF1C2', rose: '#FF9CC8', speed: 1, drift: 1 },
-  live: { c: ['#D2F54A', '#5CF08A', '#08804A', '#FFE066'], warm: '#FFE29A', rose: '#FFA98A', speed: 1.6, drift: 1.4 },
-  wire: { c: ['#7DF5C8', '#38D6F0', '#056E66', '#B6F7E6'], warm: '#E8FBFF', rose: '#C7A8FF', speed: 1.15, drift: 2.2 },
-  matchups: { c: ['#A8F55A', '#4FC8FF', '#05704E', '#FFE066'], warm: '#FFF1C2', rose: '#FF9CC8', speed: 1.1, drift: -1 },
-  lab: { c: ['#B4F07A', '#5EE8B0', '#0A7A50', '#E2F59A'], warm: '#F6FFD8', rose: '#F2A8E0', speed: 0.85, drift: 0.6 },
+  rankings: { c: ['#5FD39A', '#3FB7A8', '#C9E27A', '#7CC8E8'], speed: 1 },
+  live: { c: ['#7EDC8A', '#3FC4A0', '#F2D477', '#8FD6C8'], speed: 1.25 },
+  wire: { c: ['#58D0B4', '#3AA8C8', '#B8E6A0', '#86C4F0'], speed: 1 },
+  matchups: { c: ['#5FD39A', '#5AA8E0', '#EBCB78', '#7CC8E8'], speed: 1 },
+  lab: { c: ['#7AD8A0', '#48BFA8', '#D2E68A', '#A0D8E0'], speed: 0.9 },
 };
-// the themes: the pitch's top and bottom, how much the pools show, how bright the light is, the floodlights, and how much
-// the pools dim (night keeps the ribbons vivid, like a real aurora, and sinks the rest)
+// the themes: the field's top and bottom and how strong the light is
 const THEMES = {
-  // 4.7 (Dan's request Nov 20): a deeper turf, so the cards and the words stand off it
-  light: { top: '#0F6B3E', bot: '#02341F', pool: 0.62, glow: 0.34, flood: 0.16, dim: 0.66 },
-  dark: { top: '#042818', bot: '#010805', pool: 0.6, glow: 0.5, flood: 0.1, dim: 0.26 },
+  light: { top: '#0E5638', bot: '#042C1C', amt: 0.2 },
+  dark: { top: '#0A2E1F', bot: '#020C07', amt: 0.26 },
 };
 
 export function initSilk() {
@@ -110,7 +77,7 @@ export function initSilk() {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const U = {};
-  for (const k of ['uRes', 'uT', 'uPtr', 'uScroll', 'uC0', 'uC1', 'uC2', 'uC3', 'uWarm', 'uRose', 'uTop', 'uBot', 'uPool', 'uGlow', 'uDrift', 'uFlood']) U[k] = gl.getUniformLocation(prog, k);
+  for (const k of ['uRes', 'uT', 'uPtr', 'uScroll', 'uC0', 'uC1', 'uC2', 'uC3', 'uTop', 'uBot', 'uAmt']) U[k] = gl.getUniformLocation(prog, k);
 
   sky.prepend(canvas);
   const root = document.documentElement;
@@ -124,13 +91,10 @@ export function initSilk() {
   // a mood in a theme
   const target = (mood, th, live) => {
     const m = MOODS[mood] || MOODS.rankings, T = THEMES[th];
-    const dim = (c) => hex(c).map((v) => v * T.dim);
-    // at night the ribbons stay bright and everything else sinks into the dark
-    return { c: m.c.map((c, i) => (i === 2 ? dim(c) : hex(c))), warm: hex(m.warm), rose: dim(m.rose), top: hex(T.top), bot: hex(T.bot), pool: T.pool, glow: T.glow, flood: T.flood,
-      speed: m.speed * (live ? 1.5 : 1), drift: m.drift };
+    return { c: m.c.map(hex), top: hex(T.top), bot: hex(T.bot), amt: T.amt, speed: m.speed * (live ? 1.2 : 1) };
   };
-  const clone = (o) => ({ ...o, c: o.c.map((x) => [...x]), warm: [...o.warm], rose: [...o.rose], top: [...o.top], bot: [...o.bot] });
-  let mood = 'rankings', live = false, surge = 0, t = Math.random() * 60, ptr = [0, 0], ptrGoal = [0, 0];
+  const clone = (o) => ({ ...o, c: o.c.map((x) => [...x]), top: [...o.top], bot: [...o.bot] });
+  let mood = 'rankings', live = false, t = Math.random() * 400, ptr = [0, 0], ptrGoal = [0, 0];
   let goal = target(mood, theme(), live);
   const cur = clone(goal);
   let raf = 0, last = 0, paused = false, lastRead = -1e9, lastTop = '';
@@ -160,38 +124,28 @@ export function initSilk() {
     gl.uniform2f(U.uRes, canvas.width, canvas.height);
     gl.uniform1f(U.uT, t);
     gl.uniform2f(U.uPtr, ptr[0], ptr[1]);
-    gl.uniform1f(U.uScroll, (scrollY / Math.max(1, innerHeight)) * 0.06);
+    gl.uniform1f(U.uScroll, (scrollY / Math.max(1, innerHeight)) * 0.03);
     cur.c.forEach((c, i) => gl.uniform3fv(U[`uC${i}`], c));
-    gl.uniform3fv(U.uWarm, cur.warm);
-    gl.uniform3fv(U.uRose, cur.rose);
     gl.uniform3fv(U.uTop, cur.top);
     gl.uniform3fv(U.uBot, cur.bot);
-    gl.uniform1f(U.uPool, cur.pool);
-    gl.uniform1f(U.uGlow, cur.glow);
-    gl.uniform1f(U.uDrift, cur.drift);
-    gl.uniform1f(U.uFlood, cur.flood);
+    gl.uniform1f(U.uAmt, cur.amt);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     if (now - lastRead > 500) { lastRead = now; readTop(); }
   };
   const step = (now) => {
     raf = 0;
     if (paused) return;
-    const gap = small() ? 1000 / 30 : 1000 / 45;
+    const gap = 1000 / 24;
     if (now - last < gap - 2) { raf = requestAnimationFrame(step); return; }
     const dt = Math.min(0.1, (now - (last || now)) / 1000);
     last = now;
-    const k = 1 - Math.exp(-dt * 2.2); // colours settle in about a second and a half
+    const k = 1 - Math.exp(-dt * 0.7); // a mood crossfades over three or four seconds
     cur.c.forEach((c, i) => easeV(c, goal.c[i], k));
-    easeV(cur.warm, goal.warm, k); easeV(cur.rose, goal.rose, k);
     easeV(cur.top, goal.top, k * 2); easeV(cur.bot, goal.bot, k * 2);
-    cur.pool = ease(cur.pool, goal.pool, k * 2);
-    cur.glow = ease(cur.glow, goal.glow, k * 2);
-    cur.flood = ease(cur.flood, goal.flood, k * 2);
+    cur.amt = ease(cur.amt, goal.amt, k * 2);
     cur.speed = ease(cur.speed, goal.speed, k);
-    cur.drift = ease(cur.drift, goal.drift, k);
-    surge *= Math.exp(-dt * 2.4);
-    ptr = [ease(ptr[0], ptrGoal[0], 1 - Math.exp(-dt * 1.5)), ease(ptr[1], ptrGoal[1], 1 - Math.exp(-dt * 1.5))];
-    t += dt * (cur.speed + surge * 6);
+    ptr = [ease(ptr[0], ptrGoal[0], 1 - Math.exp(-dt * 0.8)), ease(ptr[1], ptrGoal[1], 1 - Math.exp(-dt * 0.8))];
+    t += dt * cur.speed;
     draw(now);
     raf = requestAnimationFrame(step);
   };
@@ -220,11 +174,9 @@ export function initSilk() {
   run();
 
   return {
-    // route() calls this on every page change: the new page's mood, whether games are on, and a surge if the tab changed
+    // route() calls this on every page change: the new page's mood and whether games are on
     mood(view, opts = {}) {
-      const next = MOODS[view] ? view : mood;
-      if (next !== mood && !still()) surge = 1;
-      mood = next;
+      mood = MOODS[view] ? view : mood;
       live = !!opts.live;
       setGoal();
       run();

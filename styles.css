@@ -5829,13 +5829,12 @@ html.silk-on .sky { background: var(--aurora-top); }
   /* in a live week an older rule hides .tn on the current tab with a heavier selector (the six-tab dock), so this one
      names that case too */
   :root .tabs a[aria-current='page'] :is(.tn, .tl), :root .tabs:has(a[data-view='live']:not([hidden])) a[aria-current='page'] :is(.tn, .tl) { display: block; position: absolute; left: 50%; bottom: calc(100% + 14px); z-index: 2; pointer-events: none;
-    padding: 7px 14px; border-radius: 999px; white-space: nowrap; font: 600 14px/1 var(--body); color: var(--ink);
-    background: var(--glass-float); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 8px 24px color-mix(in srgb, var(--island) 22%, transparent);
+    padding: 7px 14px; border-radius: 999px; white-space: nowrap; font: 600 14px/1 var(--body); color: var(--tab-card-ink);
+    background: var(--tab-card-bg); box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 8px 24px color-mix(in srgb, var(--island) 22%, transparent);
     transform: translateX(-50%); opacity: 0; }
   /* a little tail pointing down at the icon */
   :root .tabs a[aria-current='page'] :is(.tn, .tl)::after { content: ''; position: absolute; left: 50%; top: 100%; width: 10px; height: 10px; margin: -6px 0 0 -5px;
     background: inherit; border-radius: 0 0 3px 0; transform: rotate(45deg); box-shadow: 1px 1px 0 color-mix(in srgb, var(--glass-border) 60%, transparent); }
-  :root[data-theme='dark'] .tabs a[aria-current='page'] :is(.tn, .tl) { color: var(--chalk); }
   /* the first and last tabs keep their card on screen */
   :root .tabs a[data-view='live'][aria-current='page'] :is(.tn, .tl), :root .tabs:has(a[data-view='live'][hidden]) a[data-view='rankings'][aria-current='page'] :is(.tn, .tl) { left: 0; transform: none; }
   :root .tabs a[data-view='live'][aria-current='page'] :is(.tn, .tl)::after, :root .tabs:has(a[data-view='live'][hidden]) a[data-view='rankings'][aria-current='page'] :is(.tn, .tl)::after { left: 22px; }
@@ -5855,3 +5854,6 @@ html.silk-on .sky { background: var(--aurora-top); }
 }
 :root .tx-hello { color: var(--ink); } /* the note is near-white glass now: dark words on it */
 :root[data-theme='dark'] .tx-hello { color: var(--chalk); }
+/* the tab name card's own colours, as tokens, so no heavier tab rule can put dark words on its dark night glass */
+:root { --tab-card-ink: var(--ink-day); --tab-card-bg: color-mix(in srgb, var(--chalk) 96%, transparent); }
+:root[data-theme='dark'] { --tab-card-ink: var(--chalk); --tab-card-bg: color-mix(in srgb, var(--tone-night) 94%, transparent); }
