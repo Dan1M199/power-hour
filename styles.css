@@ -5662,12 +5662,6 @@ html.silk-on .sky :is(.cloud), html.silk-on .sky::before { display: none; }
   --glass-light: radial-gradient(130% 90% at 12% -8%, rgba(255, 255, 255, 0.1) 0, rgba(255, 255, 255, 0.03) 40%, rgba(255, 255, 255, 0) 66%),
     radial-gradient(90% 70% at 100% 110%, rgba(220, 240, 160, 0.06) 0, rgba(220, 240, 160, 0) 60%); }
 .glass, .ag-card { background-image: var(--glass-light); }
-/* a faint haze of light over the whole sky, screened on, so the silk reads as lit from above rather than painted */
-html.silk-on .sky::after { content: ''; position: absolute; inset: 0; mix-blend-mode: screen; pointer-events: none;
-  background: radial-gradient(120% 60% at 50% -10%, var(--haze) 0, transparent 70%); }
-:root[data-theme='dark'].silk-on .sky::after {
-  --haze: rgba(200, 240, 190, 0.08); }
-
 /* the bar the browser draws and the overscroll match the lit top of the silk (the theme colour in index.html and app.js) */
 :root { --aurora-top: #C2DAA6; }
 :root[data-theme='dark'] { --aurora-top: #33532E; }
@@ -5713,11 +5707,65 @@ html.admin-mode { background: var(--np-paper); }
   .gs-glass { width: 150px; }
 }
 
-/* ---------- 4.4: readability (Dan's request Nov 20) ----------
-   4.3's light made the page as bright as the cards, so 46% glass over it read as pale green and the muted greys
-   washed out. The page steps down and the cards step up: the silk is deeper turf with a gentler light (src/silk.js
-   THEMES), and every glass surface is nearly solid, so text sits on a clear, even face in both themes. At night the
-   glass is a smoked dark green instead of a white tint, and the page under it is darker again. */
+/* ---------- 4.4: the aurora, diffused (Dan's requests Nov 19) ----------
+   The background is aurora glass again: src/silk.js draws a pearl-to-emerald sky with five wide pools of colour
+   (emerald, jade, deep teal, mint and a breath of rose gold, green's complement) bending through each other, and two
+   ribbons of champagne light rolling across the top, all soft, nothing drawn as a line. The mowing stripes are gone.
+   Edge to edge on phones: the sky reaches past the top and bottom of the screen, under the status bar and into the
+   overscroll, and the silk reads the colour at the top of the screen back into --aurora-top (html's background) and the
+   theme colour, so the bar the phone draws is the aurora itself.
+   The glass football lies somewhere different on every headline card: Carousel.jsx's ballOf() gives each card a spot
+   (--ball-x, --ball-y, in percent, so the whole ball stays inside), a size (--ball-k) and one of three tilts (ball-0..2). */
+:root { --aurora-top: #DCEED8;
+  --hero-ball-1: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-10 -40 460 380'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.34'/%3E%3Cstop offset='.45' stop-color='%23fff' stop-opacity='.08'/%3E%3Cstop offset='1' stop-color='%23E6F7B0' stop-opacity='.2'/%3E%3C/linearGradient%3E%3CradialGradient id='core' cx='.42' cy='.55' r='.5'%3E%3Cstop offset='0' stop-color='%23DDEB95' stop-opacity='.28'/%3E%3Cstop offset='1' stop-color='%23DDEB95' stop-opacity='0'/%3E%3C/radialGradient%3E%3ClinearGradient id='hi' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.85'/%3E%3Cstop offset='1' stop-color='%23fff' stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient id='rim' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23A8E3EE' stop-opacity='0'/%3E%3Cstop offset='.5' stop-color='%23A8E3EE' stop-opacity='.9'/%3E%3Cstop offset='1' stop-color='%23FFE48A' stop-opacity='0'/%3E%3C/linearGradient%3E%3CclipPath id='c'%3E%3Cpath d='M30 150C100 38 340 38 410 150C340 262 100 262 30 150Z'/%3E%3C/clipPath%3E%3C/defs%3E%3Cg transform='rotate(24 220 150)' opacity='.6'%3E%3Cpath d='M30 150C100 38 340 38 410 150C340 262 100 262 30 150Z' fill='url(%23b)'/%3E%3Cg clip-path='url(%23c)'%3E%3Crect width='440' height='300' fill='url(%23core)'/%3E%3Cpath d='M30 150C100 38 340 38 410 150' fill='none' stroke='%23fff' stroke-opacity='.22' stroke-width='22'/%3E%3Cpath d='M90 112C150 66 290 66 350 112C300 92 140 92 90 112Z' fill='url(%23hi)'/%3E%3Cpath d='M70 198C140 246 300 246 370 198' fill='none' stroke='url(%23rim)' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M92 70C76 110 76 190 92 230M112 62C94 106 94 194 112 238' fill='none' stroke='%23fff' stroke-opacity='.3' stroke-width='3'/%3E%3Cpath d='M348 70C364 110 364 190 348 230M328 62C346 106 346 194 328 238' fill='none' stroke='%23fff' stroke-opacity='.3' stroke-width='3'/%3E%3C/g%3E%3Cpath d='M30 150C100 38 340 38 410 150C340 262 100 262 30 150Z' fill='none' stroke='%23fff' stroke-opacity='.7' stroke-width='2'/%3E%3Cg stroke-linecap='round'%3E%3Cpath d='M160 112H280' stroke='%23FFE01A' stroke-opacity='.35' stroke-width='9'/%3E%3Cpath d='M160 112H280' stroke='%23fff' stroke-opacity='.95' stroke-width='2.6'/%3E%3Cpath d='M172 101v22M188 101v22M204 101v22M220 101v22M236 101v22M252 101v22M268 101v22' stroke='%23FFE01A' stroke-opacity='.3' stroke-width='7'/%3E%3Cpath d='M172 101v22M188 101v22M204 101v22M220 101v22M236 101v22M252 101v22M268 101v22' stroke='%23fff' stroke-opacity='.9' stroke-width='2.2'/%3E%3C/g%3E%3Ccircle cx='120' cy='96' r='4' fill='%23fff' fill-opacity='.9'/%3E%3C/g%3E%3C/svg%3E");
+  --hero-ball-2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-10 -40 460 380'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.34'/%3E%3Cstop offset='.45' stop-color='%23fff' stop-opacity='.08'/%3E%3Cstop offset='1' stop-color='%23E6F7B0' stop-opacity='.2'/%3E%3C/linearGradient%3E%3CradialGradient id='core' cx='.42' cy='.55' r='.5'%3E%3Cstop offset='0' stop-color='%23DDEB95' stop-opacity='.28'/%3E%3Cstop offset='1' stop-color='%23DDEB95' stop-opacity='0'/%3E%3C/radialGradient%3E%3ClinearGradient id='hi' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.85'/%3E%3Cstop offset='1' stop-color='%23fff' stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient id='rim' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23A8E3EE' stop-opacity='0'/%3E%3Cstop offset='.5' stop-color='%23A8E3EE' stop-opacity='.9'/%3E%3Cstop offset='1' stop-color='%23FFE48A' stop-opacity='0'/%3E%3C/linearGradient%3E%3CclipPath id='c'%3E%3Cpath d='M30 150C100 38 340 38 410 150C340 262 100 262 30 150Z'/%3E%3C/clipPath%3E%3C/defs%3E%3Cg transform='rotate(-6 220 150)' opacity='.6'%3E%3Cpath d='M30 150C100 38 340 38 410 150C340 262 100 262 30 150Z' fill='url(%23b)'/%3E%3Cg clip-path='url(%23c)'%3E%3Crect width='440' height='300' fill='url(%23core)'/%3E%3Cpath d='M30 150C100 38 340 38 410 150' fill='none' stroke='%23fff' stroke-opacity='.22' stroke-width='22'/%3E%3Cpath d='M90 112C150 66 290 66 350 112C300 92 140 92 90 112Z' fill='url(%23hi)'/%3E%3Cpath d='M70 198C140 246 300 246 370 198' fill='none' stroke='url(%23rim)' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M92 70C76 110 76 190 92 230M112 62C94 106 94 194 112 238' fill='none' stroke='%23fff' stroke-opacity='.3' stroke-width='3'/%3E%3Cpath d='M348 70C364 110 364 190 348 230M328 62C346 106 346 194 328 238' fill='none' stroke='%23fff' stroke-opacity='.3' stroke-width='3'/%3E%3C/g%3E%3Cpath d='M30 150C100 38 340 38 410 150C340 262 100 262 30 150Z' fill='none' stroke='%23fff' stroke-opacity='.7' stroke-width='2'/%3E%3Cg stroke-linecap='round'%3E%3Cpath d='M160 112H280' stroke='%23FFE01A' stroke-opacity='.35' stroke-width='9'/%3E%3Cpath d='M160 112H280' stroke='%23fff' stroke-opacity='.95' stroke-width='2.6'/%3E%3Cpath d='M172 101v22M188 101v22M204 101v22M220 101v22M236 101v22M252 101v22M268 101v22' stroke='%23FFE01A' stroke-opacity='.3' stroke-width='7'/%3E%3Cpath d='M172 101v22M188 101v22M204 101v22M220 101v22M236 101v22M252 101v22M268 101v22' stroke='%23fff' stroke-opacity='.9' stroke-width='2.2'/%3E%3C/g%3E%3Ccircle cx='120' cy='96' r='4' fill='%23fff' fill-opacity='.9'/%3E%3C/g%3E%3C/svg%3E"); }
+:root[data-theme='dark'] { --aurora-top: #0F2A1E; }
+.sky { inset: auto 0; top: calc(-1 * (env(safe-area-inset-top, 0px) + 100px)); height: calc(100lvh + env(safe-area-inset-top, 0px) + 200px); }
+.sky .silk { height: 100%; }
+/* 4.3 gave <html> a background, so <body>'s no longer passes up to the page and painted a flat green box over the sky:
+   the body stays clear and <html> carries the colour */
+body { background: transparent; }
+.car-card { --ball-img: var(--hero-ball);
+  background-image: var(--ball-img), var(--hero-ribbon), var(--hero-grad);
+  background-size: calc(230px + var(--ball-k, 0.5) * 170px) auto, 100% 100%, 100% 100%;
+  background-position: var(--ball-x, 100%) var(--ball-y, 80%), 0 0, 0 0; }
+.car-card.ball-1 { --ball-img: var(--hero-ball-1); }
+.car-card.ball-2 { --ball-img: var(--hero-ball-2); }
+@media (max-width: 760px) {
+  .car-card { background-size: calc(160px + var(--ball-k, 0.5) * 110px) auto, 100% 100%, 100% 100%; }
+}
+
+/* ---------- 4.5: floodlit aurora (Dan's request Nov 20) ----------
+   The 4.4 sky barely moved and read as a pale mint wash. src/silk.js is now a floodlit aurora on a vivid emerald pitch
+   (floodlight green, #14D77F family): three curtains of light with crisp hems, rising glow and streaming rays, waving on a
+   10 to 20 second beat; pools of colour beneath; two stadium beams sweeping from the top corners. Night keeps the curtains
+   vivid over a near-black turf, like a real aurora.
+   Edge to edge: the silk reads the colour at the top of the screen back into --aurora-top twice a second, and the sky's
+   own background is that colour too, because iPhone Safari (26) tints its bar from a fixed element at the top of the page
+   rather than the theme colour.
+   The glass, tuned for a green light source: the blur drinks more colour (saturate) so the aurora glows through every
+   card, shadows are deep emerald rather than grey, the top edge catches a brighter specular line, and the foot of each
+   card holds a faint mint glow, the light it picks up from the curtains behind. */
+:root { --aurora-top: #2FD388; --aurora-base: #14B86C;
+  --glass-blur: blur(30px) saturate(190%) brightness(1.04);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 2px 6px -2px rgba(255, 255, 255, 0.55);
+  --glass-catch: inset 0 -22px 34px -26px rgba(150, 255, 200, 0.75);
+  --shadow-soft: 0 10px 34px -6px rgba(2, 70, 38, 0.28);
+  --shadow-lift: 0 18px 44px -8px rgba(2, 70, 38, 0.36); }
+:root[data-theme='dark'] { --aurora-top: #08391F; --aurora-base: #03241A;
+  --glass-blur: blur(30px) saturate(170%);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 2px 6px -2px rgba(160, 255, 210, 0.12);
+  --glass-catch: inset 0 -22px 34px -26px rgba(60, 255, 150, 0.32);
+  --shadow-soft: 0 10px 34px -6px rgba(0, 0, 0, 0.5);
+  --shadow-lift: 0 18px 44px -8px rgba(0, 0, 0, 0.6); }
+html.silk-on .sky { background: var(--aurora-top); }
+.glass, .ag-card { box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--glass-catch), 0 0 0 var(--ring-w, 0px) var(--yellow), var(--shadow-soft); }
+.glass.rim { box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--glass-catch), 0 0 0 var(--ring-w, 0px) var(--yellow), var(--shadow-lift); }
+
+/* ---------- 4.6: readability (Dan's request Nov 20) ----------
+   The bright page had caught up with the cards, so 46% glass over it read as pale green and the muted greys
+   washed out. The cards step up: every glass surface is nearly solid, so text sits on a clear, even face in both themes. At night the
+   glass is a smoked dark green instead of a white tint. */
 :root {
   --glass-bg: rgba(255, 255, 255, 0.84);
   --glass-bg-strong: rgba(255, 255, 255, 0.92);
@@ -5725,10 +5773,6 @@ html.admin-mode { background: var(--np-paper); }
   --glass-border: rgba(255, 255, 255, 0.8);
   --glass-solid: rgba(255, 255, 255, 0.96);
   --glass-float: rgba(252, 253, 251, 0.94);
-  --shadow-soft: 0 10px 30px rgba(8, 40, 18, 0.2);
-  --shadow-lift: 0 16px 40px rgba(8, 40, 18, 0.28);
-  --aurora-base: #2F7A38;
-  --aurora-top: #3E8A44;
   --haze: rgba(255, 252, 230, 0.12);
   --glass-light: radial-gradient(130% 90% at 12% -8%, rgba(255, 255, 255, 0.5) 0, rgba(255, 255, 255, 0) 60%);
 }
@@ -5739,10 +5783,6 @@ html.admin-mode { background: var(--np-paper); }
   --glass-border: rgba(255, 255, 255, 0.12);
   --glass-solid: rgba(12, 24, 16, 0.96);
   --glass-float: rgba(12, 24, 16, 0.94);
-  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.45);
-  --shadow-lift: 0 16px 40px rgba(0, 0, 0, 0.55);
-  --aurora-base: #0A1A0F;
-  --aurora-top: #12281A;
 }
 :root[data-theme='dark'].silk-on .sky::after { --haze: rgba(200, 240, 190, 0.04); }
 /* the muted inks a step darker in the day, a step lighter at night, now that they sit on solid faces */
@@ -5750,9 +5790,6 @@ html.admin-mode { background: var(--np-paper); }
 :root[data-theme='dark'] { --ink-2: #DDE5DF; --ink-3: #BCC8C0; --text-secondary: #BCC8C0; }
 /* the hero-gradient buttons keep white words at night (the dark-ink list had turned them dark) */
 :root[data-theme='dark'] :is(.cta, .pth-share:not(.alt), .pth-invite, .ag-btn.primary, .pth-cta) { color: var(--chalk); }
-/* words straight on the turf: white with a soft shade now that the turf is deeper (dark ink there fell to 3.5:1) */
-:root .view-head :is(h1, .page-title), :root .view-head p, :root .view-head h1 + p { color: var(--chalk); text-shadow: 0 1px 14px color-mix(in srgb, var(--island) 35%, transparent); }
-:root .rank:not(:nth-child(-n + 3)) .jersey { color: color-mix(in srgb, var(--chalk) 88%, transparent); text-shadow: 0 2px 18px color-mix(in srgb, var(--island) 40%, transparent); }
 /* chips and rings that the dark-ink list had turned dark on what are now dark faces */
 :root[data-theme='dark'] .view-head .wk.wk.wk { color: var(--chalk); text-shadow: none; }
 :root .view-head :is(h1, .page-title) .wk { text-shadow: none; }
@@ -5764,4 +5801,5 @@ html.admin-mode { background: var(--np-paper); }
 :root .lab-tabs a[aria-current='page'], :root[data-theme='dark'] .lab-tabs a[aria-current='page'] { color: var(--sel-ink); }
 :root .lab-tabs a[aria-current='page'] :is(b, small) { color: inherit; }
 :root .tx-hello strong { color: var(--ink); } /* the 2.x yellow sat on what is now a white note */
-:root .needs > .lbl { color: var(--chalk); }
+/* at night the curtains can run bright behind the page intro: a soft dark halo keeps the white words legible */
+:root[data-theme='dark'] .view-head :is(h1, .page-title, p) { text-shadow: 0 1px 2px color-mix(in srgb, var(--island) 55%, transparent), 0 2px 16px color-mix(in srgb, var(--island) 55%, transparent); }
