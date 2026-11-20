@@ -1,98 +1,91 @@
-// 4.4, the aurora (Dan's request Nov 19: back to aurora glass, flowing, a lot of diffused light, green with
-// complementary colours, luxurious). One WebGL shader behind everything, drawn in three layers of light:
-//  - the sky: a pearl-to-emerald wash, lit from the top
-//  - pools: five wide, soft clouds of colour (emerald, jade, deep teal, mint, and a breath of rose gold, green's
-//    complement) on domain-warped paths, so they swell, merge and part like light through frosted glass
-//  - curtains: two aurora ribbons of champagne and mint light rolling across the upper half, with soft rays, screened on
-//    so they only ever add light
-// Everything is a wide gaussian; nothing draws a line. It has a mood per page, all in the same family:
-//  - rankings: emerald, jade and champagne, the trophy table
-//  - live: warmer, more gold, and it flows faster while games are on
-//  - wire: cooler, teal and aqua, drifting sideways
-//  - matchups: emerald and sky with gold, the two sides of every game
-//  - lab: sage and mint, the greenhouse
-// Switching tabs crossfades the mood and sends a surge through it (it speeds up and settles), on the same beat as the
-// tab pill's glide. The pointer leans on it a little, scrolling slides it like a slow parallax.
-// The colour at the top of the screen is read back now and then and handed to <html>'s background and the theme
-// colour, so the phone's status bar and the overscroll are the aurora itself, edge to edge.
-// Costs: drawn at a fraction of the screen's resolution (it is all soft, so nobody sees it), at most 30 frames a second
-// on phones and 45 elsewhere, paused while the tab is hidden, an overlay locks the page or the headline desk is open.
-// Reduced motion or Save-Data draws one still frame per mood. Without WebGL the CSS aurora stays.
+// 4.5, floodlit aurora (Dan's request Nov 20: the 4.4 sky barely moved and read as a pale mint wash; make it aurora
+// glass again, lively, with personality, in an eye-catching green). One WebGL shader behind everything:
+//  - the pitch: a vivid emerald (#14D77F, "floodlight green") falling to deep turf at the foot of the screen
+//  - pools: four wide clouds of colour on domain-warped paths, plus a screened breath of rose (green's complement and
+//    the site's --pop), so overlaps glow instead of going muddy
+//  - curtains: three aurora ribbons hanging over the upper half, each with a crisp lower hem, a long glow rising off it
+//    and streaming rays, their colour sliding lime to aqua along their length; they wave on a 10 to 20 second beat,
+//    quick enough to see
+//  - floodlights: two soft stadium beams from the top corners, sweeping slowly, the game-day touch
+// It has a mood per page (the ribbons' colours and pace), crossfades on a tab change with a surge on the tab pill's beat,
+// leans toward the pointer and slides with the scroll.
+// The colour at the top of the screen is read back twice a second into --aurora-top: <html>'s background, the sky's own
+// background colour (iPhone Safari tints its bar from a fixed element at the top) and the theme colour.
+// Costs: drawn at about a third of the screen's resolution, at most 30 fps on phones and 45 elsewhere, paused while the tab
+// is hidden, an overlay locks the page or the headline desk is open. Reduced motion or Save-Data draw one still frame.
 
 const VERT = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
 const FRAG = `
 precision mediump float;
 uniform vec2 uRes;uniform float uT;uniform vec2 uPtr;uniform float uScroll;
 uniform vec3 uC0;uniform vec3 uC1;uniform vec3 uC2;uniform vec3 uC3;uniform vec3 uWarm;uniform vec3 uRose;
-uniform vec3 uTop;uniform vec3 uBot;uniform float uPool;uniform float uGlow;uniform float uDrift;uniform float uNight;
+uniform vec3 uTop;uniform vec3 uBot;uniform float uPool;uniform float uGlow;uniform float uDrift;uniform float uFlood;
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
   return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
 float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*n(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}
 float pool(vec2 p,vec2 c,float s){vec2 d=p-c;return exp(-dot(d,d)*s);}
+float beam(vec2 v,float ctr){float a=atan(v.x,-v.y);float d=(a-ctr)/.13;return exp(-d*d)*smoothstep(1.9,.1,length(v));}
 void main(){
   vec2 uv=gl_FragCoord.xy/uRes;float asp=uRes.x/uRes.y;
-  vec2 p=vec2(uv.x*asp,uv.y+uScroll)+uPtr*.05;
+  vec2 p=vec2(uv.x*asp,uv.y+uScroll)+uPtr*.06;
   float t=uT;
-  /* the sky: lit from the top */
+  /* the pitch: bright up top, deep turf at the foot */
   vec3 c=mix(uBot,uTop,smoothstep(.0,1.,uv.y));
-  /* a slow warp, so the pools bend and merge instead of sliding as circles */
-  vec2 w=vec2(fbm(p*1.2+vec2(t*.035*uDrift,t*.02)),fbm(p*1.2+vec2(5.2,1.3)-t*.03))-.5;
-  vec2 q=p+w*.55;
-  /* the pools of colour, on long lissajous paths */
-  float a0=pool(q,vec2((.16+.14*sin(t*.07))*asp,.26+.16*cos(t*.05)),4.6);
-  float a1=pool(q,vec2((.84+.12*cos(t*.06))*asp,.60+.16*sin(t*.08+1.)),4.2);
-  float a2=pool(q,vec2((.52+.30*sin(t*.04+2.))*asp,.02+.10*sin(t*.06)),3.6);
-  float a3=pool(q,vec2((.30+.22*cos(t*.05+4.))*asp,.84+.08*sin(t*.09)),5.4);
-  float a4=pool(q,vec2((.68+.20*sin(t*.045+3.))*asp,.30+.14*cos(t*.07+2.)),7.);
-  float a5=pool(q,vec2((.05+.10*cos(t*.05+1.))*asp,.62+.12*sin(t*.06+3.)),5.);
-  c=mix(c,uC2,a2*uPool*.9);
-  c=mix(c,uC0,a0*uPool);
-  c=mix(c,uC1,a1*uPool*.9);
-  c=mix(c,uC3,a3*uPool*.85);
-  c=mix(c,uWarm*(1.-.62*uNight),a5*uPool*.42);
-  c=mix(c,uRose,a4*uPool*.3);
-  c=1.-(1.-c)*(1.-uRose*a4*uPool*.32);
-  /* jewel tones: the mixed colour pushed away from its own grey, so overlaps glow instead of going muddy */
-  float g=dot(c,vec3(.299,.587,.114));c=clamp(mix(vec3(g),c,1.38),0.,1.);
-  /* the curtains: two ribbons of light rolling across the upper half, soft below, softer above, with slow rays */
-  float x=p.x;
-  float y1=.66+.09*sin(x*1.1+t*.11)+.16*(fbm(vec2(x*.8+t*.045,t*.03))-.5);
-  float y2=.44+.08*sin(x*1.6-t*.09+2.)+.14*(fbm(vec2(x*.7-t*.04,9.+t*.025))-.5);
-  float d1=q.y-y1,d2=q.y-y2;
-  float r1=.6+.4*fbm(vec2(x*2.6+t*.05,q.y*.9-t*.04));
-  float r2=.6+.4*fbm(vec2(x*2.2-t*.05,q.y*.8+t*.035+4.));
-  float k1=exp(-d1*d1/(d1>0.?.05:.012))*r1;
-  float k2=exp(-d2*d2/(d2>0.?.035:.01))*r2*.7;
-  /* the light from above, swaying a little, and a soft glow where the pools are brightest */
-  float top=pow(uv.y,2.6)*.26+exp(-pow((uv.x-.5-.15*sin(t*.06))*1.5,2.))*pow(uv.y,3.)*.2;
-  vec3 L=uWarm*k1*.42+mix(uC3,vec3(1.),.35)*k2*.5+vec3(1.,.97,.88)*top+vec3(1.)*(a0+a1+a3)*.05
-    +vec3(1.,.99,.94)*(a1*a1*.32+a3*a3*.26)+uWarm*a5*a5*.3;
-  /* ^ the cores: where a pool is thickest it turns to light, soft white at the jade and mint, gold at the warm one */
-  /* at night the white light turns to the aurora's own green and the sky's glow drops away */
-  L=mix(L,(L.r+L.g+L.b)/3.*mix(uC1,uC3,.5)*1.6,uNight*.75)*uGlow;
-  c=1.-(1.-c)*(1.-clamp(L,0.,1.));
-  /* depth: the corners fall away a touch, so the light reads as coming from inside */
-  c*=1.-.09*smoothstep(.45,1.15,length((uv-vec2(.5,.62))*vec2(1.,1.3)));
-  /* grain, a hair, so the soft gradients never band */
-  c+=(h(gl_FragCoord.xy+fract(t))-.5)/96.;
+  /* the warp, so everything bends and merges */
+  vec2 w=vec2(fbm(p*1.3+vec2(t*.09*uDrift,t*.05)),fbm(p*1.3+vec2(5.2,1.3)-t*.07))-.5;
+  vec2 q=p+w*.6;
+  /* pools of colour on lissajous paths, about half a minute a lap */
+  float a0=pool(q,vec2((.18+.26*sin(t*.16))*asp,.24+.18*cos(t*.13)),3.4);
+  float a1=pool(q,vec2((.82+.18*cos(t*.14))*asp,.52+.22*sin(t*.17+1.)),4.2);
+  float a2=pool(q,vec2((.5+.36*sin(t*.11+2.))*asp,.04+.12*sin(t*.15)),2.6);
+  float a3=pool(q,vec2((.34+.3*cos(t*.12+4.))*asp,.86+.1*sin(t*.19)),4.6);
+  c=mix(c,uC2,a2*uPool*.8);
+  c=mix(c,uC0,a0*uPool*.7);
+  c=mix(c,uC3,a3*uPool*.5);
+  c=1.-(1.-c)*(1.-uRose*a1*a1*uPool*.22);
+  /* the curtains */
+  float x=q.x;vec3 L=vec3(0.);
+  for(int i=0;i<3;i++){float fi=float(i);
+    float y=.8-fi*.17+.07*sin(x*(2.2+fi*.7)+t*(.5-fi*.1)+fi*2.1)+.035*sin(x*(5.3-fi)-t*.7+fi)
+      +.14*(fbm(vec2(x*1.1+t*.12+fi*3.7,t*.08+fi))-.5);
+    float d=q.y-y;
+    float band=d>0.?exp(-d/(.11+fi*.04)):exp(-d*d/.0016);
+    float rays=pow(fbm(vec2(x*11.+t*.25*(fi+1.),q.y*.8-t*.3)),1.6)*2.2;
+    vec3 col=mix(uC0,uC1,.5+.5*sin(x*1.6+t*.27+fi*1.9));
+    col=mix(col,uC3,fi*.28);
+    L+=col*band*(.25+rays)*(1.-fi*.22);
+  }
+  /* floodlights from the top corners, sweeping */
+  vec2 f=vec2(uv.x*asp,uv.y);
+  float fl=beam(f-vec2(-.04*asp,1.1),.55+.16*sin(t*.21))+beam(f-vec2(1.04*asp,1.1),-.55-.16*sin(t*.19+1.3));
+  L+=uWarm*fl*uFlood;
+  /* where a pool is thickest it turns to light */
+  L+=vec3(1.,1.,.94)*(a0*a0*.14+a3*a3*.2);
+  c=1.-(1.-c)*(1.-clamp(L*uGlow,0.,1.));
+  /* jewel tones: pushed away from grey so the green rings out */
+  float g=dot(c,vec3(.299,.587,.114));c=clamp(mix(vec3(g),c,1.35),0.,1.);
+  /* depth: the corners fall away a touch */
+  c*=1.-.12*smoothstep(.5,1.2,length((uv-vec2(.5,.6))*vec2(1.,1.25)));
+  c+=(h(gl_FragCoord.xy+fract(t))-.5)/80.;
   gl_FragColor=vec4(c,1.);
 }`;
 
 const hex = (s) => [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16) / 255);
-// the moods: four colours for the pools (c0 the big emerald, c1 and c3 the light ones, c2 the deep one), the warm light
-// of the curtains, the rose-gold breath, how fast it moves and which way it drifts
+// the moods: c0 and c1 are the ribbons' two ends (and c0 a pool), c2 the deep pool, c3 the high ribbon and a light pool,
+// warm the floodlights, rose the complement's breath, then pace and drift
 const MOODS = {
-  rankings: { c: ['#14B26A', '#2FCBAE', '#1FA39A', '#5DD68F'], warm: '#F5D676', rose: '#F6B1A6', speed: 1, drift: 1 },
-  live: { c: ['#17B26A', '#8FD85A', '#1F9E7A', '#F4D35E'], warm: '#FFC94A', rose: '#F7B28C', speed: 1.9, drift: 1.4 },
-  wire: { c: ['#12A884', '#38C9C2', '#1E8FAE', '#9EE6CF'], warm: '#E9E39A', rose: '#C9B8EE', speed: 1.25, drift: 2.4 },
-  matchups: { c: ['#17B26A', '#5BBCEB', '#2A8FC4', '#C6EA7A'], warm: '#F7C94E', rose: '#F6B1A6', speed: 1.1, drift: -1 },
-  lab: { c: ['#2BAA5E', '#74D49A', '#2A9C84', '#D2EA86'], warm: '#F1DB7A', rose: '#E8B8CC', speed: 0.85, drift: 0.6 },
+  rankings: { c: ['#A8F55A', '#3DE6C4', '#047A4C', '#8CF5B4'], warm: '#FFF1C2', rose: '#FF9CC8', speed: 1, drift: 1 },
+  live: { c: ['#D2F54A', '#5CF08A', '#08804A', '#FFE066'], warm: '#FFE29A', rose: '#FFA98A', speed: 1.6, drift: 1.4 },
+  wire: { c: ['#7DF5C8', '#38D6F0', '#056E66', '#B6F7E6'], warm: '#E8FBFF', rose: '#C7A8FF', speed: 1.15, drift: 2.2 },
+  matchups: { c: ['#A8F55A', '#4FC8FF', '#05704E', '#FFE066'], warm: '#FFF1C2', rose: '#FF9CC8', speed: 1.1, drift: -1 },
+  lab: { c: ['#B4F07A', '#5EE8B0', '#0A7A50', '#E2F59A'], warm: '#F6FFD8', rose: '#F2A8E0', speed: 0.85, drift: 0.6 },
 };
-// the themes: the sky's top and bottom, how much of each pool shows, how bright the light is
+// the themes: the pitch's top and bottom, how much the pools show, how bright the light is, the floodlights, and how much
+// the pools dim (night keeps the ribbons vivid, like a real aurora, and sinks the rest)
 const THEMES = {
-  light: { top: '#E4F4E8', bot: '#8FD0A4', pool: 1, glow: 0.7, dim: 1 },
-  dark: { top: '#0A2419', bot: '#020C07', pool: 0.85, glow: 0.4, dim: 0.3 },
+  light: { top: '#1CC977', bot: '#036039', pool: 1, glow: 0.72, flood: 0.45, dim: 1 },
+  dark: { top: '#063A24', bot: '#010C07', pool: 0.7, glow: 0.62, flood: 0.16, dim: 0.32 },
 };
 
 export function initSilk() {
@@ -116,7 +109,7 @@ export function initSilk() {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const U = {};
-  for (const k of ['uRes', 'uT', 'uPtr', 'uScroll', 'uC0', 'uC1', 'uC2', 'uC3', 'uWarm', 'uRose', 'uTop', 'uBot', 'uPool', 'uGlow', 'uDrift', 'uNight']) U[k] = gl.getUniformLocation(prog, k);
+  for (const k of ['uRes', 'uT', 'uPtr', 'uScroll', 'uC0', 'uC1', 'uC2', 'uC3', 'uWarm', 'uRose', 'uTop', 'uBot', 'uPool', 'uGlow', 'uDrift', 'uFlood']) U[k] = gl.getUniformLocation(prog, k);
 
   sky.prepend(canvas);
   const root = document.documentElement;
@@ -127,18 +120,19 @@ export function initSilk() {
   const small = () => matchMedia('(max-width: 760px)').matches;
   const theme = () => (root.dataset.theme === 'dark' ? 'dark' : 'light');
 
-  // a mood in a theme: night dims the pools (the curtains stay lit, like a real aurora)
+  // a mood in a theme
   const target = (mood, th, live) => {
     const m = MOODS[mood] || MOODS.rankings, T = THEMES[th];
     const dim = (c) => hex(c).map((v) => v * T.dim);
-    return { c: m.c.map(dim), warm: hex(m.warm), rose: dim(m.rose), top: hex(T.top), bot: hex(T.bot), pool: T.pool, glow: T.glow, night: th === 'dark' ? 1 : 0,
+    // at night the ribbons stay bright and everything else sinks into the dark
+    return { c: m.c.map((c, i) => (i === 2 ? dim(c) : hex(c))), warm: hex(m.warm), rose: dim(m.rose), top: hex(T.top), bot: hex(T.bot), pool: T.pool, glow: T.glow, flood: T.flood,
       speed: m.speed * (live ? 1.5 : 1), drift: m.drift };
   };
   const clone = (o) => ({ ...o, c: o.c.map((x) => [...x]), warm: [...o.warm], rose: [...o.rose], top: [...o.top], bot: [...o.bot] });
   let mood = 'rankings', live = false, surge = 0, t = Math.random() * 60, ptr = [0, 0], ptrGoal = [0, 0];
   let goal = target(mood, theme(), live);
   const cur = clone(goal);
-  let raf = 0, last = 0, paused = false, lastRead = -1e9;
+  let raf = 0, last = 0, paused = false, lastRead = -1e9, lastTop = '';
 
   const size = () => {
     const scale = small() ? 0.4 : 0.34;
@@ -156,6 +150,8 @@ export function initSilk() {
     let r = 0, g = 0, b = 0;
     for (let i = 0; i < 8; i++) { gl.readPixels(Math.min(canvas.width - 1, i * step), Math.max(0, y), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); r += px[0]; g += px[1]; b += px[2]; }
     const c = `#${[r, g, b].map((v) => Math.round(v / 8).toString(16).padStart(2, '0')).join('')}`;
+    if (c === lastTop) return;
+    lastTop = c;
     root.style.setProperty('--aurora-top', c);
     meta?.setAttribute('content', c);
   };
@@ -172,9 +168,9 @@ export function initSilk() {
     gl.uniform1f(U.uPool, cur.pool);
     gl.uniform1f(U.uGlow, cur.glow);
     gl.uniform1f(U.uDrift, cur.drift);
-    gl.uniform1f(U.uNight, cur.night);
+    gl.uniform1f(U.uFlood, cur.flood);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
-    if (now - lastRead > 1500) { lastRead = now; readTop(); }
+    if (now - lastRead > 500) { lastRead = now; readTop(); }
   };
   const step = (now) => {
     raf = 0;
@@ -189,7 +185,7 @@ export function initSilk() {
     easeV(cur.top, goal.top, k * 2); easeV(cur.bot, goal.bot, k * 2);
     cur.pool = ease(cur.pool, goal.pool, k * 2);
     cur.glow = ease(cur.glow, goal.glow, k * 2);
-    cur.night = ease(cur.night, goal.night, k * 2);
+    cur.flood = ease(cur.flood, goal.flood, k * 2);
     cur.speed = ease(cur.speed, goal.speed, k);
     cur.drift = ease(cur.drift, goal.drift, k);
     surge *= Math.exp(-dt * 2.4);

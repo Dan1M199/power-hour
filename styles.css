@@ -5734,3 +5734,30 @@ body { background: transparent; }
 @media (max-width: 760px) {
   .car-card { background-size: calc(160px + var(--ball-k, 0.5) * 110px) auto, 100% 100%, 100% 100%; }
 }
+
+/* ---------- 4.5: floodlit aurora (Dan's request Nov 20) ----------
+   The 4.4 sky barely moved and read as a pale mint wash. src/silk.js is now a floodlit aurora on a vivid emerald pitch
+   (floodlight green, #14D77F family): three curtains of light with crisp hems, rising glow and streaming rays, waving on a
+   10 to 20 second beat; pools of colour beneath; two stadium beams sweeping from the top corners. Night keeps the curtains
+   vivid over a near-black turf, like a real aurora.
+   Edge to edge: the silk reads the colour at the top of the screen back into --aurora-top twice a second, and the sky's
+   own background is that colour too, because iPhone Safari (26) tints its bar from a fixed element at the top of the page
+   rather than the theme colour.
+   The glass, tuned for a green light source: the blur drinks more colour (saturate) so the aurora glows through every
+   card, shadows are deep emerald rather than grey, the top edge catches a brighter specular line, and the foot of each
+   card holds a faint mint glow, the light it picks up from the curtains behind. */
+:root { --aurora-top: #2FD388; --aurora-base: #14B86C;
+  --glass-blur: blur(30px) saturate(190%) brightness(1.04);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 2px 6px -2px rgba(255, 255, 255, 0.55);
+  --glass-catch: inset 0 -22px 34px -26px rgba(150, 255, 200, 0.75);
+  --shadow-soft: 0 10px 34px -6px rgba(2, 70, 38, 0.28);
+  --shadow-lift: 0 18px 44px -8px rgba(2, 70, 38, 0.36); }
+:root[data-theme='dark'] { --aurora-top: #08391F; --aurora-base: #03241A;
+  --glass-blur: blur(30px) saturate(170%);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 2px 6px -2px rgba(160, 255, 210, 0.12);
+  --glass-catch: inset 0 -22px 34px -26px rgba(60, 255, 150, 0.32);
+  --shadow-soft: 0 10px 34px -6px rgba(0, 0, 0, 0.5);
+  --shadow-lift: 0 18px 44px -8px rgba(0, 0, 0, 0.6); }
+html.silk-on .sky { background: var(--aurora-top); }
+.glass, .ag-card { box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--glass-catch), 0 0 0 var(--ring-w, 0px) var(--yellow), var(--shadow-soft); }
+.glass.rim { box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--glass-catch), 0 0 0 var(--ring-w, 0px) var(--yellow), var(--shadow-lift); }
