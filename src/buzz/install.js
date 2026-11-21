@@ -10,8 +10,7 @@
 // Off in the demo, the preview bundle and the headline desk.
 import { haptic } from '../touch.js';
 
-const get = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
-const put = (k, v) => { try { localStorage.setItem(k, v); } catch { /* fine */ } };
+import { get, put } from '../storage.js';
 const LATER_MS = 10 * 864e5;
 
 export const standalone = () => navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;

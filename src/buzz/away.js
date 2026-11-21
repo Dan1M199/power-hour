@@ -8,8 +8,7 @@
 //    and now, kept on this device (ph-last-look).
 import { island } from './island.js';
 
-const get = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
-const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* fine */ } };
+import { getJson as get, putJson as put } from '../storage.js';
 const ARROW = (up) => `<svg class="bz-arrow ${up ? 'up' : 'down'}" viewBox="0 0 24 24" aria-hidden="true"><path d="${up ? 'M12 19V5M5.5 11.5 12 5l6.5 6.5' : 'M12 5v14M5.5 12.5 12 19l6.5-6.5'}" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const BOLT = '<svg class="bz-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2 4.5 13.5h6l-1 8.5 9-11.5h-6z" fill="currentColor"/></svg>';
 

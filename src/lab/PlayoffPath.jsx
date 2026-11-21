@@ -9,6 +9,7 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { restOfSeason, playoffPath } from '../../lib/labmodels.js';
 import { TeamAvatar } from '../shared.jsx';
 import { scenarioFiles } from './scenarioCard.js';
+import { get as lsGet, put as lsPut } from '../storage.js';
 import { shareFile, canShareFiles } from '../dashboard/share.js';
 
 const p0 = (x) => (x == null ? '–' : x > 0 && x < 0.005 ? '<1%' : x < 1 && x > 0.995 ? '>99%' : `${Math.round(x * 100)}%`);
@@ -48,7 +49,7 @@ export function PlayoffPath({ D, me, h }) {
   const [picks, setPicks] = useState({});
   const [bw, setBw] = useState(null); // the builder's week
   const [wdir, setWdir] = useState(''); // which way the last week change went, so the games slide in from that side
-  const [taught, setTaught] = useState(() => { try { return localStorage.getItem('ph-pth-picked') === '1'; } catch { return false; } });
+  const [taught, setTaught] = useState(() => lsGet('ph-pth-picked') === '1');
   const rid = pickRid ?? me ?? bubble;
   // a tap paints its pressed button at once; the seasons are read again in a render React can drop if another tap comes
   const dRid = useDeferredValue(rid), dPicks = useDeferredValue(picks);
@@ -82,7 +83,7 @@ export function PlayoffPath({ D, me, h }) {
   const thin = P.matches < 400;
   const pick = (i, v) => {
     setPicks((cur) => { const next = { ...cur }; if (next[i] === v) delete next[i]; else next[i] = v; return next; });
-    if (!taught) { setTaught(true); try { localStorage.setItem('ph-pth-picked', '1'); } catch { /* private mode */ } }
+    if (!taught) { setTaught(true); lsPut('ph-pth-picked', '1'); }
   };
   const game = (i) => S.games[i];
   const winnerSide = (x, r) => (r === x.ra ? 1 : 0);

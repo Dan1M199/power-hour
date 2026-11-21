@@ -12,6 +12,7 @@ import { WirePage } from './src/wire/WirePage.jsx';
 import { SECTIONS } from './src/lab/parts.jsx';
 import { GamesPage } from './src/games/GamesPage.jsx';
 import { loadVotes } from './src/games/votes.js';
+import { get as lsGet, put as lsPut } from './src/storage.js';
 import { RankingsPage } from './src/rankings/RankingsPage.jsx';
 import { LivePage } from './src/live/LivePage.jsx';
 import { storyKeys } from './src/hero/storyKeys.js';
@@ -76,10 +77,7 @@ function american(p) {
 }
 const half = (x) => (Math.round(x * 2) / 2).toFixed(1);
 const ordinal = (n) => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
-const store = {
-  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
-  set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch { /* storage unavailable */ } },
-};
+const store = { get: lsGet, set: lsPut };
 
 let DATA = null; // computed league
 let RAW = null;

@@ -9,9 +9,7 @@
 // Storage can be off (private windows, full disks): every read and write is wrapped, and a failure means "nothing seen".
 import { morningKey } from '../../lib/newsclock.js';
 
-const get = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
-const put = (k, v) => { try { localStorage.setItem(k, v); } catch { /* fine */ } };
-const json = (k, d) => { try { return JSON.parse(get(k)) ?? d; } catch { return d; } };
+import { get, put, getJson as json, putJson } from '../storage.js';
 
 // ---------- the streak ----------
 const dayNo = (key) => Math.round(Date.parse(`${key}T12:00:00Z`) / 864e5);
@@ -25,7 +23,7 @@ export function streak() {
   if (s && s.day === today) ({ n, best } = s), (fresh = false);
   else if (s && dayNo(today) - dayNo(s.day) === 1) n = s.n + 1, best = Math.max(s.best || 0, n);
   else best = Math.max(s?.best || 0, 1);
-  if (fresh) put('ph-streak', JSON.stringify({ day: today, n, best }));
+  if (fresh) putJson('ph-streak', { day: today, n, best });
   // a run that just broke (a gap of more than a day) remembers the old one for the note
   const lost = fresh && s && s.day !== today && n === 1 && s.n >= 2 ? s.n : 0;
   streakNow = { n, best, fresh, lost, milestone: fresh && MILESTONES.includes(n) ? n : 0 };
@@ -52,4 +50,4 @@ export function wireSeen(now = Date.now()) {
 let watched = null;
 const load = () => (watched ??= json('ph-stories-seen', {}));
 export const storySeen = (rid, sig) => load()[rid] === sig;
-export function markStory(rid, sig) { load()[rid] = sig; put('ph-stories-seen', JSON.stringify(watched)); }
+export function markStory(rid, sig) { load()[rid] = sig; putJson('ph-stories-seen', watched); }

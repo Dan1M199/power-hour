@@ -12,6 +12,7 @@ import { Poll } from './Poll.jsx';
 import { Report } from './Report.jsx';
 import { usePosts } from '../admin/posts.js';
 import { Lockout } from './Lockout.jsx';
+import { get as lsGet, put as lsPut } from '../storage.js';
 
 // Dan's way into the headline desk (#admin), shown only while he's signed in
 function DeskLink() {
@@ -41,8 +42,8 @@ function RankHead({ D, h, wk, held, sources, updated, message }) {
   </>;
 }
 
-const seen = () => { try { return !!localStorage.getItem('ph-opened-rank'); } catch { return false; } };
-const learn = () => { try { localStorage.setItem('ph-opened-rank', '1'); } catch { /* fine */ } };
+const seen = () => !!lsGet('ph-opened-rank');
+const learn = () => lsPut('ph-opened-rank', '1');
 
 const MoveTag = ({ t }) => (t.movement > 0 ? <span className="move up" title={`Up ${t.movement} since last week`}>{`▲${t.movement}`}</span>
   : t.movement < 0 ? <span className="move down" title={`Down ${-t.movement} since last week`}>{`▼${-t.movement}`}</span>
