@@ -249,7 +249,7 @@ export function pageIn(dir) {
 // headline, the game of the week, your strip, the podium), at most SHINE_MAX a page, and each tab only on its first
 // visit, so scrolling a list never sets off card after card. The band is drawn on a box laid over the card from <body>
 // (page coordinates, so it scrolls with the card), not inside it.
-const SHINE = '.car-slot.front .car-card, .gotw, .rank-card.rim, .you-strip, .you-card, .matchups > .mu.rim, .poll';
+const SHINE = '.car-slot.front .car-card, .gotw, .rank-card.rim, .you-strip, .you-card, .matchups > .mu.rim';
 const SHINE_MAX = 3;
 const shone = new Set();
 let shineIo = null;

@@ -6,42 +6,8 @@
    See "the bowl" near the end of this file. No backdrop-filter, so phones draw exactly
    what desktops do. */
 
-/* The two typefaces, served from this site (assets/fonts, SIL Open Font License) instead of Google Fonts: no
-   third-party stylesheet holding up the first paint, and index.html preloads the Latin files. Both are variable fonts,
-   one file per character range for every weight. The latin-ext files only load for names that need them. */
-@font-face { font-family: 'Albert Sans'; font-style: normal; font-weight: 100 900; font-display: swap;
-  src: url('assets/fonts/albert-sans-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: 'Albert Sans'; font-style: normal; font-weight: 100 900; font-display: swap;
-  src: url('assets/fonts/albert-sans-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
-@font-face { font-family: 'Big Shoulders Display'; font-style: normal; font-weight: 500 900; font-display: swap;
-  src: url('assets/fonts/big-shoulders-display-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: 'Big Shoulders Display'; font-style: normal; font-weight: 500 900; font-display: swap;
-  src: url('assets/fonts/big-shoulders-display-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
-
-/* the team dashboard's paper style (the Lab, #lab/team): Geist, Geist Mono and Inter, only downloaded once it's open */
-@font-face { font-family: 'Geist'; font-style: normal; font-weight: 300 400; font-display: swap;
-  src: url('assets/fonts/geist-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: 'Geist'; font-style: normal; font-weight: 300 400; font-display: swap;
-  src: url('assets/fonts/geist-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
-@font-face { font-family: 'Geist Mono'; font-style: normal; font-weight: 400 500; font-display: swap;
-  src: url('assets/fonts/geist-mono-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-/* 4.0, aurora glass: Inter is the site's one face now (variable, 400 to 700, roman and italic, SIL OFL), preloaded */
-@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 700; font-display: swap;
-  src: url('assets/fonts/inter-var-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 700; font-display: swap;
-  src: url('assets/fonts/inter-var-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
-@font-face { font-family: 'Inter'; font-style: italic; font-weight: 400 700; font-display: swap;
-  src: url('assets/fonts/inter-var-italic-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+/* The typefaces are served from this site (assets/fonts, SIL Open Font License), never Google Fonts. The site's own
+   face, Outfit, is declared with 5.0 below and preloaded by index.html. */
 /* the headline desk's newspaper faces (Nov 6, src/admin): only fetched once the desk is open */
 @font-face { font-family: 'Source Serif 4'; font-style: normal; font-weight: 200 900; font-display: swap;
   src: url('assets/fonts/source-serif-4-latin.woff2') format('woff2'); }
@@ -51,9 +17,6 @@
   src: url('assets/fonts/libre-franklin-latin.woff2') format('woff2'); }
 @font-face { font-family: 'UnifrakturMaguntia'; font-style: normal; font-weight: 400; font-display: swap;
   src: url('assets/fonts/unifraktur-maguntia-latin.woff2') format('woff2'); }
-/* the sketch marks' handwriting (Caveat, OFL): a few margin notes only, so it downloads when one is on screen */
-@font-face { font-family: 'Caveat'; font-style: normal; font-weight: 400 700; font-display: swap;
-  src: url('assets/fonts/caveat-latin.woff2') format('woff2'); }
 /* constant colours: every literal the stylesheet used, lifted here so no rule names a colour itself (Hallmark 48).
    They stay the same in both themes; the themed palette is the :root block below. Pure white and black are tinted a hair
    toward the grass. */
@@ -94,14 +57,12 @@
   --tone-green-16: #173A1E;
   --tone-green-17: #173F2A;
   --tone-green-18: #134A18;
-  --tone-green-22: #1E5230;
   --tone-green-24: #2E4B35;
   --tone-green-30-2: #28702C;
   --tone-green-30-3: #3D5A44;
   --tone-green-30: #2E6B30;
   --tone-green-33-2: #2C7A33;
   --tone-green-33: #47604C;
-  --tone-green-34-2: #357A49;
   --tone-green-34: #2E7D32;
   --tone-green-35: #2A8A37;
   --tone-green-37-2: #3F7F45;
@@ -113,48 +74,32 @@
   --tone-green-51: #4FB357;
   --tone-green-63: #8FC27F;
   --tone-green-69: #8BD48E;
-  --tone-green-6: #001E0A;
   --tone-green-71: #B9DC8F;
   --tone-green-75-2: #BFD2AE;
-  --tone-green-75: #BFE29B;
-  --tone-green-76: #9CE89F;
   --tone-green-79-2: #C9D9BC;
   --tone-green-79: #C8D9BC;
   --tone-green-8-2: #06220E;
   --tone-green-8-3: #0C1E12;
-  --tone-green-84: #CFE3CB;
   --tone-green-85: #D9E6CC;
-  --tone-green-86: #DCE5D3;
   --tone-green-8: #00280C;
-  --tone-green-91: #E8F0DF;
   --tone-green-92: #E7F4E0;
   --tone-grey-10-2: #1C1B18;
   --tone-grey-10: #17181A;
-  --tone-grey-12: #1E1724;
   --tone-grey-13: #23211E;
   --tone-grey-14: #241C2A;
   --tone-grey-16-2: #2A2230;
   --tone-grey-16: #2B2A26;
   --tone-grey-18: #26352B;
-  --tone-grey-19: #302A38;
   --tone-grey-23: #3F3B35;
   --tone-grey-27: #4A463F;
   --tone-grey-3: #040C07;
-  --tone-grey-4-2: #0B070E;
-  --tone-grey-4: #04100A;
   --tone-grey-52: #8A877E;
   --tone-grey-57: #8C9197;
-  --tone-grey-65: #AAA0AE;
   --tone-grey-6: #0B1310;
-  --tone-grey-7-2: #120D16;
-  --tone-grey-71: #BCAEBB;
   --tone-grey-75: #B9BEC4;
   --tone-grey-7: #141311;
   --tone-grey-8-2: #141414;
-  --tone-grey-84: #D8D0DC;
   --tone-grey-87: #E3E0D7;
-  --tone-grey-88: #E4DAE6;
-  --tone-grey-89-2: #E6E0E8;
   --tone-grey-89: #E8E5DD;
   --tone-grey-8: #10141A;
   --tone-grey-90: #EDE9E0;
@@ -162,18 +107,13 @@
   --tone-grey-93-3: #F1EFE9;
   --tone-grey-93-4: #EAF4E6;
   --tone-grey-93: #F4F1E8;
-  --tone-grey-94: #F3ECF2;
-  --tone-grey-96: #FAF7F0;
   --tone-grey-98: #FFFCF7;
   --tone-orange-12: #3C1E00;
   --tone-orange-18: #5A3200;
   --tone-orange-20: #4A321D;
-  --tone-orange-24: #784600;
-  --tone-orange-29: #965000;
   --tone-orange-30: #985700;
   --tone-orange-31: #6D4C2F;
   --tone-orange-33-2: #A65A00;
-  --tone-orange-33: #5E5148;
   --tone-orange-34-2: #8B4A22;
   --tone-orange-34: #7B5534;
   --tone-orange-36: #8B5A2B;
@@ -181,52 +121,28 @@
   --tone-orange-53: #F4661B;
   --tone-orange-56: #FF5A1F;
   --tone-orange-58: #FF6A2B;
-  --tone-orange-59: #A4978A;
-  --tone-orange-66: #E9A66A;
-  --tone-orange-67: #E58E70;
   --tone-orange-76: #FFCC85;
-  --tone-orange-84: #E3D7CA;
-  --tone-orange-86-2: #E8DDD1;
-  --tone-orange-86: #E6DBD0;
-  --tone-orange-88: #F4D9CF;
-  --tone-orange-89: #ECE4D9;
   --tone-orange-8: #2A1500;
-  --tone-orange-91: #F2EAE0;
-  --tone-pink-39: #6B5B66;
   --tone-pink-80: #F3A6BC;
-  --tone-purple-17: #2E2235;
-  --tone-purple-49: #807385;
-  --tone-purple-53: #8A7E92;
-  --tone-purple-81: #D2C6D6;
   --tone-red-19: #44201F;
-  --tone-red-22: #4A2A26;
-  --tone-red-33: #8A2B1D;
-  --tone-red-34: #8A3A24;
   --tone-red-38: #8A3B37;
   --tone-red-39: #B3141C;
-  --tone-red-41: #A04A32;
-  --tone-red-47-2: #B5573D;
   --tone-red-47: #C62828;
   --tone-red-51-2: #E8341C;
   --tone-red-51: #D32F2F;
-  --tone-red-53: #C4664A;
-  --tone-red-58: #D27354;
   --tone-red-62: #FF5A3D;
   --tone-red-63: #D16F6F;
   --tone-red-67: #E57373;
   --tone-red-72: #FF7B72;
-  --tone-red-75-2: #F2A68E;
   --tone-red-75: #FF8A80;
   --tone-red-76: #FF9C85;
   --tone-red-78-2: #E9A3A3;
-  --tone-red-78: #FF9C8F;
   --tone-red-90: #FFCDD2;
   --tone-red-96: #FDECEC;
   --tone-sky-11: #0A1C30;
   --tone-sky-32: #0266A3;
   --tone-sky-40: #2470A8;
   --tone-sky-41-2: #286EAA;
-  --tone-sky-41: #0288D1;
   --tone-sky-52: #0A84FF;
   --tone-sky-71: #9DB6CC;
   --tone-sky-74-2: #81D4FA;
@@ -236,33 +152,12 @@
   --tone-sky-85: #B3E5FC;
   --tone-sky-91: #DCE9F4;
   --tone-teal-12: #102D20;
-  --tone-teal-17-2: #173F30;
-  --tone-teal-17: #1F3A35;
-  --tone-teal-26: #2B5A50;
-  --tone-teal-43: #4F8C80;
-  --tone-teal-49: #5E9E91;
   --tone-teal-67: #86CFC7;
-  --tone-teal-73: #9ED6C8;
-  --tone-teal-83: #C3E2D4;
-  --tone-teal-87: #D5E8E2;
-  --tone-violet-16: #2B2232;
   --tone-violet-18: #2F2636;
-  --tone-violet-22-2: #3A2F43;
-  --tone-violet-22: #3A3042;
-  --tone-violet-23: #3D3245;
-  --tone-violet-27: #463A50;
-  --tone-violet-29: #3F2E66;
-  --tone-violet-30: #4B3F5C;
-  --tone-violet-31: #45336A;
-  --tone-violet-46: #6A4F9C;
-  --tone-violet-63: #8E73CC;
-  --tone-violet-77-2: #B39DEB;
   --tone-violet-77: #BCA9E0;
   --tone-violet-83: #D7A6FF;
-  --tone-violet-85: #D8CCE3;
   --tone-yellow-62: #FFEB3B;
   --tone-yellow-81: #FFF3A0;
-  --tone-yellow-82: #FFF0A3;
 }
 
 :root {
@@ -578,7 +473,6 @@ h3 { font: 800 17px/1.1 var(--display); margin: 0; }
 .lab-tabs b { font: 800 16px/1 var(--display); letter-spacing: 0.01em; color: var(--ink-2); }
 .lab-tabs small { font-size: 12px; font-weight: 600; line-height: 1.25; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (hover: hover) { .lab-tabs a:not([aria-current]):hover { background-color: var(--tile-2); } }
-.lab-tabs a[aria-current='page'] b { color: var(--ink); }
 .lab-tabs a:focus-visible { outline-offset: 2px; }
 .lab-head > div > p { margin-top: 16px; }
 .day { margin: 0 0 20px; }
@@ -744,33 +638,7 @@ h3 { font: 800 17px/1.1 var(--display); margin: 0; }
 /* the clobber story's scoreboard: two scores in display numerals (the leader's in yellow), the projected finals, a
    win-odds bar and each side's key players (green pip beat the projection by 4+, red missed it by 4+) */
 .bug { margin-top: auto; padding-top: 16px; display: grid; gap: 10px; }
-.bug-score { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--r-md); background: color-mix(in srgb, var(--island) 28%, transparent); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--chalk) 12%, transparent); }
-.bug-side { display: grid; min-width: 0; line-height: 1; }
-.bug-side.trail { text-align: right; }
-.bug-team { font: 800 12px/1.1 var(--display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: color-mix(in srgb, var(--chalk) 85%, transparent); }
-.bug-pts { font: 800 clamp(32px, 9cqi, 51px)/1 var(--display); font-variant-numeric: tabular-nums; margin: 4px 0 3px; }
-.bug-side.lead .bug-pts { color: var(--yellow); text-shadow: 3px 3px 0 var(--tone-red-33); }
-.bug-side.trail .bug-pts { color: color-mix(in srgb, var(--chalk) 55%, transparent); }
-.bug-side small { font-size: 12px; color: color-mix(in srgb, var(--chalk) 66%, transparent); }
-.bug-vs { font: 800 11.5px/1 var(--display); color: color-mix(in srgb, var(--chalk) 50%, transparent); }
-.bug-odds { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; font: 800 11.5px/1 var(--display); color: color-mix(in srgb, var(--chalk) 80%, transparent); }
-.bug-odds i { height: 12px; border-radius: var(--r-ctl); background: linear-gradient(90deg, var(--amber) var(--w), color-mix(in srgb, var(--chalk) 16%, transparent) var(--w)); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--island) 35%, transparent); }
-.bug-key { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.bug-key ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; align-content: start; }
-.bug-key li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 6px; padding: 5px 8px; border-radius: var(--r-mid); background: color-mix(in srgb, var(--chalk) 8%, transparent); font-size: 13px; }
-.bug-key .pos { margin: 0; }
-.bug-pl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bug-key li b { font: 800 13px/1 var(--display); font-variant-numeric: tabular-nums; }
-.bug-key li small { font-size: 11.5px; color: color-mix(in srgb, var(--chalk) 60%, transparent); }
-.bug-key li.boom b { color: var(--tone-green-76); } .bug-key li.bust b { color: var(--tone-red-78); }
-.bug-key li.proj { background: color-mix(in srgb, var(--chalk) 4%, transparent); }
 /* phones: the Final/Proj label gives its room to the name (still-to-play rows keep the fainter tray) */
-@media (max-width: 760px) {
-  .bug-key { gap: 6px; }
-  .bug-key li { grid-template-columns: auto minmax(0, 1fr) auto; gap: 5px; padding: 5px 7px; }
-  .bug-key li small { display: none; }
-  .bug-key li.proj b { color: color-mix(in srgb, var(--chalk) 70%, transparent); }
-}
 /* ---------- the trade graphic: who got which players, under a trade headline (src/hero/TradeGraphic.jsx) ----------
    On the scoreboard in place of the team rows, in the style picked at the headline desk: the handoff (a lane per side,
    arrows across), the seesaw (trading cards on a plank that tips toward the winner) or the receipt (a stapled slip with
@@ -954,8 +822,7 @@ h3 { font: 800 17px/1.1 var(--display); margin: 0; }
 /* hold the timer while someone is reading: a finger down, a real mouse hovering, or keyboard focus. Phones keep tapped
    elements in :hover and :focus, so those only count for mouse pointers and keyboard focus or the carousel would freeze.
    A clip that is still loading holds it too, and so does anything covering the page (html.locked). */
-.lead-car.held .car-dot i, .lead-car.reacting .car-dot i, .lead-car.away .car-dot i, .lead-car.buffering .car-dot i, .lead-car.paused .car-dot i, .lead-car:has(:focus-visible) .car-dot i,
-.locked .lead-car .car-dot i { animation-play-state: paused; }
+.lead-car.held .car-dot i, .lead-car.reacting .car-dot i, .lead-car.away .car-dot i, .lead-car.paused .car-dot i, .lead-car:has(:focus-visible) .car-dot i, .locked .lead-car .car-dot i { animation-play-state: paused; }
 @media (hover: hover) { .lead-car:hover .car-dot i { animation-play-state: paused; } }
 @keyframes car-fill { to { transform: scaleX(1); } }
 @media (prefers-reduced-motion: reduce) { .car-dot[aria-current='true'] i { transform: none; } }
@@ -1349,8 +1216,7 @@ h3 { font: 800 17px/1.1 var(--display); margin: 0; }
 /* the front page's way in: a shiny amber pill (gloss over the top half, an ink edge on a gold ledge, a band of light
    sweeping across every few seconds, two sparkles twinkling on its corner) with a New tag on the board's green */
 .pth-cta { position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 12px; padding: 6px 18px 6px 6px;
-  border-radius: var(--r-ctl); overflow: visible; text-decoration: none; color: var(--ink); background: var(--amber); touch-action: manipulation; -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 0 0 2px var(--outline), 0 4px 0 2px var(--ledge-gold), 0 10px 22px -8px color-mix(in srgb, var(--amber) 75%, transparent); transition: transform 0.12s, box-shadow 0.12s; }
+  border-radius: var(--r-ctl); overflow: visible; text-decoration: none; background: var(--amber); touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: transform 0.12s, box-shadow 0.12s; }
 .pth-cta::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
   background: linear-gradient(180deg, color-mix(in srgb, var(--chalk) 62%, transparent) 0 46%, rgba(255, 255, 255, 0) 50%); }
 /* the sweep rides in a clipped layer of its own, so the sparkles can sit outside the pill */
@@ -1359,7 +1225,6 @@ h3 { font: 800 17px/1.1 var(--display); margin: 0; }
   background-size: 220% 100%; background-position: 160% 0; }
 .pth-cta-label { font: 800 16px/1 var(--display); }
 .pth-cta-go { flex: none; transition: transform 0.15s; }
-.pth-cta:active { transform: translateY(3px); box-shadow: 0 0 0 2px var(--outline), 0 1px 0 2px var(--ledge-gold), 0 6px 14px -8px color-mix(in srgb, var(--amber) 75%, transparent); }
 .pth-cta .spk { position: absolute; width: 16px; height: 16px; background: var(--yellow); pointer-events: none;
   clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); }
 .pth-cta .spk.a { top: -8px; right: 10px; }
@@ -1486,7 +1351,6 @@ h3 { font: 800 17px/1.1 var(--display); margin: 0; }
 
 /* ---------- faces: the managers' headshots (lib/members.js) ---------- */
 /* a 12-point burst for the "vs" badges */
-:root { --burst: polygon(50% 0%, 60.1% 12.3%, 75% 6.7%, 77.6% 22.4%, 93.3% 25%, 87.7% 39.9%, 100% 50%, 87.7% 60.1%, 93.3% 75%, 77.6% 77.6%, 75% 93.3%, 60.1% 87.7%, 50% 100%, 39.9% 87.7%, 25% 93.3%, 22.4% 77.6%, 6.7% 75%, 12.3% 60.1%, 0% 50%, 12.3% 39.9%, 6.7% 25%, 22.4% 22.4%, 25% 6.7%, 39.9% 12.3%); }
 :is(.lead-face, .mgr-face, .fo-face, .stat-face, .deal-face, .pitch-face).ph { display: grid; place-items: center; font: 800 26px var(--display); color: var(--ink); background: var(--lime); }
 /* last place gets the colour drained out (the "This Guy Stinks" tier) */
 .drained { filter: grayscale(1) contrast(1.08); }
@@ -1510,27 +1374,9 @@ h3 { font: 800 17px/1.1 var(--display); margin: 0; }
 /* a video story: the clip printed beside the kicker and headline like the photos (tilted, white border, hard shadow),
    stamped on its corner, with the face of whoever the joke is on hanging off the bottom. The deck and cast run full
    width underneath. The 4:5 frame crops the clip's top and bottom and keeps the faces. */
-.slide.has-clip { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto 1fr; column-gap: 26px; align-items: start; }
-.clip-head { min-width: 0; }
-.has-clip .lead-hed { font-size: clamp(30px, 7.6cqi, 48px); }
-.has-clip .lead-deck { grid-column: 1 / -1; }
-.slide.has-clip .cast { grid-column: 1 / -1; align-self: end; }
-.clip-print { position: relative; width: 208px; margin: 4px 4px 22px 0; }
-.clip-frame { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border: 4px solid var(--chalk); background: var(--island);
-  box-shadow: 5px 6px 0 color-mix(in srgb, var(--island) 35%, transparent); transform: rotate(2.5deg); }
 .clip { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; cursor: pointer; }
-.clip-print .stamp { z-index: 2; top: -9px; left: -14px; }
 /* a photo headline (Tarek's Ironman finish): the frame sits on the two finishers, not the arch above them */
-.photo-print .clip { object-position: 62% 78%; cursor: default; }
-.clip-who { position: absolute; z-index: 2; left: -18px; bottom: -14px; }
-.clip-who .lead-face { width: 62px; height: 62px; border-radius: var(--r-mid); border-width: 3px; box-shadow: 4px 5px 0 color-mix(in srgb, var(--island) 35%, transparent); transform: rotate(-7deg); }
 /* amber while it's asking for a tap (muted, or waiting to play); a white pill once the sound is on */
-.clip-frame .clip-sound { position: absolute; right: 9px; bottom: 10px; display: inline-flex; align-items: center; gap: 5px; padding: 7px 11px 6px 8px;
-  border: 0; border-radius: var(--r-ctl); cursor: pointer; font: 800 12.5px/1 var(--body); color: var(--ink); --lc: var(--ledge-gold); background-color: var(--amber);
-  box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--lc); }
-.clip-sound[aria-pressed='true'] { --lc: var(--ledge); background-color: var(--paper); }
-.clip-sound:active { transform: translateY(2px); box-shadow: 0 0 0 2px var(--outline), 0 1px 0 2px var(--lc); }
-.clip-sound svg { flex: none; }
 
 /* the manager's card at the top of an opened ranking row */
 .mgr { grid-column: 1 / -1; display: grid; grid-template-columns: 88px minmax(0, auto) minmax(0, 1fr); gap: 10px 18px; align-items: center;
@@ -1822,16 +1668,7 @@ h3 { font: 800 17px/1.1 var(--display); margin: 0; }
   .hero { grid-template-columns: minmax(0, 1fr); }
   .lead-car { max-width: 640px; }
 }
-/* ---------- the important message: a full-screen takeover that plays Dan's video ---------- */
-.takeover { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 20px; background: var(--board); animation: unveil-in 0.3s ease-out; }
-.takeover.out { opacity: 0; transition: opacity 0.35s ease; }
-.takeover [hidden] { display: none; } /* .cta and the video set their own display */
-.to-card { display: grid; justify-items: center; gap: 12px; width: min(960px, 100%); text-align: center; }
-.to-card h2 { margin: 0; font: 800 clamp(32px, 5.6vw, 73.5px)/0.95 var(--display); color: var(--yellow); text-wrap: balance; }
-.to-sub { margin: 0; font: 800 clamp(16px, 2.08vw, 24px)/1.1 var(--display); color: var(--chalk); }
-.to-count { font: 800 clamp(72px, 12.8vw, 144px)/1 var(--display); color: var(--chalk); font-variant-numeric: tabular-nums; }
-.to-video { width: 100%; max-height: 70vh; border-radius: var(--r-md); background: var(--island); }
-.to-skip { cursor: pointer; padding: 8px 16px; border: 0; border-radius: var(--r-ctl); font: 700 14px/1 var(--body); color: var(--chalk); background: color-mix(in srgb, var(--chalk) 14%, transparent); }
+/* ---------- the important message: a full-screen takeover that plays Dan's video ---------- */ /* .cta and the video set their own display */
 .chip:is(.to-again, .rank-pdf) { cursor: pointer; border: 0; font: 700 12.5px/1.2 var(--body); background: var(--amber); color: var(--ink); }
 
 /* the reveal button's deep pass (passThenReveal) */
@@ -1869,27 +1706,6 @@ mark.hl { background: none; color: var(--yellow); }
 @keyframes brk-blink { to { visibility: hidden; } }
 
 /* ---------- fan poll on top of the power rankings ---------- */
-.poll { margin: 0 0 26px; padding: 20px 22px; border-radius: var(--r-lg); }
-.poll h2 { margin: 0 0 4px; font: 800 clamp(19px, 2.08vw, 25.5px)/1.05 var(--display); color: var(--ink); }
-.poll .sub { margin: 0 0 14px; }
-.poll-err { margin: 10px 0 0; color: var(--bad); font-weight: 700; }
-.poll-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
-.poll-list.done { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 22px; }
-.poll-pick { cursor: pointer; width: 100%; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; align-items: center; padding: 10px 12px; border: 0; border-radius: var(--r-md);
-  text-align: left; font: inherit; color: var(--ink); background: var(--tile); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge); }
-.poll-pick:hover, .poll-pick:focus-visible { background: var(--mine-bg); outline: none; }
-.poll-pick:active { transform: translateY(2px); box-shadow: 0 0 0 2px var(--outline), 0 1px 0 2px var(--ledge); }
-.poll .avatar { width: 40px; height: 40px; }
-.poll .pn { display: grid; gap: 3px; min-width: 0; }
-.poll .pn b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 13.5px/1.15 var(--display); }
-.poll .pn small { font-size: 12px; font-weight: 600; color: var(--ink-3); }
-.poll-res { display: grid; grid-template-columns: 40px minmax(0, 1fr) 48px; gap: 10px; align-items: center; padding: 6px 8px; border-radius: var(--r-md); }
-.poll-res.mine { background: var(--mine-bg); }
-.poll-res .pn b small { font: 700 11.5px var(--body); color: var(--ink-2); }
-.poll-bar { display: block; height: 10px; border-radius: var(--r-ctl); overflow: hidden; background: var(--tile); }
-.poll-bar i { display: block; height: 100%; background: var(--grass); }
-.poll-res.mine .poll-bar i { background: var(--amber); }
-.poll-res .pp { font: 900 22px/1 var(--display); text-align: right; }
 
 /* ---------- the final call: final scores, then the reveal of the new power rankings ---------- */
 .unveil-cta { display: flex; justify-content: center; margin: 0 0 24px; }
@@ -2044,12 +1860,6 @@ html.locked { overflow: hidden; }
   .lead-face { width: 74px; height: 74px; border-radius: var(--r-card); border-width: 3px; box-shadow: 4px 5px 0 color-mix(in srgb, var(--island) 35%, transparent); }
   .lf .cap { font-size: 11px; }
   .stamp { font-size: 13px; left: -12px; }
-  .slide.has-clip { column-gap: 14px; }
-  .has-clip .lead-hed { font-size: clamp(26px, 8.4cqi, 34px); }
-  .clip-print { width: 124px; margin: 2px 2px 20px 0; }
-  .clip-frame { border-width: 3px; border-radius: var(--r-card); box-shadow: 4px 5px 0 color-mix(in srgb, var(--island) 35%, transparent); }
-  .clip-who { left: -12px; bottom: -12px; }
-  .clip-who .lead-face { width: 46px; height: 46px; border-radius: var(--r-mid); }
   .player-print { width: 112px; margin: 0 4px 46px 0; }
   .pp-card { gap: 4px; padding: 4px; border-radius: 11px; }
   .pp-photo { border-radius: 7px; }
@@ -2059,7 +1869,6 @@ html.locked { overflow: hidden; }
   .pp-card small { font-size: 11.5px; }
   .pp-who { right: 4px; bottom: -30px; }
   .pp-who .lead-face { width: 40px; height: 40px; border-radius: 18px; }
-  .clip-frame .clip-sound { right: 7px; bottom: 7px; padding: 6px 9px 5px 7px; font-size: 11.5px; }
   .mgr { grid-template-columns: 64px minmax(0, 1fr); padding: 12px; gap: 10px 12px; }
   .mgr-face { width: 64px; height: 64px; border-radius: var(--r-card); }
   .mgr:has(.mgr-sup) .mgr-face { grid-row: auto; }
@@ -2118,8 +1927,6 @@ html.locked { overflow: hidden; }
   .unveil-verdict { grid-template-columns: 1fr; gap: 12px; }
   .verdict-face { width: 84px; height: 84px; }
   .cta { width: 100%; padding: 14px 18px; }
-  .poll { padding: 16px 14px; }
-  .poll-list, .poll-list.done { grid-template-columns: 1fr; gap: 8px; }
 }
 
 @media (max-width: 760px) {
@@ -2941,7 +2748,7 @@ html.admin-mode {
   --np-paper: var(--tone-grey-93-3); --np-ink: var(--tone-grey-8-2); --np-ink-2: var(--tone-grey-27); --np-rule: var(--tone-grey-8-2); --np-hair: var(--tone-amber-70); --np-tray: var(--tone-grey-87); --np-tint: var(--tone-grey-89);
   --np-red: var(--tone-red-39); --np-mark: var(--tone-amber-81); --np-focus: var(--tone-grey-8-2);
   --np-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
-  --np-sans: 'Libre Franklin', 'Albert Sans', 'Helvetica Neue', Arial, sans-serif;
+  --np-sans: 'Libre Franklin', 'Helvetica Neue', Arial, sans-serif;
   --np-black: 'UnifrakturMaguntia', 'Source Serif 4', Georgia, serif;
   scroll-padding-top: 64px;
 }
@@ -3357,7 +3164,6 @@ main::after { border-radius: 56px 56px 0 0; }
 :is(.lead-face, .stat-face, .pitch-face, .strip-face, .mgr-face, .clip-frame, .clip-who .lead-face, .pp-who .lead-face) { box-shadow: 0 8px 14px -4px color-mix(in srgb, var(--island) 50%, transparent); }
 .lf + .lf { margin-left: -30px; }
 .lf:first-child { z-index: 1; }
-.clip-frame { border-radius: var(--r-card); }
 .tl-track { border-radius: var(--r-ctl); }
 
 /* --- the header: the tray is pressed in, the active tab's pill rides in it --- */
@@ -3678,18 +3484,16 @@ main::after { border-radius: 56px 56px 0 0; }
   --smoke: rgba(9, 28, 16, 0.76);            /* the dark boards that float: the tooltip, the 2.0 note */
   /* a card's sheen picks up the sky, and its upper edge is wet */
   --shine: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(140, 212, 255, 0.1) 30%, rgba(255, 255, 255, 0.5) 50%, rgba(140, 212, 255, 0.1) 70%, rgba(255, 255, 255, 0) 100%);
-  --lens: radial-gradient(circle closest-side, rgba(255, 255, 255, 0.7) 0, rgba(255, 255, 255, 0.28) 52%, rgba(11, 36, 18, 0.13) 86%, rgba(11, 36, 18, 0) 100%);
   --dock-h: 62px;
   --dock-gap: calc(10px + env(safe-area-inset-bottom, 0px));
 }
 :root[data-theme='dark'] {
   --smoke: rgba(4, 12, 7, 0.74);
   --shine: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(140, 200, 255, 0.06) 30%, rgba(255, 255, 255, 0.18) 50%, rgba(140, 200, 255, 0.06) 70%, rgba(255, 255, 255, 0) 100%);
-  --lens: radial-gradient(circle closest-side, rgba(255, 255, 255, 0.34) 0, rgba(255, 255, 255, 0.12) 52%, rgba(255, 255, 255, 0.2) 88%, rgba(255, 255, 255, 0) 100%);
 }
 /* no blur, no see-through: the chrome goes back to solid */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  :root { --chrome: var(--header); --frost-paper: var(--paper); --smoke: var(--board); }
+  :root { --frost-paper: var(--paper); --smoke: var(--board); }
 }
 
 /* --- 1. frosted chrome --- */
@@ -3808,39 +3612,7 @@ html:is(.admin-mode, .locked) .tx-top { display: none; }
 .waiver-fit ol { padding: 0; list-style: none; margin: 16px 0; }
 .waiver-fit li { display: flex; gap: 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--outline); }
 .waiver-fit li span:last-child { margin-left: auto; font-size: 12px; white-space: nowrap; }
-.portrait-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0; }
-.portrait-tabs button { min-height: 44px; padding: 8px 14px; border: 1px solid var(--tone-grey-65); border-radius: var(--r-mid); background: transparent; font: inherit; font-size: 13px; cursor: pointer; }
-.portrait-axis { display: flex; justify-content: space-between; margin: 0 66px 8px 76px; font-size: 11.5px; }
-.portrait-row { display: grid; grid-template-columns: 64px 1fr 54px; align-items: center; gap: 12px; padding: 5px 12px; font-size: 12px; border-radius: 8px; }
-.portrait-row > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.portrait-row > b { text-align: right; font-weight: 400; }
-.portrait-row.own { background: var(--tone-yellow-82); font-weight: 700; }
-.portrait-track { position: relative; height: 2px; margin-right: 6px; }
-.portrait-track i { position: absolute; width: 8px; height: 8px; border-radius: 50%; top: -3px; transform: translateX(-50%); }
-.own .portrait-track i { width: 12px; height: 12px; top: -5px; background: var(--tone-grey-19); }
-.portrait-form { display: flex; gap: 18px; align-items: center; border-top: 1px solid var(--tone-grey-84); margin-top: 18px; padding-top: 18px; font-size: 13px; }
-.portrait-form ol { display: flex; list-style: none; padding: 0; gap: 8px; margin: 0; flex: 1; justify-content: flex-end; }
-.portrait-form li { display: grid; text-align: center; gap: 5px; }
-.portrait-form small { font-size: 11.5px; }
-.portrait-form b { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; }
-.portrait-form li[data-result=W] b { background: var(--tone-teal-83); color: var(--tone-teal-17-2); }
-@media (max-width: 760px) {
-  .portrait-tabs { gap: 4px; }
-  .portrait-tabs button { padding: 8px 10px; font-size: 12px; }
-  .portrait-form { gap: 8px; }
-  .portrait-form ol { gap: 6px; }
-}
 /* Use the dashboard's paper tokens in both editions. */
-.portrait-tabs button { color: var(--p-ink); border-color: var(--p-muted); }
-.portrait-tabs button[aria-pressed=true] { background: var(--p-ink); color: var(--p-tile); }
-.portrait-track { background: var(--p-line); }
-.portrait-track i { background: var(--p-muted); }
-.portrait-form { border-color: var(--p-line); }
-.portrait-row.own { color: var(--tone-grey-19); }
-.portrait-form b { background: var(--p-track); }
-@media (hover: hover) {
-  .portrait-tabs button:hover { border-color: var(--p-ink); }
-}
 
 /* Dashboard gestures complement the shared phone dock and touch layer. */
 .swipe-hint, .player-swipe-hint { display: none; }
@@ -3899,10 +3671,10 @@ html:is(.admin-mode, .locked) .tx-top { display: none; }
      bends without splitting into red, green and blue. iPhone Safari can't filter a backdrop through SVG, so there it's the first two.
    The words and icons keep a soft halo so they hold up over whatever passes under them. --- */
 @media (max-width: 760px) {
-  :root { --dock-glass: rgba(236, 248, 255, 0.26); --dock-frost: blur(5px) saturate(2.3) brightness(1.12) contrast(1.05);
+  :root { --dock-frost: blur(5px) saturate(2.3) brightness(1.12) contrast(1.05);
     --dock-halo: rgba(255, 255, 255, 0.85); --caustic: rgba(255, 255, 255, 0.6);
     --bevel-hi: rgba(255, 255, 255, 0.95); --bevel-lo: rgba(11, 36, 18, 0.28); --bevel-in: rgba(255, 255, 255, 0.55); }
-  :root[data-theme='dark'] { --dock-glass: rgba(12, 28, 20, 0.3); --dock-frost: blur(5px) saturate(2) brightness(0.92) contrast(1.08);
+  :root[data-theme='dark'] { --dock-frost: blur(5px) saturate(2) brightness(0.92) contrast(1.08);
     --dock-halo: rgba(0, 0, 0, 0.75); --caustic: rgba(255, 255, 255, 0.22);
     --bevel-hi: rgba(255, 255, 255, 0.42); --bevel-lo: rgba(0, 0, 0, 0.55); --bevel-in: rgba(255, 255, 255, 0.16); }
   .tabs, :root[data-theme='dark'] .tabs, .me-btn { -webkit-backdrop-filter: var(--dock-frost); backdrop-filter: var(--dock-frost); }
@@ -3930,7 +3702,6 @@ html:is(.admin-mode, .locked) .tx-top { display: none; }
    chip that follows the finger in from the edge), drag a scouting report's pull, tap the tab you're on to go to the
    top. Kept last, night values beside the day ones. */
 .glass { background-size: 100% 96px; }
-.car-card, .gotw { --rim: inset 0 1px 0 color-mix(in srgb, var(--chalk) 16%, transparent); }
 .car-card::after, .gotw::after { opacity: 0.22; }
 .tab-ink, .lab-tabs a[aria-current='page'], .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'] {
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--chalk) 45%, transparent), 0 0 0 1px color-mix(in srgb, var(--ink-day) 28%, transparent), 0 2px 0 var(--pop), 0 5px 8px -4px color-mix(in srgb, var(--tone-orange-18) 40%, transparent); }
@@ -4599,17 +4370,14 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
    newspaper. The team dashboard comes along (its --p-* tokens are re-pointed at the glass). Kept last, so it wins. */
 :root {
   /* 4.0's constant colours (the same in both themes), kept with the rest of the literals */
-  --tone-shade: #1E463C; --tone-hero: #134A47; --tone-hero-night: #0F3A3A; --tone-night: #141A26;
-  --tone-field-27: #1E6B2A; --tone-field-45: #2F8A4A; --tone-field-66: #7FCF8F; --tone-field-71: #8EDC92;
-  --tone-sky-38: #1D6AA8; --tone-sky-72: #7EC2F2; --tone-teal-27: #1D6E6A; --tone-teal-35: #2C8580;
-  --tone-grey-56: #8A8C94; --tone-clay-49: #C2503A; --tone-clay-76: #FF9C85;
+  --tone-shade: #1E463C; --tone-hero: #134A47;
+  --tone-grey-56: #8A8C94;
 }
 :root {
   /* the aurora: the base and its five blobs, plus the warm ribbon */
   /* glass */      /* where backdrop-filter is missing */       /* a panel inside a glass card: a hair whiter, never blurred */
   /* the one saturated card a page gets: deep grass into teal into deep sky, so white type clears 4.5:1 everywhere */
   /* the dial on the hero card: two translucent rings and a ring of ticks, drawn once */
-  --hero-dial: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Cg fill='none' stroke='%23fff'%3E%3Ccircle cx='150' cy='150' r='138' stroke-opacity='.5' stroke-width='9' stroke-dasharray='1.6 6.2'/%3E%3Ccircle cx='150' cy='150' r='110' stroke-opacity='.28' stroke-width='1.5'/%3E%3Ccircle cx='150' cy='150' r='76' stroke-opacity='.22' stroke-width='14'/%3E%3Cpath d='M62 186L36 197M220 222l18 22' stroke-opacity='.4' stroke-width='1.2' stroke-dasharray='3 4'/%3E%3C/g%3E%3C/svg%3E");
   /* the shimmer a press sends through a button */
   /* selected things (the pressed filter, the picked team): solid ink, so they never depend on the colour behind */
 
@@ -4620,7 +4388,7 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
   /* no slabs, ledges or hard shadows any more: depth is the glass */
   --slab: transparent; --slab-gold: transparent; --slab-soft: transparent; --slab-board: transparent;
   --ledge: transparent; --ledge-gold: transparent; --ledge-c: transparent;
-  --edge: 0px; --sheen: none; --gloss: none; --rim: 0 0 0 0 transparent; --chip-shade: none; --tray-edge: 0 0 0 0 transparent;
+  --edge: 0px; --sheen: none; --gloss: none; --chip-shade: none; --tray-edge: 0 0 0 0 transparent;
   --press-down: inset 0 0 0 1px var(--glass-border);
   --soft-down: inset 0 0 0 1px var(--glass-border);
   --in-tray: inset 0 0 0 1px var(--glass-border); --chrome-rim: var(--glass-hi);
@@ -4629,19 +4397,16 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 :root[data-theme='dark'] {
   --face: var(--glass-bg);
   --paper: var(--glass-bg-strong);
-  --header: var(--glass-bg);
   --tile: var(--glass-fill);
   --well: var(--glass-fill);
   --in-tile: var(--glass-bg-strong);
   --in-tile-2: var(--glass-fill);
   --slab: transparent; --slab-gold: transparent; --slab-soft: transparent; --slab-board: transparent;
   --ledge: transparent; --ledge-gold: transparent; --ledge-c: transparent;
-  --sheen: none; --gloss: none; --rim: 0 0 0 0 transparent; --chip-shade: none; --tray-edge: 0 0 0 0 transparent;
+  --sheen: none; --gloss: none; --chip-shade: none; --tray-edge: 0 0 0 0 transparent;
   --press-down: inset 0 0 0 1px var(--glass-border);
   --soft-down: inset 0 0 0 1px var(--glass-border);
-  --in-tray: inset 0 0 0 1px var(--glass-border);
-  --chrome: var(--glass-bg); --frost: var(--glass-blur); --frost-s: var(--glass-blur); --frost-paper: var(--glass-bg-strong); --chrome-rim: var(--glass-hi);
-  --dock-glass: var(--glass-bg); --dock-frost: var(--glass-blur);
+  --in-tray: inset 0 0 0 1px var(--glass-border); --frost: var(--glass-blur); --frost-s: var(--glass-blur); --frost-paper: var(--glass-bg-strong); --chrome-rim: var(--glass-hi); --dock-frost: var(--glass-blur);
 }
 
 /* --- the base: Inter, crisp, and the browser's own parts in the palette --- */
@@ -4785,7 +4550,6 @@ main::before, main::after, :root[data-theme='dark'] main::before, :root[data-the
 .view-head :is(h1, .page-title) .wk { border-radius: 999px;
   box-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi); }
 :is(.team-name, .mu-team .tn, .lead-hed, .gotw h2, .gotw h3, .me-head, .pth-build-top h3, .pth-part-head h4, .pth-receipt-text h3, .pth-invite b, .pth-side-name b, .pth-mine-name b) { font-weight: 600; letter-spacing: -0.02em; }
-.lead-hed { font-weight: 600; letter-spacing: -0.03em; }
 :is(.score, .odds b, .mu-team .pr, .wp-labels.odds, .gotw-score b, .cast-odds b, .odds-tag, .wr-num b, .wire-stats b, .pth-bar-odds b, .pth-side-odds b, .pth-wl > span b, .pth-stat b) { font-weight: 600; letter-spacing: -0.025em; }
 :is(.tier, .move, .chip, .kicker, .pth-imp, .pth-flag, .you, .tabs a, .filters :is(button, a)) { letter-spacing: 0; }
 .you { font-weight: 600; }
@@ -4841,7 +4605,6 @@ main::before, main::after, :root[data-theme='dark'] main::before, :root[data-the
 
 /* --- 4.0, the second pass: what the first look turned up --- */
 /* the active tab and the Lab's section: the glass pill, not the old amber (the 3.0 list outranked a bare class) */
-.topbar .tabs .tab-ink, .topbar .tabs.dragging .tab-ink { background: var(--glass-bg-strong); box-shadow: inset 0 0 0 1px var(--chalk), var(--glass-hi), 0 4px 14px color-mix(in srgb, var(--tone-shade) 10%, transparent); }
 .lab-tabs { -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
 .lab-tabs a[aria-current='page'] { color: var(--sel-ink); background: var(--sel-bg); box-shadow: 0 6px 18px color-mix(in srgb, var(--ink-day) 18%, transparent); }
 .lab-tabs a[aria-current='page'] * { color: inherit; }
@@ -4875,8 +4638,7 @@ main::before, main::after, :root[data-theme='dark'] main::before, :root[data-the
   --p-bg: transparent; --p-tile: var(--glass-bg); --p-ink: var(--ink); --p-muted: var(--ink-3); --p-white: var(--glass-bg-strong); --p-hot-ledge: transparent;
   --p-toss: var(--tone-grey-56); --p-toss-bg: color-mix(in srgb, var(--chalk) 50%, transparent); --p-toss-ink: var(--ink-2);
   --p-line: var(--line); --p-wash: var(--glass-fill); --p-track: var(--tile-2); --p-hair: var(--line); --p-marker: color-mix(in srgb, var(--ink) 18%, transparent);
-  --p-dotted: color-mix(in srgb, var(--ink) 30%, transparent);
-  --p-edge: 0px; --p-edge-c: transparent; --p-ledge: transparent;
+  --p-dotted: color-mix(in srgb, var(--ink) 30%, transparent); --p-edge-c: transparent; --p-ledge: transparent;
   --p-shadow: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft);
   --p-chip: inset 0 0 0 1px var(--glass-border);
   --p-well: inset 0 0 0 1px var(--glass-border);
@@ -4963,7 +4725,6 @@ html.silk-on .sky :is(.cloud), html.silk-on .sky::before { display: none; }
    The glass football: its picture had the ball's tips cut flat by its own frame (the viewBox), and it sat half off the
    card's corner. The frame now holds the whole tilted ball, and it lies wholly inside the card, right of centre over the
    cast rows, at a size that fits each width (4.2's positions above are replaced). */
-:root { --haze: rgba(255, 252, 230, 0.32); }
 /* the bar the browser draws and the overscroll match the lit top of the silk (the theme colour in index.html and app.js) */
 html.admin-mode { background: var(--np-paper); }
 
@@ -5042,8 +4803,6 @@ body { background: transparent; }
    The glass, tuned for a green light source: the blur drinks more colour (saturate) so the aurora glows through every
    card, shadows are deep emerald rather than grey, the top edge catches a brighter specular line, and the foot of each
    card holds a faint mint glow, the light it picks up from the curtains behind. */
-:root[data-theme='dark'] {
-  --glass-catch: inset 0 -22px 34px -26px rgba(60, 255, 150, 0.32); }
 
 /* ---------- 5.0: Aura (Dan's request Nov 20: "the maximum style overhaul; copy this, copy the colours, copy it
    perfectly", a calm wellness dashboard on an iPad) ----------
@@ -5074,13 +4833,12 @@ body { background: transparent; }
   /* 5.0's constant colours, the same in both themes */
   --au-char: #2B2A27; --au-char-2: #3B3A36; --au-char-3: #55524C;
   --au-yellow: #F2CF5B; --au-yellow-hi: #F8E08E; --au-yellow-deep: #E2B83A; --au-butter: #F6E5A6; --au-butter-ink: #5A4508;
-  --au-cream: #F4F1EB; --au-pearl: #CFD5DE; --au-sand: #E8D5AC; --au-gold: #F0C677;
+  --au-cream: #F4F1EB; --au-pearl: #CFD5DE; --au-gold: #F0C677;
   --au-slate: #6A7A90; --au-slate-ink: #3F4E63; --au-gold-ink: #7A5A08;
-  --au-umber: #3A2614; --au-dash: #CFCBC3;
 }
 :root {
   /* 5.0's other constants, lifted out of the rules below (Hallmark 48); translucent uses are color-mix of these */
-  --au-t-121110: #121110; --au-t-1e1208: #1E1208; --au-t-20140a: #20140A; --au-t-281608: #281608; --au-t-2b2a27: #2B2A27; --au-t-34322e: #34322E; --au-t-463a28: #463A28; --au-t-503014: #503014; --au-t-8c6440: #8C6440; --au-t-8fa2bc: #8FA2BC; --au-t-9ccb9f: #9CCB9F; --au-t-a07814: #A07814; --au-t-a9794c: #A9794C; --au-t-a9a399: #A9A399; --au-t-afc0d8: #AFC0D8; --au-t-c0623f: #C0623F; --au-t-d2cdc4: #D2CDC4; --au-t-d9d4ca: #D9D4CA; --au-t-e2e6eb: #E2E6EB; --au-t-ece3cf: #ECE3CF; --au-t-f0a08c: #F0A08C; --au-t-f2cf5b: #F2CF5B; --au-t-f3f0ea: #F3F0EA; --au-t-ffecc8: #FFECC8; --au-t-fff4e0: #FFF4E0; --au-t-fff8ec: #FFF8EC;
+  --au-t-121110: #121110; --au-t-1e1208: #1E1208; --au-t-20140a: #20140A; --au-t-281608: #281608; --au-t-2b2a27: #2B2A27; --au-t-34322e: #34322E; --au-t-463a28: #463A28; --au-t-503014: #503014; --au-t-8fa2bc: #8FA2BC; --au-t-9ccb9f: #9CCB9F; --au-t-a07814: #A07814; --au-t-a9a399: #A9A399; --au-t-afc0d8: #AFC0D8; --au-t-c0623f: #C0623F; --au-t-d2cdc4: #D2CDC4; --au-t-d9d4ca: #D9D4CA; --au-t-e2e6eb: #E2E6EB; --au-t-ece3cf: #ECE3CF; --au-t-f0a08c: #F0A08C; --au-t-f2cf5b: #F2CF5B; --au-t-f3f0ea: #F3F0EA; --au-t-ffecc8: #FFECC8; --au-t-fff4e0: #FFF4E0; --au-t-fff8ec: #FFF8EC;
 }
 :root {
   /* the haze */
@@ -5094,7 +4852,6 @@ body { background: transparent; }
   --glass-fill: rgba(255, 255, 255, 0.5);
   --glass-border: rgba(255, 255, 255, 0.78);
   --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  --glass-catch: inset 0 0 0 0 transparent;
   --glass-light: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0, rgba(255, 255, 255, 0) 120px);
   --glass-blur: blur(28px) saturate(130%);
   --glass-float: rgba(250, 248, 244, 0.9);
@@ -5117,7 +4874,7 @@ body { background: transparent; }
   --body: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --hand: var(--body);
   --ink: #1E1D1B; --ink-2: #47443F; --ink-3: #686359; --ink-day: #1E1D1B; --outline-day: #1E1D1B;
-  --face: var(--glass-bg); --paper: var(--glass-bg-strong); --header: var(--glass-bg);
+  --face: var(--glass-bg); --paper: var(--glass-bg-strong);
   --tile: var(--glass-fill); --tile-2: rgba(43, 42, 39, 0.08); --well: var(--glass-fill);
   --line: rgba(43, 42, 39, 0.09); --in-line: rgba(43, 42, 39, 0.09);
   --drawer: rgba(255, 255, 255, 0.3); --in-tile: var(--glass-bg-strong); --in-tile-2: var(--glass-fill);
@@ -5131,9 +4888,7 @@ body { background: transparent; }
   --cast: rgba(70, 58, 40, 0.1);
   --outline: rgba(255, 255, 255, 0.78);
   --press: inset 0 0 0 1px var(--glass-border), var(--glass-hi), var(--shadow-soft);
-  --soft: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 2px 8px rgba(70, 58, 40, 0.06);
-  --chrome: var(--glass-bg); --frost: var(--glass-blur); --frost-s: var(--glass-blur); --frost-paper: var(--glass-bg-strong);
-  --dock-glass: var(--glass-bg); --dock-frost: var(--glass-blur);
+  --soft: inset 0 0 0 1px var(--glass-border), var(--glass-hi), 0 2px 8px rgba(70, 58, 40, 0.06); --frost: var(--glass-blur); --frost-s: var(--glass-blur); --frost-paper: var(--glass-bg-strong); --dock-frost: var(--glass-blur);
   --side-w: 236px;
 }
 :root[data-theme='dark'] {
@@ -5230,7 +4985,6 @@ h2, h3, .sec-title { font-weight: 500; letter-spacing: -0.015em; }
 .cast-odds b { color: var(--chalk); }
 .cast-name small, .cast-odds small { color: color-mix(in srgb, var(--au-t-fff4e0) 74%, transparent); }
 .car-dim { background: var(--aurora-base); }
-.lead-car { --deck-1: var(--au-t-8c6440); --deck-2: var(--au-t-a9794c); }
 :root :is(.car-card, .gotw, .ag-hero) :is(.car-arrow, .car-pause, .gotw-more, .drive-pick button, .clip-sound, .ag-btn) {
   color: var(--chalk); background: color-mix(in srgb, var(--au-t-fff4e0) 18%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--au-t-fff4e0) 50%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 :root :is(.car-card, .gotw) :is(.car-pause, .drive-pick button)[aria-pressed='true'] { color: var(--ink-day); background: var(--au-cream); box-shadow: none; }
@@ -5315,7 +5069,6 @@ h2, h3, .sec-title { font-weight: 500; letter-spacing: -0.015em; }
 .lab-tabs a, .lab-tabs a[aria-current='page'] { border-radius: 17px; }
 .lab-tabs a:not([aria-current]) { background: transparent; box-shadow: none; }
 .lab-tabs b { font-weight: 500; }
-.lab-tabs a[aria-current='page'] small { color: color-mix(in srgb, var(--sel-ink) 70%, transparent); }
 
 /* --- charts: the reference's bars. Done in charcoal, the latest in yellow, plates in white glass --- */
 .chart .plate { fill: color-mix(in srgb, var(--chalk) 36%, transparent); stroke: var(--glass-border); }
@@ -5420,8 +5173,7 @@ h2, h3, .sec-title { font-weight: 500; letter-spacing: -0.015em; }
   .me::before { content: 'General'; display: block; padding: 0 12px 8px; font: 500 11.5px/1 var(--body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
   .me-panel { display: flex !important; flex-direction: column; gap: 6px; flex: 1 0 auto; }
   .me-btn, .me-head { display: none !important; }
-  .me-panel .theme-btn { display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; height: 48px; padding: 0 14px; border-radius: 999px;
-    background: transparent; box-shadow: none; color: var(--ink-2); font: 500 15.5px/1 var(--body); }
+  .me-panel .theme-btn { display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; height: 48px; padding: 0 14px; border-radius: 999px; font: 500 15.5px/1 var(--body); }
   .me-panel .theme-btn::after { content: 'Night game'; }
   :root[data-theme='dark'] .me-panel .theme-btn::after { content: 'Day game'; }
   .me-panel .theme-btn svg { width: 19px; height: 19px; }

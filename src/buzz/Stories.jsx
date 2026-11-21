@@ -154,7 +154,7 @@ function StoryViewer({ list, start, from, D, h, me, onSeen, onClose }) {
   const still = calm();
 
   useEffect(() => { onSeen(s); }, [ti]);
-  // the page holds still under the story: no scroll, the carousel and its clip wait, the dock and circle step aside
+  // the page holds still under the story: no scroll, the carousel waits, the dock and circle step aside
   useEffect(() => {
     const root = document.documentElement;
     root.classList.add('locked', 'focusing');

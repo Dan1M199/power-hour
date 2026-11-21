@@ -41,15 +41,13 @@ const MIME = { png: 'image/png', webp: 'image/webp', jpg: 'image/jpeg', svg: 'im
 html = html.replace(/(src|href)="(\/bundle\/[^"]+\.(png|webp|jpg|svg|ico))"/g, (_, attr, f, ext) => `${attr}="data:${MIME[ext]};base64,${readFileSync(`${out}${f}`).toString('base64')}"`);
 if (!js || !css) throw new Error('preview: the built page has no script or no stylesheet to inline');
 
-// the demo snapshot, the managers' headshots and the other pictures the code asks for by name (photoUrl in
-// lib/members.js reads window.__HEADS__, asset() in src/hero/Carousel.jsx window.__ASSETS__)
+// the demo snapshot and the managers' headshots (photoUrl in lib/members.js reads window.__HEADS__)
 const heads = Object.fromEntries(readdirSync(`${root}assets/heads`).filter((f) => f.endsWith('.jpg'))
   .map((f) => [f.slice(0, -4), `data:image/jpeg;base64,${readFileSync(`${root}assets/heads/${f}`).toString('base64')}`]));
-const assets = Object.fromEntries(['assets/money-week-flyer.jpg'].map((p) => [p, `data:image/jpeg;base64,${readFileSync(`${root}${p}`).toString('base64')}`]));
 const demo = r('demo/demo.json').replace(/<\//g, '<\\/');
 const inline = (s) => s.replace(/<\/(script|style)/gi, '<\\/$1');
 html = html.replace('</head>', () => `<style>${inline(css)}</style>
-<script>window.__DEMO__ = ${demo}; window.__HEADS__ = ${JSON.stringify(heads)}; window.__ASSETS__ = ${JSON.stringify(assets)};</script>
+<script>window.__DEMO__ = ${demo}; window.__HEADS__ = ${JSON.stringify(heads)};</script>
 <script type="module">${inline(js)}</script>
 </head>`);
 rmSync(out, { recursive: true, force: true });

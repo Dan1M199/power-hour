@@ -1,14 +1,13 @@
 // The power rankings (#rankings): a row per team that opens into its scouting report, with your rank in a strip up
-// top, the fan poll, championship futures and how the score works. The hero (headline carousel and page head) is
+// top, championship futures and how the score works. The hero (headline carousel and page head) is
 // shared with the Live page.
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { closeDrawer, openDrawer, slides, sliding } from './drawer.js';
 import { ChampTag, Headshot, TeamAvatar, Xp, HeadLinks, Ring } from '../shared.jsx';
 import { Hero } from '../hero/Hero.jsx';
 import { StoryRail } from '../buzz/Stories.jsx';
 import { Futures } from './Futures.jsx';
-import { Poll } from './Poll.jsx';
 import { Report } from './Report.jsx';
 import { usePosts } from '../admin/posts.js';
 import { Lockout } from './Lockout.jsx';
@@ -20,11 +19,8 @@ function DeskLink() {
   return p.admin ? <a className="chip rank-pdf" href="#admin">Headline desk</a> : null;
 }
 
-// the page head: the week, what the ranks weigh, the ROS sources and when they were refreshed, and the important
-// message's replay chip once its file is known to be there
-function RankHead({ D, h, wk, held, sources, updated, message }) {
-  const [again, setAgain] = useState(false);
-  useEffect(() => { message?.ready().then((ok) => setAgain(!!ok)); }, []);
+// the page head: the week, what the ranks weigh, the ROS sources and when they were refreshed
+function RankHead({ wk, held, sources, updated }) {
   return <>
     <div>
       <h2 className="page-title"><span className="wk">{held ? `On hold during week ${wk}` : `Week ${wk}`}</span>Power Rankings</h2>
@@ -37,7 +33,6 @@ function RankHead({ D, h, wk, held, sources, updated, message }) {
         : <span className="chip off"><span className="dot" />ROS rankings unavailable</span>}
       {updated ? <span className="chip">{updated}</span> : null}
       <DeskLink />
-      {message ? <button type="button" className="chip to-again" data-message hidden={!again} onClick={message.play}>Watch the important message again</button> : null}
     </div>
   </>;
 }
@@ -99,10 +94,9 @@ const METHOD = (pctW) => <>
 /**
  * held: a week is being played, so the ranks are on hold (no hero); car: the headline carousel's props, or null;
  * sources: the ROS sources' chips ({ name, ok, title }), or null when they're all down; updated:
- * when they were refreshed; message: { ready, play } for the important message's replay chip, or null; rosError: why the
- * ROS rankings are missing; calm: reduced motion; poll: { on, question, store, onPick }.
+ * when they were refreshed; rosError: why the ROS rankings are missing; calm: reduced motion.
  */
-export function RankingsPage({ D, me, h, held, car, sources, updated, message, rosError, calm, poll, buzz }) {
+export function RankingsPage({ D, me, h, held, car, sources, updated, rosError, calm, buzz }) {
   const [open, setOpen] = useState(() => new Set());
   const [nudged, setNudged] = useState(() => !seen());
   const rows = useRef(new Map()), btns = useRef(new Map()), unpin = useRef(new Map());
@@ -161,12 +155,11 @@ export function RankingsPage({ D, me, h, held, car, sources, updated, message, r
   return <>
     {held
       ? <section className="view-head"><RankHead wk={wk} held sources={sources} updated={updated} /></section>
-      : <Hero D={D} h={h} car={car} head={<RankHead D={D} h={h} wk={wk} sources={sources} updated={updated} message={message} />}
+      : <Hero D={D} h={h} car={car} head={<RankHead wk={wk} sources={sources} updated={updated} />}
         side={youStrip} hint={<p className="you-card glass empty" data-open-me>{'Pick your team '}<span className="where-d">in the top right</span><span className="where-s">at the foot of the menu</span><span className="where-p">in the circle at the bottom right</span>{' and this spot shows your rank, your tier and your playoff odds.'}</p>} />}
     {held ? null : <StoryRail D={D} me={me} h={h} streak={buzz?.streak} now={buzz?.now ?? D.now} />}
     {held ? <div className="notice glass hold"><span><strong>Power rankings are on hold.</strong>{` Week ${wk} is being played, so these are the ranks going into the week. They update as soon as every game is final. For how this week is going, see the `}<a href="#live">Live</a> tab.</span></div> : null}
     {rosError ? <div className="notice glass"><strong>Results-only mode.</strong>{` The rest-of-season rankings couldn't be loaded (${rosError}), so these ranks use this season's results alone until they come back.`}</div> : null}
-    <div id="poll-slot"><Poll D={D} h={h} poll={poll} /></div>
     <ol className="ranks">{D.teams.map((t) => (
       <RankRow key={t.rid} D={D} t={t} me={me} h={h} open={open.has(t.rid)} nudge={t.powerRank === 1 && nudged}
         onToggle={() => toggle(t.rid)} onClose={() => close(t.rid)}
