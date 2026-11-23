@@ -1847,7 +1847,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
   @keyframes grow-x { from { transform: scaleX(0); } }
   @keyframes grow-y { from { transform: scaleY(0); } }
   @keyframes draw { from { stroke-dashoffset: 1; } }
-  @keyframes pop { from { opacity: 0; transform: scale(0.4); } }
+  @keyframes pop { from { opacity: 0; transform: scale(0.97); } } /* an entrance settles in from 0.97, never pops from small */
   /* out from under whatever sits above it */
   @keyframes emerge { from { opacity: 0; transform: translateY(-20px) scale(0.97); } }
 
@@ -3963,7 +3963,7 @@ main::after { border-radius: 56px 56px 0 0; }
 .tx-top { position: fixed; z-index: 17; right: max(14px, calc((100vw - 1180px) / 2 - 64px)); bottom: 24px; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
   color: var(--ink); background: var(--chrome); -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost);
   box-shadow: var(--chrome-rim), 0 0 0 var(--edge) var(--outline), 0 4px 0 var(--edge) var(--ledge), 0 12px 16px -6px var(--cast);
-  transform: translateY(18px) scale(0.6);
+  transform: translateY(12px) scale(0.97);
   transition: transform 0.3s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.2s, visibility 0s 0.3s; }
 .js .tx-top:not(.on) { opacity: 0; visibility: hidden; }
 .tx-top.on { opacity: 1; visibility: visible; transform: none; transition: transform 0.5s var(--ease-out), opacity 0.2s, visibility 0s; }
@@ -4625,7 +4625,7 @@ html:is(.admin-mode, .locked) .tx-edge { display: none; }
 .tabs a .bz-badge { position: absolute; top: -4px; right: -2px; z-index: 2; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
   font: 800 11.5px/1 var(--body); color: var(--chalk); background: var(--tone-red-51-2); box-shadow: 0 0 0 2px var(--face, var(--chalk)), 0 3px 8px color-mix(in srgb, var(--tone-red-51-2) 45%, transparent); pointer-events: none; }
 @media (prefers-reduced-motion: no-preference) { .tabs a .bz-badge { animation: bz-badge-in 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both; } }
-@keyframes bz-badge-in { from { transform: scale(0); } }
+@keyframes bz-badge-in { from { opacity: 0; transform: scale(0.97); } }
 @media (max-width: 760px) { .tabs a .bz-badge { top: 1px; right: calc(50% - 24px); min-width: 18px; height: 18px; padding: 0 5px; } }
 .bz-new { display: inline-flex; align-items: center; gap: 5px; margin-right: 8px; padding: 3px 8px 3px 6px; border-radius: 999px; font: 800 11.5px/1 var(--body); color: var(--ink);
   background: var(--yellow); vertical-align: 1px; }
@@ -5292,3 +5292,65 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
   --paper: var(--chalk); --line: var(--tone-green-75-2); --tile: var(--tone-green-85);
   color: var(--ink); }
 :root[data-theme='dark'] .wi-cta { box-shadow: inset 0 1.5px 0 color-mix(in srgb, var(--chalk) 22%, transparent), 0 0 0 2px color-mix(in srgb, var(--yellow) 45%, transparent), 0 4px 0 2px var(--ledge-gold), 0 10px 22px -8px var(--cast); }
+
+/* ---------- 2.5: the nav bar in cartoon glass (Dan's request Nov 23: "more cartoon glassy, textured") ----------
+   The header (desktop), the dock and its circle (phones) and the top pill keep their frosted glass, and gain what the
+   cards and buttons have: a bold ink edge on a deeper ledge, a hard-edged gloss band over the top half, the cartoon
+   glint in the corner, and a printed halftone texture in the glass itself. The tabs sit in a recessed groove, and the
+   active tab is a glossy amber pill on its magenta ledge. Paint only: nothing here moves. */
+:root {
+  --nav-tint: rgba(226, 244, 255, 0.62);
+  --nav-dots: radial-gradient(circle, color-mix(in srgb, var(--ink-day) 11%, transparent) 0 0.9px, transparent 1.4px);
+  --nav-gloss: linear-gradient(180deg, color-mix(in srgb, var(--chalk) 62%, transparent) 0, color-mix(in srgb, var(--chalk) 26%, transparent) 44%, transparent 47%);
+  --nav-groove: inset 0 3px 0 color-mix(in srgb, var(--ink-day) 14%, transparent), inset 0 0 0 1.5px color-mix(in srgb, var(--ink-day) 22%, transparent), 0 1.5px 0 color-mix(in srgb, var(--chalk) 70%, transparent);
+}
+:root[data-theme='dark'] {
+  --nav-tint: rgba(12, 30, 21, 0.7);
+  --nav-dots: radial-gradient(circle, color-mix(in srgb, var(--chalk) 9%, transparent) 0 0.9px, transparent 1.4px);
+  --nav-gloss: linear-gradient(180deg, color-mix(in srgb, var(--chalk) 18%, transparent) 0, color-mix(in srgb, var(--chalk) 7%, transparent) 44%, transparent 47%);
+  --nav-groove: inset 0 3px 0 color-mix(in srgb, var(--island) 45%, transparent), inset 0 0 0 1.5px color-mix(in srgb, var(--island) 55%, transparent), 0 1.5px 0 color-mix(in srgb, var(--chalk) 8%, transparent);
+}
+
+/* the active tab, everywhere: amber with a hard gloss band, an ink edge and the magenta ledge */
+.tab-ink { background: var(--nav-gloss), var(--amber);
+  box-shadow: inset 0 -3px 4px color-mix(in srgb, var(--tone-orange-29) 30%, transparent), 0 0 0 1.5px var(--outline), 0 3px 0 1.5px var(--pop),
+    0 7px 12px -4px color-mix(in srgb, var(--amber) 55%, transparent); }
+:root[data-theme='dark'] .tab-ink { background: linear-gradient(180deg, color-mix(in srgb, var(--chalk) 58%, transparent) 0, color-mix(in srgb, var(--chalk) 22%, transparent) 44%, transparent 47%), var(--amber); }
+
+@media (min-width: 761px) {
+  .topbar { background-color: var(--nav-tint); background-image: var(--nav-dots); background-size: 6px 6px; background-repeat: repeat;
+    box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--ink-day) 10%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--chalk) 30%, transparent),
+      0 0 0 2px var(--outline), 0 7px 0 2px var(--ledge), 0 22px 28px -12px var(--cast); }
+  /* the gloss band and the glint ride over the texture; the light under a mouse stays */
+  .topbar::before { background:
+      radial-gradient(220px 120px at var(--lx, 50%) var(--ly, -60px), color-mix(in srgb, var(--chalk) calc(40% * var(--lo, 0)), transparent), transparent 70%),
+      var(--nav-gloss); }
+  :root[data-theme='dark'] .topbar::before { opacity: 0.85; }
+  /* the tabs sit in a groove pressed into the glass */
+  /* (the glint sits on the groove's corner: the header's own corner is the logo's) */
+  .tabs, :root[data-theme='dark'] .tabs { background: var(--glint) 12px 5px / 17px 17px no-repeat, color-mix(in srgb, var(--ink-day) 8%, transparent); box-shadow: var(--nav-groove); }
+  :root[data-theme='dark'] .tabs { background: var(--glint) 12px 5px / 17px 17px no-repeat, color-mix(in srgb, var(--island) 30%, transparent); }
+}
+
+@media (max-width: 760px) {
+  :root { --dock-glass: rgba(226, 244, 255, 0.5); }
+  :root[data-theme='dark'] { --dock-glass: rgba(12, 30, 21, 0.58); }
+  .tabs, :root[data-theme='dark'] .tabs, .me-btn { background-color: var(--dock-glass); background-image: var(--nav-dots); background-size: 6px 6px; background-repeat: repeat; }
+  .tabs::before, .me-btn::before { background:
+      var(--glint) 18px 8px / 22px 22px no-repeat,
+      var(--nav-gloss),
+      radial-gradient(70% 55% at 50% 128%, var(--caustic), transparent 62%); }
+  .me-btn::before { background: var(--glint) 9px 7px / 16px 16px no-repeat, var(--nav-gloss); }
+  .tabs, .me-btn { box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--ink-day) 10%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--chalk) 30%, transparent),
+      0 0 0 2px var(--outline), 0 6px 0 2px var(--ledge), 0 18px 24px -8px color-mix(in srgb, var(--tone-green-4) 70%, transparent); }
+  .tabs.dragging .tab-ink { box-shadow: inset 0 1.5px 0 color-mix(in srgb, var(--chalk) 95%, transparent), inset 0 0 0 1.5px color-mix(in srgb, var(--chalk) 55%, transparent), 0 0 0 1.5px var(--outline), 0 8px 18px -6px color-mix(in srgb, var(--tone-green-4) 45%, transparent); }
+}
+
+/* the top pill: the same glass, gloss and dots */
+.tx-top { background-color: var(--nav-tint); background-image: var(--nav-dots); background-size: 6px 6px; background-repeat: repeat;
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--ink-day) 10%, transparent), 0 0 0 2px var(--outline), 0 5px 0 2px var(--ledge), 0 14px 18px -6px var(--cast); }
+.tx-top::before { background: var(--glint) 9px 7px / 15px 15px no-repeat, var(--nav-gloss); }
+
+@media (prefers-reduced-transparency: reduce) {
+  :root, :root[data-theme] { --nav-tint: var(--header); }
+}
