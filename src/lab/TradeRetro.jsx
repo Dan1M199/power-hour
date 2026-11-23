@@ -1,8 +1,10 @@
 // The trade retrospective (Dan's request Nov 23; the Lab's Trades section, #lab/retro): every trade with four or more
 // weeks of games, judged on the points it put into each team's starting lineups (lib/retro.js), never on rest of season
-// rankings. A report card per team, then a card per trade (biggest swing first) with the winner and loser, why, the
-// record each team would have without it and the numbers behind it, the trades still too young to call, and for any team
-// with more than one trade a panel that undoes any or all of them and shows the record and lineup it would have.
+// rankings. One team at a time, the one picked in the Lab's head (your team for the whole site), in bands on trays of
+// their own, each with a line saying what's in it: the scorecard (its points from trades and every trade in order),
+// the verdicts (a card per judged trade, oldest first, numbered as in the scorecard), too soon to call, undo the trades
+// (switches grouped by the week each trade went through, then the record and lineup without them) and how it works.
+// With no team picked, every team that traded, to pick from.
 // Waiver-week points come from /api/history (src/lab/history.js), the same as What if.
 import { useEffect, useMemo, useState } from 'react';
 import { seasonBook } from '../../lib/whatif.js';
@@ -10,7 +12,7 @@ import { retrospective, tradesOf, undoTeam, withFlips, MIN_WEEKS } from '../../l
 import { historyStore, loadHistory } from './history.js';
 import { Headshot, PosTag, TeamAvatar } from '../shared.jsx';
 
-const keep = { open: null, undo: null, picked: {} }; // for the visit: the opened card, the undo panel's team and picks
+const keep = { open: null, picked: {} }; // for the visit: the opened card and each team's undo picks
 const rec = (x) => `${x.w}-${x.l}${x.t ? `-${x.t}` : ''}`;
 const signed = (x, f) => `${x > 0 ? '+' : x < 0 ? '−' : ''}${f(Math.abs(x))}`;
 const and = (a) => (a.length <= 1 ? a.join('') : `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}`);
@@ -27,77 +29,168 @@ function retroFor(D, raw, body) {
   return (D._retro = { body, book, R: retrospective(book, raw) });
 }
 
-export function TradeRetro({ D, raw, me, h, demo }) {
+export function TradeRetro({ D, raw, me, h, demo, onTeam }) {
   const hs = historyStore.use();
   useEffect(() => { loadHistory({ demo }); }, [demo]);
   if (!hs) return <section className="panel glass span-12 wi-wait" aria-busy="true"><span className="wi-spin" aria-hidden="true" /><p>{'Getting every week of stats to replay the trades.'}</p></section>;
-  return <Retro D={D} raw={raw} me={me} h={h} body={hs.body} />;
+  return <Retro D={D} raw={raw} me={me} h={h} body={hs.body} onTeam={onTeam} />;
 }
 
-function Retro({ D, raw, me, h, body }) {
+const calmScroll = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+const jumpTo = (id) => requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: calmScroll(), block: 'start' }));
+
+// one band of the page: a title, a line saying what's in it, then its cards on a tray of their own
+function Sec({ id, title, line, children, cls = '' }) {
+  return (
+    <section className={`rt-sec${cls ? ` ${cls}` : ''}`} id={id} aria-labelledby={`${id}-h`}>
+      <header className="rt-sec-head">
+        <h2 id={`${id}-h`}>{title}</h2>
+        {line ? <p>{line}</p> : null}
+      </header>
+      <div className="rt-sec-body">{children}</div>
+    </section>
+  );
+}
+
+// how one trade went for team rid: won, lost, in the middle of a three-way, or still waiting
+function outcomeOf(x, rid, judged, waiting, f1) {
+  const j = judged[x.id];
+  if (!j) {
+    const w = waiting[x.id];
+    return { k: 'wait', label: w ? `Judged after week ${w.after}` : 'Too soon to call' };
+  }
+  const s = j.sides.find((y) => y.rid === rid);
+  const k = j.winner === rid ? 'won' : j.loser === rid ? 'lost' : 'mid';
+  return { k, label: `${k === 'won' ? 'Won' : k === 'lost' ? 'Lost' : 'Middle'} ${signed(s.net, f1)}`, net: s.net };
+}
+
+function Retro({ D, raw, me, h, body, onTeam }) {
   const { book, R } = retroFor(D, raw, body);
-  const [open, setOpenRaw] = useState(keep.open ?? R.judged[0]?.id ?? null);
+  const [open, setOpenRaw] = useState(keep.open);
   const setOpen = (id) => { keep.open = id; setOpenRaw(id); };
-  const many = (rid) => tradesOf(R.all, rid).length >= 2;
-  const firstUndo = keep.undo ?? (me && many(me) ? me : [...D.teams].filter((t) => many(t.rid)).sort((a, b) => tradesOf(R.all, b.rid).length - tradesOf(R.all, a.rid).length)[0]?.rid ?? null);
-  const [undoRid, setUndoRaw] = useState(firstUndo);
-  const setUndo = (rid, all = false) => {
-    keep.undo = rid;
-    if (all) keep.picked[rid] = tradesOf(R.all, rid).map((t) => t.id);
-    setUndoRaw(rid);
-  };
-  const [bump, setBump] = useState(0); // a fresh "undo all" from a card re-reads the picks
-  const undoAll = (rid) => {
-    setUndo(rid, true);
-    setBump((x) => x + 1);
-    requestAnimationFrame(() => document.getElementById('rt-undo')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }));
-  };
+  const [bump, setBump] = useState(0); // a fresh "undo all" from the scorecard re-reads the picks
+  const rid = me != null && D.byRid[me] ? me : null;
 
   if (!R.all.length) return <section className="panel glass span-12"><h2>{'No trades yet'}</h2><p className="sub">{'Once a trade goes through and four weeks of games are played, it gets its verdict here.'}</p></section>;
+  if (rid == null) return <><Chooser R={R} D={D} h={h} onTeam={onTeam} /><RetroHow /></>;
+
+  const t = D.byRid[rid];
+  const mine = tradesOf(R.all, rid); // oldest first
+  const num = Object.fromEntries(mine.map((x, i) => [x.id, i + 1]));
+  const judgedById = Object.fromEntries(R.judged.map((x) => [x.id, x]));
+  const waitingById = Object.fromEntries(R.waiting.map((x) => [x.id, x]));
+  const judged = mine.filter((x) => judgedById[x.id]).map((x) => judgedById[x.id]);
+  const waiting = mine.filter((x) => waitingById[x.id]).map((x) => waitingById[x.id]);
+  const undoAll = () => {
+    keep.picked[rid] = mine.map((x) => x.id);
+    setBump((x) => x + 1);
+    jumpTo('rt-undo');
+  };
+  const jump = (id) => { if (judgedById[id]) setOpen(id); jumpTo(`rt-${id}`); };
+
+  if (!mine.length) return <>
+    <Sec id="rt-score" title={`${t.name} hasn't made a trade`} line={`Pick another team up top to see its trades. ${R.all.length} ${R.all.length === 1 ? 'trade has' : 'trades have'} gone through in the league so far.`}>
+      <Chooser R={R} D={D} h={h} onTeam={onTeam} bare />
+    </Sec>
+    <RetroHow />
+  </>;
+
   return <>
-    {R.judged.length ? <ReportCard R={R} D={D} h={h} me={me} many={many} onUndo={undoAll} /> : (
-      <section className="panel glass span-12 rt-none">
-        <h2>{'Too soon to call any of them'}</h2>
-        <p className="sub">{`A trade needs ${MIN_WEEKS} weeks of games before it gets a verdict. The first one is judged after week ${Math.min(...R.waiting.map((t) => t.after))}.`}</p>
-      </section>
-    )}
-    {R.judged.map((t, i) => (
-      <RetroCard key={t.id} t={t} k={i} D={D} h={h} book={book} me={me} open={open === t.id} onToggle={() => setOpen(open === t.id ? '' : t.id)} many={many} onUndo={undoAll} />
-    ))}
-    {R.waiting.length ? <Waiting R={R} D={D} h={h} book={book} me={me} /> : null}
-    {undoRid != null ? <TeamUndo key={`${undoRid}:${bump}`} R={R} D={D} h={h} book={book} me={me} rid={undoRid} many={many} onTeam={(rid) => setUndo(rid)} /> : null}
+    <Sec id="rt-score" title="Scorecard" line={`${t.name}'s ${mine.length === 1 ? 'trade' : `${mine.length} trades`} in the order they went through. Points only count once a trade has ${MIN_WEEKS} weeks of games. Tap one to jump to it.`}>
+      <Scorecard R={R} D={D} h={h} book={book} rid={rid} mine={mine} judged={judgedById} waiting={waitingById} onJump={jump} onUndo={undoAll} />
+    </Sec>
+    {judged.length ? (
+      <Sec id="rt-verdicts" title={judged.length === 1 ? 'The verdict' : 'The verdicts'} line={`Each trade replayed as if it never happened. The side whose starting lineups gained the most points wins it. Oldest first; open one for the race and every week.`}>
+        {judged.map((x) => (
+          <RetroCard key={x.id} t={x} n={num[x.id]} of={mine.length} D={D} h={h} book={book} me={rid} open={open === x.id} onToggle={() => setOpen(open === x.id ? '' : x.id)} />
+        ))}
+      </Sec>
+    ) : null}
+    {waiting.length ? (
+      <Sec id="rt-soon" title="Too soon to call" line={`Trades with fewer than ${MIN_WEEKS} weeks of games. Each gets its verdict once the week shown is scored.`}>
+        <Waiting list={waiting} num={num} D={D} h={h} book={book} rid={rid} />
+      </Sec>
+    ) : null}
+    <Sec id="rt-undo" title="Undo the trades" line={`Switch on any of ${t.name}'s trades to undo it, and the season is replayed without them: the record, the standings and the lineup it would have today. Grouped by the week each went through, oldest at the top.`}>
+      <TeamUndo key={`${rid}:${bump}`} R={R} D={D} h={h} book={book} rid={rid} mine={mine} num={num} judged={judgedById} waiting={waitingById} />
+    </Sec>
     <RetroHow />
   </>;
 }
 
-// ---------- the report card ----------
+// ---------- the scorecard: the picked team's trades at a glance, in order ----------
 
-function ReportCard({ R, D, h, me, many, onUndo }) {
-  const { f1, short } = h;
-  const max = Math.max(1, ...R.teams.map((c) => Math.abs(c.net)));
+function Scorecard({ R, D, h, book, rid, mine, judged, waiting, onJump, onUndo }) {
+  const { f1, short, ordinal } = h, team = (r) => D.byRid[r];
+  const c = R.teams.find((x) => x.rid === rid);
+  const rank = c ? R.teams.indexOf(c) + 1 : 0;
+  const all = useMemo(() => undoTeam(book, rid, mine, R.all), [book, rid, mine.length]);
+  const partners = (x) => x.sides.filter((s) => s.rid !== rid).map((s) => team(s.rid));
   return (
-    <section className="panel glass span-12 rt-board">
-      <h2>{'Trade report card'}</h2>
-      <p className="sub">{`Every judged trade added up: the points each team's trades put into its starting lineups, and how many it won and lost. ${R.judged.length} ${R.judged.length === 1 ? 'trade has' : 'trades have'} ${MIN_WEEKS}+ weeks of games.`}</p>
-      <ol className="rt-teams">
-        {R.teams.map((c) => {
-          const t = D.byRid[c.rid], w = (Math.abs(c.net) / max) * 50;
-          const n = tradesOf(R.all, c.rid).length;
+    <div className="panel glass rt-score">
+      <div className="rt-stats">
+        <div><small>{'Points from trades'}</small><b className={c ? (c.net > 0.05 ? 'up' : c.net < -0.05 ? 'down' : '') : ''}>{c ? signed(c.net, f1) : '—'}</b><em>{c ? `${c.trades} judged ${c.trades === 1 ? 'trade' : 'trades'}` : 'none judged yet'}</em></div>
+        <div><small>{'Won and lost'}</small><b>{c ? `${c.won}-${c.lost}` : '0-0'}</b><em>{c && c.trades - c.won - c.lost ? `${c.trades - c.won - c.lost} in the middle` : 'in judged trades'}</em></div>
+        <div><small>{'Among the traders'}</small><b>{c ? ordinal(rank) : '—'}</b><em>{c ? `of ${R.teams.length}, by points` : 'not ranked yet'}</em></div>
+        <div><small>{mine.length === 1 ? 'Without the trade' : `Without all ${mine.length}`}</small><b>{rec(all.without)}</b><em>{`real ${rec(all.real)}, ${ordinal(all.without.seed)} instead of ${ordinal(all.real.seed)}`}</em></div>
+      </div>
+      <ol className="rt-order" aria-label="Trades in order">
+        {mine.map((x, i) => {
+          const o = outcomeOf(x, rid, judged, waiting, f1);
           return (
-            <li key={c.rid} className={c.rid === me ? 'mine' : ''}>
-              <span className="rt-tm"><TeamAvatar t={t} cls="avatar xs" /><b>{short(t.name, 22)}</b></span>
-              <span className="rt-wl" data-tip={`${c.won} won, ${c.lost} lost${c.trades - c.won - c.lost ? `, ${c.trades - c.won - c.lost} in the middle of a three-way` : ''}`}>{`${c.won}-${c.lost}`}<small>{' in trades'}</small></span>
-              <span className="rt-track" data-tip={`${signed(c.net, f1)} points in ${t.name}'s lineups from ${c.trades} judged ${c.trades === 1 ? 'trade' : 'trades'}${c.dw ? `, ${signed(c.dw, winsSaid)}` : ''}`}>
-                <i className="mid" />
-                <span className={`bar ${c.net >= 0 ? 'pos' : 'neg'}`} style={c.net >= 0 ? { left: '50%', width: `${w}%` } : { right: '50%', width: `${w}%` }} />
-              </span>
-              <b className={`rt-net ${c.net > 0.05 ? 'up' : c.net < -0.05 ? 'down' : ''}`}>{signed(c.net, f1)}</b>
-              {many(c.rid) ? <button type="button" className="rt-undo-btn" onClick={() => onUndo(c.rid)}>{`Undo all ${n}`}</button> : <span className="rt-undo-btn ghost" aria-hidden="true" />}
+            <li key={x.id}>
+              <button type="button" className={`rt-step ${o.k}`} onClick={() => onJump(x.id)}>
+                <span className="rt-n" aria-hidden="true">{i + 1}</span>
+                <span className="rt-step-what">
+                  <small>{`Week ${x.leg}, ${dateOf(x.ts)}`}</small>
+                  <b>{`with ${and(partners(x).map((p) => p.name))}`}</b>
+                </span>
+                <span className={`rt-out ${o.k}`}>{o.label}</span>
+              </button>
             </li>
           );
         })}
       </ol>
-    </section>
+      {mine.length >= 2 ? <button type="button" className="rt-link" onClick={onUndo}>{`Undo all ${mine.length} and see the season without them`}</button> : null}
+    </div>
+  );
+}
+
+// ---------- no team picked: every team that traded, to pick from ----------
+
+function Chooser({ R, D, h, onTeam, bare = false }) {
+  const { f1, short } = h;
+  const traded = [...new Set(R.all.flatMap((t) => t.sides.map((s) => s.rid)))];
+  const rows = traded.map((rid) => R.teams.find((c) => c.rid === rid) || { rid, net: 0, won: 0, lost: 0, trades: 0 })
+    .sort((a, b) => b.net - a.net || b.trades - a.trades || a.rid - b.rid);
+  const max = Math.max(1, ...rows.map((c) => Math.abs(c.net)));
+  const list = (
+    <div className="panel glass rt-board">
+      <ol className="rt-teams">
+        {rows.map((c) => {
+          const t = D.byRid[c.rid], w = (Math.abs(c.net) / max) * 50, n = tradesOf(R.all, c.rid).length;
+          return (
+            <li key={c.rid}>
+              <button type="button" className="rt-row" onClick={() => onTeam?.(c.rid)}>
+                <span className="rt-tm"><TeamAvatar t={t} cls="avatar xs" /><b>{short(t.name, 22)}</b></span>
+                <span className="rt-wl">{`${c.won}-${c.lost}`}<small>{` in ${n} ${n === 1 ? 'trade' : 'trades'}`}</small></span>
+                <span className="rt-track" aria-hidden="true">
+                  <i className="mid" />
+                  <span className={`bar ${c.net >= 0 ? 'pos' : 'neg'}`} style={c.net >= 0 ? { left: '50%', width: `${w}%` } : { right: '50%', width: `${w}%` }} />
+                </span>
+                <b className={`rt-net ${c.net > 0.05 ? 'up' : c.net < -0.05 ? 'down' : ''}`}>{c.trades ? signed(c.net, f1) : 'Waiting'}</b>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+  if (bare) return list;
+  return (
+    <Sec id="rt-pick" title="Pick a team" line={`Choose a team up top, or tap one here, to see its trades in order: who won each, the ones too soon to call, and its season without them. The bars are points each team's judged trades put into its starting lineups.`}>
+      {list}
+    </Sec>
   );
 }
 
@@ -133,11 +226,10 @@ function verdictOf(t, D, h) {
   return { head: `${tn(W.rid)} won this trade${big ? `, ${big}` : ''}`, kicker, sub: `by ${f1(t.margin)} points over ${t.weeks.length} weeks` };
 }
 
-function RetroCard({ t, k, D, h, book, me, open, onToggle, many, onUndo }) {
+function RetroCard({ t, n, of, D, h, book, me, open, onToggle }) {
   const { f1, short, ordinal } = h, name = book.nameOf, team = (rid) => D.byRid[rid];
   const W = t.sides[0], L = t.sides[t.sides.length - 1];
   const v = verdictOf(t, D, h);
-  const mine = t.sides.some((s) => s.rid === me);
   const roleOf = (s, i) => (i === 0 ? 'Winner' : i === t.sides.length - 1 ? 'Loser' : 'Middle');
   const playerRow = (x, extra) => (
     <li key={x.id}>
@@ -147,10 +239,10 @@ function RetroCard({ t, k, D, h, book, me, open, onToggle, many, onUndo }) {
     </li>
   );
   return (
-    <article className={`panel glass span-12 rt-card${k === 0 ? ' rim' : ''}${mine ? ' mine' : ''}`} id={`rt-${t.id}`}>
+    <article className="panel glass rt-card" id={`rt-${t.id}`}>
       <header className="rt-top">
-        <span>{`${dateOf(t.ts)}, first played week ${t.start}`}</span>
-        <span>{`${t.weeks.length} weeks of games`}</span>
+        <span className="rt-tag"><span className="rt-n" aria-hidden="true">{n}</span>{`Trade ${n} of ${of}`}</span>
+        <span>{`Week ${t.leg}, ${dateOf(t.ts)}, ${t.weeks.length} weeks of games since`}</span>
       </header>
       <div className="rt-verdict">
         <span className="rt-faces">
@@ -189,7 +281,6 @@ function RetroCard({ t, k, D, h, book, me, open, onToggle, many, onUndo }) {
               <p key={o.id} className="rt-onward">{stop(`Then flipped ${name(o.via)} to ${and(o.partners.map((r) => short(team(r).name, 16)))} for ${o.got.length ? and(o.got.map((g) => `${name(g.id)} (${g.starts ? `${f1(g.pts)} in ${g.starts}` : 'no starts'})`)) : 'nothing on the field'}`)}</p>
             ))}
             {s.swung.length ? <ul className="rt-swung">{s.swung.map((g) => <li key={g.w} className={g.res[0]} data-tip={`Week ${g.w} vs ${team(g.opp).name}: ${f1(g.was[0])}–${f1(g.was[1])} with the trade, ${f1(g.now[0])}–${f1(g.now[1])} without`}>{`Wk ${g.w}: ${g.res[1]} → ${g.res[0]}`}</li>)}</ul> : null}
-            {many(s.rid) ? <button type="button" className="rt-link" onClick={() => onUndo(s.rid)}>{`Undo all of ${short(team(s.rid).name, 18)}'s trades`}</button> : null}
           </section>
         ))}
       </div>
@@ -282,32 +373,28 @@ function Weeks({ t, D, h, book }) {
 
 // ---------- too soon to call ----------
 
-function Waiting({ R, D, h, book, me }) {
+function Waiting({ list, num, D, h, book, rid }) {
   const { short } = h, name = book.nameOf;
   return (
-    <section className="panel glass span-12 rt-wait">
-      <h2>{'Too soon to call'}</h2>
-      <p className="sub">{`Trades with fewer than ${MIN_WEEKS} weeks of games. Each gets its verdict once the week shown is scored.`}</p>
+    <div className="panel glass rt-wait">
       <ul>
-        {[...R.waiting].reverse().map((t) => (
-          <li key={t.id} className={t.sides.some((s) => s.rid === me) ? 'mine' : ''}>
-            <span className="rt-when"><b>{`After week ${t.after}`}</b><small>{`${dateOf(t.ts)}, ${t.weeks.length} of ${MIN_WEEKS} weeks`}</small></span>
-            <span className="rt-deal">{t.sides.map((s) => (
-              <span key={s.rid}><TeamAvatar t={D.byRid[s.rid]} cls="avatar xs" /><b>{short(D.byRid[s.rid].name, 18)}</b>{` gets ${s.gets.length ? and(s.gets.map(name)) : s.picksIn.length ? and(s.picksIn.map(pickSaid)) : 'nothing on the field'}`}</span>
+        {list.map((t) => (
+          <li key={t.id} id={`rt-${t.id}`}>
+            <span className="rt-when"><span className="rt-n" aria-hidden="true">{num[t.id]}</span><span><b>{`After week ${t.after}`}</b><small>{`Trade ${num[t.id]}, week ${t.leg}, ${dateOf(t.ts)}. ${t.weeks.length} of ${MIN_WEEKS} weeks played`}</small></span></span>
+            <span className="rt-deal">{[...t.sides].sort((a, b) => (b.rid === rid) - (a.rid === rid)).map((s) => (
+              <span key={s.rid}><TeamAvatar t={D.byRid[s.rid]} cls="avatar xs" /><span><b>{short(D.byRid[s.rid].name, 18)}</b>{` gets ${s.gets.length ? and(s.gets.map(name)) : s.picksIn.length ? and(s.picksIn.map(pickSaid)) : 'nothing on the field'}`}</span></span>
             ))}</span>
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 }
 
 // ---------- a team's trades, undone ----------
 
-function TeamUndo({ R, D, h, book, me, rid, many, onTeam }) {
-  const { f1, short, ordinal } = h, name = book.nameOf, team = (r) => D.byRid[r];
-  const mine = tradesOf(R.all, rid);
-  const judged = Object.fromEntries(R.judged.map((t) => [t.id, t]));
+function TeamUndo({ R, D, h, book, rid, mine, num, judged, waiting }) {
+  const { f1, short } = h, name = book.nameOf, team = (r) => D.byRid[r];
   const [picked, setPickedRaw] = useState(() => keep.picked[rid] || mine.map((t) => t.id));
   const setPicked = (next) => setPickedRaw((cur) => { const ids = typeof next === 'function' ? next(cur) : next; keep.picked[rid] = ids; return ids; });
   const chosen = mine.filter((t) => picked.includes(t.id));
@@ -318,44 +405,50 @@ function TeamUndo({ R, D, h, book, me, rid, many, onTeam }) {
   const allOn = picked.length === mine.length;
   const partnerOf = (x) => and(x.sides.filter((s) => s.rid !== rid).map((s) => short(team(s.rid).name, 18)));
   const sideOf = (x) => x.sides.find((s) => s.rid === rid);
-  const teams = [...D.teams].filter((x) => many(x.rid)).sort((a, b) => a.name.localeCompare(b.name));
+  // the trades by the week they went through, oldest first
+  const weeks = [];
+  for (const x of mine) {
+    const g = weeks[weeks.length - 1];
+    if (g && g.w === x.leg) g.list.push(x);
+    else weeks.push({ w: x.leg, list: [x] });
+  }
 
   return (
-    <section className="panel glass span-12 rt-undo" id="rt-undo">
-      <div className="rt-undo-head">
-        <div>
-          <h2>{'Undo the trades'}</h2>
-          <p className="sub">{'Pick a team that has made more than one trade, switch any of its trades off, and the season is replayed as if they never happened: the record, the standings and the lineup it would have today.'}</p>
-        </div>
-        <label className="trade-pick"><span>{'Team'}</span>
-          <select value={String(rid)} onChange={(e) => onTeam(Number(e.target.value))}>
-            {teams.map((x) => <option key={x.rid} value={x.rid}>{`${x.name} (${tradesOf(R.all, x.rid).length} trades)`}</option>)}
-          </select>
-        </label>
+    <div className="panel glass rt-undo">
+      <div className="rt-undo-top">
+        <p>{picked.length ? `${picked.length} of ${mine.length} undone${Object.keys(forced).length ? `, plus ${Object.keys(forced).length} later ${Object.keys(forced).length === 1 ? 'deal' : 'deals'} that couldn't have happened without them` : ''}` : 'Every trade stands: switch one on to replay the season without it.'}</p>
+        {mine.length >= 2 ? <div className="filters rt-all">
+          <button type="button" aria-pressed={allOn} onClick={() => setPicked(allOn ? [] : mine.map((x) => x.id))}>{allOn ? `Put all ${mine.length} back` : `Undo all ${mine.length} trades`}</button>
+        </div> : null}
       </div>
-      <div className="filters rt-all">
-        <button type="button" aria-pressed={allOn} onClick={() => setPicked(allOn ? [] : mine.map((x) => x.id))}>{allOn ? `Put all ${mine.length} back` : `Undo all ${mine.length} trades`}</button>
-      </div>
-      <ul className="rt-toggles">
-        {mine.map((x) => {
-          const on = picked.includes(x.id), dragged = !on && forced[x.id];
-          const s = sideOf(x), j = judged[x.id], js = j?.sides.find((y) => y.rid === rid);
-          return (
-            <li key={x.id}>
-              <button type="button" role="switch" aria-checked={on || !!dragged} disabled={!!dragged} className={`rt-toggle${on ? ' on' : ''}${dragged ? ' dragged' : ''}`} onClick={() => toggle(x.id)}>
-                <span className="rt-sw" aria-hidden="true"><i /></span>
-                <span className="rt-tg-what">
-                  <b>{`Got ${s.gets.length ? and(s.gets.map(name)) : s.picksIn.length ? and(s.picksIn.map(pickSaid)) : 'nothing on the field'}`}</b>
-                  <small>{`${stop(`Gave ${[...s.gave, ...s.cut].length ? and([...s.gave, ...s.cut].map(name)) : s.picksOut.length ? and(s.picksOut.map(pickSaid)) : 'nothing on the field'}`)} ${dateOf(x.ts)} with ${stop(`${partnerOf(x)}${dragged ? `. Undone anyway: they paid with ${name(forced[x.id])}` : x.start == null ? '. No games yet' : ''}`)}`}</small>
-                </span>
-                <span className={`rt-tg-net ${js ? (js.net > 0.05 ? 'up' : js.net < -0.05 ? 'down' : '') : ''}`} data-tip={js ? `Points this trade put into ${t.name}'s lineups` : `Judged after ${MIN_WEEKS} weeks of games`}>{js ? signed(js.net, f1) : x.weeks.length ? `${x.weeks.length} of ${MIN_WEEKS} wks` : 'New'}</span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      <ol className="rt-chrono">
+        {weeks.map((g) => (
+          <li key={g.w} className="rt-wk">
+            <div className="rt-wk-head"><b>{`Week ${g.w}`}</b><small>{g.list.length === 1 ? dateOf(g.list[0].ts) : `${g.list.length} trades, ${dateOf(g.list[0].ts) === dateOf(g.list[g.list.length - 1].ts) ? dateOf(g.list[0].ts) : `${dateOf(g.list[0].ts)} to ${dateOf(g.list[g.list.length - 1].ts)}`}`}</small></div>
+            <ul>
+              {g.list.map((x) => {
+                const on = picked.includes(x.id), dragged = !on && forced[x.id];
+                const s = sideOf(x), o = outcomeOf(x, rid, judged, waiting, f1);
+                return (
+                  <li key={x.id}>
+                    <button type="button" role="switch" aria-checked={on || !!dragged} disabled={!!dragged} className={`rt-toggle${on ? ' on' : ''}${dragged ? ' dragged' : ''}`} onClick={() => toggle(x.id)}>
+                      <span className="rt-n" aria-hidden="true">{num[x.id]}</span>
+                      <span className="rt-sw" aria-hidden="true"><i /></span>
+                      <span className="rt-tg-what">
+                        <b>{`Got ${s.gets.length ? and(s.gets.map(name)) : s.picksIn.length ? and(s.picksIn.map(pickSaid)) : 'nothing on the field'}`}</b>
+                        <small>{`${stop(`Gave ${[...s.gave, ...s.cut].length ? and([...s.gave, ...s.cut].map(name)) : s.picksOut.length ? and(s.picksOut.map(pickSaid)) : 'nothing on the field'}`)} ${stop(`With ${partnerOf(x)}, ${dateOf(x.ts)}${dragged ? `. Undone anyway: it was paid with ${name(forced[x.id])}` : ''}`)}`}</small>
+                      </span>
+                      <span className={`rt-out ${o.k}`} data-tip={o.k === 'wait' ? `Judged after ${MIN_WEEKS} weeks of games` : `Points this trade put into ${t.name}'s lineups`}>{o.k === 'wait' ? (x.weeks.length ? `${x.weeks.length} of ${MIN_WEEKS} wks` : 'New') : o.label}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </li>
+        ))}
+      </ol>
       {!res ? <p className="rt-empty">{`Switch a trade on to see ${t.name} without it.`}</p> : <UndoResult res={res} D={D} h={h} book={book} t={t} cut={cut} n={chosen.length + Object.keys(forced).length} />}
-    </section>
+    </div>
   );
 }
 
@@ -463,17 +556,19 @@ function UndoResult({ res, D, h, book, t, cut, n }) {
   );
 }
 
-// how the verdicts are worked out, under the page
+// how the verdicts are worked out, in a fold at the foot of the page
 function RetroHow() {
   return (
-    <section className="panel glass span-12 wi-how">
-      <h2>{'How it works'}</h2>
-      <ul>
-        <li>{`Only points count. For every week since a trade went through, the season is replayed with the players back where they came from, and each team's real lineup total is compared with the one it would have had. The team the trade gave the most points wins it. Rest of season rankings play no part.`}</li>
-        <li>{'Without the trade, a player a team got back takes the slot of the one it lost (best average so far first); if none fits, its best benched player who fits does. A player it got back who didn\'t take a slot starts over its weakest starter at his position when his average so far beats that starter\'s.'}</li>
-        <li>{'Whoever really had a player later, the team that got him or someone he was flipped or dropped to, plays without him. A later trade paid with a player from this one couldn\'t have happened, so it\'s undone too. Everything else, waiver pickups included, happened as it did.'}</li>
-        <li>{`A trade needs ${MIN_WEEKS} weeks of games for a verdict. Records are recomputed for the whole league: wins, ties half, then points for. Points are the league's own scoring; weeks a player sat on waivers use Sleeper's half-PPR stats. Draft picks and waiver budget can't score, so they're listed but not counted.`}</li>
-      </ul>
-    </section>
+    <Sec id="rt-how" title="How it works" line="Only points in starting lineups count; rest of season rankings play no part.">
+      <details className="panel glass rt-how wi-how">
+        <summary>{'The rules of the replay'}</summary>
+        <ul>
+          <li>{`For every week since a trade went through, the season is replayed with the players back where they came from, and each team's real lineup total is compared with the one it would have had. The team the trade gave the most points wins it.`}</li>
+          <li>{'Without the trade, a player a team got back takes the slot of the one it lost (best average so far first); if none fits, its best benched player who fits does. A player it got back who didn\'t take a slot starts over its weakest starter at his position when his average so far beats that starter\'s.'}</li>
+          <li>{'Whoever really had a player later, the team that got him or someone he was flipped or dropped to, plays without him. A later trade paid with a player from this one couldn\'t have happened, so it\'s undone too. Everything else, waiver pickups included, happened as it did.'}</li>
+          <li>{`A trade needs ${MIN_WEEKS} weeks of games for a verdict. Records are recomputed for the whole league: wins, ties half, then points for. Points are the league's own scoring; weeks a player sat on waivers use Sleeper's half-PPR stats. Draft picks and waiver budget can't score, so they're listed but not counted.`}</li>
+        </ul>
+      </details>
+    </Sec>
   );
 }

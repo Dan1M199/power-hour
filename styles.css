@@ -5364,10 +5364,45 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 .rt-grid > .panel { grid-column: span 12; }
 .rt-grid h2 { margin-bottom: 4px; }
 
+/* the bands: each part of the page on a tray of its own (a recessed sheet a step off the grass), its title and a line
+   saying what's in it, then its white cards */
+.rt-sec { grid-column: span 12; min-width: 0; padding: 20px; border-radius: var(--r-lg); background: var(--tile); box-shadow: var(--tray-edge), 0 0 0 2px var(--outline), 0 5px 0 2px var(--ledge-c); scroll-margin-top: 90px; }
+.rt-sec-head { display: grid; gap: 4px; margin: 0 4px 16px; }
+.rt-sec-head h2 { margin: 0; font: 800 clamp(24px, 2.6vw, 30px)/1.05 var(--display); }
+.rt-sec-head p { margin: 0; font-size: 14.5px; line-height: 1.45; color: var(--ink-2); max-width: 75ch; }
+.rt-sec-body { display: grid; gap: 16px; min-width: 0; }
+.rt-sec-body > .panel { margin: 0; }
+.rt-n { display: inline-grid; place-items: center; flex: none; width: 26px; height: 26px; border-radius: 50%; font: 800 14px/1 var(--display); color: var(--chalk); background: var(--board); box-shadow: 0 0 0 2px var(--outline); }
+
+/* the scorecard: four numbers, then every trade in order */
+.rt-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.rt-stats > div { display: grid; align-content: start; gap: 4px; padding: 12px 14px; border-radius: var(--r-md); background: var(--tile); box-shadow: var(--tray-edge); min-width: 0; }
+.rt-stats small { font-size: 12.5px; font-weight: 700; color: var(--ink-3); }
+.rt-stats b { font: 800 30px/1 var(--display); white-space: nowrap; }
+.rt-stats b.up { color: var(--good); } .rt-stats b.down { color: var(--bad); }
+.rt-stats em { font-style: normal; font-size: 12.5px; font-weight: 600; color: var(--ink-3); }
+.rt-order { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; counter-reset: none; }
+.rt-order li { position: relative; }
+.rt-order li + li::before { content: ''; position: absolute; left: 25px; top: -9px; height: 10px; width: 3px; border-radius: 2px; background: var(--tile-2); }
+.rt-step { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 8px 12px; border: 0; border-radius: var(--r-md); cursor: pointer; text-align: left; font: inherit; color: var(--ink); touch-action: manipulation;
+  background: var(--tile); box-shadow: var(--tray-edge); transition: background-color 0.15s; }
+@media (hover: hover) { .rt-step:hover { background-color: var(--hover); } }
+.rt-step-what { display: grid; gap: 2px; min-width: 0; }
+.rt-step-what small { font-size: 12.5px; font-weight: 700; color: var(--ink-3); }
+.rt-step-what b { font-size: 15px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rt-out { padding: 5px 10px; border-radius: 999px; font: 800 13px/1 var(--body); white-space: nowrap; color: var(--ink); background: var(--paper); box-shadow: 0 0 0 1.5px var(--outline); }
+.rt-out.won { background: var(--amber); }
+.rt-out.lost { background: var(--bad-bg); box-shadow: 0 0 0 1.5px var(--bad); }
+.rt-out.wait { color: var(--ink-2); background: var(--tile-2); box-shadow: none; font-weight: 700; }
+.rt-score .rt-link { margin-top: 14px; }
+.rt-tag { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
+.rt-tag .rt-n { width: 24px; height: 24px; font-size: 13px; }
+
 /* the report card: a row per team, its points from trades as a bar either side of zero */
-.rt-teams { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; }
-.rt-teams li { display: grid; grid-template-columns: minmax(0, 1.3fr) 82px minmax(0, 2fr) 72px 104px; align-items: center; gap: 12px; min-height: 48px; padding: 6px 10px; border-radius: var(--r-md); background: var(--tile); box-shadow: var(--tray-edge); }
-.rt-teams li.mine { background: var(--mine-bg); box-shadow: inset 0 0 0 2px var(--mine-edge); }
+.rt-teams { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rt-row { display: grid; grid-template-columns: minmax(0, 1.3fr) 120px minmax(0, 2fr) 76px; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 6px 12px; border: 0; border-radius: var(--r-md); cursor: pointer; text-align: left; font: inherit; color: var(--ink); touch-action: manipulation;
+  background: var(--tile); box-shadow: var(--tray-edge); transition: background-color 0.15s; }
+@media (hover: hover) { .rt-row:hover { background-color: var(--hover); } }
 .rt-tm { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .rt-tm b { font: 800 17px/1.1 var(--display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rt-wl { font: 800 17px/1 var(--display); white-space: nowrap; }
@@ -5378,16 +5413,10 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 .rt-track .bar.pos { border-radius: 0 999px 999px 0; background: var(--amber); }
 .rt-track .bar.neg { border-radius: 999px 0 0 999px; background: var(--bad); }
 .rt-net { font: 800 18px/1 var(--display); text-align: right; white-space: nowrap; }
-:is(.rt-net, .rt-big, .rt-tg-net).up { color: var(--good); }
-:is(.rt-net, .rt-big, .rt-tg-net).down { color: var(--bad); }
-.rt-undo-btn { justify-self: end; cursor: pointer; padding: 7px 12px; border: 0; border-radius: 999px; font: 700 13px/1 var(--body); color: var(--ink); white-space: nowrap; touch-action: manipulation;
-  background: var(--paper); box-shadow: 0 0 0 1.5px var(--outline), 0 3px 0 1.5px var(--ledge); transition: transform 0.15s, box-shadow 0.15s; }
-.rt-undo-btn:active { transform: translateY(2px); box-shadow: 0 0 0 1.5px var(--outline), 0 1px 0 1.5px var(--ledge); }
-.rt-undo-btn.ghost { visibility: hidden; }
-@media (hover: hover) { button.rt-undo-btn:hover { background-color: var(--hover); } }
+:is(.rt-net, .rt-big).up { color: var(--good); }
+:is(.rt-net, .rt-big).down { color: var(--bad); }
 
 /* one trade */
-.rt-card.mine { --ring-w: 4px; }
 .rt-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 13px; font-weight: 700; color: var(--ink-3); }
 .rt-verdict { display: flex; align-items: center; gap: 16px; margin: 10px 0 0; }
 .rt-verdict h2 { margin: 0; font: 800 clamp(24px, 3vw, 34px)/1.05 var(--display); text-wrap: balance; }
@@ -5484,25 +5513,27 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 .rt-weeks p.turned { margin-inline: -6px; padding: 2px 6px; border-radius: 8px; background: var(--mine-bg); }
 
 /* too soon to call */
-.rt-wait ul { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
-.rt-wait li { display: grid; grid-template-columns: 150px minmax(0, 1fr); align-items: center; gap: 6px 14px; padding: 10px 14px; border-radius: var(--r-md); background: var(--tile); box-shadow: var(--tray-edge); }
-.rt-wait li.mine { background: var(--mine-bg); box-shadow: inset 0 0 0 2px var(--mine-edge); }
-.rt-when { display: grid; gap: 3px; }
+.rt-wait ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rt-wait li { display: grid; grid-template-columns: 250px minmax(0, 1fr); align-items: center; gap: 6px 14px; padding: 10px 14px; border-radius: var(--r-md); background: var(--tile); box-shadow: var(--tray-edge); }
+.rt-when { display: flex; align-items: center; gap: 10px; }
+.rt-when > span:last-child { display: grid; gap: 3px; }
 .rt-when b { font: 800 17px/1 var(--display); }
 .rt-when small { font-size: 12.5px; font-weight: 600; color: var(--ink-3); }
 .rt-deal { display: grid; gap: 4px; font-size: 14px; color: var(--ink-2); min-width: 0; }
-.rt-deal > span { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.rt-deal > span { display: flex; align-items: flex-start; gap: 8px; min-width: 0; line-height: 1.4; }
 .rt-deal b { color: var(--ink); font-weight: 800; white-space: nowrap; }
 .rt-deal .avatar { flex: none; }
 
-/* undo a team's trades */
-.rt-undo { scroll-margin-top: 90px; }
-.rt-undo-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px; }
-.rt-undo-head > div { flex: 1 1 340px; }
-.rt-undo-head .trade-pick { flex: none; }
-.rt-all { margin: 16px 0 10px; }
-.rt-toggles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 8px; }
-.rt-toggle { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 10px 14px; border: 0; border-radius: var(--r-md); cursor: pointer; text-align: left; font: inherit; color: var(--ink); touch-action: manipulation;
+/* undo a team's trades: the switches grouped by the week each trade went through, a rail down the left */
+.rt-undo-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 16px; margin: 0 0 14px; }
+.rt-undo-top p { margin: 0; font-size: 14.5px; font-weight: 700; color: var(--ink-2); }
+.rt-all { margin: 0; }
+.rt-chrono { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.rt-wk-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.rt-wk-head b { padding: 6px 12px; border-radius: 999px; font: 800 16px/1 var(--display); color: var(--chalk); background: var(--board); box-shadow: 0 0 0 2px var(--outline); }
+.rt-wk-head small { font-size: 13px; font-weight: 700; color: var(--ink-3); }
+.rt-wk > ul { list-style: none; margin: 8px 0 0 22px; padding: 2px 0 2px 16px; border-left: 3px solid var(--tile-2); display: grid; gap: 8px; max-width: 860px; }
+.rt-toggle { display: grid; grid-template-columns: auto 44px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 10px 14px; border: 0; border-radius: var(--r-md); cursor: pointer; text-align: left; font: inherit; color: var(--ink); touch-action: manipulation;
   background: var(--tile); box-shadow: var(--tray-edge); transition: background-color 0.15s, box-shadow 0.15s; }
 .rt-toggle.on, .rt-toggle.dragged { background: var(--paper); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge-gold); }
 .rt-toggle.dragged { cursor: default; opacity: 0.78; }
@@ -5513,9 +5544,8 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 .rt-tg-what { display: grid; gap: 3px; min-width: 0; }
 .rt-tg-what b { font-size: 14.5px; font-weight: 800; line-height: 1.25; }
 .rt-tg-what small { font-size: 12.5px; font-weight: 600; color: var(--ink-3); }
-.rt-tg-net { font: 800 16px/1 var(--display); white-space: nowrap; color: var(--ink-3); }
 .rt-empty { margin: 16px 0 0; font-size: 15px; color: var(--ink-2); }
-.rt-res { margin-top: 18px; }
+.rt-res { margin-top: 18px; padding-top: 18px; border-top: 2px dashed var(--line); }
 .rt-res-grid { display: grid; gap: 18px; margin-top: 4px; }
 @media (min-width: 1100px) { .rt-res-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: start; } }
 .rt-lineup { margin-top: 16px; padding: 14px 16px; border-radius: var(--r-md); background: var(--tile); box-shadow: var(--tray-edge); }
@@ -5537,13 +5567,23 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 @media (max-width: 359px) { .rt-table table { font-size: 13px; } .rt-table td, .rt-table th { padding-inline: 5px; } }
 .rt-table summary { cursor: pointer; font: 800 17px/1.2 var(--display); padding: 6px 0; touch-action: manipulation; }
 .rt-table table { margin-top: 8px; }
-.rt-none p { margin: 6px 0 0; }
+.rt-how summary { cursor: pointer; font: 800 18px/1.2 var(--display); touch-action: manipulation; }
+.rt-how ul { margin-top: 10px; }
 
 @media (max-width: 760px) {
-  .rt-teams li { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'tm tm net' 'wl bar btn'; gap: 8px 12px; padding: 10px 12px; }
+  .rt-sec { padding: 16px 12px; }
+  .rt-sec-head { margin: 0 2px 12px; }
+  .rt-sec-body > .panel { padding: 14px 12px; }
+  .rt-row { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'tm tm net' 'wl bar bar'; gap: 8px 12px; padding: 10px 12px; }
   .rt-tm { grid-area: tm; } .rt-wl { grid-area: wl; } .rt-net { grid-area: net; }
-  .rt-track { grid-area: bar; } .rt-undo-btn { grid-area: btn; min-height: 36px; }
-  .rt-undo-btn.ghost { display: none; }
+  .rt-track { grid-area: bar; }
+  .rt-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rt-stats b { font-size: 26px; }
+  .rt-step { grid-template-columns: auto minmax(0, 1fr); }
+  .rt-step .rt-out { grid-column: 2; justify-self: start; }
+  .rt-wk > ul { margin-left: 12px; padding-left: 12px; }
+  .rt-toggle { grid-template-columns: auto 44px minmax(0, 1fr); gap: 10px; padding: 10px 12px; }
+  .rt-toggle .rt-out { grid-column: 3; justify-self: start; }
   .rt-verdict { align-items: flex-start; gap: 12px; }
   .rt-faces { width: 70px; height: 52px; }
   .rt-face { width: 48px; height: 48px; }
@@ -5556,12 +5596,10 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
   .rt-race-x { margin: 8px 12px 0 26px; }
   .rt-more, .rt-link { min-height: 44px; }
   .rt-switch a { flex: 1 1 0; text-align: center; }
-  .rt-undo-head .trade-pick { flex: 1 1 100%; min-width: 0; }
-  .rt-undo-head .trade-pick select { width: 100%; min-width: 0; max-width: 100%; }
 }
 @media (max-width: 420px) { .rt-race-x span:not(:first-child):not(:last-child):nth-child(even) { visibility: hidden; } }
 
 /* the night game: words on the retrospective's amber fills keep the day's dark ink */
-:root[data-theme='dark'] :is(.winner .rt-role, .rt-more.on) {
+:root[data-theme='dark'] :is(.winner .rt-role, .rt-more.on, .rt-out.won) {
   --ink: var(--ink-day); --ink-2: var(--tone-green-24); --ink-3: var(--tone-green-33);
 }

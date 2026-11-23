@@ -22,9 +22,9 @@ export function Lab({ sub, D, raw, ros, me, team, onTeam, trade, calm, demo, h }
     <TradesPage D={D} me={me} h={h} state={trade.state} onState={trade.onState} />
   </>;
   if (sub === 'retro') return <>
-    {head(null,
-      `Every trade with four or more weeks of games, judged on one thing: the points it put into each team's starting lineups since it went through. The season is replayed as if it never happened, so you see who won, who lost and the record each side would have without it.`)}
-    <div className="lab-grid rt-grid"><TradeSwitch sub={sub} /><TradeRetro D={D} raw={raw} me={me} h={h} demo={demo} /></div>
+    {head(<TradePicker D={D} me={me} onTeam={trade.onTeam} label="Trades for" />,
+      `Every trade a team made, in order, judged on one thing: the points it put into starting lineups since it went through. The season is replayed as if it never happened, so you see who won, who lost and the record it would have without them.`)}
+    <div className="lab-grid rt-grid"><TradeSwitch sub={sub} /><TradeRetro D={D} raw={raw} me={me} h={h} demo={demo} onTeam={trade.onTeam} /></div>
   </>;
   if (sub === 'whatif') return <>
     {head(<TradePicker D={D} me={me} onTeam={trade.onTeam} label="What if for" />,
