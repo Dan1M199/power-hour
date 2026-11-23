@@ -2,8 +2,9 @@
 // right (the Trades section's team picker).
 import { tradeIdeas } from '../../lib/trades.js';
 
-// the four sections, personal to league-wide; the route is #lab/<key>
-export const SECTIONS = ['team', 'trades', 'whatif', 'league'];
+// the four sections, personal to league-wide; the route is #lab/<key>. The trade retrospective (#lab/retro) lives under
+// Trades: its own route, the Trades segment lit
+export const SECTIONS = ['team', 'trades', 'retro', 'whatif', 'league'];
 
 // the switcher: one segment per section, each with a line saying what's behind it (phones show the labels only)
 function LabTabs({ sub, D, me }) {
@@ -17,10 +18,20 @@ function LabTabs({ sub, D, me }) {
   return (
     <nav className="lab-tabs" aria-label="Lab sections">
       {items.map(([k, label, line]) => (
-        <a key={k} href={`#lab/${k}`} aria-current={sub === k ? 'page' : undefined}>
+        <a key={k} href={`#lab/${k}`} aria-current={sub === k || (k === 'trades' && sub === 'retro') ? 'page' : undefined}>
           <b>{label}</b><small>{line}</small>
         </a>
       ))}
+    </nav>
+  );
+}
+
+/** Trades' two pages: the ideas and the retrospective */
+export function TradeSwitch({ sub }) {
+  return (
+    <nav className="filters rt-switch" aria-label="Trades">
+      <a href="#lab/trades" aria-current={sub === 'trades' ? 'page' : undefined}>{'Trade ideas'}</a>
+      <a href="#lab/retro" aria-current={sub === 'retro' ? 'page' : undefined}>{'Trade retrospective'}</a>
     </nav>
   );
 }

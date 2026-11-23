@@ -5354,3 +5354,214 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 @media (prefers-reduced-transparency: reduce) {
   :root, :root[data-theme] { --nav-tint: var(--header); }
 }
+
+/* ---------- the trade retrospective (Dan's request Nov 23; the Lab's Trades section, #lab/retro, src/lab/TradeRetro.jsx)
+   In the bowl's materials: white cards, recessed trays, amber for the winner (leaders and winners wear amber), red for
+   the loser, yellow only for your team. The race's lines run in the winner's amber and the other side's sky, each on an
+   ink case. Motion is the site's press and the fold's settle, transform and opacity only. */
+.rt-grid { align-items: start; }
+.rt-switch { grid-column: span 12; margin: 0; }
+.rt-grid > .panel { grid-column: span 12; }
+.rt-grid h2 { margin-bottom: 4px; }
+
+/* the report card: a row per team, its points from trades as a bar either side of zero */
+.rt-teams { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; }
+.rt-teams li { display: grid; grid-template-columns: minmax(0, 1.3fr) 82px minmax(0, 2fr) 72px 104px; align-items: center; gap: 12px; min-height: 48px; padding: 6px 10px; border-radius: var(--r-md); background: var(--tile); box-shadow: var(--tray-edge); }
+.rt-teams li.mine { background: var(--mine-bg); box-shadow: inset 0 0 0 2px var(--mine-edge); }
+.rt-tm { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.rt-tm b { font: 800 17px/1.1 var(--display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rt-wl { font: 800 17px/1 var(--display); white-space: nowrap; }
+.rt-wl small { font: 600 12px/1 var(--body); color: var(--ink-3); }
+.rt-track { position: relative; height: 16px; }
+.rt-track .mid { position: absolute; left: 50%; top: -6px; bottom: -6px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--ink-3); }
+.rt-track .bar { position: absolute; top: 0; height: 16px; box-shadow: inset 0 1.5px 0 color-mix(in srgb, var(--chalk) 45%, transparent), 0 0 0 1.5px var(--outline); }
+.rt-track .bar.pos { border-radius: 0 999px 999px 0; background: var(--amber); }
+.rt-track .bar.neg { border-radius: 999px 0 0 999px; background: var(--bad); }
+.rt-net { font: 800 18px/1 var(--display); text-align: right; white-space: nowrap; }
+:is(.rt-net, .rt-big, .rt-tg-net).up { color: var(--good); }
+:is(.rt-net, .rt-big, .rt-tg-net).down { color: var(--bad); }
+.rt-undo-btn { justify-self: end; cursor: pointer; padding: 7px 12px; border: 0; border-radius: 999px; font: 700 13px/1 var(--body); color: var(--ink); white-space: nowrap; touch-action: manipulation;
+  background: var(--paper); box-shadow: 0 0 0 1.5px var(--outline), 0 3px 0 1.5px var(--ledge); transition: transform 0.15s, box-shadow 0.15s; }
+.rt-undo-btn:active { transform: translateY(2px); box-shadow: 0 0 0 1.5px var(--outline), 0 1px 0 1.5px var(--ledge); }
+.rt-undo-btn.ghost { visibility: hidden; }
+@media (hover: hover) { button.rt-undo-btn:hover { background-color: var(--hover); } }
+
+/* one trade */
+.rt-card.mine { --ring-w: 4px; }
+.rt-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 13px; font-weight: 700; color: var(--ink-3); }
+.rt-verdict { display: flex; align-items: center; gap: 16px; margin: 10px 0 0; }
+.rt-verdict h2 { margin: 0; font: 800 clamp(24px, 3vw, 34px)/1.05 var(--display); text-wrap: balance; }
+.rt-verdict p { margin: 6px 0 0; font-size: 15px; color: var(--ink-2); }
+.rt-verdict p b { color: var(--ink); }
+.rt-faces { position: relative; flex: none; width: 92px; height: 64px; }
+.rt-face { position: absolute; width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: var(--tile-2); }
+.rt-face.ph { display: grid; place-items: center; font: 800 20px/1 var(--display); color: var(--ink-2); }
+.rt-face.win { left: 0; top: 0; z-index: 1; box-shadow: 0 0 0 3px var(--amber), 0 0 0 5px var(--outline), 0 5px 0 4px var(--ledge-gold); }
+.rt-face.lose { right: 0; bottom: 0; width: 44px; height: 44px; box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--outline); }
+
+.rt-sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 18px 0 0; }
+.rt-sides.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.rt-side { padding: 14px 16px 16px; border-radius: var(--r-md); background: var(--tile); box-shadow: var(--tray-edge); min-width: 0; }
+.rt-side.winner { background: var(--paper); box-shadow: 0 0 0 2px var(--outline), 0 5px 0 2px var(--ledge-gold), 0 12px 16px -10px var(--cast); }
+.rt-side.you { box-shadow: inset 0 0 0 3px var(--mine-edge), var(--tray-edge); }
+.rt-side.winner.you { box-shadow: inset 0 0 0 3px var(--mine-edge), 0 0 0 2px var(--outline), 0 5px 0 2px var(--ledge-gold), 0 12px 16px -10px var(--cast); }
+.rt-side-head { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.rt-side-head .avatar { width: 40px; height: 40px; }
+.rt-side-head > div { display: grid; gap: 4px; min-width: 0; justify-items: start; }
+.rt-side-head > div > b { font: 800 19px/1.05 var(--display); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rt-role { padding: 3px 9px; border-radius: 999px; font: 800 12px/1 var(--body); color: var(--ink); background: var(--paper); box-shadow: 0 0 0 1.5px var(--outline); }
+.winner .rt-role { background: var(--amber); }
+.loser .rt-role { color: var(--ink); background: var(--bad-bg); box-shadow: 0 0 0 1.5px var(--bad); }
+.rt-big { display: grid; justify-items: end; font: 900 clamp(26px, 3.2vw, 34px)/0.95 var(--display); white-space: nowrap; }
+.rt-big small { font: 700 12px/1.2 var(--body); color: var(--ink-3); }
+.rt-recs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 14px 0 0; }
+.rt-recs > div { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 2px 8px; padding: 8px 12px; border-radius: 12px; background: var(--paper); box-shadow: var(--chip-shade); }
+.rt-side.winner .rt-recs > div { background: var(--tile); box-shadow: var(--tray-edge); }
+.rt-recs small { grid-column: 1 / -1; font-size: 12px; font-weight: 700; color: var(--ink-3); }
+.rt-recs b { font: 800 24px/1 var(--display); }
+.rt-recs em { font-style: normal; font-size: 13px; font-weight: 700; color: var(--ink-3); }
+.rt-recs .was b { color: var(--ink-2); }
+.rt-side h4 { margin: 14px 0 6px; font-size: 13px; font-weight: 800; color: var(--ink-3); }
+.rt-players { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rt-players li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 4px 6px; font-size: 14.5px; }
+.rt-players .pos { margin: 0; }
+.rt-players .pos.PK { background: var(--tile-2); }
+.rt-players .pl { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rt-pts { font-size: 13px; font-weight: 600; color: var(--ink-3); text-align: right; white-space: nowrap; }
+.rt-onward { margin: 10px 0 0; padding: 8px 12px; border-radius: 12px; font-size: 13.5px; line-height: 1.45; color: var(--ink-2); background: var(--paper); box-shadow: var(--chip-shade); }
+.rt-swung { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.rt-swung li { padding: 5px 11px; border-radius: 999px; font: 800 13px/1 var(--body); color: var(--ink); background: var(--mine-bg); box-shadow: inset 0 0 0 1.5px var(--mine-edge); }
+.rt-link { margin: 12px 0 0; padding: 0; border: 0; background: none; cursor: pointer; font: 700 13.5px/1.3 var(--body); color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; touch-action: manipulation; }
+@media (hover: hover) { .rt-link:hover { color: var(--ink); } }
+.rt-why { margin: 16px 0 0; display: grid; gap: 6px; }
+.rt-why p { margin: 0; padding-left: 18px; position: relative; font-size: 15px; line-height: 1.5; color: var(--ink-2); max-width: 75ch; }
+.rt-why p::before { content: ''; position: absolute; left: 2px; top: 0.6em; width: 8px; height: 8px; border-radius: 50%; background: var(--pip, var(--ink)); }
+.rt-chips { margin-top: 14px; }
+.rt-more { display: inline-flex; align-items: center; gap: 8px; margin: 16px 0 0; cursor: pointer; padding: 9px 16px; border: 0; border-radius: 999px; font: 800 14px/1 var(--body); color: var(--ink); touch-action: manipulation;
+  background: var(--paper); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge); transition: transform 0.15s, box-shadow 0.15s; }
+.rt-more:active { transform: translateY(2px); box-shadow: 0 0 0 2px var(--outline), 0 1px 0 2px var(--ledge); }
+.rt-more svg { transition: transform 240ms var(--ease-out); }
+.rt-more.on { background: var(--amber); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge-gold); }
+.rt-more.on svg { transform: rotate(180deg); }
+@media (hover: hover) { .rt-more:not(.on):hover { background-color: var(--hover); } }
+.rt-fold { margin: 16px 0 0; display: grid; gap: 16px; }
+@media (prefers-reduced-motion: no-preference) { .rt-fold { animation: rt-in 260ms var(--ease-out); } }
+@keyframes rt-in { from { opacity: 0; transform: translateY(-6px) scale(0.99); } }
+
+/* the race: running points from the trade */
+.rt-race { margin: 0; padding: 14px 16px 12px; border-radius: var(--r-md); background: var(--tile); box-shadow: var(--tray-edge); }
+.rt-race figcaption { font-size: 13.5px; color: var(--ink-2); }
+.rt-race figcaption b { color: var(--ink); margin-right: 4px; }
+.rt-race-plot { position: relative; height: 190px; margin: 14px 18px 0 30px; }
+.rt-race-plot svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.rt-race-plot polyline { fill: none; stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
+.rt-race-plot polyline.case { stroke: var(--outline); stroke-width: 7.5; }
+.rt-race-plot polyline.s0 { stroke: var(--amber); }
+.rt-race-plot polyline.s1 { stroke: var(--a); }
+.rt-race-plot polyline.s2 { stroke: var(--grass); }
+.rt-race-plot .zero { position: absolute; left: 0; right: 0; height: 0; border-top: 2px dashed var(--ink-3); }
+.rt-race-plot .zero small { position: absolute; left: -26px; top: -9px; font: 700 12px/1 var(--body); color: var(--ink-3); }
+.rt-race-plot .dot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; box-shadow: 0 0 0 2px var(--outline), inset 0 1.5px 0 color-mix(in srgb, var(--chalk) 60%, transparent); cursor: default; }
+.rt-race-plot .dot::after { content: ''; position: absolute; inset: -12px; } /* a finger-sized target */
+.rt-race-plot .dot.s0, .rt-race-key i.s0, .rt-weeks i.s0 { background: var(--amber); }
+.rt-race-plot .dot.s1, .rt-race-key i.s1, .rt-weeks i.s1 { background: var(--a); }
+.rt-race-plot .dot.s2, .rt-race-key i.s2, .rt-weeks i.s2 { background: var(--grass); }
+.rt-race-x { position: relative; height: 18px; margin: 10px 18px 0 30px; }
+.rt-race-x span { position: absolute; transform: translateX(-50%); font: 700 12px/18px var(--body); color: var(--ink-3); white-space: nowrap; }
+.rt-race-key { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.rt-race-key li { display: inline-flex; align-items: center; gap: 6px; }
+.rt-race-key i, .rt-weeks i.key { display: inline-block; width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 1.5px var(--outline); flex: none; }
+
+/* week by week */
+.rt-weeks h3 { margin: 0 0 8px; font: 800 20px/1.1 var(--display); }
+.rt-weeks ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.rt-weeks li { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 4px 12px; padding: 10px 14px; border-radius: var(--r-md); background: var(--tile); box-shadow: var(--tray-edge); }
+.rt-weeks li .wi-wk { font-size: 16px; padding-top: 2px; }
+.rt-weeks p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.rt-weeks p + p { margin-top: 4px; }
+.rt-weeks p b { color: var(--ink); }
+.rt-weeks p .key { margin: 0 6px 0 0; vertical-align: -1px; }
+.rt-weeks p.turned { margin-inline: -6px; padding: 2px 6px; border-radius: 8px; background: var(--mine-bg); }
+
+/* too soon to call */
+.rt-wait ul { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+.rt-wait li { display: grid; grid-template-columns: 150px minmax(0, 1fr); align-items: center; gap: 6px 14px; padding: 10px 14px; border-radius: var(--r-md); background: var(--tile); box-shadow: var(--tray-edge); }
+.rt-wait li.mine { background: var(--mine-bg); box-shadow: inset 0 0 0 2px var(--mine-edge); }
+.rt-when { display: grid; gap: 3px; }
+.rt-when b { font: 800 17px/1 var(--display); }
+.rt-when small { font-size: 12.5px; font-weight: 600; color: var(--ink-3); }
+.rt-deal { display: grid; gap: 4px; font-size: 14px; color: var(--ink-2); min-width: 0; }
+.rt-deal > span { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.rt-deal b { color: var(--ink); font-weight: 800; white-space: nowrap; }
+.rt-deal .avatar { flex: none; }
+
+/* undo a team's trades */
+.rt-undo { scroll-margin-top: 90px; }
+.rt-undo-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px; }
+.rt-undo-head > div { flex: 1 1 340px; }
+.rt-undo-head .trade-pick { flex: none; }
+.rt-all { margin: 16px 0 10px; }
+.rt-toggles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 8px; }
+.rt-toggle { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 10px 14px; border: 0; border-radius: var(--r-md); cursor: pointer; text-align: left; font: inherit; color: var(--ink); touch-action: manipulation;
+  background: var(--tile); box-shadow: var(--tray-edge); transition: background-color 0.15s, box-shadow 0.15s; }
+.rt-toggle.on, .rt-toggle.dragged { background: var(--paper); box-shadow: 0 0 0 2px var(--outline), 0 3px 0 2px var(--ledge-gold); }
+.rt-toggle.dragged { cursor: default; opacity: 0.78; }
+.rt-sw { position: relative; width: 44px; height: 26px; border-radius: 999px; background: var(--tile-2); box-shadow: inset 0 0 0 1.5px var(--outline); }
+.rt-sw i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 1.5px var(--outline), 0 2px 0 var(--ledge); transition: transform 200ms var(--ease-out); }
+:is(.rt-toggle.on, .rt-toggle.dragged) .rt-sw { background: var(--amber); }
+:is(.rt-toggle.on, .rt-toggle.dragged) .rt-sw i { transform: translateX(18px); }
+.rt-tg-what { display: grid; gap: 3px; min-width: 0; }
+.rt-tg-what b { font-size: 14.5px; font-weight: 800; line-height: 1.25; }
+.rt-tg-what small { font-size: 12.5px; font-weight: 600; color: var(--ink-3); }
+.rt-tg-net { font: 800 16px/1 var(--display); white-space: nowrap; color: var(--ink-3); }
+.rt-empty { margin: 16px 0 0; font-size: 15px; color: var(--ink-2); }
+.rt-res { margin-top: 18px; }
+.rt-res-grid { display: grid; gap: 18px; margin-top: 4px; }
+@media (min-width: 1100px) { .rt-res-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: start; } }
+.rt-lineup { margin-top: 16px; padding: 14px 16px; border-radius: var(--r-md); background: var(--tile); box-shadow: var(--tray-edge); }
+.rt-lineup h3 { margin: 0; font: 800 20px/1.1 var(--display); }
+.rt-lineup .sub { margin: 4px 0 10px; font-size: 13px; }
+.rt-lineup table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
+.rt-lineup th { text-align: left; font-size: 12px; font-weight: 700; color: var(--ink-3); padding: 0 6px 6px; }
+.rt-lineup th:first-child, .rt-lineup td:first-child { width: 52px; }
+.rt-lineup td { padding: 7px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+.rt-lineup td:first-child { font: 800 13px/1.4 var(--body); color: var(--ink-3); }
+.rt-lineup td .pl { display: block; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rt-lineup td small { font-size: 12px; font-weight: 600; color: var(--ink-3); }
+.rt-lineup td em { margin-left: 6px; padding: 1px 6px; border-radius: 999px; font: 800 11.5px/1.4 var(--body); font-style: normal; color: var(--ink-day); background: var(--amber); }
+.rt-lineup .rt-open { font-style: italic; }
+.rt-lineup tr.diff td { background: color-mix(in srgb, var(--amber) 14%, transparent); }
+.rt-roster { margin: 10px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+.rt-roster b { color: var(--ink); }
+.rt-table { margin-top: 16px; overflow-x: auto; }
+@media (max-width: 359px) { .rt-table table { font-size: 13px; } .rt-table td, .rt-table th { padding-inline: 5px; } }
+.rt-table summary { cursor: pointer; font: 800 17px/1.2 var(--display); padding: 6px 0; touch-action: manipulation; }
+.rt-table table { margin-top: 8px; }
+.rt-none p { margin: 6px 0 0; }
+
+@media (max-width: 760px) {
+  .rt-teams li { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'tm tm net' 'wl bar btn'; gap: 8px 12px; padding: 10px 12px; }
+  .rt-tm { grid-area: tm; } .rt-wl { grid-area: wl; } .rt-net { grid-area: net; }
+  .rt-track { grid-area: bar; } .rt-undo-btn { grid-area: btn; min-height: 36px; }
+  .rt-undo-btn.ghost { display: none; }
+  .rt-verdict { align-items: flex-start; gap: 12px; }
+  .rt-faces { width: 70px; height: 52px; }
+  .rt-face { width: 48px; height: 48px; }
+  .rt-face.lose { width: 34px; height: 34px; }
+  .rt-sides, .rt-sides.n3 { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .rt-side { padding: 12px 14px 14px; }
+  .rt-weeks li { grid-template-columns: minmax(0, 1fr); padding: 10px 12px; }
+  .rt-wait li { grid-template-columns: minmax(0, 1fr); }
+  .rt-race-plot { height: 160px; margin: 12px 12px 0 26px; }
+  .rt-race-x { margin: 8px 12px 0 26px; }
+  .rt-more, .rt-link { min-height: 44px; }
+  .rt-switch a { flex: 1 1 0; text-align: center; }
+  .rt-undo-head .trade-pick { flex: 1 1 100%; min-width: 0; }
+  .rt-undo-head .trade-pick select { width: 100%; min-width: 0; max-width: 100%; }
+}
+@media (max-width: 420px) { .rt-race-x span:not(:first-child):not(:last-child):nth-child(even) { visibility: hidden; } }
+
+/* the night game: words on the retrospective's amber fills keep the day's dark ink */
+:root[data-theme='dark'] :is(.winner .rt-role, .rt-more.on) {
+  --ink: var(--ink-day); --ink-2: var(--tone-green-24); --ink-3: var(--tone-green-33);
+}
