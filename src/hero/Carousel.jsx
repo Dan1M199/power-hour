@@ -32,20 +32,6 @@ export const stampOf = (st) => st.stamp || (st.type === 'streak' ? (st.tone === 
 // first sentence, kept short.
 const MAX = 110;
 
-/* the glass football (--hero-ball in styles.css) lies somewhere different on every card, Dan's request Nov 19: a spot,
-   a size and one of three tilts, drawn from the headline itself, so a story keeps its ball wherever it sits in the deck
-   and two cards side by side never match. Background position in percent keeps the whole ball inside the card. */
-const BALLS = new Map();
-function ballOf(st, i) {
-  const key = `${st.type || ''}|${st.headline || ''}|${i}`;
-  if (BALLS.has(key)) return BALLS.get(key);
-  let s = 2166136261;
-  for (let j = 0; j < key.length; j++) s = Math.imul(s ^ key.charCodeAt(j), 16777619);
-  const r = () => { s = Math.imul(s ^ (s >>> 15), 2246822507); s = Math.imul(s ^ (s >>> 13), 3266489909); return ((s ^= s >>> 16) >>> 0) / 4294967296; };
-  const ball = { '--ball-x': `${Math.round(r() * 100)}%`, '--ball-y': `${Math.round(8 + r() * 84)}%`, '--ball-k': r().toFixed(2), '--ball-v': Math.floor(r() * 3) };
-  BALLS.set(key, ball);
-  return ball;
-}
 export function tickOf(st) {
   if (st.tick) return st.tick;
   let line = st.headline.split(/(?<=[.?!])\s+/)[0];
@@ -305,7 +291,7 @@ export function Carousel({ D, h, stories, date, hold, night, groups }) {
           <div key={i} ref={(s) => (ring.slots.current[i] = s)} className={`car-slot${i === idx ? ' front' : ''}`}
             onClick={i === idx ? undefined : () => { if (!ring.dragged()) go(i); }}>
             <div className="car-float">
-              <Card sink={8} off={i !== idx || ring.held || lite} ball={ballOf(st, i)} className={`ball-${ballOf(st, i)['--ball-v']}`}>
+              <Card sink={8} off={i !== idx || ring.held || lite}>
                 <Slide st={st} i={i} n={n} D={D} h={h} groups={groups} runs={runs} date={date} front={i === idx} slideRef={(s) => (slides.current[i] = s)} hk={keys[i]} rx={rx} />
               </Card>
             </div>

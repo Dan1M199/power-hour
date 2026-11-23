@@ -16,7 +16,7 @@
   <meta property="og:image:alt" content="The Power Hour logo on a mowed football field">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="/assets/share-card.jpg">
-  <meta name="theme-color" content="#CDD3DC">
+  <meta name="theme-color" content="#4FBDF2">
   <!-- the theme, before the first paint: a choice kept on this device (ph-theme) wins, else the device's own setting.
        app.js keeps it in step afterwards (the header's sun and moon button, a change in the device's setting). -->
   <script>
@@ -26,7 +26,7 @@
       if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       document.documentElement.dataset.theme = t;
       document.documentElement.classList.add('js'); // hidden-until-shown states only apply once scripts run
-      if (t === 'dark') document.querySelector('meta[name="theme-color"]').content = '#1B1C1F';
+      if (t === 'dark') document.querySelector('meta[name="theme-color"]').content = '#0A1630';
     })();
   </script>
   <link rel="icon" type="image/png" href="assets/favicon.png">
@@ -36,11 +36,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Power Hour">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <!-- everything the first screen needs starts downloading here, in parallel: the stylesheet, both typefaces (served
        from this site) and the connection to Sleeper's picture CDN for the team avatars. The build (vite.config.js)
        bundles app.js and lib/ and adds a modulepreload for each piece of the bundle itself. -->
-  <link rel="preload" href="assets/fonts/outfit-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/big-shoulders-display-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/albert-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://sleepercdn.com">
   <!-- the league data: asked for as soon as the clock module is in, while the rest of the code is still on its way.
@@ -130,7 +131,7 @@
     <img class="footer-logo" src="assets/logo-footer.webp" alt="The Power Hour, fantasy football power rankings" width="175" height="160" loading="lazy" decoding="async" fetchpriority="low">
     <p id="footer-meta"></p>
     <div class="sponsor gs-sponsor">
-      <!-- 4.3 (Nov 19): Grand Slam Car Wash & Lube, its logo set in glass; TTP banned, kept crossed out -->
+      <!-- Nov 19: Grand Slam Car Wash & Lube, its logo set in glass; TTP banned, kept crossed out -->
       <span class="gs-glass"><span class="gs-logo"><img src="assets/grand-slam-logo.webp" alt="Grand Slam Car Wash and Lube" width="320" height="257" loading="lazy" decoding="async" fetchpriority="low"><span class="gs-shine" aria-hidden="true"></span></span></span>
       <div class="gs-words">
         <p><span class="was">The Power Hour was sponsored by TTP (Texas Truck Parts).</span></p>
@@ -141,7 +142,7 @@
     <p class="masthead" id="masthead" hidden></p>
     <p class="masthead" id="reigning" hidden></p>
     <p class="fine">League data from the Sleeper API. Rest-of-season rankings from FantasyPros, DraftSharks and LeagueLogs, blended into one consensus. Not affiliated with any of them.</p>
-    <p class="version">Mir Inc. Sleeper Power Hour V5.0</p>
+    <p class="version">Mir Inc. Sleeper Power Hour V2.5</p>
   </footer>
 
   <div id="tip" class="tip" role="tooltip" hidden></div>

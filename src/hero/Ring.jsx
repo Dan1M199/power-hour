@@ -506,7 +506,7 @@ export function useRing({ n, geom, float = 0, settle = 50, onAt }) {
    (Its children are the headline. They are the same elements
    from one of this card's renders to the next, so React leaves
    them alone while the springs run.) */
-export function Card({ className = '', sink, off, ball, children }) {
+export function Card({ className = '', sink, off, children }) {
   const skin = useRef(null);
   const [pt, setPt] = useState({ x: 0, y: 0 });
   const [on, setOn] = useState(false);
@@ -574,8 +574,7 @@ export function Card({ className = '', sink, off, ball, children }) {
         if (!el || !to || !el.contains(to)) setOn(false);
       }}
       onPointerCancel={() => setOn(false)}
-      style={resting ? ball : {
-        ...ball,
+      style={resting ? undefined : {
         /* translateZ FIRST, so the retreat is measured in the
            room's axes rather than in the card's own — after a
            rotation the card's z points off to one side and

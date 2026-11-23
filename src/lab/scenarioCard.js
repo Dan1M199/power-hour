@@ -1,6 +1,6 @@
 // The scenario receipt (Dan's request Nov 17): a picture of a playoff-path scenario to drop in the group chat. Drawn
-// straight onto a canvas in the site's 3.0 look (no DOM capture, so none of Safari's html-to-image quirks): the board
-// header, the mowed field, one flat white card on its slab with the team, the odds today and in this scenario, and every
+// straight onto a canvas in the site's cartoon-glass look (no DOM capture, so none of Safari's html-to-image quirks): the board
+// header, the mowed field, one white card on its gold ledge with the team, the odds today and in this scenario, and every
 // picked result in week order, each with what it does to the odds on its own. Your own games wear the yellow You tag.
 // Shared as a JPEG or a one-page PDF through the dashboard's share module.
 import { pdfOf } from '../dashboard/share.js';
@@ -12,7 +12,8 @@ const C = {
   grass: '#3E9F46', stripe: '#359A3F', slab: '#1D5F28', face: '#F7FAF3', well: '#E6EEDC', ink: '#0B2412', ink3: '#47604C',
   good: '#28702C', bad: '#C62828', line: '#BFD2AE',
 };
-const FONT = "'Outfit', -apple-system, 'Segoe UI', system-ui, sans-serif";
+const FONT = "'Albert Sans', 'Segoe UI', system-ui, sans-serif";
+const DISP = "'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif"; // the scoreboard numerals, as on the site
 const rr = (ctx, x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); };
 const pct = (x) => (x == null ? '–' : x > 0 && x < 0.005 ? '<1%' : x < 1 && x > 0.995 ? '>99%' : `${Math.round(x * 100)}%`);
 const signed = (d) => `${d >= 0 ? '+' : '−'}${Math.abs(Math.round(d * 100))}%`;
@@ -44,7 +45,7 @@ export function scenarioLines(D, base, picks, rid, games) {
 /** Draws the receipt; resolves { canvas }. */
 export async function drawScenario({ D, base, P, picks, rid, games, sims, weeks, spots }) {
   const t = D.byRid[rid], lines = scenarioLines(D, base, picks, rid, games);
-  await timeout(Promise.all([document.fonts.load(`800 20px ${FONT}`), document.fonts.load(`400 14px ${FONT}`)]), 1500);
+  await timeout(Promise.all([document.fonts.load(`800 20px ${FONT}`), document.fonts.load(`400 14px ${FONT}`), document.fonts.load(`800 40px ${DISP}`)]), 1500);
   const member = MEMBERS[t.ownerId];
   const [logo, face] = await Promise.all([timeout(img('assets/logo-header.webp'), 2000), member ? timeout(img(photoUrl(member.photo)), 2000) : null]);
 
@@ -66,14 +67,15 @@ export async function drawScenario({ D, base, P, picks, rid, games, sims, weeks,
   let lx = PAD;
   if (logo) { const lh = 56, lw = (logo.width / logo.height) * lh; ctx.drawImage(logo, PAD, (headH - lh) / 2, lw, lh); lx = PAD + lw + 14; }
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = C.chalk; ctx.font = `800 28px ${FONT}`; ctx.fillText('Playoff scenario', lx, 48);
+  ctx.fillStyle = C.chalk; ctx.font = `900 34px ${DISP}`; ctx.fillText('Playoff scenario', lx, 48);
   ctx.fillStyle = C.yellow; ctx.font = `700 15px ${FONT}`; ctx.fillText(`The Power Hour, the rest of the regular season (weeks ${weeks[0]} to ${weeks[weeks.length - 1]})`, lx, 72);
 
-  // the card on its slab, with a soft shadow on the grass
+  // the card on its gold ledge (the site's featured cards), inked edge, a soft shadow on the grass
   const cx = PAD, cw = W - PAD * 2;
   ctx.save(); ctx.shadowColor = 'rgba(4, 30, 12, 0.35)'; ctx.shadowBlur = 26; ctx.shadowOffsetY = 18;
-  ctx.fillStyle = C.slab; rr(ctx, cx, cardTop + 8, cw, cardH, 20); ctx.fill(); ctx.restore();
-  ctx.fillStyle = C.face; rr(ctx, cx, cardTop, cw, cardH, 20); ctx.fill();
+  ctx.fillStyle = C.gold; rr(ctx, cx, cardTop + 8, cw, cardH, 36); ctx.fill(); ctx.restore();
+  ctx.fillStyle = C.face; rr(ctx, cx, cardTop, cw, cardH, 36); ctx.fill();
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 2; rr(ctx, cx + 1, cardTop + 1, cw - 2, cardH - 2, 35); ctx.stroke();
 
   // the team
   let y = cardTop + 24;
@@ -91,9 +93,9 @@ export async function drawScenario({ D, base, P, picks, rid, games, sims, weeks,
   ctx.fillStyle = C.well; rr(ctx, ix, y, cw - 48, 104, 14); ctx.fill();
   const up = P.odds >= base.odds;
   ctx.fillStyle = C.ink3; ctx.font = `700 13px ${FONT}`; ctx.fillText('Playoff odds today', ix + 18, y + 28); ctx.fillText('In this scenario', ix + 210, y + 28);
-  ctx.fillStyle = C.ink3; ctx.font = `800 40px ${FONT}`; ctx.fillText(pct(base.odds), ix + 18, y + 78);
+  ctx.fillStyle = C.ink3; ctx.font = `800 48px ${DISP}`; ctx.fillText(pct(base.odds), ix + 18, y + 78);
   ctx.fillStyle = C.ink; ctx.font = `800 20px ${FONT}`; ctx.fillText('→', ix + 150, y + 74);
-  ctx.fillStyle = up ? C.good : C.bad; ctx.font = `800 56px ${FONT}`; ctx.fillText(pct(P.odds), ix + 210, y + 82);
+  ctx.fillStyle = up ? C.good : C.bad; ctx.font = `900 66px ${DISP}`; ctx.fillText(pct(P.odds), ix + 210, y + 82);
   const ow = ctx.measureText(pct(P.odds)).width;
   pill(ctx, ix + 222 + ow, y + 50, `${signed(P.odds - base.odds)}`, { bg: up ? C.good : C.bad, fg: C.chalk, font: `800 15px ${FONT}`, h: 30 });
   y += 104 + 22;

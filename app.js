@@ -19,7 +19,7 @@ import { storyKeys } from './src/hero/storyKeys.js';
 import { posts, loadPosts } from './src/admin/posts.js';
 import { AdminShell } from './src/admin/AdminShell.jsx';
 import { initTouch, shine, pageIn } from './src/touch.js';
-import { initSilk } from './src/silk.js';
+import { initLiquid } from './src/liquid.js';
 import { streak, wireNew, wireSeen } from './src/buzz/seen.js';
 import { streakNote } from './src/buzz/streak.js';
 import { startPresence, presenceNow } from './src/buzz/presence.js';
@@ -252,7 +252,7 @@ function initTheme() {
     html.classList.add('theme-switching');
     html.dataset.theme = t;
     setTimeout(() => html.classList.remove('theme-switching'), 60); // a timer, not frames: a background tab runs none
-    $('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#1B1C1F' : '#CDD3DC');
+    $('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#0A1630' : '#4FBDF2');
     btn?.setAttribute('aria-label', t === 'dark' ? 'Switch to the day game (light mode)' : 'Switch to the night game (dark mode)');
   };
   paint(html.dataset.theme === 'dark' ? 'dark' : 'light');
@@ -857,67 +857,16 @@ const morphs = () => !!document.startViewTransition && !calm() && !lite();
 const ORDER = ['live', 'rankings', 'wire', 'matchups', 'lab', 'admin'];
 let currentView = null;
 
-// The glowing pill behind the active tab (4.1). A tab switch is a glide that stretches: the leading edge sets off at
-// once and the trailing edge catches up, so the pill reaches toward the new tab and then gathers itself there. One set
-// of keyframes (worm) drives both paths: on phones the pill itself animates, and the dock's tabs slide to their new
-// places from where they were (a FLIP: the active tab widens to show its label, so the others move); with a desktop
-// view transition the page is a snapshot, so the same keyframes drive the transition's own pill
-// (::view-transition-group(tab-ink)). A re-measure (settle) snaps. Reduced motion snaps.
-let tabCenters = null, activeVT = null, silk = null;
-const GLIDE_MS = 560;
-const easeOut = (t) => 1 - Math.pow(1 - t, 3);
-function worm(from, to, n = 16) {
-  const right = to.x > from.x, frames = [];
-  for (let i = 0; i <= n; i++) {
-    const t = i / n, lead = easeOut(Math.min(1, t / 0.72)), trail = easeOut(Math.max(0, (t - 0.16) / 0.84));
-    const l0 = from.x, r0 = from.x + from.w, l1 = to.x, r1 = to.x + to.w;
-    const l = right ? l0 + (l1 - l0) * trail : l0 + (l1 - l0) * lead;
-    const r = right ? r0 + (r1 - r0) * lead : r0 + (r1 - r0) * trail;
-    frames.push({ x: l, w: Math.max(0, r - l) });
-  }
-  return frames;
-}
+// gold pill behind the active tab; with view transitions the browser morphs it, otherwise CSS slides it
 function placeInk({ settle = false } = {}) {
   const ink = $('.tab-ink'), a = $('.tabs a[aria-current]');
   if (ink && !a) { ink.style.width = '0px'; return; } // no tab to mark
   if (!ink || !a) return;
-  const nav = ink.parentElement;
-  // 5.0: on wide desktops the tabs are the sidebar's menu, a column, so the pill glides up and down instead (the same
-  // keyframes, read as top and height)
-  const vert = getComputedStyle(nav).flexDirection.startsWith('column');
-  const T = vert ? 'translateY' : 'translateX', size = vert ? 'height' : 'width';
-  // where the pill is right now, mid-glide or mid-drag included
-  const m = new DOMMatrixReadOnly(getComputedStyle(ink).transform), box = ink.getBoundingClientRect();
-  const from = { x: vert ? m.m42 : m.m41, w: vert ? box.height : box.width };
-  ink.getAnimations().forEach((x) => x.cancel());
-  const to = vert ? { x: a.offsetTop, w: a.offsetHeight } : { x: a.offsetLeft, w: a.offsetWidth };
-  ink.style[vert ? 'width' : 'height'] = '';
-  ink.style[size] = `${to.w}px`;
-  ink.style.transform = `${T}(${to.x}px)`;
-  const tabs = [...nav.querySelectorAll('a')].filter((t) => !t.hidden);
-  const centers = new Map(tabs.map((t) => [t, vert ? null : t.offsetLeft + t.offsetWidth / 2]));
-  const before = vert ? null : tabCenters;
-  tabCenters = vert ? null : centers;
-  if (settle || calm() || !from.w || (Math.abs(from.x - to.x) < 0.5 && Math.abs(from.w - to.w) < 0.5)) return;
-  const frames = worm(from, to);
-  if (activeVT) {
-    // desktop: the page is a snapshot until the transition ends, so the transition's own pill does the glide
-    const vt = activeVT;
-    vt.ready.then(() => {
-      const r = nav.getBoundingClientRect();
-      document.documentElement.animate(frames.map((k) => (vert
-        ? { transform: `translate(${r.left + ink.offsetLeft}px, ${r.top + k.x}px)`, height: `${k.w}px` }
-        : { transform: `translate(${r.left + k.x}px, ${r.top + ink.offsetTop}px)`, width: `${k.w}px` })),
-      { duration: GLIDE_MS, easing: 'linear', pseudoElement: '::view-transition-group(tab-ink)' });
-    }).catch(() => {});
-    return;
-  }
-  ink.animate(frames.map((k) => ({ transform: `${T}(${k.x}px)`, [size]: `${k.w}px` })), { duration: GLIDE_MS, easing: 'linear' });
-  // the tabs themselves: each slides from its old place to its new one, on the same clock
-  if (before) for (const t of tabs) {
-    const was = before.get(t), now = centers.get(t);
-    if (was != null && Math.abs(was - now) > 0.5) t.animate([{ transform: `translateX(${was - now}px)` }, { transform: 'none' }], { duration: GLIDE_MS * 0.85, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
-  }
+  if (settle) ink.classList.remove('live'); // a re-measure snaps into place instead of sliding
+  ink.style.width = `${a.offsetWidth}px`;
+  ink.style.transform = `translateX(${a.offsetLeft}px)`;
+  // the browser morphs the pill during a view transition; otherwise CSS slides it
+  requestAnimationFrame(() => ink.classList.toggle('live', !morphs()));
 }
 
 // You (phones): the bar is gone, so the team picker and the theme switch live in a glass circle beside the tab dock,
@@ -1099,13 +1048,10 @@ function route({ fresh = false } = {}) {
     shine(app); // 2.0: light crosses each glass card once as it comes on screen (src/touch.js)
     if (currentView && key !== currentView) pageIn(dir === 'back' ? -1 : 1); // 2.1, phones: the page slides in
     currentView = key;
-    silk?.mood(key, { live: !!(DATA.liveMode && DATA.live) }); // 4.1: the background takes the page's mood (src/silk.js)
   };
   document.documentElement.dataset.dir = dir;
-  if (currentView && morphs()) {
-    activeVT = document.startViewTransition(render);
-    activeVT.finished.finally(() => { activeVT = null; });
-  } else render();
+  if (currentView && morphs()) document.startViewTransition(render);
+  else render();
 }
 
 // the Live tab exists while a week is on, and reads "Final" once the week is (before and after the reveal)
@@ -1232,8 +1178,8 @@ async function main() {
   initTheme();
   initMe();
   initTooltips();
-  silk = initSilk(); // 4.1: the living silk behind everything, or the CSS aurora where WebGL isn't there
   const touch = initTouch({ placeInk }); // 2.0: press, the dock's slide, the top pill (src/touch.js)
+  initLiquid(); // 2.3: the chrome's lens, its light and the scroll edges (src/liquid.js)
   const loader = startLoader();
   // 2.4: the browser's install offer can come at any moment, so the listener starts first; the sheet waits for a
   // device's second day (src/buzz/install.js)
