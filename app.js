@@ -180,7 +180,7 @@ function build(raw, after = null) {
   const now = RAW.isDemo && DATA.feed.length ? DATA.feed[0].ts + 6 * 36e5 : Date.now();
   DATA.now = now;
   DATA.bull = MONEY_WEEK ? bullseye(DATA, MONEY_WEEK) : null;
-  DATA.stories = after ? null : headlines();
+  DATA.stories = after ? (finalsOn() ? finalsStories() : null) : headlines();
   DATA.key = keyMatchup(DATA);
   DATA.quips = matchupQuips(DATA);
   return DATA;
@@ -189,6 +189,7 @@ function build(raw, after = null) {
 // the headline carousel for a league being played or about to be (after the final call there's none)
 function headlines() {
   if (DATA.finalCall) return null; // once the week is final the headlines come down
+  if (finalsOn()) return finalsStories(); // the week just finished: Dan's headlines until Thursday's kickoff
   let stories = buildStories(DATA, { now: DATA.now, dateKey: chicagoDate(), editor: EDITOR });
   // after Sunday night football the night desk takes over the headlines
   if (nightDesk() && DATA.live) {
@@ -405,6 +406,130 @@ function launchStory() {
 // a position in words, for the headlines
 const SLOT_WORD = { QB: 'quarterback', RB: 'running back', WR: 'receiver', TE: 'tight end', K: 'kicker', DEF: 'defense' };
 
+// ---------- the week's final call ----------
+// Dan's headlines once a week is final (from the final call, then Sleeper's own scoring, until Thursday's kickoff). The
+// headlines are Dan's words; every number in the decks comes from the snapshot. Null drops them all.
+// Week 11 (Nov 23): Commissioner Mo's trade, Khalil's near miss, Akrm winning through his byes, and Tarek's trade with Hamza.
+const FINALS = { week: 11, mo: 'Mo', khalil: 'Khalil', akrm: 'Akrm', tarek: 'Tarek', hamza: 'Hamza', walker: /kenneth walker/i };
+const finalsOn = () => !!FINALS && DATA.meta.lastScored === FINALS.week && !DATA.liveMode;
+const byFirst = (name) => DATA.teams.find((t) => member(t)?.first === name);
+const weekOf = (t, w) => t?.weeks.find((x) => x.week === w);
+const gameSaid = (t) => {
+  const g = weekOf(t, FINALS.week), o = g && team(g.opp);
+  return g && o ? `${firstName(t)} ${g.result === 'W' ? 'beat' : g.result === 'L' ? 'lost to' : 'tied'} ${firstName(o)} ${f1(g.pts)} to ${f1(g.oppPts)}` : '';
+};
+const oddsSaid = (t) => `${firstName(t)} is ${record(t)} with ${pct(t.playoffPct)} playoff odds`;
+const playerCard = (id, t, label) => {
+  const info = DATA.helpers.player(id) || {}, P = nameOf(id);
+  return { id, name: P, short: shortName(info.name ? info : { name: P }), line: `${info.pos || posOf(id)}, ${nfl(info.team)}`, pin: t ? { team: t, label: label || firstName(t) } : null };
+};
+// the newest completed trade between two teams, made by the week's games
+const tradeOf = (a, b) => DATA.feed.find((f) => f.type === 'trade' && (f.week ?? 0) <= FINALS.week && f.sides.some((s) => s.rid === a.rid) && f.sides.some((s) => s.rid === b.rid));
+// what a side's incoming players scored in its starting lineup, in one week or every week since the trade
+const startedFor = (side, weeks) => weeks.flatMap((w) => weekPlayers(w).filter((p) => p.rid === side.rid && p.started && side.adds.some((a) => a.id === p.id)));
+const sumPts = (ps) => ps.reduce((a, p) => a + p.pts, 0);
+const STATUS_SAID = { IR: 'on injured reserve', Out: 'ruled out', Doubtful: 'doubtful', Questionable: 'questionable', PUP: 'on the PUP list', Sus: 'suspended', NA: 'not active' };
+const dayOf = (ts) => new Date(ts).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'short', day: 'numeric' });
+
+// Commissioner Mo pushed a trade through, and the players it brought in are what got him over the line
+function commishStory() {
+  const M = byFirst(FINALS.mo), g = weekOf(M, FINALS.week);
+  if (!M || !g) return null;
+  // his trades made before the week's games, the one whose players scored the most for him that week first (newest on a tie)
+  const deals = DATA.feed.filter((f) => f.type === 'trade' && (f.week ?? 0) <= FINALS.week && f.sides.some((s) => s.rid === M.rid))
+    .map((f) => ({ f, mine: f.sides.find((s) => s.rid === M.rid) })).map((x) => ({ ...x, used: startedFor(x.mine, [FINALS.week]) }))
+    .sort((a, b) => sumPts(b.used) - sumPts(a.used) || b.f.ts - a.f.ts);
+  if (!deals.length) return null;
+  const { f, mine, used } = deals[0], O = team(g.opp), others = f.sides.filter((s) => s !== mine).map((s) => team(s.rid)).filter(Boolean);
+  const got = sumPts(used), margin = g.pts - g.oppPts;
+  const star = [...used].sort((a, b) => b.pts - a.pts)[0] || [...mine.adds].sort((a, b) => b.v - a.v)[0];
+  const carried = g.result === 'W' && got > margin;
+  return {
+    type: 'commish', group: 'trades', kicker: "Commissioner's office", tone: 'trade', stamp: 'Sketchy', breaking: true,
+    rids: [M.rid, ...others.map((t) => t.rid)], tx: [String(f.id)], player: star ? playerCard(star.id, M, 'Approved by Mo') : undefined, mark: star ? [nameOf(star.id)] : undefined,
+    headline: carried ? 'Commissioner Mo getting sketchy? He pushed a trade through, and it inked out the win' : 'Commissioner Mo getting sketchy? He pushed a trade through, and the league has questions',
+    deck: [
+      `The deal went through ${dayOf(f.ts)}, with the commissioner's blessing: ${dealSaid(f)}`,
+      used.length ? `In week ${FINALS.week}, ${listOf(used.map((p) => `${nameOf(p.id)} (${f1(p.pts)})`))} started for Mo, ${f1(got)} points from the trade.` : '',
+      g.result === 'W' ? `He beat ${firstName(O)} ${f1(g.pts)} to ${f1(g.oppPts)}, a ${f1(margin)}-point win.${carried ? ` Take the trade away and that's a loss.` : ''}` : `${gameSaid(M)}.`,
+      `${oddsSaid(M)}. The league office has opened an investigation. The league office is Mo.`,
+    ].filter(Boolean).join(' '),
+    tick: { hook: 'Sketchy', line: carried ? `Mo pushed a trade through, and it won him the week by ${f1(margin)}.` : 'Mo pushed a trade through. The league has questions.' },
+  };
+}
+
+// Khalil came within a couple of points. It's Khalil: he lost
+function khalilStory() {
+  const K = byFirst(FINALS.khalil), g = weekOf(K, FINALS.week);
+  if (!K || !g || g.result !== 'L') return null;
+  const O = team(g.opp), gap = g.oppPts - g.pts, box = weekPlayers(FINALS.week).filter((p) => p.rid === K.rid);
+  // the bench player who would have won it on his own, swapped in for a starter at his position
+  const swap = box.filter((p) => !p.started).flatMap((b) => box.filter((s) => s.started && s.pos === b.pos && b.pts - s.pts > gap).map((s) => ({ b, s, d: b.pts - s.pts })))
+    .sort((a, b) => b.d - a.d)[0];
+  return {
+    type: 'khalil', group: 'week', kicker: 'So close', tone: 'bad', stamp: "It's Khalil", rids: [K.rid, O.rid], drain: K.rid,
+    headline: `Khalil was ${f1(gap)} points away from a win. But it's Khalil, so what do you think happened?`,
+    deck: [
+      `He lost. ${firstName(O)} beat him ${f1(g.oppPts)} to ${f1(g.pts)}.`,
+      swap ? `${nameOf(swap.b.id)} sat on his bench with ${f1(swap.b.pts)} while ${nameOf(swap.s.id)} started and put up ${f1(swap.s.pts)}. That one swap wins it.`
+        : g.benchPts ? `His bench had ${f1(g.benchPts)} points on it, and nobody there could have saved him either.` : '',
+      `${oddsSaid(K)}. Never change, Khalil.`,
+    ].filter(Boolean).join(' '),
+    tick: { hook: "It's Khalil", line: `Khalil lost by ${f1(gap)}. Of course he did.` },
+  };
+}
+
+// Akrm had a roster full of byes and won anyway
+function akrmStory() {
+  const A = byFirst(FINALS.akrm), g = weekOf(A, FINALS.week);
+  if (!A || !g || g.result !== 'W') return null;
+  const O = team(g.opp), m = (DATA.raw.matchups?.[FINALS.week] || []).find((x) => x.roster_id === A.rid);
+  const byes = (m?.players || []).filter((id) => DATA.helpers.byeOf(id) === FINALS.week).sort((a, b) => valueOf(b) - valueOf(a));
+  const luck = A.luck, rank = g.rank;
+  return {
+    type: 'akrm', group: 'week', kicker: 'Bye week survivor', tone: 'good', stamp: 'Luck turning?', rids: [A.rid, O.rid], drain: O.rid,
+    headline: byes.length > 1 ? `Akrm had ${count(byes.length)} players on bye and still won. Is the luck finally turning?` : 'Akrm had a lineup full of holes and still won. Is the luck finally turning?',
+    deck: [
+      byes.length ? `${listOf(byes.slice(0, 4).map(nameOf))}${byes.length > 4 ? ` and ${count(byes.length - 4)} more` : ''} had the week off.` : '',
+      `He beat ${firstName(O)} anyway, ${f1(g.pts)} to ${f1(g.oppPts)}, the ${ordinal(rank)}-highest score in the league this week.`,
+      rank > 6 ? 'A below-average week, and a win. That is what luck looks like.' : '',
+      Math.abs(luck) >= 0.5 ? `On the season his scores say he should have about ${f1(A.expectedWins)} wins; he has ${A.wins}, ${luck < 0 ? `so the universe still owes him ${f1(-luck)}` : `so it's been paying him back`}.` : '',
+      `${oddsSaid(A)}.`,
+    ].filter(Boolean).join(' '),
+    tick: { hook: 'Luck turning?', line: `Akrm won with ${count(byes.length)} players on bye.` },
+  };
+}
+
+// Tarek won the trade with Hamza; Kenneth Walker might sit a week, and Hamza has egg on his face
+function eggStory() {
+  const T = byFirst(FINALS.tarek), H = byFirst(FINALS.hamza), f = T && H && tradeOf(T, H);
+  if (!f) return null;
+  const ts = f.sides.find((s) => s.rid === T.rid), hs = f.sides.find((s) => s.rid === H.rid);
+  const since = pointWeeks().filter((w) => w >= (f.week || 1) && w <= FINALS.week);
+  const tPts = sumPts(startedFor(ts, since)), hPts = sumPts(startedFor(hs, since));
+  const kw = f.sides.flatMap((s) => s.adds.map((a) => ({ ...a, rid: s.rid }))).find((a) => FINALS.walker.test(nameOf(a.id)));
+  const info = kw && DATA.helpers.player(kw.id), bye = kw && DATA.helpers.byeOf(kw.id) === FINALS.week + 1;
+  const who = kw && team(kw.rid);
+  return {
+    type: 'eggface', group: 'trades', kicker: 'Trade review', tone: 'trade', stamp: 'Egg on face', rids: [T.rid, H.rid], drain: H.rid, tx: [String(f.id)],
+    player: kw ? playerCard(kw.id, who, who?.rid === H.rid ? "Hamza's problem" : `${firstName(who)}'s`) : undefined, mark: kw ? [nameOf(kw.id)] : undefined,
+    headline: "Tarek wins the heck out of his trade. Kenneth Walker might sit a week, and Hamza has egg on his face. He's trying to eat it",
+    deck: [
+      `The deal: ${dealSaid(f)}`,
+      since.length ? `Since it went through, Tarek's new players have put up ${f1(tPts)} points in his lineup; Hamza's have given him ${f1(hPts)}.` : '',
+      kw ? (info?.status ? `${nameOf(kw.id)} is ${STATUS_SAID[info.status] || `listed ${info.status.toLowerCase()}`}` : `${nameOf(kw.id)} might not suit up`) + (bye ? `, and week ${FINALS.week + 1} is his bye anyway.` : '.') : '',
+      `${oddsSaid(T)}; ${oddsSaid(H)}. Hamza says he'd do it again. Pass the hot sauce.`,
+    ].filter(Boolean).join(' '),
+    tick: { hook: 'Egg on face', line: `Tarek won the trade. Hamza is eating the egg.` },
+  };
+}
+
+function finalsStories() {
+  // week 11's four, in Dan's order
+  const sel = [commishStory(), khalilStory(), akrmStory(), eggStory()].filter(Boolean);
+  return sel.length ? { lead: sel[0], more: sel.slice(1), size: sel.length } : null;
+}
+
 // ---------- live week: weekly rankings and projected standings ----------
 // every team this week: projected final (banked plus the rest projected, as on the matchup cards), what's banked, who's
 // still to play, and how its game stands (from the night desk's board: locked once the other side can't catch up)
@@ -608,12 +733,14 @@ function carouselProps({ all = false, only = false } = {}) {
   const site = only ? [] : siteStories().flatMap(desk);
   // a news release (launchStory) leads, unless Dan has hidden it or placed it in his running order like any other
   const party = [launchStory()].filter(Boolean).flatMap(desk), placed = posts.arrange?.[`w${headlineWeek()}`] || [];
-  const lead = party.filter((st) => !placed.includes(st.key)), mixed = party.filter((st) => placed.includes(st.key));
+  // (behind Dan's own headlines on a final-call week)
+  const ahead = (st) => !placed.includes(st.key) && !finalsOn();
+  const lead = party.filter(ahead), mixed = party.filter((st) => !ahead(st));
   if (!site.length && !own.length && !party.length) return null;
   return {
     // Dan's own headlines from the admin portal lead, ahead of everything the desk writes, and every headline sits in
     // its section (the dots group them)
-    stories: [...lead, ...arrangeStories([...mixed, ...own, ...site].map((st) => withTrade({ ...st, group: groupOf(st) })))],
+    stories: [...lead, ...arrangeStories([...own, ...site, ...mixed].map((st) => withTrade({ ...st, group: groupOf(st) })))],
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
     hold: onHold() ? NEWS_CLOCK.holdNote : null, night: !!s?.night, groups: GROUPS,
   };
