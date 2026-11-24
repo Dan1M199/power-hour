@@ -78,7 +78,8 @@ function initPress() {
     const d = Math.min(2 * reach, 520);
     drop.style.cssText = `left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px;width:${d}px;height:${d}px`;
     drop.getAnimations().forEach((a) => a.cancel());
-    drop.animate([{ transform: 'scale(0.12)', opacity: 0.9 }, { transform: 'scale(1)', opacity: 0 }], { duration: 520, easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)' });
+    // the groove swirls a quarter turn as it spreads
+    drop.animate([{ transform: 'scale(0.12) rotate(-80deg)', opacity: 0.85 }, { transform: 'scale(1) rotate(0deg)', opacity: 0 }], { duration: 620, easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)' });
   }, { passive: true });
   for (const type of ['pointerup', 'pointercancel']) document.addEventListener(type, release, { passive: true });
   // a finger that turns a press into a scroll gets no bubble riding along
@@ -166,7 +167,7 @@ const scrollsSideways = (n) => {
 let swipeDir = 0; // which way the last swipe went, for pageIn
 function initSwipe() {
   // a black island that flows out of the screen's edge, its corners curving into it; the ring fills as you pull
-  const chip = el('div', 'tx-swipe', '<span></span><svg viewBox="0 0 32 32" aria-hidden="true"><circle class="sw-track" cx="16" cy="16" r="13" pathLength="100"/><circle class="sw-ring" cx="16" cy="16" r="13" pathLength="100"/><path d="M13.5 10.5l5.5 5.5-5.5 5.5"/></svg>');
+  const chip = el('div', 'tx-swipe', '<span></span><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="sw-groove" x1="0" y1="0" x2="1" y2="1" class="groove-grad"><stop offset="0"/><stop offset="0.35"/><stop offset="0.65"/><stop offset="1"/></linearGradient></defs><circle class="sw-track" cx="16" cy="16" r="13" pathLength="100"/><circle class="sw-ring" cx="16" cy="16" r="13" pathLength="100"/><path d="M13.5 10.5l5.5 5.5-5.5 5.5"/></svg>');
   chip.setAttribute('aria-hidden', 'true');
   document.body.append(chip);
   const label = chip.firstChild, ring = chip.querySelector('.sw-ring'), NEED = 96;
@@ -283,7 +284,7 @@ export function shine(scope) {
 // are, and a tap goes back to the top.
 function initTopPill() {
   const C = 2 * Math.PI * 19;
-  const btn = el('button', 'tx-top', `<svg viewBox="0 0 44 44" aria-hidden="true"><circle class="tx-top-track" cx="22" cy="22" r="19"/><circle class="tx-top-ring" cx="22" cy="22" r="19" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}"/><path d="M15.500 24.500L22 18l6.500 6.500"/></svg>`);
+  const btn = el('button', 'tx-top', `<svg viewBox="0 0 44 44" aria-hidden="true"><defs><linearGradient id="top-groove" x1="0" y1="0" x2="1" y2="1" class="groove-grad"><stop offset="0"/><stop offset="0.35"/><stop offset="0.65"/><stop offset="1"/></linearGradient></defs><circle class="tx-top-track" cx="22" cy="22" r="19"/><circle class="tx-top-ring" cx="22" cy="22" r="19" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}"/><path d="M15.500 24.500L22 18l6.500 6.500"/></svg>`);
   btn.type = 'button';
   btn.setAttribute('aria-label', 'Back to the top');
   btn.tabIndex = -1;

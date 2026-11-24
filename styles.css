@@ -51,6 +51,11 @@
    They stay the same in both themes; the themed palette is the :root block below. Pure white and black are tinted a hair
    toward the grass. */
 :root {
+  --groove-coral: #FF5C5C;   /* the groove (Nov 24): the colours of assets/groove.webp, for SVG strokes that can't take a picture */
+  --groove-pink: #F25CF0;
+  --groove-lilac: #C3A4FF;
+  --groove-blue: #2F6BFF;
+  --groove-gold: #E6C64A;
   --board-day: #0D2415;
   --bone: #FBF6EF;
   --ink-day: #0B2412;
@@ -5691,3 +5696,50 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 @media (max-width: 359px) {
   .head-ctas { grid-template-columns: 1fr; }
 }
+
+/* ---------- the groove (Nov 24, Dan's request: "add this groovy gradient to some touch elements or backgrounds, be creative") ----------
+   One holographic liquid picture (assets/groove.webp, 12 KB, and a square crop of its pink-gold heart, groove-sq.webp, 4 KB) shows
+   up only where something moves or answers a finger, so the bowl stays the bowl at rest:
+   1. the press bubble: a finger's touch swirls a drop of the groove out from under it (a quarter turn while it spreads, src/touch.js)
+   2. the dock: while a finger slides the tab pill along, the amber droplet melts into the groove
+   3. story rings: a manager's story you haven't watched spins in the groove (yours stays yellow, yellow means you)
+   4. rings that fill: the swipe island's pull ring and the top pill's scroll ring are drawn in the groove's colours (SVG gradient)
+   5. the headline timer: the active dot fills with the groove instead of yellow
+   6. the reveal stage: a slow lava lamp of the groove drifts under the stadium beams
+   Transform and opacity only; reduced motion keeps every piece and stills it, reduced transparency drops the lava lamp. */
+:root { --groove: url("assets/groove.webp"); --groove-sq: url("assets/groove-sq.webp"); }
+.groove-grad stop:nth-child(1) { stop-color: var(--groove-gold); }
+.groove-grad stop:nth-child(2) { stop-color: var(--groove-coral); }
+.groove-grad stop:nth-child(3) { stop-color: var(--groove-pink); }
+.groove-grad stop:nth-child(4) { stop-color: var(--groove-blue); }
+
+/* 1. the press bubble: a white core over the groove, its edge feathered away */
+.tx-lens i { background: radial-gradient(circle closest-side, color-mix(in srgb, var(--chalk) 70%, transparent) 0, color-mix(in srgb, var(--chalk) 0%, transparent) 46%), var(--groove-sq) center / cover;
+  -webkit-mask: radial-gradient(circle closest-side, var(--island) 30%, transparent 100%); mask: radial-gradient(circle closest-side, var(--island) 30%, transparent 100%); }
+
+/* 2. the dock: the droplet turns to liquid under a sliding finger, its glass gloss kept on top */
+@media (max-width: 760px) {
+  .tabs.dragging .tab-ink { background: var(--nav-gloss), var(--groove-sq) 50% 40% / 180% auto; }
+  .tabs.dragging a.hot { color: var(--chalk); text-shadow: 0 1px 2px color-mix(in srgb, var(--island) 70%, transparent); }
+  .tabs.dragging a.hot .ti { filter: drop-shadow(0 1px 1.5px color-mix(in srgb, var(--island) 60%, transparent)); }
+}
+
+/* 3. story rings: new stories spin in the groove */
+.bz-face:not(.mine):not(.seen) .bz-ring::before { background: conic-gradient(from 200deg, var(--groove-gold), var(--groove-coral) 22%, var(--groove-pink) 42%, var(--groove-lilac) 58%, var(--groove-blue) 74%, var(--groove-pink) 88%, var(--groove-gold)); }
+
+/* 4. rings that fill */
+.sw-ring, .tx-swipe.go .sw-ring { stroke: url(#sw-groove); }
+.tx-top-ring { stroke: url(#top-groove); }
+
+/* 5. the headline timer */
+.car-dot i { background: var(--groove) 50% 45% / 400% auto; }
+
+/* 6. the reveal stage's lava lamp */
+.rv-groove { position: absolute; inset: -45% -20%; z-index: -3; pointer-events: none; background: var(--groove) center / cover; opacity: 0.85;
+  animation: rv-groove 22s ease-in-out infinite alternate; }
+@keyframes rv-groove { from { transform: rotate(-8deg) scale(1); } to { transform: rotate(14deg) scale(1.25) translateY(-6%); } }
+.rv-stage::before { background: radial-gradient(60% 70% at 50% 0%, color-mix(in srgb, var(--yellow) 16%, transparent), transparent 70%),
+  radial-gradient(48% 62% at 50% 50%, color-mix(in srgb, var(--board) 78%, transparent), color-mix(in srgb, var(--board) 30%, transparent) 70%, transparent 100%),
+  repeating-linear-gradient(90deg, transparent 0 46px, color-mix(in srgb, var(--chalk) 4%, transparent) 46px 92px); }
+@media (prefers-reduced-motion: reduce) { .rv-groove { animation: none; } }
+@media (prefers-reduced-transparency: reduce) { .rv-groove { display: none; } }

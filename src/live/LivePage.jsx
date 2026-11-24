@@ -82,6 +82,7 @@ function RevealStage({ D, wk, onReveal }) {
   const lane = (k) => teams.map((t) => <li key={`${k}${t.rid}`}><TeamAvatar t={t} /><b>?</b></li>);
   return (
     <section className="rv-stage" aria-label="The new power rankings">
+      <span className="rv-groove" aria-hidden="true" />
       <span className="rv-beam l" aria-hidden="true" /><span className="rv-beam r" aria-hidden="true" />
       <div className="rv-copy">
         <span className="rv-kick">{`Week ${wk} is in the books`}</span>
