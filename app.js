@@ -558,7 +558,7 @@ function liveProps() {
   const wk = DATA.previews[0]?.week, { rows, standings } = liveWeek();
   const bull = DATA.bull && DATA.bull.state !== 'final' && DATA.bull.rows.find((x) => x.rid === myTeam);
   return {
-    D: DATA, fin, wk, rows, standings, car: fin ? carouselProps({ only: true }) : carouselProps(),
+    D: DATA, fin, wk, rows, standings, car: fin ? null : carouselProps(), // once every game is final: no headlines, only the way to the new rankings
     played: DATA.live?.teams.length || 0, fetched: DATA.fetched || null,
     bull: bull ? awayText(bull) : null, onReveal: passThenReveal, h: { ...reactHelpers(), today: chicagoDate() },
   };

@@ -1,7 +1,7 @@
 // The Live tab (#live) while a week is played: the desk's note on your week, every team's week best to worst (banked
 // plus the rest projected) and the projected standings. Once every game is final it becomes Final Scores, with the
-// button to the new power rankings. The hero (headline carousel and page head) is the one the power rankings
-// use.
+// reveal stage in place of the headlines (RevealStage), whose button opens the new power rankings. While the week is
+// played the hero (headline carousel and page head) is the one the power rankings use.
 import { ChampTag, Headshot, TeamAvatar, HeadLinks } from '../shared.jsx';
 import { Hero } from '../hero/Hero.jsx';
 import { StoryRail } from '../buzz/Stories.jsx';
@@ -74,6 +74,34 @@ function LiveHead({ fin, wk, played, fetched }) {
   </>;
 }
 
+// The way from the final scores to the new power rankings (Dan's request Nov 23, in place of the headlines once every
+// game is final): a scoreboard under stadium lights, the twelve teams sliding past behind question-mark tags, and one
+// glossy button that throws the football (passThenReveal in app.js) and opens the reveal.
+function RevealStage({ D, wk, onReveal }) {
+  const teams = [...D.teams].sort((a, b) => a.rid - b.rid);
+  const lane = (k) => teams.map((t) => <li key={`${k}${t.rid}`}><TeamAvatar t={t} /><b>?</b></li>);
+  return (
+    <section className="rv-stage" aria-label="The new power rankings">
+      <span className="rv-beam l" aria-hidden="true" /><span className="rv-beam r" aria-hidden="true" />
+      <div className="rv-copy">
+        <span className="rv-kick">{`Week ${wk} is in the books`}</span>
+        <h2>{`The week ${wk + 1} power rankings are ready`}</h2>
+        <p>{`${D.teams.length} teams, one new order. Who climbed, who fell, and who stinks.`}</p>
+      </div>
+      <div className="rv-lane" aria-hidden="true"><ul>{lane('a')}{lane('b')}</ul></div>
+      <div className="rv-go-wrap">
+        <span className="rv-pulse" aria-hidden="true" /><span className="rv-pulse late" aria-hidden="true" />
+        <button type="button" className="rv-go" data-reveal onClick={(e) => onReveal(e.currentTarget)}>
+          <span className="rv-glint" aria-hidden="true" />
+          <span className="rv-label">Reveal the power rankings</span>
+          <svg className="rv-arrow" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <span className="spk a" aria-hidden="true" /><span className="spk b" aria-hidden="true" />
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetched, bull, onReveal, buzz }) {
   const { f1, pct, ordinal } = h, pt = D.meta.playoffTeams, n = rows.length;
   const max = Math.max(1, ...rows.map((r) => r.proj)) * 1.04;
@@ -85,12 +113,11 @@ export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetc
     return <span className={`st-chip ${r.win >= 0.5 ? 'up' : 'down'}`}><span className="st-l">{`${pct(r.win)} to beat ${o}`}</span><span className="st-s">{`${pct(r.win)} to win`}</span></span>;
   };
   return <>
-    {fin && !car
-      ? <section className="view-head"><LiveHead fin wk={wk} played={played} fetched={fetched} /></section>
+    {fin
+      ? <><section className="view-head"><LiveHead fin wk={wk} played={played} fetched={fetched} /></section><RevealStage D={D} wk={wk} onReveal={onReveal} /></>
       : <Hero D={D} h={h} car={car} head={<LiveHead fin={fin} wk={wk} played={played} fetched={fetched} />}
-        side={fin ? null : <YourWeek rows={rows} standings={standings} me={me} h={h} bull={bull} />} />}
+        side={<YourWeek rows={rows} standings={standings} me={me} h={h} bull={bull} />} />}
     <StoryRail D={D} me={me} h={h} streak={buzz?.streak} now={buzz?.now ?? D.now} />
-    {fin ? <div className="unveil-cta"><button type="button" className="cta" data-reveal onClick={(e) => onReveal(e.currentTarget)}>Done with Live Ranks, Show me the Power Ranking</button></div> : null}
     <div className="live-grid">
       <section className="panel glass live-panel wk-rank">
         <h2>{`Week ${wk}, top to bottom`}</h2>
