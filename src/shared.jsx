@@ -61,18 +61,19 @@ export const ScenariosLink = () => (
  * The front page's way into What if (Lab, #lab/whatif; Dan's request Nov 20): a charcoal pill with a band of gold
  * light crossing it, a replay mark and the New tag. cls: extra classes (the headline card's copy sits on the scene).
  */
-export const WhatIfLink = ({ cls = '', label = 'What if: redo your draft' }) => (
+export const WhatIfLink = ({ cls = '', label = 'What if: redo your draft', short = null }) => (
   <a className={`wi-cta ${cls}`} href="#lab/whatif">
     <span className="wi-cta-glint" aria-hidden="true" />
     <span className="wi-cta-new">New</span>
     <svg className="wi-cta-icon" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.2 7.4A6.5 6.5 0 1 1 3.5 11" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" /><path d="M3.6 3.6v4.2h4.2" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-    <span className="wi-cta-label">{label}</span>
+    {short ? <span className="wi-cta-label"><span className="lbl-l">{label}</span><span className="lbl-s">{short}</span></span> : <span className="wi-cta-label">{label}</span>}
     <i className="spk a" aria-hidden="true" /><i className="spk b" aria-hidden="true" />
   </a>
 );
 
-/** The page head's two shiny ways into the Lab, side by side (wrapping on a phone). */
-export const HeadLinks = () => <div className="head-ctas"><WhatIfLink /><ScenariosLink /></div>;
+/** The page head's two shiny ways into the Lab, side by side; on a phone they share one tray, "From the Lab", with
+ * shorter labels (Dan's request Nov 24: the head was crowded). */
+export const HeadLinks = () => <div className="head-ctas" role="group" aria-label="From the Lab"><WhatIfLink short="Redo your draft" /><ScenariosLink /></div>;
 
 // An activity ring (Nov 11, the soft-futurism pass): a black disc with one bright arc for a share from 0 to 1 and the
 // number set inside it. The arc draws itself in once its card is on screen (styles.css, "2.2"); yellow when it's yours.

@@ -5664,3 +5664,30 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
   .rv-go { min-height: 58px; padding: 12px 22px 12px 26px; }
 }
 @media (prefers-reduced-motion: reduce) { .rv-beam, .rv-lane ul, .rv-pulse, .rv-glint::before, .rv-arrow, .rv-go .spk { animation: none; } }
+
+/* ---------- the page head on phones (Nov 24, Dan's request: it was crowded) ----------
+   A shorter lede, the two ways into the Lab in one recessed tray side by side, and the refresh time (plus Dan's desk
+   link) as a quiet line of text instead of pills. Desktop is untouched. */
+.lbl-s { display: none; }
+@media (max-width: 760px) {
+  .lbl-l { display: none; }
+  .lbl-s { display: inline; }
+  .head-ctas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; padding: 30px 8px 8px; position: relative;
+    border-radius: 26px; background-color: var(--tile); box-shadow: var(--tray-edge); }
+  .head-ctas::before { content: 'From the Lab'; position: absolute; top: 9px; left: 16px; font: 700 12px/1 var(--body); color: var(--ink-2); }
+  .head-ctas :is(.wi-cta, .pth-cta) { justify-content: center; gap: 6px; min-height: 48px; margin: 0; padding: 6px 10px; }
+  .head-ctas .wi-cta-icon { display: none; }
+  .head-ctas .wi-cta-new { padding: 4px 7px; font-size: 11.5px; }
+  .head-ctas :is(.wi-cta-label, .pth-cta-label) { font-size: 17px; white-space: nowrap; }
+  .head-ctas .spk.b { display: none; }
+  .head-ctas .spk.a { top: -6px; right: 8px; width: 12px; height: 12px; }
+  .view-head .sources, .hero .sources { justify-content: space-between; align-items: baseline; gap: 4px 12px; margin-top: 2px; }
+  :is(.view-head, .hero) .sources .chip:not(.off) { min-height: 0; padding: 0; border: 0; background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+    font: 600 13px/1.3 var(--body); color: var(--ink-2); }
+  :is(.view-head, .hero) .sources .chip:not(.off)::before, :is(.view-head, .hero) .sources .chip:not(.off)::after { display: none; }
+  :is(.view-head, .hero) .sources a.chip { color: var(--ink); text-decoration: none; }
+  :is(.view-head, .hero) .sources a.chip::after { content: " →"; display: inline !important; position: static; inset: auto; background: none; transform: none; opacity: 1; }
+}
+@media (max-width: 359px) {
+  .head-ctas { grid-template-columns: 1fr; }
+}

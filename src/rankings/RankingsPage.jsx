@@ -24,7 +24,7 @@ function RankHead({ wk, held, sources, updated }) {
   return <>
     <div>
       <h2 className="page-title"><span className="wk">{held ? `On hold during week ${wk}` : `Week ${wk}`}</span>Power Rankings</h2>
-      <p>Where you sit in the standings, how much you score, who's left on your schedule and how your roster projects, in that order. Tap any team to see why it sits where it does.</p>
+      <p><span className="lbl-l">Where you sit in the standings, how much you score, who's left on your schedule and how your roster projects, in that order. Tap any team to see why it sits where it does.</span><span className="lbl-s">Standings, scoring, schedule and roster, in that order. Tap a team to see why.</span></p>
       <HeadLinks />
     </div>
     <div className="sources">
