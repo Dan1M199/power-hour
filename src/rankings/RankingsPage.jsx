@@ -83,7 +83,8 @@ function RankRow({ D, t, me, h, open, nudge, onToggle, onClose, rowRef, btnRef }
 }
 
 const METHOD = (pctW) => <>
-  <p><b>{`Standing (${pctW('standing')}%).`}</b> Your place in the real standings, wins first and points for as the tiebreaker, like Sleeper's table, plus the record itself so a two-game lead counts for more than a tiebreak.</p>
+  <p><b>{`Standing (${pctW('standing')}%).`}</b> Your place in the real standings, wins first and points for as the tiebreaker, like Sleeper's table, plus the record itself so a two-game lead counts for more than a tiebreak, plus your playoff odds from 10,000 simulations of the rest of the season.</p>
+  <p><b>No playoff hope.</b> An easy schedule and a strong roster only earn credit while there's something to play for: below 15% playoff odds that credit shrinks in step with the odds, to nothing at 0%. A team whose odds round to 0% ranks below every team still alive.</p>
   <p><b>{`Scoring (${pctW('scoring')}%).`}</b> Points per game carries most of it. All-play win rate (your record if you played every team every week) and the last three weeks add a little.</p>
   <p><b>{`Schedule left (${pctW('schedule')}%).`}</b> Priced in wins: each team's expected wins against its actual remaining opponents, minus what it would expect against an average opponent. An easier road scores higher. Opponent strength uses the same projection as the playoff odds (about two-thirds projected lineup, one-third points per game so far).</p>
   <p><b>{`Rest-of-season roster (${pctW('roster')}%).`}</b> Every player gets a consensus value from FantasyPros, DraftSharks and LeagueLogs half-PPR ROS rankings (LeagueLogs counts half, since it tracks the FantasyPros consensus closely). We build each team's best possible starting lineup from DraftSharks' weekly projections, discounted for games a player is expected to miss, then add a little for the bench.</p>
