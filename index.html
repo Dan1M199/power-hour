@@ -16,7 +16,7 @@
   <meta property="og:image:alt" content="The Power Hour logo on a mowed football field">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="/assets/share-card.jpg">
-  <meta name="theme-color" content="#18352F">
+  <meta name="theme-color" content="#4FBDF2">
   <!-- the theme, before the first paint: a choice kept on this device (ph-theme) wins, else the device's own setting.
        app.js keeps it in step afterwards (the header's sun and moon button, a change in the device's setting). -->
   <script>
@@ -26,7 +26,7 @@
       if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       document.documentElement.dataset.theme = t;
       document.documentElement.classList.add('js'); // hidden-until-shown states only apply once scripts run
-      if (t === 'dark') document.querySelector('meta[name="theme-color"]').content = '#101F1C';
+      if (t === 'dark') document.querySelector('meta[name="theme-color"]').content = '#0A1630';
     })();
   </script>
   <link rel="icon" type="image/png" href="assets/favicon.png">
@@ -142,7 +142,7 @@
     <p class="masthead" id="masthead" hidden></p>
     <p class="masthead" id="reigning" hidden></p>
     <p class="fine">League data from the Sleeper API. Rest-of-season rankings from FantasyPros, DraftSharks and LeagueLogs, blended into one consensus. Not affiliated with any of them.</p>
-    <p class="version">Mir Inc. Sleeper Power Hour V6.0</p>
+    <p class="version">Mir Inc. Sleeper Power Hour V6.1</p>
   </footer>
 
   <div id="tip" class="tip" role="tooltip" hidden></div>
