@@ -1,8 +1,8 @@
 // The streak note (Dan's request Nov 14): the first time a device opens the site on a new day (the site's day turns at
 // 6am Central), a black island drops out of the top of the screen with a flame and the count, the way a phone's
 // Dynamic Island shows a live activity, then tucks back after a few seconds (a tap tucks it at once). Milestone days
-// (3, 7, 14, 30, ...) get a gold flame and a shower of confetti; a broken run says so, gently, once. The count itself
-// lives on the Stories rail (src/buzz/Stories.jsx). The island itself is src/buzz/island.js.
+// (3, 7, 14, 30, ...) get a gold flame and a shower of confetti; a broken run says so, gently, once. The island
+// itself is src/buzz/island.js.
 import { streak } from './seen.js';
 import { haptic } from '../touch.js';
 import { island } from './island.js';

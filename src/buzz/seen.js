@@ -3,9 +3,7 @@
 //  - the daily streak: how many mornings in a row this device has opened the site (the site's day turns at 6am Central,
 //    morningKey), with the best run kept;
 //  - the wire's "new since you last looked": the time this device last opened the Wire, for the tab's count badge and
-//    the New marks on the page;
-//  - the stories: which team's story this device has watched, by a signature of what's in it, so a ring lights up
-//    again only when that team's story changes.
+//    the New marks on the page.
 // Storage can be off (private windows, full disks): every read and write is wrapped, and a failure means "nothing seen".
 import { morningKey } from '../../lib/newsclock.js';
 
@@ -46,8 +44,3 @@ export function wireSeen(now = Date.now()) {
   return pageSince;
 }
 
-// ---------- the stories ----------
-let watched = null;
-const load = () => (watched ??= json('ph-stories-seen', {}));
-export const storySeen = (rid, sig) => load()[rid] === sig;
-export function markStory(rid, sig) { load()[rid] = sig; putJson('ph-stories-seen', watched); }

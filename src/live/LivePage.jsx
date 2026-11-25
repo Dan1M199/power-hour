@@ -4,7 +4,6 @@
 // played the hero (headline carousel and page head) is the one the power rankings use.
 import { ChampTag, Headshot, TeamAvatar, HeadLinks } from '../shared.jsx';
 import { Hero } from '../hero/Hero.jsx';
-import { StoryRail } from '../buzz/Stories.jsx';
 
 // "Your week": a note from the desk to whoever picked a team. Winning gets congratulated, losing gets roasted, and a
 // coin flip gets a pep talk if they're ahead or a reality check if they're behind. Wording rotates daily.
@@ -103,7 +102,7 @@ function RevealStage({ D, wk, onReveal }) {
   );
 }
 
-export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetched, bull, onReveal, buzz }) {
+export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetched, bull, onReveal }) {
   const { f1, pct, ordinal } = h, pt = D.meta.playoffTeams, n = rows.length;
   const max = Math.max(1, ...rows.map((r) => r.proj)) * 1.04;
   const status = (r) => {
@@ -118,7 +117,6 @@ export function LivePage({ D, me, h, fin, wk, rows, standings, car, played, fetc
       ? <><section className="view-head"><LiveHead fin wk={wk} played={played} fetched={fetched} /></section><RevealStage D={D} wk={wk} onReveal={onReveal} /></>
       : <Hero D={D} h={h} car={car} head={<LiveHead fin={fin} wk={wk} played={played} fetched={fetched} />}
         side={<YourWeek rows={rows} standings={standings} me={me} h={h} bull={bull} />} />}
-    <StoryRail D={D} me={me} h={h} streak={buzz?.streak} now={buzz?.now ?? D.now} />
     <div className="live-grid">
       <section className="panel glass live-panel wk-rank">
         <h2>{`Week ${wk}, top to bottom`}</h2>

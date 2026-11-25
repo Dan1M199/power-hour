@@ -22,7 +22,6 @@ import { initTouch, shine, pageIn } from './src/touch.js';
 import { initLiquid } from './src/liquid.js';
 import { streak, wireNew, wireSeen } from './src/buzz/seen.js';
 import { streakNote } from './src/buzz/streak.js';
-import { startPresence, presenceNow } from './src/buzz/presence.js';
 import { initAway, recapNote } from './src/buzz/away.js';
 import { initInstall, appBadge } from './src/buzz/install.js';
 import { nightEdition, nightBoard } from './lib/nightdesk.js';
@@ -939,7 +938,6 @@ function setMyTeam(rid) {
   store.set('ph-my-team', myTeam ? String(myTeam) : null);
   $('#my-team').value = myTeam ? String(myTeam) : '';
   route();
-  presenceNow(); // the others see your face light up without waiting for the next beat
 }
 // ---------- nerd lab ----------
 // Return visits open your own dashboard; browsing rivals never changes your identity.
@@ -1167,8 +1165,7 @@ function route({ fresh = false } = {}) {
     paintMe();
     const app = $('#app'), [Page, props] = PAGES[key]();
     showPage ||= pageRoot(app);
-    // buzz: the stories rail's streak count and the clock its "how long ago" reads (src/buzz)
-    showPage(Page, { D: DATA, me: myTeam, h: reactHelpers(), buzz: { streak: streak(), now: DATA.now }, ...props });
+    showPage(Page, { D: DATA, me: myTeam, h: reactHelpers(), ...props });
     paintWireBadge();
     if (fresh) { app.focus({ preventScroll: true }); window.scrollTo({ top: 0 }); }
     reveal(app);
@@ -1353,8 +1350,7 @@ async function main() {
     streakNote(); // once a day: the streak island drops in (src/buzz/streak.js)
     recapNote(myTeam && team(myTeam), { week: DATA.meta.lastScored, pct }); // then what moved for your team since last time
   }
-  // who's here now (src/buzz/presence.js) and what the tab says while you're away (src/buzz/away.js)
-  if (!RAW.isDemo || window.__PRESENCE_TEST__) startPresence({ team: () => myTeam }); // the demo stays offline; tests set the flag
+  // what the tab says while you're away (src/buzz/away.js)
   initAway({
     key: () => (RAW.isDemo ? 'demo' : leagueKey()),
     title: () => {

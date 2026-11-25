@@ -4468,139 +4468,17 @@ html:is(.admin-mode, .locked) .tx-edge { display: none; }
 }
 
 /* ---------- 2.4: the buzz (Dan's request Nov 14: the pull of Instagram, done in the bowl's colours) ----------
-   src/buzz. Four things that reward coming back:
-   - Stories: a rail of manager faces under the headlines (.bz-rail), each in a ring lit amber-to-flame while its story
-     is new to this device and grey once watched; a tap opens it full screen out of the face (.bz-viewer, .bz-stage)
-     with progress bars across the top, tap to step, hold to pause, swipe sideways for the next team, down to close.
-   - The streak: a flame and the count of mornings in a row (.bz-streak on the rail), and once a day a black island
-     drops out of the top of the screen with it (.bz-island; gold with confetti on a milestone).
+   src/buzz. Things that reward coming back (the stories rail and its here-now chip were removed Nov 25, Dan's request):
+   - The streak: once a day a black island drops out of the top of the screen with the count of mornings in a row
+     (.bz-island; gold with confetti on a milestone).
    - The Wire's unread badge (.bz-badge on the tab) and the New marks on what came in since you last looked (.bz-new).
    - Double tap a headline: a cartoon flame pops where you tapped in a ring of sparks (.bz-burst) and it gets your fire.
    Transform and opacity only; reduced motion keeps everything still. */
-:root { --bz-ring: conic-gradient(from 210deg, var(--yellow), var(--amber) 30%, #FF6A3D 55%, var(--amber) 80%, var(--yellow)); }
 
-/* the flame (rail chip, island) */
+/* the flame (the streak island) */
 .bz-flame { width: 16px; height: 16px; flex: none; overflow: visible; }
 .bz-flame .fl-out { fill: var(--amber); stroke: var(--outline-day); stroke-width: 1.3; stroke-linejoin: round; }
 .bz-flame .fl-in { fill: var(--yellow); }
-
-/* ---- the rail ---- */
-.bz-rail { border-radius: var(--r-lg); padding: 16px 18px 12px; margin: 0 0 22px; }
-.bz-rail-head { display: flex; align-items: baseline; gap: 6px 12px; flex-wrap: wrap; padding: 0 4px 6px; }
-.bz-rail-head h2 { margin: 0; font: 700 22px/1 var(--display); letter-spacing: -0.01em; color: var(--ink); }
-.bz-rail-sub { font-size: 13px; color: var(--ink-3); }
-.bz-streak { margin-left: auto; align-self: center; display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px 5px 9px; border-radius: 999px;
-  font: 700 13px/1 var(--body); color: var(--ink); background-color: var(--tile); box-shadow: inset 0 0 0 1.5px var(--line, color-mix(in srgb, var(--island) 12%, transparent)); white-space: nowrap; }
-.bz-streak.hot { background-color: var(--tone-amber-83-2); box-shadow: inset 0 0 0 1.5px var(--tone-amber-45), 0 0 0 3px color-mix(in srgb, var(--amber) 18%, transparent); }
-.bz-rail-row { display: flex; gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none;
-  margin: 0 -18px; padding: 8px 18px 6px; -webkit-mask-image: linear-gradient(90deg, transparent 0, var(--island) 14px, var(--island) calc(100% - 28px), transparent);
-  mask-image: linear-gradient(90deg, transparent 0, var(--island) 14px, var(--island) calc(100% - 28px), transparent); }
-.bz-rail-row::-webkit-scrollbar { display: none; }
-.bz-face { flex: none; display: grid; justify-items: center; gap: 6px; width: 78px; padding: 0; border: 0; background: none; cursor: pointer; scroll-snap-align: start;
-  font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-.bz-ring { position: relative; display: grid; place-items: center; width: 74px; height: 74px; border-radius: 50%; isolation: isolate; transition: transform 0.25s var(--ease-out); }
-.bz-ring::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: 50%; background: var(--bz-ring); }
-.bz-face.seen .bz-ring::before { background: var(--tile-2); inset: 4px; box-shadow: 0 0 0 1.5px var(--tile-2); }
-.bz-pic { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--face, var(--chalk)); background-color: var(--tile); }
-.bz-pic.ph { display: grid; place-items: center; font: 800 22px/1 var(--display); color: var(--ink-2); }
-.bz-face.seen .bz-pic { width: 62px; height: 62px; border-width: 2px; }
-.bz-no { position: absolute; right: -2px; bottom: -2px; display: grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 999px;
-  font: 800 14px/1 var(--display); color: var(--chalk); background-color: var(--board); box-shadow: 0 0 0 2.5px var(--face, var(--chalk)); }
-.bz-face.mine .bz-ring::before { background: conic-gradient(from 210deg, var(--yellow), var(--tone-yellow-81), var(--yellow), var(--tone-amber-47), var(--yellow)); }
-.bz-face.mine.seen .bz-ring::before { background: var(--tile-2); }
-.bz-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
-.bz-face:not(.seen) .bz-name { color: var(--ink); font-weight: 700; }
-.bz-face.mine .bz-name { font-weight: 800; }
-.bz-face:active .bz-ring { transform: scale(0.92); }
-@media (hover: hover) { .bz-face:hover .bz-ring { transform: scale(1.06); } }
-.bz-face:focus-visible { outline: none; }
-.bz-face:focus-visible .bz-ring { box-shadow: 0 0 0 3px var(--face, var(--chalk)), 0 0 0 6px var(--ink); }
-@media (prefers-reduced-motion: no-preference) {
-  .bz-face:not(.seen) .bz-ring::before { animation: bz-spin 7s linear infinite; }
-}
-@keyframes bz-spin { to { transform: rotate(1turn); } }
-
-/* ---- the viewer ---- */
-.bz-viewer { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; background: color-mix(in srgb, var(--tone-grey-3) 88%, transparent); animation: bz-fade 0.25s ease-out both;
-  -webkit-backdrop-filter: blur(12px) saturate(1.2); backdrop-filter: blur(12px) saturate(1.2); overscroll-behavior: contain; }
-.bz-viewer.out { animation: bz-fade 0.26s ease-in reverse both; }
-@keyframes bz-fade { from { opacity: 0; } }
-.bz-stage { --pull: 0px; position: relative; overflow: hidden; isolation: isolate; outline: none; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
-  width: min(100%, calc(min(100dvh, 880px) * 9 / 16)); height: min(100dvh, 880px); border-radius: 30px; color: var(--chalk); cursor: pointer;
-  translate: 0 var(--pull); scale: calc(1 - min(var(--pull) / 2400px, 0.15)); transition: translate 0.2s, scale 0.2s;
-  box-shadow: 0 30px 80px color-mix(in srgb, var(--island) 50%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--chalk) 10%, transparent);
-  background: radial-gradient(120% 70% at 85% 0%, var(--glow), transparent 60%), linear-gradient(165deg, var(--bg1), var(--bg2)); }
-.bz-stage[style*='--pull'] { transition: none; }
-.bz-stage::after { content: ''; position: absolute; inset: 0; z-index: -1; background-image: var(--grain); background-size: 160px; opacity: 0.22; mix-blend-mode: overlay; pointer-events: none; }
-.bz-stage.k-rank { --bg1: var(--tone-green-35); --bg2: var(--board-day); --glow: color-mix(in srgb, var(--yellow) 45%, transparent); }
-.bz-stage.k-won { --bg1: var(--tone-green-51); --bg2: var(--tone-green-18); --glow: color-mix(in srgb, var(--lime) 60%, transparent); }
-.bz-stage.k-lost, .bz-stage.k-tie { --bg1: var(--tone-blue-21); --bg2: var(--tone-grey-6); --glow: color-mix(in srgb, var(--tone-red-62) 38%, transparent); }
-.bz-stage.k-tie { --glow: color-mix(in srgb, var(--tone-sky-76) 40%, transparent); }
-.bz-stage.k-move { --bg1: var(--tone-orange-33-2); --bg2: var(--tone-orange-8); --glow: color-mix(in srgb, var(--yellow) 50%, transparent); }
-.bz-stage.k-odds { --bg1: var(--tone-sky-40); --bg2: var(--tone-sky-11); --glow: color-mix(in srgb, var(--tone-sky-76) 55%, transparent); }
-@media (max-width: 760px) { .bz-stage { width: 100%; height: 100dvh; border-radius: 0; box-shadow: none; } }
-@media (prefers-reduced-motion: no-preference) {
-  .bz-stage[data-dir='0'] { animation: bz-open 0.42s cubic-bezier(0.2, 0.9, 0.25, 1) both; }
-  .bz-viewer.out .bz-stage { animation: bz-open 0.26s cubic-bezier(0.5, 0, 0.75, 0.3) reverse both; }
-  .bz-stage[data-dir='1'] { transform-origin: 0% 50%; animation: bz-turn-next 0.45s cubic-bezier(0.25, 0.9, 0.3, 1) both; }
-  .bz-stage[data-dir='-1'] { transform-origin: 100% 50%; animation: bz-turn-prev 0.45s cubic-bezier(0.25, 0.9, 0.3, 1) both; }
-  .bz-body > * { animation: bz-rise 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15) both; }
-  .bz-body > :nth-child(2) { animation-delay: 0.05s; } .bz-body > :nth-child(3) { animation-delay: 0.1s; }
-  .bz-body > :nth-child(4) { animation-delay: 0.15s; } .bz-body > :nth-child(5) { animation-delay: 0.2s; }
-}
-@keyframes bz-open { from { transform: translate(calc(var(--ox) - 50vw), calc(var(--oy) - 50vh)) scale(0.1); border-radius: 50%; opacity: 0.4; } }
-@keyframes bz-turn-next { from { transform: perspective(1400px) translateX(60%) rotateY(-60deg); opacity: 0.3; } }
-@keyframes bz-turn-prev { from { transform: perspective(1400px) translateX(-60%) rotateY(60deg); opacity: 0.3; } }
-@keyframes bz-rise { from { transform: translateY(18px) scale(0.96); opacity: 0; } }
-
-.bz-bars { position: absolute; z-index: 2; top: max(10px, env(safe-area-inset-top)); left: 12px; right: 12px; display: flex; gap: 4px; }
-.bz-bars span { flex: 1; height: 3px; border-radius: 999px; overflow: hidden; background: color-mix(in srgb, var(--chalk) 32%, transparent); }
-.bz-bars i { display: block; height: 100%; border-radius: inherit; background: var(--chalk); transform: scaleX(0); transform-origin: 0 50%; }
-.bz-bars .done i { transform: none; }
-.bz-bars .on i { animation: bz-fill linear both; }
-.bz-stage.paused .bz-bars .on i { animation-play-state: paused; }
-@keyframes bz-fill { to { transform: none; } }
-@media (prefers-reduced-motion: reduce) { .bz-bars .on i { transform: none; } }
-.bz-top { position: absolute; z-index: 2; top: calc(max(10px, env(safe-area-inset-top)) + 12px); left: 12px; right: 6px; display: flex; align-items: center; gap: 10px; transition: opacity 0.2s; }
-.bz-top-pic { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--chalk); background-color: color-mix(in srgb, var(--chalk) 20%, transparent); }
-.bz-top-pic.ph { display: grid; place-items: center; font: 800 16px/1 var(--display); color: var(--chalk); }
-.bz-top-who { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px; }
-.bz-top-who b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
-.bz-top-who small { flex: none; font-size: 13px; color: color-mix(in srgb, var(--chalk) 72%, transparent); }
-.bz-x { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: var(--chalk); cursor: pointer; }
-.bz-x:hover { background: color-mix(in srgb, var(--chalk) 14%, transparent); }
-.bz-stage.paused .bz-top, .bz-stage.paused .bz-bars { opacity: 0.35; }
-.bz-hint { position: absolute; bottom: max(16px, env(safe-area-inset-bottom)); left: 0; right: 0; margin: 0; text-align: center; font-size: 12.5px; color: color-mix(in srgb, var(--chalk) 60%, transparent); }
-
-.bz-body { position: absolute; inset: 90px 26px 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; pointer-events: none; }
-.bz-body p { margin: 0; }
-.bz-kick { font-size: 16px; font-weight: 700; color: color-mix(in srgb, var(--chalk) 82%, transparent); }
-.bz-big { font: 900 clamp(104px, 34vw, 150px)/0.85 var(--display); letter-spacing: -0.03em; color: var(--chalk); text-shadow: 5px 6px 0 color-mix(in srgb, var(--island) 32%, transparent); }
-.k-rank .bz-big { color: var(--yellow); }
-.bz-body .tier { font-size: 14px; padding: 7px 14px; }
-.bz-line { font: 800 24px/1.15 var(--display); letter-spacing: 0.01em; }
-.bz-line.up { color: var(--lime); } .bz-line.down { color: var(--tone-red-76); }
-.bz-sub { max-width: 30ch; font-size: 15.5px; line-height: 1.45; color: color-mix(in srgb, var(--chalk) 78%, transparent); }
-.bz-score { display: flex; align-items: center; gap: 18px; }
-.bz-score > span { display: grid; justify-items: center; gap: 10px; }
-.bz-score b { font: 900 54px/1 var(--display); letter-spacing: -0.02em; color: color-mix(in srgb, var(--chalk) 70%, transparent); }
-.k-won .bz-score .bz-me b { color: var(--yellow); text-shadow: 4px 5px 0 color-mix(in srgb, var(--island) 30%, transparent); }
-.k-lost .bz-score > span:last-child b { color: var(--chalk); }
-.bz-score .bz-vs { font: 800 18px/1 var(--display); color: color-mix(in srgb, var(--chalk) 60%, transparent); }
-.bz-score-pic { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 3px var(--chalk); background-color: color-mix(in srgb, var(--chalk) 20%, transparent); }
-.bz-score-pic.ph { display: grid; place-items: center; font: 800 24px/1 var(--display); color: var(--chalk); }
-.k-lost .bz-score .bz-me .bz-score-pic { filter: grayscale(1); }
-.bz-players { display: grid; gap: 8px; width: min(100%, 320px); margin: 0; padding: 0; list-style: none; }
-.bz-players li { display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; border-radius: 999px; text-align: left; font-size: 16px; font-weight: 700;
-  background: color-mix(in srgb, var(--chalk) 13%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chalk) 16%, transparent); }
-.bz-players li.out { opacity: 0.72; }
-.bz-players small { margin-left: auto; font-size: 12.5px; color: color-mix(in srgb, var(--chalk) 70%, transparent); }
-.bz-players .sign { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%; font-weight: 900; color: var(--ink); background: var(--lime); }
-.bz-players .out .sign { background: var(--tone-red-76); }
-.bz-pl { flex: none; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: color-mix(in srgb, var(--chalk) 20%, transparent); }
-.bz-odds .aring { width: 190px; height: 190px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--chalk) 12%, transparent), 0 20px 50px color-mix(in srgb, var(--island) 35%, transparent); }
-.bz-odds .aring svg { stroke-width: 3.2; }
-.bz-odds .aring-n b { font-size: 54px; }
 
 /* ---- the streak island ---- */
 .bz-island { position: fixed; z-index: 96; top: max(10px, env(safe-area-inset-top)); left: 50%; display: flex; align-items: center; gap: 12px;
@@ -4648,34 +4526,13 @@ html:is(.admin-mode, .locked) .tx-edge { display: none; }
 .bz-spark { position: absolute; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 1.5px var(--outline-day); will-change: transform, opacity; }
 .bz-spark.w { width: 7px; height: 7px; background: var(--chalk); }
 
-/* night: the rail sits on the night card like everything else; the badge's ring matches the dark face */
-:root[data-theme='dark'] .bz-streak.hot { background-color: var(--tone-amber-18); box-shadow: inset 0 0 0 1.5px var(--tone-amber-45); }
+/* night: the New mark keeps dark ink */
 :root[data-theme='dark'] .bz-new { color: var(--outline-day); }
-/* the island steps aside for a story, and on a wide screen drops in under the header rather than over the tabs */
+/* the island steps aside for a focused view, and on a wide screen drops in under the header rather than over the tabs */
 html.focusing .bz-island { opacity: 0; pointer-events: none; }
 @media (min-width: 761px) { .bz-island { top: 96px; } }
 
-/* ---- 2.4, part two: who's here, away and back, the Home Screen (src/buzz/presence.js, away.js, install.js) ---- */
-/* here now: a green "active" dot on a face whose manager is on the site, and the count on the rail */
-.bz-on { position: absolute; left: 3px; bottom: 3px; width: 17px; height: 17px; border-radius: 50%; background: var(--tone-green-50); box-shadow: 0 0 0 3px var(--face, var(--chalk)); }
-@media (prefers-reduced-motion: no-preference) {
-  .bz-on::after { content: ''; position: absolute; inset: 0; border-radius: 50%; animation: bz-live 2.2s ease-out infinite; }
-}
-@keyframes bz-live { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tone-green-50) 55%, transparent); } 75%, 100% { box-shadow: 0 0 0 9px rgba(47, 209, 88, 0); } }
-.bz-here { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 9px; border-radius: 999px; font: 700 12.5px/1 var(--body); color: var(--ink);
-  background-color: var(--tile); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--tone-green-50) 55%, transparent); white-space: nowrap; }
-.bz-here i { width: 8px; height: 8px; border-radius: 50%; background: var(--tone-green-50); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone-green-50) 22%, transparent); }
-.bz-rail-head .bz-here { align-self: center; }
-.bz-rail-head .bz-here + .bz-streak { margin-left: 0; }
-.bz-rail-head .bz-here { margin-left: auto; }
-/* phones: the chips get a row of their own under the title, here-now on the left and the streak on the right */
-.bz-break { display: none; }
-@media (max-width: 760px) {
-  .bz-break { display: block; flex-basis: 100%; height: 0; }
-  .bz-rail-head .bz-here { margin-left: 0; }
-  .bz-rail-head .bz-here + .bz-streak { margin-left: auto; }
-}
-
+/* ---- 2.4, part two: away and back, the Home Screen (src/buzz/away.js, install.js) ---- */
 /* the island's arrow and bolt, and a note you can tap to act on */
 .bz-island .bz-arrow { width: 24px; height: 24px; color: var(--yellow); }
 .bz-island .bz-arrow.up { color: var(--lime); } .bz-island .bz-arrow.down { color: var(--tone-red-76); }
@@ -5702,10 +5559,9 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
    up only where something moves or answers a finger, so the bowl stays the bowl at rest:
    1. the press bubble: a finger's touch swirls a drop of the groove out from under it (a quarter turn while it spreads, src/touch.js)
    2. the dock: while a finger slides the tab pill along, the amber droplet melts into the groove
-   3. story rings: a manager's story you haven't watched spins in the groove (yours stays yellow, yellow means you)
-   4. rings that fill: the swipe island's pull ring and the top pill's scroll ring are drawn in the groove's colours (SVG gradient)
-   5. the headline timer: the active dot fills with the groove instead of yellow
-   6. the reveal stage: a slow lava lamp of the groove drifts under the stadium beams
+   3. rings that fill: the swipe island's pull ring and the top pill's scroll ring are drawn in the groove's colours (SVG gradient)
+   4. the headline timer: the active dot fills with the groove instead of yellow
+   5. the reveal stage: a slow lava lamp of the groove drifts under the stadium beams
    Transform and opacity only; reduced motion keeps every piece and stills it, reduced transparency drops the lava lamp. */
 :root { --groove: url("assets/groove.webp"); --groove-sq: url("assets/groove-sq.webp"); }
 .groove-grad stop:nth-child(1) { stop-color: var(--groove-gold); }
@@ -5724,17 +5580,14 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
   .tabs.dragging a.hot .ti { filter: drop-shadow(0 1px 1.5px color-mix(in srgb, var(--island) 60%, transparent)); }
 }
 
-/* 3. story rings: new stories spin in the groove */
-.bz-face:not(.mine):not(.seen) .bz-ring::before { background: conic-gradient(from 200deg, var(--groove-gold), var(--groove-coral) 22%, var(--groove-pink) 42%, var(--groove-lilac) 58%, var(--groove-blue) 74%, var(--groove-pink) 88%, var(--groove-gold)); }
-
-/* 4. rings that fill */
+/* 3. rings that fill */
 .sw-ring, .tx-swipe.go .sw-ring { stroke: url(#sw-groove); }
 .tx-top-ring { stroke: url(#top-groove); }
 
-/* 5. the headline timer */
+/* 4. the headline timer */
 .car-dot i { background: var(--groove) 50% 45% / 400% auto; }
 
-/* 6. the reveal stage's lava lamp */
+/* 5. the reveal stage's lava lamp */
 .rv-groove { position: absolute; inset: -45% -20%; z-index: -3; pointer-events: none; background: var(--groove) center / cover; opacity: 0.85;
   animation: rv-groove 22s ease-in-out infinite alternate; }
 @keyframes rv-groove { from { transform: rotate(-8deg) scale(1); } to { transform: rotate(14deg) scale(1.25) translateY(-6%); } }
