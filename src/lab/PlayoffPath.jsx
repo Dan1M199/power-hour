@@ -5,12 +5,21 @@
 // read again from only the seasons where that happened, so you can build your own scenario. The scenario builder (Dan's
 // request Nov 17) lists every remaining game week by week as two team buttons, a first visit points at one ("Tap a
 // team", until this device has picked once: ph-pth-picked), and a sticky bar carries the picks and the odds they moved.
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { restOfSeason, playoffPath } from '../../lib/labmodels.js';
 import { TeamAvatar } from '../shared.jsx';
 import { scenarioFiles } from './scenarioCard.js';
 import { get as lsGet, put as lsPut } from '../storage.js';
 import { shareFile, canShareFiles } from '../dashboard/share.js';
+
+// A value that follows its source one beat later: the render with the new pick paints first (the button shows pressed in
+// the same frame) and the numbers, read off 20,000 seasons, follow in the next. React's useDeferredValue did this; the
+// site runs on Preact, whose version hands the value straight back.
+function useDeferred(v) {
+  const [d, setD] = useState(v);
+  useEffect(() => { if (d === v) return undefined; const t = setTimeout(() => setD(v), 0); return () => clearTimeout(t); }, [v, d]);
+  return d;
+}
 
 const p0 = (x) => (x == null ? '–' : x > 0 && x < 0.005 ? '<1%' : x < 1 && x > 0.995 ? '>99%' : `${Math.round(x * 100)}%`);
 const pts = (x) => `${Math.round(x * 100)}%`;
@@ -51,8 +60,8 @@ export function PlayoffPath({ D, me, h }) {
   const [wdir, setWdir] = useState(''); // which way the last week change went, so the games slide in from that side
   const [taught, setTaught] = useState(() => lsGet('ph-pth-picked') === '1');
   const rid = pickRid ?? me ?? bubble;
-  // a tap paints its pressed button at once; the seasons are read again in a render React can drop if another tap comes
-  const dRid = useDeferredValue(rid), dPicks = useDeferredValue(picks);
+  // a tap paints its pressed button at once; the seasons are read again a beat later (useDeferred)
+  const dRid = useDeferred(rid), dPicks = useDeferred(picks);
   const stale = dRid !== rid || dPicks !== picks;
   const base = useMemo(() => S && playoffPath(S, D, dRid), [S, D, dRid]);
   const P = useMemo(() => S && (Object.keys(dPicks).length ? playoffPath(S, D, dRid, { picks: dPicks }) : base), [S, D, dRid, dPicks, base]);

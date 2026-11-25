@@ -1,4 +1,4 @@
-// The build: Vite bundles index.html, app.js, lib/ and src/ (the React pages, JSX through @vitejs/plugin-react) and
+// The build: Vite bundles index.html, app.js, lib/ and src/ (the React pages, JSX through @preact/preset-vite) and
 // styles.css into dist/, which Vercel serves (vercel.json).
 // - Bundled files go to dist/bundle/ with a hash in their names, so they can be cached for a year (vercel.json).
 // - Nothing is translated for older browsers (target esnext): the site ships the same JS and CSS features as before.
@@ -6,10 +6,12 @@
 //   (headshots, videos, the flyer) and demo/ (the ?demo=1 snapshot).
 // - The early data script in index.html is a plain script whose import('/lib/newsclock.js') the build points at a
 //   small chunk of its own, so the league data is still asked for before the main bundle arrives.
+// - The pages are written against React's API but run on Preact (Nov 25, performance): the preset aliases react and
+//   react-dom to preact/compat (about 10 KB instead of react-dom's 200), and gives the dev server Preact's hot reload.
 // - Each page is its own chunk (app.js, LOADERS); preloadFirstPage below starts the one the address asks for early.
 // - api/ isn't part of this: Vercel builds those functions from the repo, as before.
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import preact from '@preact/preset-vite';
 import { cpSync, readFileSync, writeFileSync } from 'node:fs';
 
 const COPY = ['assets', 'demo'];
@@ -87,5 +89,5 @@ export default defineConfig({
     cssTarget: 'esnext',
     assetsInlineLimit: 0, // keep every picture and font a file of its own, as before
   },
-  plugins: [react(), copyRuntimeFiles(), absoluteShareCard(), preloadFirstPage()],
+  plugins: [preact(), copyRuntimeFiles(), absoluteShareCard(), preloadFirstPage()],
 });

@@ -5649,3 +5649,18 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
    While the kicker loader is up, the footer would sit on the first screen and its sponsor and logo pictures (about 75 KB)
    would download ahead of the league data and the page's code. Hidden until the page replaces the loader. */
 main:has(> #loading) + .footer { display: none; }
+
+/* ---------- the headline's top (Nov 25, Dan's request: "a lot of dead space between the headline and the tag") ----------
+   The picture (the managers' faces or the player card) floats top right, and the kicker then the headline run down the
+   left beside it, left aligned; once the headline is past the picture it wraps the full width. The picture's margins
+   leave room for its tilt, its caption and the manager pinned to a player card. */
+.slide-top { display: flow-root; }
+.slide-top > :is(.lead-faces, .player-print) { float: right; }
+.slide-top > .lead-faces { margin: -4px -4px 4px 10px; }
+.slide-top > .player-print { margin: 2px 6px 34px 18px; }
+.slide-top > .lead-hed { text-wrap: pretty; }
+@media (max-width: 760px) {
+  .slide-top > .lead-faces { margin: -4px -4px 2px 8px; }
+  .slide-top > .player-print { width: 96px; margin: 0 4px 44px 12px; }
+}
+.slide-top > .kicker > span:not(.k) { white-space: nowrap; } /* the date and Breaking never break */

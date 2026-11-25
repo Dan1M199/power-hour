@@ -126,18 +126,21 @@ const TONIGHT = new Set(['monday', 'locked']);
 function Slide({ st, i, n, D, h, groups, runs, date, slideRef, hk, rx, front }) {
   const run = runs?.find((x) => x.i.includes(i));
   const breaking = !!st.breaking;
+  // The top of the card: the picture floats top right, and the kicker then the headline run down the left beside it,
+  // the headline wrapping under the picture once it's past it, so no band of empty board sits between them
+  // (Dan's request Nov 25). One block so the float works; .slide stays a flex column for everything under it.
+  const Hed = i ? 'h2' : 'h1';
   const top = (
     <div className="slide-top">
+      {st.player ? <PlayerPrint st={st} h={h} /> : <Faces st={st} D={D} h={h} />}
       <p className="kicker">
         {breaking ? <Brk /> : null}
         <span>{i ? (TONIGHT.has(st.type) ? 'Tonight' : 'Also today') : date}</span>
         <span className={`k${st.group ? ` g-${st.group}` : ''}`}>{st.kicker}{run && run.i.length > 1 ? <small>{`${run.i.indexOf(i) + 1} of ${run.i.length}`}</small> : null}</span>
       </p>
-      {st.player ? <PlayerPrint st={st} h={h} /> : <Faces st={st} D={D} h={h} />}
+      <Hed className={`lead-hed${st.mark ? ' marked' : ''}`}><Marked text={st.headline} marks={st.mark} /></Hed>
     </div>
   );
-  const Hed = i ? 'h2' : 'h1';
-  const hed = <Hed className={`lead-hed${st.mark ? ' marked' : ''}`}><Marked text={st.headline} marks={st.mark} /></Hed>;
   // double tap the headline to fire it (src/buzz/burst.js); the handlers live as long as the slide, so a re-render
   // between the two taps doesn't lose the first
   const key = useRef(hk);
@@ -145,7 +148,7 @@ function Slide({ st, i, n, D, h, groups, runs, date, slideRef, hk, rx, front }) 
   const tap = useMemo(() => doubleTap((x, y) => fireHeadline(key.current, x, y)), []);
   return (
     <article ref={slideRef} {...(front ? tap : null)} className={`slide${breaking ? ' breaking' : ''}`} id={`slide-${i}`} role="group" aria-roledescription="slide" aria-label={`Headline ${i + 1} of ${n}`} inert={!front}>
-      {top}{hed}
+      {top}
       <p className="lead-deck"><Marked text={st.deck} marks={st.mark} /></p>
       {st.cta ? <WhatIfLink cls="on-scene" label={st.cta.label} /> : null}
       {rx.enabled ? <Suspense fallback={<div className="rxn-hold" />}><Reactions hk={hk} label={tickOf(st).hook} rx={rx} react={react} /></Suspense> : null}
