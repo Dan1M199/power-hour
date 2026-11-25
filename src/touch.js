@@ -94,19 +94,20 @@ function initDock(placeInk) {
   if (!nav || !ink) return;
   let drag = null;
   const tabs = () => [...nav.querySelectorAll('a')].filter((a) => !a.hidden);
-  const under = (x) => {
-    let best = null, gap = Infinity;
-    for (const a of drag.tabs) { const r = a.getBoundingClientRect(), g = Math.abs(x - (r.left + r.width / 2)); if (g < gap) { gap = g; best = a; } }
-    return best;
-  };
-  const aim = (a) => {
-    if (!a || a === drag.over) return;
-    drag.over?.classList.remove('hot');
-    drag.over = a;
-    a.classList.add('hot');
-    ink.style.width = `${a.offsetWidth}px`;
-    ink.style.transform = `translateX(${a.offsetLeft}px)`;
-    haptic();
+  // The dock stays fixed throughout a drag. Measure its cells once, then move only the lens.
+  const follow = (x) => {
+    const cells = drag.cells;
+    const cell = cells.reduce((nearest, c) => Math.abs(x - c.center) < Math.abs(x - nearest.center) ? c : nearest);
+    if (cell.link !== drag.over) {
+      drag.over?.classList.remove('hot');
+      drag.over = cell.link;
+      cell.link.classList.add('hot');
+      ink.style.width = `${cell.width}px`;
+      haptic();
+    }
+    const last = cells[cells.length - 1];
+    const left = Math.max(cells[0].left, Math.min(last.left + last.width - cell.width, x - drag.origin - cell.width / 2));
+    ink.style.transform = `translateX(${left}px)`;
   };
   const end = (pick) => {
     if (!drag) return;
@@ -125,7 +126,9 @@ function initDock(placeInk) {
   };
   nav.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse' || !phone() || !e.isPrimary) return;
-    drag = { id: e.pointerId, x: e.clientX, moved: false, over: null, tabs: tabs() };
+    const origin = nav.getBoundingClientRect().left;
+    const cells = tabs().map((link) => ({ link, left: link.offsetLeft, width: link.offsetWidth, center: origin + link.offsetLeft + link.offsetWidth / 2 }));
+    if (cells.length) drag = { id: e.pointerId, x: e.clientX, moved: false, over: null, origin, cells };
   });
   nav.addEventListener('pointermove', (e) => {
     if (!drag || e.pointerId !== drag.id) return;
@@ -136,7 +139,7 @@ function initDock(placeInk) {
       nav.classList.add('dragging');
       try { nav.setPointerCapture(drag.id); } catch { /* the finger already left */ }
     }
-    aim(under(e.clientX));
+    follow(e.clientX);
   });
   nav.addEventListener('pointerup', (e) => { if (drag && e.pointerId === drag.id) end(true); });
   nav.addEventListener('pointercancel', () => end(false));
@@ -306,10 +309,10 @@ function initTopPill() {
 // ---------- hello ----------
 // Once per device: a glass note above the dock that names the update and the one gesture nobody would guess.
 function hello() {
-  const KEY = 'ph-hello-60';
+  const KEY = 'ph-hello-61';
   if (root.classList.contains('admin-mode') || root.classList.contains('locked')) return;
   try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, '1'); } catch { return; }
-  const note = el('div', 'tx-hello', `<b>6.0</b><span><strong>Squared off.</strong> ${phone() ? 'Flatter and sharper, same colours. Swipe sideways on any page to change tabs.' : 'Flatter and sharper, same colours, everything where you left it.'}</span>`);
+  const note = el('div', 'tx-hello', `<b>6.1</b><span><strong>The cartoon glass is back.</strong> ${phone() ? 'Slide your thumb along the dock and lift to switch tabs.' : 'The league is back under stadium lights.'}</span>`);
   note.setAttribute('role', 'status');
   document.body.append(note);
   const close = () => { note.classList.remove('on'); setTimeout(() => note.remove(), 500); };

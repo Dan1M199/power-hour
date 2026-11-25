@@ -68,10 +68,10 @@ typography:
     fontWeight: 700
     lineHeight: 1.2
 rounded:
-  md: "0px"
-  lg: "0px"
-  xl: "0px"
-  pill: "0px"
+  md: "16px"
+  lg: "24px"
+  xl: "32px"
+  pill: "999px"
 spacing:
   xs: "8px"
   sm: "14px"
@@ -125,7 +125,7 @@ components:
     padding: "8px 16px"
 ---
 
-> **6.0 uses square panels on a muted field.** The masthead and scoreboards are deep green. Amber marks the active control and yellow identifies the viewer’s team. Score breakdowns, player lists and filter groups sit in slightly darker trays with a shallow inner shadow (`--recess`). Cards use a hairline and a short shadow. On phones the masthead scrolls away, the dock stays above the home indicator, and the page heading and personal summary appear before the headline carousel. Both themes use the tokens in the “6.0: square” block of `styles.css`. The sections below describe the earlier stadium design.
+> The current language is **the bowl**: everything is a stadium shape or a circle, shaded and stacked in tiers; things come out from behind other things. Amber marks actions and what's on; magenta is a tiny hint on a few ledges and text selection. Where anything below still says cartoon glass, ink outlines, hard ledges or no soft shadows, the bowl wins. The rules live in the "the bowl" section of `styles.css` and the Design system section of `CLAUDE.md`.
 
 # Design System: The Power Hour
 
