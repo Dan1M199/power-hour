@@ -306,10 +306,10 @@ function initTopPill() {
 // ---------- hello ----------
 // Once per device: a glass note above the dock that names the update and the one gesture nobody would guess.
 function hello() {
-  const KEY = 'ph-hello-25';
+  const KEY = 'ph-hello-60';
   if (root.classList.contains('admin-mode') || root.classList.contains('locked')) return;
   try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, '1'); } catch { return; }
-  const note = el('div', 'tx-hello', `<b>2.5</b><span><strong>The cartoon glass is back.</strong> ${phone() ? 'The old look returns, with What if in the Lab. Swipe sideways on any page to change tabs.' : 'The old look returns, with What if and playoff scenarios in the Lab.'}</span>`);
+  const note = el('div', 'tx-hello', `<b>6.0</b><span><strong>Squared off.</strong> ${phone() ? 'Flatter and sharper, same colours. Swipe sideways on any page to change tabs.' : 'Flatter and sharper, same colours, everything where you left it.'}</span>`);
   note.setAttribute('role', 'status');
   document.body.append(note);
   const close = () => { note.classList.remove('on'); setTimeout(() => note.remove(), 500); };

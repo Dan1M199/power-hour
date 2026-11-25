@@ -5743,3 +5743,198 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
   repeating-linear-gradient(90deg, transparent 0 46px, color-mix(in srgb, var(--chalk) 4%, transparent) 46px 92px); }
 @media (prefers-reduced-motion: reduce) { .rv-groove { animation: none; } }
 @media (prefers-reduced-transparency: reduce) { .rv-groove { display: none; } }
+
+/* ---------- 6.0: square (Dan's request Nov 25: "square everything out, make it even flatter, and more modern. Make
+   layers blend in to each other") ----------
+   Same colours, new shape. The bowl's three rules turned around:
+   1. Square. Nothing is rounded except things that are round in life: the vinyl record, the sun on its arc, the
+      footballs, the press ripple, and the marks inside charts (SVG). Faces are square too.
+   2. Flat. No ledges, inked edges, gloss, sheen, glints, halftone or drop shadows. Depth comes from tone alone.
+   3. Layers blend. Every surface is a tone of what it sits on, so nothing needs an outline: the header is the sky,
+      frosted; the sky melts into the field; trays are a step darker than their card, drawers a step darker again; a
+      control on a card is a tint, not a white pill. Hairlines (--hair) only where a seam has to read.
+   One block, last in the file, so it wins without touching what's above; git history has the 2.5 look under it. The
+   universal rules below are !important, so !important appears after them only where a rule has to beat them (what
+   stays round, the marks that say you) or an older !important; everything else matches the specificity it overrides. */
+:root {
+  --hair: color-mix(in srgb, var(--ink) 11%, transparent);
+  --hair-2: color-mix(in srgb, var(--ink) 20%, transparent);
+  --wash: color-mix(in srgb, var(--ink) 6%, transparent);     /* a control resting on a card */
+  --wash-2: color-mix(in srgb, var(--ink) 11%, transparent);  /* the same under a mouse */
+  --face: #FBFCF8;
+  --tile: #E7EEDE;     /* a tray: one step under the card */
+  --tile-2: #D5E1C8;   /* tracks and hover fills: two steps */
+  --line: #D2DDC6;
+  --drawer: #E7EEDE;   /* a report opening under its card: the tray's tone, so the two read as one sheet */
+  --in-tile: #FBFCF8;
+  --in-tile-2: #E7EEDE;
+  --in-line: #D2DDC6;
+  --sheen: none;
+  --gloss: linear-gradient(transparent, transparent);
+  --nav-gloss: linear-gradient(transparent, transparent);
+  --nav-dots: none;
+  --glint: none;
+  --r-xl: 0px; --r-lg: 0px; --r-md: 0px;
+  --lip: 0px;
+  --head-h: 64px;
+}
+:root[data-theme='dark'] {
+  --face: #13211A;
+  --hair: color-mix(in srgb, var(--ink) 10%, transparent);
+  --hair-2: color-mix(in srgb, var(--ink) 18%, transparent);
+  --wash: color-mix(in srgb, var(--ink) 7%, transparent);
+  --wash-2: color-mix(in srgb, var(--ink) 13%, transparent);
+}
+
+/* 1 and 2: square and flat, everywhere */
+*, *::before, *::after { border-radius: 0 !important; box-shadow: none !important; text-shadow: none !important; }
+/* what stays round: the record and its label, the sun, the footballs, the press ripple */
+:is(.record, .record .label, .moon, .lo-ball span, .ball, .tx-lens i) { border-radius: 50% !important; }
+
+/* yellow still means you: a flat ring on your card, a flat inset on your row, cell or side, a square frame on your face */
+.glass { box-shadow: 0 0 0 var(--ring-w) var(--yellow) !important; }
+@media (max-width: 760px) {
+  .rank .rank-btn::before, .rank .detail > div { box-shadow: 0 0 0 var(--ring-w) var(--yellow) !important; }
+}
+:is(.trade-side.mine, .fut.mine, .heat tr.mine th, .heat tr.mine td, .tl-row.mine .tl-name b, .tl-row.mine .tl-track, .pth-games li.yours,
+  .wi-rows li.chosen:not(.open) .wi-row, .wi-rows li.swapped:not(.open) .wi-row, .wi-alt[aria-pressed='true'], .wi-wkc-row.flip, .wi-legend .k-flip,
+  .wi-weeks li.flip, .rt-side.you, .rt-swung li, .wr.mine, .wi-sheet .wi-tray-foot, .unveil-team.mine) { box-shadow: inset 0 0 0 2px var(--mine-edge) !important; }
+.wi-table tr.mine td:first-child { box-shadow: inset 3px 0 0 var(--mine-edge) !important; }
+:is(.me-face, .me-btn-face, .footer .masthead img) { outline: 2px solid var(--yellow); outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+/* no gloss, glints, shine or sketches */
+:is(.car-card, .gotw)::after, .car-card::before, .wi-cta-glint, .wi-cta .spk, .pth-cta .spk, :is(.pth-cta, .wi-cta)::before, .pth-cta::after, .tx-shine,
+  :is(.pull, .mu-more)::before, :is(.key-tag, .toilet-tag)::before, :is(.key-tag, .toilet-tag)::after,
+  .rank:first-child .jersey::after, .stand tr.cut td:last-child::after, .you-card.empty::before, .you-card.empty::after,
+  .chart :is(.shine, .glint) { display: none !important; }
+.lead-hed mark.hl, .lead-deck mark.hl { background-image: none; }
+@media (hover: hover) {
+  :is(.filters :is(button, a), .pick, .gotw-more, .cta, .drive-pick button, .odds-more, .poll-pick, .unveil-team, .chip:is(.to-again, .rank-pdf))::after { display: none; }
+  .mu:hover, .idea:hover, .wire-team:hover, .trade:hover, .rank-card:hover, .car-arrow:hover,
+    .filters :is(button, a):hover, .pick:hover, .gotw-more:hover { transform: none; }
+}
+:is(.wi-cta, .pth-cta, .filters :is(button, a), .pick, .gotw-more):active { transform: none; }
+:is(.fo-vs, .gs-logo img, .bz-burst-flame, .pp-val .stk-line, .tabs a .ti, .me-btn-icon, .pth-cta .spk) { filter: none; }
+
+/* the sky: one smooth wash, no clouds, no grain */
+.sky { background: linear-gradient(180deg, var(--sky-1) 0, var(--sky-2) 55%, var(--sky-3) 100%); }
+.sky::before, .sky::after, .cloud { display: none; }
+
+/* the field: square, no sidelines, finer chalk, and it rises out of the sky instead of starting at an edge */
+main::before { top: -120px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 239px, color-mix(in srgb, var(--chalk) 22%, transparent) 239px 240px),
+    repeating-linear-gradient(180deg, var(--grass) 0 120px, var(--stripe) 120px 240px);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, var(--island) 220px); mask-image: linear-gradient(180deg, transparent 0, var(--island) 220px); }
+main::after { display: none; }
+
+/* cards: a solid face, nothing around it */
+:is(.glass, .car-card, .gotw) { background-image: none; }
+
+/* controls: amber is on or primary; everything else is a wash of ink on whatever it sits on */
+:is(.tab-ink, .lab-tabs a[aria-current='page'], .filters :is(button, a)[aria-pressed='true'], .filters a[aria-current='page'], .cta, .gotw-more,
+  .drive-pick button[aria-pressed='true'], .chip:is(.to-again, .rank-pdf), .pth-side.on, .pth-wl.on, .pth-share:not(.alt)) { background: var(--amber); color: var(--ink-day); }
+@media (hover: hover) { :is(.cta, .gotw-more, .chip:is(.to-again, .rank-pdf)):hover { background: var(--tone-amber-55-2); } }
+:is(.odds-more, .poll-pick, .unveil-x, .to-skip, .xp, .pth-wl:not(.on), .pth-side:not(.on), .pth-share.alt, .theme-btn) { background-color: var(--wash); }
+@media (hover: hover) { :is(.odds-more, .poll-pick, .xp, .pth-wl:not(.on), .pth-side:not(.on), .theme-btn):hover { background-color: var(--wash-2); } }
+.pick:not(.on) { background-color: var(--wash); }
+.team-pick select { background-color: var(--wash); }
+:is(.track, .gtrack, .poll-bar, .h2h-bar span) { background-color: var(--wash-2); }
+.sched .g { padding: 8px 0; }
+
+/* the header (desktop): the full width of the window, flush to the top, the sky's own colour frosted over the page.
+   The tabs are flat words; the one you're on stands in a solid amber block the header's full height. */
+@media (min-width: 761px) {
+  .topbar, html.liquid .topbar, :root[data-theme='dark'].liquid .topbar { top: 0; width: 100%; height: var(--head-h); margin: 0; padding: 0 calc((100% - var(--page)) / 2); gap: 24px;
+    background-color: color-mix(in srgb, var(--sky-1) 80%, transparent); background-image: none;
+    -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4); }
+  .topbar::before, .topbar::after { display: none; }
+  .tabs, :root[data-theme='dark'] .tabs { align-self: stretch; padding: 0; gap: 0; background: none; }
+  .tabs a { display: flex; align-items: center; padding: 0 22px; font-size: 15px; color: var(--ink); }
+  .tabs a[hidden] { display: none; }
+  .tabs a .bz-badge { top: 10px; right: 4px; }
+  .topbar > .brand { flex: none; }
+  .tab-ink { top: 0; bottom: 0; }
+  .tx-edge { display: none !important; }
+  html { scroll-padding-top: calc(var(--head-h) + 16px); }
+  .theme-btn { width: 40px; height: 40px; }
+}
+@media (min-width: 761px) and (max-width: 959px) { .topbar { gap: 12px; } .tabs a { padding: 0 13px; } }
+.tab-ink, :root[data-theme='dark'] .tab-ink { background: var(--amber); }
+.tabs a[aria-current='page'] { color: var(--ink-day); }
+
+/* phones: the dock is a bar across the foot of the screen, flush to its edges, and you are its last cell */
+@media (max-width: 760px) {
+  :root { --dock-h: 60px; --dock-gap: env(safe-area-inset-bottom, 0px); --bar-w: 100vw; --bar-x: 0px; }
+  .tabs, :root[data-theme='dark'] .tabs, html.liquid .tabs, :root[data-theme='dark'].liquid .tabs { left: 0; right: 0; bottom: 0; width: 100%; height: calc(var(--dock-h) + var(--dock-gap));
+    padding: 0 var(--dock-h) var(--dock-gap) 0; gap: 0; background-color: color-mix(in srgb, var(--face) 86%, transparent); background-image: none;
+    -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4); }
+  .tabs::before, .tabs::after, .me-btn::before, .me-btn::after { display: none; }
+  .tabs a { gap: 4px; color: var(--ink-2); }
+  .tabs a[aria-current='page'] { color: var(--ink-day); }
+  .tab-ink { top: 0; bottom: var(--dock-gap); }
+  .tabs.dragging .tab-ink { scale: 1; background: var(--amber); }
+  .tabs.dragging a.hot { color: var(--ink-day); }
+  .me { right: 0; bottom: var(--dock-gap); width: var(--dock-h); height: var(--dock-h); }
+  .me-btn, html.liquid .me-btn, :root[data-theme='dark'].liquid .me-btn { background: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .me-btn-face { width: 36px; height: 36px; }
+  .me.open .me-btn-face { outline-color: var(--amber); transform: none; }
+  .me.open .me-btn { background-color: var(--wash); }
+  .me-panel, :root[data-theme='dark'] .me-panel { bottom: 100%; right: 0; width: 100vw; padding: 16px; background: color-mix(in srgb, var(--face) 94%, transparent);
+    transform-origin: 100% 100%; }
+  .me-panel .me-face { width: 44px; height: 44px; }
+}
+
+/* the end zone: a full-width band again, the grass deepening into it */
+.footer { max-width: none; width: var(--page); padding: 56px 0 28px; }
+.footer::before { inset: 0 calc(50% - 50vw); background: linear-gradient(180deg, var(--grass) 0, var(--turf) 64px); }
+.footer::after { display: none; }
+.footer-logo { height: 72px; }
+@media (max-width: 760px) {
+  .footer { padding: 48px 0 calc(20px + var(--dock-h) + var(--dock-gap)); }
+  .footer-logo { height: 48px; }
+}
+
+/* faces: square photos, straight, no frame; one laid over another is cut out of it by the surface's own colour */
+:is(.lead-face, .mgr-face, .fo-face, .stat-face, .pitch-face, .strip-face, .you-face, .verdict-face, .pp-who .lead-face) { border: 0; transform: none; }
+.n2 .lf + .lf .lead-face { transform: translateY(10px); outline: 4px solid var(--board); }
+:is(.fo-side.a, .fo-side.b) .fo-face { border: 0; transform: none; }
+.lf .cap { transform: translateX(-50%); }
+.stamp { top: 4px; left: 12px; transform: none; }
+.player-print .stamp { top: 0; left: 0; }
+.player-print { transform: none; }
+.pp-card { padding: 0; gap: 0; background: none; }
+.pp-photo::after { display: none; }
+
+/* section titles: a tab of the card under them, in the card's own face, so the two read as one sheet */
+.sec-title, :root[data-theme='dark'] .sec-title { background-color: var(--face); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.sec-title:has(+ :is(.moves, .wire-team, .ideas, .matchups)) { margin-bottom: 0; padding-bottom: 9px; }
+/* filter chips on the grass: solid, flat */
+.filters :is(button, a):not([aria-pressed='true'], [aria-current='page'], :disabled),
+  :root[data-theme='dark'] .filters :is(button, a):not([aria-pressed='true'], [aria-current='page'], :disabled) { background-color: var(--face); -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* the top pill: a square of the dock's frost with the arrow; the progress ring was a circle's idea */
+.tx-top { background-color: color-mix(in srgb, var(--face) 86%, transparent); background-image: none; color: var(--ink); }
+.tx-top::before { display: none; }
+.tx-top :is(.tx-top-track, .tx-top-ring) { display: none; }
+
+/* charts: square, flat plates and bars, no casing, gloss or glint */
+.chart .plate, .chart .plate.light, .chart .bar { stroke: none; }
+.chart .line.case { display: none; }
+.chart .mine-band { stroke: none; }
+
+/* the hero on a wide screen: the page head on the carousel's top line, your card on its foot */
+.hero.with-side { align-items: stretch; }
+.hero-side { align-content: space-between; }
+
+/* controls and rows that were white pills on a card: a wash of ink, so they show on whatever they sit on */
+.waiver-fit .chip { border: 0; }
+:is(.wi-row, .wi-more, .wi-sheet-x, .wi-x, .pth-weeks button:not([aria-selected='true']), .waiver-fit .chip, .wi-search input),
+  .wi-alt:not([aria-pressed='true']), .glass select, .wi-sheet select { background-color: var(--wash); }
+@media (hover: hover) { :is(.wi-row, .wi-more, .wi-sheet-x, .wi-x, .waiver-fit .chip):hover, .wi-alt:not([aria-pressed='true']):hover { background-color: var(--wash-2); } }
+/* a switch that's on is white with an amber edge (amber is what's on) */
+.rt-toggle.on, .rt-toggle.dragged { box-shadow: inset 0 0 0 2px var(--amber) !important; }
+/* (as specific as the bowl's white-pill rule, which these follow) */
+.glass :is(.team-pick, .trade-pick) select, .mu button.odds-more, .mu button.pick:not(.on) { background-color: var(--wash); }
+@media (hover: hover) { .mu button.odds-more:hover, .mu button.pick:not(.on):hover { background-color: var(--wash-2); } }

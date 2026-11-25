@@ -68,10 +68,10 @@ typography:
     fontWeight: 700
     lineHeight: 1.2
 rounded:
-  md: "16px"
-  lg: "24px"
-  xl: "32px"
-  pill: "999px"
+  md: "0px"
+  lg: "0px"
+  xl: "0px"
+  pill: "0px"
 spacing:
   xs: "8px"
   sm: "14px"
@@ -125,7 +125,7 @@ components:
     padding: "8px 16px"
 ---
 
-> The current language is **the bowl**: everything is a stadium shape or a circle, shaded and stacked in tiers; things come out from behind other things. Amber marks actions and what's on; magenta is a tiny hint on a few ledges and text selection. Where anything below still says cartoon glass, ink outlines, hard ledges or no soft shadows, the bowl wins. The rules live in the "the bowl" section of `styles.css` and the Design system section of `CLAUDE.md`.
+> The current language is **6.0, square** (Nov 25): the same colours, but every corner is square, every surface is flat (no ledges, ink outlines, gloss, glints or shadows) and layers blend into each other by tone (the header is the sky frosted, the sky melts into the field, trays and drawers are a step under their card, controls on a card are a wash of ink). Only things round in life stay round: the record, the sun, the footballs, the press ripple and the marks inside charts. Where anything below says stadium, pill, circle, cartoon glass, ink outline, ledge, gloss or shading, 6.0 wins. Under it is **the bowl** (everything a stadium shape, shaded and stacked in tiers), which still describes the components and their colours. The rules live in the "6.0: square" block at the end of `styles.css` and the Design system section of `CLAUDE.md`.
 
 # Design System: The Power Hour
 
