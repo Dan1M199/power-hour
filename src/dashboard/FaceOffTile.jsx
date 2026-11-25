@@ -172,7 +172,7 @@ function Face({ t, h, cls }) {
   const src = h.faceSrc(t), [failed, setFailed] = useState(false), first = h.first(t);
   useLayoutEffect(() => setFailed(false), [src]);
   return src && !failed
-    ? <img className={cls} src={src} alt={first} decoding="async" onError={() => setFailed(true)} />
+    ? <img decoding="async" className={cls} src={src} alt={first} onError={() => setFailed(true)} />
     : <span className={`${cls} ph`} aria-label={first}>{(first || '?')[0]}</span>;
 }
 

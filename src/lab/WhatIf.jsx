@@ -26,7 +26,7 @@ function Face({ id, cls = 'wi-face' }) {
   const [bad, setBad] = useState(false);
   const num = /^\d+$/.test(id);
   if (bad || !num) return <span className={`${cls} ph`} aria-hidden="true">{num ? '' : id}</span>;
-  return <img className={cls} src={`https://sleepercdn.com/content/nfl/players/thumb/${id}.jpg`} alt="" loading="lazy" decoding="async" onError={() => setBad(true)} />;
+  return <img loading="lazy" decoding="async" className={cls} src={`https://sleepercdn.com/content/nfl/players/thumb/${id}.jpg`} alt="" onError={() => setBad(true)} />;
 }
 
 // the book (every scored week, indexed) is built once per league and history, and so is each player's list of

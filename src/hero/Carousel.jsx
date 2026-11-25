@@ -70,7 +70,7 @@ function PlayerPrint({ st, h }) {
       <div className="pp-card">
         <div className="pp-photo">
           {failed ? <span className="pp-img ph">{initials}</span>
-            : <img className="pp-img" src={`https://sleepercdn.com/content/nfl/players/${P.id}.jpg`} alt="" decoding="async" onError={() => setFailed(true)} />}
+            : <img decoding="async" className="pp-img" src={`https://sleepercdn.com/content/nfl/players/${P.id}.jpg`} alt="" onError={() => setFailed(true)} />}
           {pos ? <span className="pp-pos">{pos}</span> : null}
         </div>
         <figcaption><b>{P.short}</b>{team ? <small>{team}</small> : null}</figcaption>

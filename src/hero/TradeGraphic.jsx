@@ -19,7 +19,7 @@ function Mug({ p, cls = 'tg-mug' }) {
   const initials = p.name.split(' ').map((w) => w[0]).slice(0, 2).join('');
   return failed
     ? <span className={`${cls} ph`} aria-hidden="true">{initials}</span>
-    : <img className={cls} src={`https://sleepercdn.com/content/nfl/players/thumb/${p.id}.jpg`} alt="" loading="lazy" decoding="async" onError={() => setFailed(true)} />;
+    : <img loading="lazy" decoding="async" className={cls} src={`https://sleepercdn.com/content/nfl/players/thumb/${p.id}.jpg`} alt="" onError={() => setFailed(true)} />;
 }
 // two arrows passing each other, the swap between the lanes
 const Swap = () => (

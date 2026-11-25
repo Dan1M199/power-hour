@@ -9,7 +9,7 @@ export function TeamAvatar({ t, cls = 'avatar' }) {
   const [failed, setFailed] = useState(false);
   const initials = t.name.replace(/[^A-Za-z0-9 ]/g, '').split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?';
   if (!t.avatar || failed) return <span className={`${cls} ph`} aria-hidden="true">{initials}</span>;
-  return <img className={cls} src={`https://sleepercdn.com/avatars/thumbs/${t.avatar}`} alt="" loading="lazy" onError={() => setFailed(true)} />;
+  return <img loading="lazy" className={cls} src={`https://sleepercdn.com/avatars/thumbs/${t.avatar}`} alt="" onError={() => setFailed(true)} />;
 }
 
 /** The manager's photo (lib/members.js), or the team picture for an account without one. */
@@ -19,7 +19,7 @@ export function Headshot({ t, cls, h }) {
   if (!src) return <TeamAvatar t={t} cls={cls} />;
   const first = h.first(t);
   if (failed) return <span className={`${cls} ph`} aria-hidden="true">{first[0]}</span>;
-  return <img className={cls} src={src} alt={first} decoding="async" onError={() => setFailed(true)} />;
+  return <img decoding="async" className={cls} src={src} alt={first} onError={() => setFailed(true)} />;
 }
 
 /** A player's position as a coloured tag. */

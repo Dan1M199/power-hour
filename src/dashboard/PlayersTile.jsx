@@ -30,7 +30,7 @@ function Record({ p }) {
     <span className="record">
       <span className="label">{failed
         ? <b>{initials(p.name)}</b>
-        : <img src={`https://sleepercdn.com/content/nfl/players/thumb/${p.id}.jpg`} alt="" crossOrigin="anonymous" decoding="async" onError={() => setFailed(true)} />}</span>
+        : <img decoding="async" crossOrigin="anonymous" src={`https://sleepercdn.com/content/nfl/players/thumb/${p.id}.jpg`} alt="" onError={() => setFailed(true)} />}</span>
     </span>
   );
 }

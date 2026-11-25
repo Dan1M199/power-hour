@@ -96,7 +96,7 @@ function Face({ t, h }) {
   const src = h.faceSrc(t), [failed, setFailed] = useState(false), first = h.first(t);
   useLayoutEffect(() => setFailed(false), [src]);
   return src && !failed
-    ? <img className="pp-face-img" src={src} alt={first} decoding="async" onError={() => setFailed(true)} />
+    ? <img decoding="async" className="pp-face-img" src={src} alt={first} onError={() => setFailed(true)} />
     : <span className="ph">{(first || '?')[0]}</span>;
 }
 
