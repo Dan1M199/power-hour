@@ -5959,8 +5959,41 @@ main::after { display: none; }
 .lab-tabs a[aria-current='page'], .tab-ink { box-shadow: var(--shade-sm) !important; }
 .sec-title:has(+ :is(.moves, .wire-team, .ideas, .matchups)) { box-shadow: none !important; } /* a tab of its card: the card's shadow is its */
 
-/* the headline's top: its own band, a step lighter than the board, so the date, section and photos read apart from the
-   story under them (Dan's request Nov 25: "too mushed together") */
-.slide-top { margin: -30px -30px 22px; padding: 26px 30px 22px; background-color: color-mix(in srgb, var(--chalk) 8%, var(--board)); }
-.n2 .lf + .lf .lead-face { outline-color: color-mix(in srgb, var(--chalk) 8%, var(--board)); }
-@media (max-width: 760px) { .slide-top { margin: -22px -18px 18px; padding: 18px 18px 18px; } }
+/* the headline's top (Nov 25, Dan's request: too much headspace, tiny type, pictures that don't flow): a band a step
+   lighter than the board, in two columns. Left, the kicker set big: Breaking, the section in display type, the date
+   under it. Right, the picture panel flush to the card's top and right edges, a 4:5 photo over a name plate in the
+   board's own green, so the plate runs straight into the story below. A player card's manager pin sits at the foot of
+   the left column, against the photo. --sx and --st are the slide's own side and top padding, which the band cancels. */
+.slide { --sx: 30px; --st: 30px; --ph-w: min(36cqi, 188px); }
+@media (max-width: 760px) { .slide { --sx: 18px; --st: 22px; --ph-w: min(38cqi, 168px); } }
+.slide-top { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; gap: 0 16px;
+  margin: calc(-1 * var(--st)) calc(-1 * var(--sx)) 22px; padding: 0 0 0 var(--sx); background-color: color-mix(in srgb, var(--chalk) 8%, var(--board)); }
+@media (max-width: 760px) { .slide-top { margin-bottom: 18px; } }
+/* the kicker: a column, the section largest */
+.slide-top .kicker { flex-direction: column; flex-wrap: nowrap; align-items: flex-start; align-self: start; gap: 10px; margin: 0; padding: calc(var(--st) - 4px) 0 20px; }
+.slide-top .kicker > span { padding: 0; background: none; color: color-mix(in srgb, var(--chalk) 72%, transparent); font: 600 14px/1.25 var(--body); }
+.slide-top .kicker > .brk { order: -2; padding: 6px 10px; font: 800 13px/1 var(--body); }
+.slide-top .kicker > .k { order: -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; box-shadow: none !important;
+  font: 800 clamp(21px, 6cqi, 28px)/1.02 var(--display); letter-spacing: 0; color: var(--chalk); }
+.slide-top .kicker > .k[class*='g-']::before { align-self: center; width: 10px; height: 10px; }
+.slide-top .kicker .k small { font: 600 14px/1 var(--body); color: color-mix(in srgb, var(--chalk) 58%, transparent); }
+/* the picture panel: photos flush to the top and right, plates flush to the band's foot */
+.slide-top :is(.lead-faces, .player-print) { align-self: stretch; margin: 0; padding: 0; transform: none; }
+.lead-faces { display: flex; gap: 2px; }
+.lead-faces .lf, .lf + .lf { display: grid; grid-template-rows: auto 1fr; margin: 0; }
+.lead-faces .lead-face, .n2 .lead-face, .n2 .lf + .lf .lead-face { width: var(--ph-w); height: auto; aspect-ratio: 4 / 5; transform: none; outline: 0; }
+.lead-faces.n2 .lead-face, .lead-faces.n2 .lf + .lf .lead-face { width: calc(var(--ph-w) * 0.72); }
+.lead-faces .lf .cap, .n2 .lf + .lf .cap { position: static; transform: none; display: flex; align-items: flex-end; padding: 8px 10px 10px;
+  font: 800 clamp(17px, 4.6cqi, 21px)/1 var(--display); letter-spacing: 0; color: var(--chalk); background: var(--board); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-print { width: var(--ph-w); }
+.pp-card { height: 100%; grid-template-rows: auto 1fr; }
+.pp-photo { aspect-ratio: 4 / 5; }
+.pp-card figcaption { align-content: end; padding: 8px 10px 10px; background-color: var(--board); }
+.pp-card b { font-size: clamp(17px, 4.6cqi, 21px); }
+.pp-card small { font-size: 13px; }
+/* the stamp: a tab on the photo's top edge */
+:is(.lead-faces, .player-print) .stamp, .player-print .stamp { top: 0; left: 0; padding: 6px 9px; font-size: 15px; box-shadow: none !important; }
+/* the manager on a player card: the foot of the left column, against the photo */
+.player-print .pp-who { position: absolute; right: calc(100% + 16px); left: auto; bottom: 20px; display: flex; align-items: center; gap: 8px; }
+.pp-who .lead-face { width: 40px; height: 40px; aspect-ratio: auto; }
+.pp-who .cap { position: static; transform: none; padding: 5px 8px; font: 800 13px/1.15 var(--body); white-space: normal; max-width: 15ch; }
