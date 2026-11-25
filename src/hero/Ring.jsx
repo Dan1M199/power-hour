@@ -6,7 +6,7 @@
      the count is the number of headlines, the first one opens at the front, and the geometry (how far out, how much
      smaller, how far back the ring leans) is handed in by the headline card, which measures its own width;
    - a card is pinned by its top edge (transform-origin 50% 0), so cards of different heights line up along the top
-     and the ones behind peek out over it; the resting angles fade to zero as a card comes forward, because the front
+     and their neighbours peek in from either side; the resting angles fade to zero as a card comes forward, because the front
      card is read, not looked at, and the drift does the same;
    - the cards hold buttons, so a press only becomes a drag once it has moved sideways, and the click after a drag is
      swallowed; a two-finger sideways scroll turns the ring too;
@@ -236,91 +236,12 @@ const BASE = 620;
    still be a tap */
 const SLOP = 8;
 
-/* ── every card sits at its own angle ──────────────────────
-   Numbers that are not a pattern: no two the same, no
-   symmetry to spot, and they do not alternate. A ring where
-   the angles went -4, +4, -4, +4 is an arrangement somebody
-   made; numbers that are merely different are a handful of
-   photographs somebody put down.
-
-   They can be this generous again now the cards are on a
-   ring. On a row an angle cost width — a turned card sweeps
-   its corner sideways into its neighbour's air — and the
-   spread knob's floor had to pay for it. Cards at different
-   depths are allowed to overlap; that is what depth looks
-   like.
-
-   (Smaller than Bencho's, and longer: a headline card is three
-   times the height of his photographs, so a degree swings its
-   foot three times as far, and there can be eight headlines.) */
-// (no longer used at rest: the deck sits square. Kept with its note.)
-export const ANGLE = [-1.7, 1.1, -0.6, 1.5, 0.7, -1.2, 0.9, -1.5];
-
-/* the drift's periods, deliberately awkward so no two cards
-   are ever doing the same thing. See the note in styles.css. */
-export const PERIOD = [4.7, 5.9, 6.7, 5.3, 7.1, 6.1];
-
-/* ── where a card sits, given where the ring is ────────────
-   ONE function, read by the first paint and by the drag both.
-   The drag writes transforms straight to the nodes — a render
-   per pointermove and the ring visibly trails the finger — so
-   there are two callers, and if they were two pieces of code
-   they would drift apart the first time the geometry changed.
-
-   `f` is the whole of it: 1 at the front, 0 at the back, and
-   it drives the size, the lean and the paint order together.
-   Position from the ANGLE rather than from a table of four
-   places is what makes the transitions free — the card
-   leaving swings out and back, the card arriving swings in
-   and forward, and the one behind crosses without any of them
-   knowing about the others.
-
-   ── how far back the ring leans ───────────────────────────
-   A card at the back sits `lean` higher than one at the
-   front. Scale alone says smaller, which the eye can read as
-   further away OR as literally smaller; a card that also
-   rides UP as it recedes is unmistakably going back, because
-   that is what a ring seen from slightly above does. It costs
-   one term and it is most of what makes the depth read. And
-   seeing something behind is what tells you the ring goes
-   round: with two headlines the other card is directly behind
-   the front one, and its top edge over the front card's is
-   all there is of it. */
-/* ── and then the ring became a deck (Dan, Nov 10, the same day) ──
-   On the ring the cards behind sat out to both sides at their
-   own angles, and with headline cards nearly as wide as the
-   frame that read as a jumble: slivers of three cards at three
-   tilts. So the resting places are a tidy stack now. `d` is how
-   many places a card is behind the front one: the next headline
-   sits one `step` higher and a little smaller, squarely behind,
-   the one after another step, and the rest wait under that one
-   (SHOWN). No angle, no sideways offset: only the top edges show,
-   evenly, like cards in a deck.
-
-   The turn is still the ring's, and still not wrapped: only the
-   DISTANCE is taken modulo, and the seam is where the motion is.
-   Swipe and the front card is dealt off to the side, clear of
-   the deck (`reach`, a card's width and a bit), tucks to the
-   bottom's size on its way back and slides in underneath, while
-   every card behind steps forward one place. It changes from the
-   top of the paint order to the bottom at the far point of that
-   swing, when it overlaps nothing, so nothing pops. */
-const SHOWN = 2;
-export const spotOf = (i, turn, n, { step, shrink, reach }) => {
-  const d = mod(i - turn, n);
-  const deep = Math.min(n - 1, SHOWN);
-  if (n > 1 && d > n - 1) {
-    /* the card being dealt: t is 0 at the front and 1 at the bottom of the deck */
-    const t = n - d, swing = Math.sin(t * Math.PI), L = deep * t * t * (3 - 2 * t);
-    return { x: -swing * reach, y: -L * step, s: 1 - L * shrink, rot: -swing * 5, dim: L / SHOWN, z: t < 0.5 ? 200 : 0 };
-  }
-  const L = Math.min(d, SHOWN);
-  /* ── paint order is a z-index, by hand ──────────────
-     Everything here is 2D — scale and offset, not
-     translateZ — so nothing sorts itself and a card would
-     otherwise paint in DOM order and sit over the one in
-     front of it. `d` already knows which is nearer. */
-  return { x: 0, y: -L * step, s: 1 - L * shrink, rot: 0, dim: L / SHOWN, z: 100 - Math.round(d * 10) };
+// Signed distance keeps the previous story to the left and the next to the right.
+// With just two stories there is one neighbour, so their positions stay in reading order.
+export const spotOf = (i, turn, n, { pitch }) => {
+  const distance = n <= 2 ? i - turn : mod(i - turn + n / 2, n) - n / 2;
+  const depth = Math.min(1, Math.abs(distance));
+  return { x: distance * pitch, y: 8 * depth, s: 1 - 0.018 * depth, rot: 0, dim: depth * 0.4, z: 100 - Math.round(depth * 10) };
 };
 
 const write = (el, sp) => {
@@ -386,7 +307,9 @@ export function useRing({ n, geom, float = 0, settle = 50, onAt }) {
      one turns the ring further instead of snapping it back. */
   const glide = (to) => {
     cancelAnimationFrame(raf.current);
+    if (n === 2) to = mod(to, n);
     const from = turn.current;
+    gliding.current = true;
     near.current = mod(to, n);
     told.current?.(near.current, true);
     if (still || from === to) {
@@ -395,12 +318,14 @@ export function useRing({ n, geom, float = 0, settle = 50, onAt }) {
       paint();
       return;
     }
-    gliding.current = true;
-    const ms = BASE * rate(clamp(settle, 0, 100));
+    const ms = BASE * rate(clamp(settle, 0, 100)) * (geom.current.phone ? 0.85 : 1);
     const t0 = performance.now();
     const tick = (now) => {
       const p = Math.min(1, (now - t0) / ms);
-      turn.current = mix(from, to, out(p));
+      /* on a phone the release eases out more gently (cubic, not quart) so the card carries the finger's speed
+         instead of snapping the last of the way */
+      const progress = geom.current.phone ? 1 - (1 - p) ** 3 : out(p);
+      turn.current = mix(from, to, progress);
       if (p >= 1) gliding.current = false;
       paint();
       if (p < 1) raf.current = requestAnimationFrame(tick);
@@ -418,9 +343,12 @@ export function useRing({ n, geom, float = 0, settle = 50, onAt }) {
   };
 
   const down = (e) => {
-    if (n < 2 || e.button || e.target.closest?.('.rxn, input, select, textarea')) return;
+    const touch = e.pointerType === 'touch';
+    if (n < 2 || !e.isPrimary || e.button || e.target.closest?.('.rxn, input, select, textarea, video')) return;
+    /* a touch that starts at the screen's edge belongs to the browser's back gesture */
+    if (touch && (e.clientX < 24 || innerWidth - e.clientX < 24)) return;
     drag.current = {
-      id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: turn.current, last: e.clientX,
+      touch, id: e.pointerId, ox: e.clientX, x0: e.clientX, y0: e.clientY, t0: turn.current, last: e.clientX,
       t: e.timeStamp, vx: 0, moved: false,
     };
   };
@@ -431,7 +359,7 @@ export function useRing({ n, geom, float = 0, settle = 50, onAt }) {
     if (!g.moved) {
       const dx = e.clientX - g.x0, dy = e.clientY - g.y0;
       if (Math.abs(dy) > SLOP && Math.abs(dy) > Math.abs(dx)) { drag.current = null; return; } // a scroll, not a swipe
-      if (Math.abs(dx) < SLOP) return;
+      if (Math.abs(dx) < (g.touch ? 16 : SLOP) || Math.abs(dx) < Math.abs(dy) * 1.5) return;
       /* it is a drag from here: the ring stops where it is and follows, from this point so it does not jump */
       cancelAnimationFrame(raf.current);
       gliding.current = false;
@@ -456,7 +384,9 @@ export function useRing({ n, geom, float = 0, settle = 50, onAt }) {
        A row had to give at its first and last card, or it read
        as broken input. A ring has neither, so the drag is a
        plain one-to-one and keeps going as long as you do. */
-    turn.current = g.t0 - dx / geom.current.pull;
+    const start = Math.round(g.t0);
+    const next = g.t0 - dx / geom.current.pull;
+    turn.current = n === 2 ? clamp(next, 0, 1) : g.touch ? clamp(next, start - 1, start + 1) : next;
     paint();
   };
 
@@ -472,8 +402,22 @@ export function useRing({ n, geom, float = 0, settle = 50, onAt }) {
     /* where it would come to rest if it kept going, capped so
        a hard flick cannot spin the ring past where you can
        follow it */
+    const start = Math.round(g.t0);
+    if (e.type === 'pointercancel') { glide(start); return; }
+    /* a finger turns one headline per swipe, never more: it has to travel a quarter of a card, or an eighth with
+       a real flick at the end, else the card goes back where it was */
+    if (g.touch) {
+      const travel = g.ox - e.clientX;
+      const pull = geom.current.pull;
+      const flick = e.timeStamp - g.t < 90 && -Math.sign(travel) * g.vx >= 0.55;
+      const change = Math.abs(travel) >= Math.max(45, pull * (flick ? 0.13 : 0.24));
+      const target = start + (change ? Math.sign(travel) : 0);
+      glide(n === 2 ? clamp(target, 0, 1) : target);
+      return;
+    }
     const carry = clamp((-g.vx * TOSS) / geom.current.pull, -MOST, MOST);
-    glide(Math.round(turn.current + carry));
+    const target = Math.round(turn.current + carry);
+    glide(n === 2 ? clamp(target, 0, 1) : target);
   };
 
   const key = (e) => {

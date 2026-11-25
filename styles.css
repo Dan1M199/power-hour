@@ -784,7 +784,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
 .hero-side .ys-body > b { white-space: normal; text-wrap: balance; } /* the column is narrower than the page: a long name wraps, never cut */
 /* The headlines: each story is its own scoreboard card, and the cards ride a ring (src/hero/Ring.jsx, Bencho's
    carousel). .lead-car is only the frame: the note, the stack of cards, then the controls on a pill of their own.
-   The frame's measurements (--side, --pad, --card-w, --card-h or --front-h) are written by layout() in Carousel.jsx.
+   The frame's measurements (--side, --card-w, --card-h or --front-h) are written by layout() in Carousel.jsx.
    Square at least on a wide screen; a long story grows every card rather than being clipped. */
 .lead-car { position: relative; color: var(--chalk); }
 /* ── the frame is only a frame ─────────────────────────────
@@ -794,8 +794,8 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
    what happens to a card when it runs out of block. The cards
    are on a ring now and never reach an edge, so the question
    is gone and so is everything that was answering it. */
-.car-track { position: relative; isolation: isolate; touch-action: pan-y; outline: none; }
-.ring .car-track { cursor: grab; }
+.car-track { position: relative; isolation: isolate; touch-action: pan-y pinch-zoom; outline: none; }
+.ring .car-track { cursor: grab; overflow-x: clip; overflow-clip-margin: 0px; }
 .ring .car-track[data-held='true'] { cursor: grabbing; user-select: none; -webkit-user-select: none; }
 .car-track:focus-visible .car-slot.front .car-card { outline: 3px solid var(--yellow); outline-offset: 3px; }
 /* the slot holds WHERE on the ring and the card's own resting
@@ -803,7 +803,7 @@ h3 { font: 800 21px/1.1 var(--display); margin: 0; letter-spacing: 0.01em; }
    transition of its own, or the easing and the drag would
    re-interpolate against each other and what you would see is
    the transition rather than the finger */
-.car-slot { position: absolute; left: 50%; top: var(--pad, 0px); width: var(--card-w, 100%); transform: translate(-50%, 0); transform-origin: 50% 0; }
+.car-slot { position: absolute; left: 50%; top: 0; width: var(--card-w, 100%); transform: translate(-50%, 0); transform-origin: 50% 0; }
 .ring .car-slot { will-change: transform; }
 .ring .car-slot:not(.front) { cursor: pointer; }
 /* ── the drift ──────────────────────────────────────────────

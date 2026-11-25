@@ -185,12 +185,8 @@ export function Carousel({ D, h, stories, date, hold, night, groups }) {
     ? stories.reduce((a, st, i) => { const r = a[a.length - 1]; if (r?.g === st.group) r.i.push(i); else a.push({ g: st.group, i: [i] }); return a; }, [])
     : null;
 
-  // The ring's measurements, from the room there is. The cards are a little narrower than the frame (`side` of air
-  // each side) so the ones behind can show past the front one, and the frame keeps `pad` above them for the cards at
-  // the back, which ride up. On a wide screen every card is as tall as the tallest (square at least); on phones each
-  // is as tall as its story and the frame hugs the one at the front, so short stories leave no gap. The cards behind
-  // are cut to that height (`data-fit` marks the one the frame was fitted to).
-  const geom = useRef({ step: 0, shrink: 0.05, reach: 600, pull: 240 });
+  // The full track catches swipes. Its narrower active card exposes the adjacent stories.
+  const geom = useRef({ pitch: 360, pull: 360 });
   const lite = mq('(max-width: 760px), (pointer: coarse)');
   const ring = useRing({
     n, geom,
@@ -204,18 +200,17 @@ export function Carousel({ D, h, stories, date, hold, night, groups }) {
     const el = car.current, tr = track.current;
     if (!el || !tr) return;
     const phone = mq('(max-width: 760px)'), F = tr.clientWidth, many = n > 1;
-    // a deck: the cards are as wide as the frame, and each one behind shows `step` of its top over the one in front
-    const side = 0, step = many ? (phone ? 10 : 13) : 0, pad = step * Math.min(n - 1, 2), W = F;
-    geom.current = { step, shrink: 0.05, reach: W + 24, pull: Math.max(180, W * 0.6) };
+    const side = many ? Math.min(phone ? 26 : 38, F * 0.08) : 0;
+    const W = F - 2 * side, pitch = W + (phone ? 6 : 10);
+    geom.current = { pitch, pull: pitch, phone };
     el.style.setProperty('--side', `${side}px`);
-    el.style.setProperty('--pad', `${pad}px`);
     el.style.setProperty('--card-w', `${W}px`);
     el.style.removeProperty('--card-h');
     const tall = slides.current.map((s) => (s ? s.offsetHeight : 0));
     const H = phone ? tall[at.current] : Math.max(W, ...tall);
     el.style.setProperty(phone ? '--front-h' : '--card-h', `${H}px`);
     if (phone) el.style.removeProperty('--card-h'); else el.style.removeProperty('--front-h');
-    tr.style.height = `${pad + H}px`;
+    tr.style.height = `${H}px`;
     ring.slots.current.forEach((s, i) => s && s.toggleAttribute('data-fit', !phone || i === at.current));
     ring.paint();
   }
