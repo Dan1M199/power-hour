@@ -2,9 +2,8 @@
 // right (the Trades section's team picker).
 import { tradeIdeas } from '../../lib/trades.js';
 
-// the four sections, personal to league-wide; the route is #lab/<key>. The trade retrospective (#lab/retro) lives under
-// Trades: its own route, the Trades segment lit
-export const SECTIONS = ['team', 'trades', 'retro', 'whatif', 'league'];
+import { SECTIONS } from './sections.js';
+export { SECTIONS };
 
 // the switcher: one segment per section, each with a line saying what's behind it (phones show the labels only)
 function LabTabs({ sub, D, me }) {

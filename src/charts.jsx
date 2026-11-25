@@ -1,16 +1,11 @@
 // Hand-written SVG and HTML charts (bump, scatter, radar, weekly bars, diverging bars, heat table). Deliberately no
 // chart library. Marks carry data-tip for the shared tooltip in app.js.
 import { useId } from 'react';
+import { TEAM_COLORS } from './colors.js'; // the frame reads the team colours from there without the charts
 
 const fmt = (x, d = 1) => (x == null ? '–' : Number(x).toFixed(d));
 
-// one colour per team, for marks on white cards. Checked with the dataviz palette validator (light mode, white surface):
-// every adjacent pair clears the colour-blind and normal-vision separation floors. Three slots sit under 3:1 contrast on
-// white, so every chart that uses them also labels the marks directly.
-export const TEAM_COLORS = [
-  '#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300',
-  '#6250d6', '#e34948', '#ad1457', '#7a8b00', '#0097a7', '#a0522d',
-];
+export { TEAM_COLORS };
 
 // Cartoon glass, like the cards: marks wear an ink outline, bars stand on a hard ledge with a gloss over their top
 // half, dots carry a white glint, and each plot sits on its own plate with chalk gridlines.

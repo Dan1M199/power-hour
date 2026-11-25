@@ -24,7 +24,9 @@ await build({
   root,
   logLevel: 'warn',
   plugins: [previewHtml],
-  build: { outDir: tmp, emptyOutDir: true, assetsInlineLimit: Number.MAX_SAFE_INTEGER, modulePreload: false },
+  // one script: the pages the site loads as chunks of their own (app.js, LOADERS) are folded back into the bundle here
+  build: { outDir: tmp, emptyOutDir: true, assetsInlineLimit: Number.MAX_SAFE_INTEGER, modulePreload: false,
+    rollupOptions: { output: { inlineDynamicImports: true } } },
 });
 
 // pull the built script and stylesheet into the page

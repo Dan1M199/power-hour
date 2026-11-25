@@ -5,14 +5,16 @@ import { useState } from 'react';
 import { TZ } from '../../lib/newsclock.js';
 import { Headshot, PosTag, TeamAvatar } from '../shared.jsx';
 
+// the formatters are made once: the Wire labels hundreds of moves, and building one costs far more than using it
+const F = {};
+const ymdOf = (d) => (F.ymd ||= new Intl.DateTimeFormat('en-CA', { timeZone: TZ })).format(d);
 function dayLabel(ts) {
-  const fmt = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d);
-  const today = fmt(new Date()), yest = fmt(new Date(Date.now() - 864e5)), d = fmt(new Date(ts));
+  const today = ymdOf(new Date()), yest = ymdOf(new Date(Date.now() - 864e5)), d = ymdOf(new Date(ts));
   if (d === today) return 'Today';
   if (d === yest) return 'Yesterday';
-  return new Date(ts).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'short', day: 'numeric' });
+  return (F.day ||= new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'long', month: 'short', day: 'numeric' })).format(ts);
 }
-const timeLabel = (ts) => new Date(ts).toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' });
+const timeLabel = (ts) => (F.time ||= new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' })).format(ts);
 // what came in since this device last opened the Wire (src/buzz/seen.js): a glowing dot and the word, like an unread mark
 const NewTag = () => <span className="bz-new"><i aria-hidden="true" />New</span>;
 const tone = (x, d = 0.4) => (x > d ? 'plus' : x < -d ? 'minus' : 'flat');

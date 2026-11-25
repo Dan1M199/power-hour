@@ -1,5 +1,5 @@
 import { computeLeague, PARTS } from './lib/engine.js';
-import { TEAM_COLORS } from './src/charts.jsx';
+import { TEAM_COLORS } from './src/colors.js';
 import { buildStories, keyMatchup, matchupQuips } from './lib/stories.js';
 import { applyOverrides } from './lib/overrides.js';
 import { shortName, nfl } from './lib/matchup.js';
@@ -7,17 +7,11 @@ import { MEMBERS, photoUrl } from './lib/members.js';
 import { bullseye } from './lib/bullseye.js';
 import { pageRoot } from './src/mount.jsx';
 import { LoadError } from './src/shared.jsx';
-import { Lab } from './src/lab/Lab.jsx';
-import { WirePage } from './src/wire/WirePage.jsx';
-import { SECTIONS } from './src/lab/parts.jsx';
-import { GamesPage } from './src/games/GamesPage.jsx';
+import { SECTIONS } from './src/lab/sections.js';
 import { loadVotes } from './src/games/votes.js';
 import { get as lsGet, put as lsPut } from './src/storage.js';
-import { RankingsPage } from './src/rankings/RankingsPage.jsx';
-import { LivePage } from './src/live/LivePage.jsx';
 import { storyKeys } from './src/hero/storyKeys.js';
 import { posts, loadPosts } from './src/admin/posts.js';
-import { AdminShell } from './src/admin/AdminShell.jsx';
 import { initTouch, shine, pageIn } from './src/touch.js';
 import { initLiquid } from './src/liquid.js';
 import { streak, wireNew, wireSeen } from './src/buzz/seen.js';
@@ -428,7 +422,8 @@ const tradeOf = (a, b) => DATA.feed.find((f) => f.type === 'trade' && (f.week ??
 const startedFor = (side, weeks) => weeks.flatMap((w) => weekPlayers(w).filter((p) => p.rid === side.rid && p.started && side.adds.some((a) => a.id === p.id)));
 const sumPts = (ps) => ps.reduce((a, p) => a + p.pts, 0);
 const STATUS_SAID = { IR: 'on injured reserve', Out: 'ruled out', Doubtful: 'doubtful', Questionable: 'questionable', PUP: 'on the PUP list', Sus: 'suspended', NA: 'not active' };
-const dayOf = (ts) => new Date(ts).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'short', day: 'numeric' });
+let dayFmt;
+const dayOf = (ts) => (dayFmt ||= new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'long', month: 'short', day: 'numeric' })).format(ts);
 
 // Commissioner Mo pushed a trade through, and the players it brought in are what got him over the line
 function commishStory() {
@@ -950,20 +945,63 @@ const reactHelpers = () => ({
 });
 
 // ---------- the pages ----------
+// Each page is its own chunk, downloaded when it's first needed (the first one alongside the league data, see
+// firstPage), so the front page never waits for the Lab's code. Once the first page is up, the rest arrive in idle time
+// or as soon as a finger or the mouse heads for a tab (prefetchPages), so changing tab stays instant.
+const LOADERS = {
+  live: () => import('./src/live/LivePage.jsx').then((m) => m.LivePage),
+  rankings: () => import('./src/rankings/RankingsPage.jsx').then((m) => m.RankingsPage),
+  wire: () => import('./src/wire/WirePage.jsx').then((m) => m.WirePage),
+  matchups: () => import('./src/games/GamesPage.jsx').then((m) => m.GamesPage),
+  admin: () => import('./src/admin/AdminShell.jsx').then((m) => m.AdminShell),
+  lab: () => import('./src/lab/Lab.jsx').then((m) => m.Lab),
+};
+const loaded = {}, loading = {};
+function loadPage(key) {
+  loading[key] ||= LOADERS[key]().then((C) => (loaded[key] = C)).catch((e) => { delete loading[key]; throw e; });
+  return loading[key];
+}
+// a page that won't load when someone opens it is almost always a tab opened before a deploy, asking for files the new
+// one renamed: reload to pick up the new page, at most once a minute (so a network that's down can't loop it). A
+// prefetch that fails is only retried when the page is opened.
+function staleChunk(e) {
+  let last = 0;
+  try { last = Number(sessionStorage.getItem('ph-chunk-reload')) || 0; } catch { /* storage off */ }
+  if (Date.now() - last < 60000) throw e;
+  try { sessionStorage.setItem('ph-chunk-reload', String(Date.now())); } catch { /* storage off */ }
+  location.reload();
+}
+// the page the address asks for, started before the data so the two download together
+function firstPage() {
+  let v = location.hash.slice(1).split('/')[0];
+  if (v === 'trades') v = 'lab';
+  if (!LOADERS[v]) v = inGameWindow() ? 'live' : 'rankings'; // the bare address: Live during a game window
+  return loadPage(v).catch(() => {}); // route() tries again and handles a failure
+}
+const firstLoad = firstPage();
+// the other pages: on intent (a press, a hover or focus on a tab), else once the browser is idle, never on Save-Data
+function prefetchPages() {
+  const nav = $('.tabs');
+  const go = (v) => { if (LOADERS[v] && !loading[v]) loadPage(v).catch(() => {}); };
+  ['pointerenter', 'touchstart', 'focusin'].forEach((t) => nav?.addEventListener(t, (e) => go(e.target.closest?.('a')?.dataset.view), { passive: true, capture: t === 'pointerenter' }));
+  if (navigator.connection?.saveData || /2g/.test(navigator.connection?.effectiveType || '')) return;
+  const idle = window.requestIdleCallback || ((f) => setTimeout(f, 1200));
+  idle(() => ['rankings', 'matchups', 'wire', 'lab', 'live'].forEach(go), { timeout: 4000 });
+}
 // what each tab mounts: the page component and its props (D, me and h are added to every page by route). Filters and
 // picks a page keeps when you leave it live in the state objects above (wireState, tradeState, labState).
 const PAGES = {
-  live: () => [LivePage, liveProps()],
-  rankings: () => [RankingsPage, rankingsProps()],
-  wire: () => [WirePage, { state: wireState, onState: (x) => Object.assign(wireState, x), since: wireSeen(DATA.now) }],
-  matchups: () => [GamesPage, { calm: calm(), lite: lite() }],
-  admin: () => [AdminShell, {
+  live: () => [loaded.live, liveProps()],
+  rankings: () => [loaded.rankings, rankingsProps()],
+  wire: () => [loaded.wire, { state: wireState, onState: (x) => Object.assign(wireState, x), since: wireSeen(DATA.now) }],
+  matchups: () => [loaded.matchups, { calm: calm(), lite: lite() }],
+  admin: () => [loaded.admin, {
     home: liveHome() ? '#live' : '#rankings', demo: !!RAW.isDemo,
     draft: draftFor, draftPlayers, draftGames, weekPlayers, weekGames, preview: (list) => postedStories(list).map(withTrade), tradeStyles: TRADE_STYLES,
     weeks: { scored: pointWeeks().filter((w) => w <= DATA.meta.lastScored).slice(0, 4), live: DATA.live ? DATA.meta.lastScored + 1 : null, ahead: DATA.previews[0]?.week ?? null }, order: () => carouselProps({ all: true })?.stories || [], groups: GROUPS, groupOf, week: headlineWeek(), now: AT ? +AT : Date.now(),
     date: new Date(AT || DATA.now).toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }),
   }],
-  lab: () => [Lab, {
+  lab: () => [loaded.lab, {
     sub: labState.sub, raw: DATA.raw, ros: RAW.ros?.values || {}, calm: calm(), demo: !!RAW.isDemo, team: dashTeam(), onTeam: (rid) => (labState.team = rid),
     trade: { state: tradeState, onState: (x) => Object.assign(tradeState, x), onTeam: setMyTeam },
   }],
@@ -1143,12 +1181,20 @@ function reveal(root) {
   below.forEach((el) => { el.classList.add('reveal'); io.observe(el); });
 }
 
+let routing = 0;
 function route({ fresh = false } = {}) {
   // while a week is being played the Live tab is the front page; it only exists then
   const home = liveHome() ? 'live' : 'rankings';
   let [v, sub] = (location.hash || `#${home}`).slice(1).split('/');
   if (v === 'trades') [v, sub] = ['lab', 'trades']; // the Trade lab's old address
   const key = PAGES[v] && (v !== 'live' || DATA.liveMode || DATA.after) ? v : home;
+  // a page whose code hasn't arrived yet: fetch it, then route again (the address may have moved on by then; only the
+  // latest route renders)
+  const n = ++routing;
+  if (!loaded[key]) {
+    loadPage(key).then(() => { if (n === routing) route({ fresh }); }, staleChunk);
+    return;
+  }
   if (key === 'lab') {
     if (SECTIONS.includes(sub)) labState.sub = sub;
     // the address always names the section, without a history entry (no hashchange either)
@@ -1174,7 +1220,10 @@ function route({ fresh = false } = {}) {
     currentView = key;
   };
   document.documentElement.dataset.dir = dir;
-  if (currentView && morphs()) document.startViewTransition(render);
+  if (currentView && morphs()) {
+    const t = document.startViewTransition(render);
+    t.ready.catch(() => {}); // a quick second tap skips this transition for the next one: expected, not an error
+  }
   else render();
 }
 
@@ -1312,7 +1361,7 @@ async function main() {
   const posted = new URLSearchParams(location.search).has('demo') || window.__DEMO__ ? null : loadPosts();
   let postedLate = false;
   try {
-    await load();
+    await Promise.all([load(), firstLoad]);
     if (posted) postedLate = !(await Promise.race([posted.then(() => true), new Promise((r) => setTimeout(r, 1200, false))]));
     await loader.done();
   } catch (e) {
@@ -1345,6 +1394,7 @@ async function main() {
     placeInk({ settle: true });
   }, { passive: true });
   route();
+  prefetchPages(); // the other tabs' code, in idle time or on the way to a tab
   setTimeout(touch.hello, 2400); // once per device, after the page has settled
   if (currentView !== 'admin') {
     streakNote(); // once a day: the streak island drops in (src/buzz/streak.js)

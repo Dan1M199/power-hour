@@ -99,14 +99,15 @@
 
   <main id="app" tabindex="-1">
     <!-- the kicker loader: shown only if loading takes longer than 300 ms (app.js, startLoader). The clip isn't
-         downloaded until then, so a fast load never spends bandwidth on it; the poster is the kick's first frame. -->
+         downloaded until then, so a fast load never spends bandwidth on it; nor is the poster (the kick's first frame), which
+         the script below sets as the loader shows. -->
     <section class="loading" id="loading" aria-busy="true">
       <div class="kick-card glass rim">
-        <video class="kick" muted loop playsinline preload="none" poster="assets/kicker-poster.webp" aria-hidden="true">
+        <video class="kick" muted loop playsinline preload="none" data-poster="assets/kicker-poster.webp" aria-hidden="true">
           <source src="assets/kicker.webm" type="video/webm">
           <source src="assets/kicker.mp4" type="video/mp4">
         </video>
-        <img class="kick kick-still" src="assets/kicker-poster.webp" alt="" aria-hidden="true">
+        <img class="kick kick-still" src="assets/kicker-poster.webp" alt="" aria-hidden="true" loading="lazy">
         <p role="status">Pulling your league from Sleeper…</p>
       </div>
     </section>
@@ -120,7 +121,7 @@
         window.__loader = { timer: setTimeout(function () {
           if (!l) return;
           window.__loader.shownAt = performance.now();
-          if (v) { try { v.currentTime = 0; var p = v.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+          if (v) { try { v.poster = v.dataset.poster; v.currentTime = 0; var p = v.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
           l.classList.add('show');
         }, 300) };
       })();

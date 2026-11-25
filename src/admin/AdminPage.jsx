@@ -26,7 +26,8 @@ const ago = (ts, now) => {
 };
 // the next Tuesday 6am Central, when the week turns over and the new headlines come in
 function weekTurns(now) {
-  const parts = (t) => Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', hourCycle: 'h23' }).formatToParts(t).map((p) => [p.type, p.value]));
+  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', hourCycle: 'h23' }); // once, not per hour tried
+  const parts = (t) => Object.fromEntries(fmt.formatToParts(t).map((p) => [p.type, p.value]));
   let t = Math.ceil(now / 36e5) * 36e5;
   for (let i = 0; i < 24 * 8; i++, t += 36e5) { const p = parts(t); if (p.weekday === 'Tue' && Number(p.hour) === 6) return t; }
   return now + 7 * 864e5;

@@ -5644,3 +5644,8 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
   .car-nav { padding: 6px; }
   .car-nav :is(.car-arrow, .car-pause) { width: 44px; height: 44px; }
 }
+
+/* ---------- loading: the footer waits for the page (Nov 25, performance) ----------
+   While the kicker loader is up, the footer would sit on the first screen and its sponsor and logo pictures (about 75 KB)
+   would download ahead of the league data and the page's code. Hidden until the page replaces the loader. */
+main:has(> #loading) + .footer { display: none; }
