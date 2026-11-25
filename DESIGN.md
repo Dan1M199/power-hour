@@ -125,7 +125,7 @@ components:
     padding: "8px 16px"
 ---
 
-> The current language is **6.0, square** (Nov 25): the same colours, but every corner is square, every surface is flat (no ledges, ink outlines, gloss, glints or shadows) and layers blend into each other by tone (the header is the sky frosted, the sky melts into the field, trays and drawers are a step under their card, controls on a card are a wash of ink). Only things round in life stay round: the record, the sun, the footballs, the press ripple and the marks inside charts. Where anything below says stadium, pill, circle, cartoon glass, ink outline, ledge, gloss or shading, 6.0 wins. Under it is **the bowl** (everything a stadium shape, shaded and stacked in tiers), which still describes the components and their colours. The rules live in the "6.0: square" block at the end of `styles.css` and the Design system section of `CLAUDE.md`.
+> **6.0 uses square panels on a muted field.** The masthead and scoreboards are deep green. Amber marks the active control and yellow identifies the viewer’s team. Score breakdowns, player lists and filter groups sit in slightly darker trays with a shallow inner shadow (`--recess`). Cards use a hairline and a short shadow. On phones the masthead scrolls away, the dock stays above the home indicator, and the page heading and personal summary appear before the headline carousel. Both themes use the tokens in the “6.0: square” block of `styles.css`. The sections below describe the earlier stadium design.
 
 # Design System: The Power Hour
 
