@@ -5749,7 +5749,8 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
    Same colours, new shape. The bowl's three rules turned around:
    1. Square. Nothing is rounded except things that are round in life: the vinyl record, the sun on its arc, the
       footballs, the press ripple, and the marks inside charts (SVG). Faces are square too.
-   2. Flat. No ledges, inked edges, gloss, sheen, glints, halftone or drop shadows. Depth comes from tone alone.
+   2. Flat. No ledges, inked edges, gloss, sheen, glints or halftone. Depth comes from tone, plus one soft, short
+      shadow under cards (--shade-md) and controls (--shade-sm), added Nov 25 at Dan's request.
    3. Layers blend. Every surface is a tone of what it sits on, so nothing needs an outline: the header is the sky,
       frosted; the sky melts into the field; trays are a step darker than their card, drawers a step darker again; a
       control on a card is a tint, not a white pill. Hairlines (--hair) only where a seam has to read.
@@ -5777,6 +5778,9 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
   --r-xl: 0px; --r-lg: 0px; --r-md: 0px;
   --lip: 0px;
   --head-h: 64px;
+  /* a little shadow (Nov 25, Dan's request): soft and short, straight down, never a ledge */
+  --shade-sm: 0 1px 2px color-mix(in srgb, var(--tone-green-4) 12%, transparent), 0 2px 6px -2px color-mix(in srgb, var(--tone-green-4) 22%, transparent);
+  --shade-md: 0 1px 2px color-mix(in srgb, var(--tone-green-4) 10%, transparent), 0 6px 16px -6px color-mix(in srgb, var(--tone-green-4) 30%, transparent);
 }
 :root[data-theme='dark'] {
   --face: #13211A;
@@ -5784,6 +5788,8 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
   --hair-2: color-mix(in srgb, var(--ink) 18%, transparent);
   --wash: color-mix(in srgb, var(--ink) 7%, transparent);
   --wash-2: color-mix(in srgb, var(--ink) 13%, transparent);
+  --shade-sm: 0 1px 2px color-mix(in srgb, var(--island) 40%, transparent), 0 2px 6px -2px color-mix(in srgb, var(--island) 55%, transparent);
+  --shade-md: 0 1px 2px color-mix(in srgb, var(--island) 35%, transparent), 0 8px 18px -6px color-mix(in srgb, var(--island) 65%, transparent);
 }
 
 /* 1 and 2: square and flat, everywhere */
@@ -5792,9 +5798,11 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 :is(.record, .record .label, .moon, .lo-ball span, .ball, .tx-lens i) { border-radius: 50% !important; }
 
 /* yellow still means you: a flat ring on your card, a flat inset on your row, cell or side, a square frame on your face */
-.glass { box-shadow: 0 0 0 var(--ring-w) var(--yellow) !important; }
+.glass { box-shadow: 0 0 0 var(--ring-w) var(--yellow), var(--shade-md) !important; }
 @media (max-width: 760px) {
-  .rank .rank-btn::before, .rank .detail > div { box-shadow: 0 0 0 var(--ring-w) var(--yellow) !important; }
+  .rank .rank-btn::before { box-shadow: 0 0 0 var(--ring-w) var(--yellow) !important; }
+  .rank .detail > div { box-shadow: 0 0 0 var(--ring-w) var(--yellow), var(--shade-md) !important; }
+  .rank .rank-card { box-shadow: none !important; } /* on phones the card's face and foot carry it (drawer.js) */
 }
 :is(.trade-side.mine, .fut.mine, .heat tr.mine th, .heat tr.mine td, .tl-row.mine .tl-name b, .tl-row.mine .tl-track, .pth-games li.yours,
   .wi-rows li.chosen:not(.open) .wi-row, .wi-rows li.swapped:not(.open) .wi-row, .wi-alt[aria-pressed='true'], .wi-wkc-row.flip, .wi-legend .k-flip,
@@ -5938,3 +5946,21 @@ main::after { display: none; }
 /* (as specific as the bowl's white-pill rule, which these follow) */
 .glass :is(.team-pick, .trade-pick) select, .mu button.odds-more, .mu button.pick:not(.on) { background-color: var(--wash); }
 @media (hover: hover) { .mu button.odds-more:hover, .mu button.pick:not(.on):hover { background-color: var(--wash-2); } }
+
+
+/* a little shadow on every card and control (Nov 25, Dan's request). The universal rule above drops every shadow, so
+   these are !important; the yellow ring and the inset marks that say you keep winning where they're more specific. */
+:is(.car-card, .car-nav, .gotw, .lab-tabs, .tip, .bz-island, .me-panel, .tx-top, .tx-hello) { box-shadow: var(--shade-md) !important; }
+@media (min-width: 761px) { .topbar { box-shadow: var(--shade-sm) !important; } }
+@media (max-width: 760px) { .tabs { box-shadow: 0 -1px 2px color-mix(in srgb, var(--tone-green-4) 8%, transparent), 0 -6px 16px -6px color-mix(in srgb, var(--tone-green-4) 22%, transparent) !important; } }
+:is(.sec-title, .sources > *, .filters :is(button, a), .cta, .gotw-more, .odds-more, .wi-cta, .pth-cta, .car-arrow, .car-pause, .theme-btn,
+  .team-pick select, .trade-pick select, .pick, .xp, .wi-alt, .wi-more, .wi-x, .wi-row, .wi-sheet-x, .pth-wl, .pth-side, .pth-weeks button,
+  .pth-share, .pth-invite, .drive-pick button, .pp-share, .detail-close, .chip:is(.to-again, .rank-pdf), .waiver-fit .chip, .rv-go, .unveil-team) { box-shadow: var(--shade-sm) !important; }
+.lab-tabs a[aria-current='page'], .tab-ink { box-shadow: var(--shade-sm) !important; }
+.sec-title:has(+ :is(.moves, .wire-team, .ideas, .matchups)) { box-shadow: none !important; } /* a tab of its card: the card's shadow is its */
+
+/* the headline's top: its own band, a step lighter than the board, so the date, section and photos read apart from the
+   story under them (Dan's request Nov 25: "too mushed together") */
+.slide-top { margin: -30px -30px 22px; padding: 26px 30px 22px; background-color: color-mix(in srgb, var(--chalk) 8%, var(--board)); }
+.n2 .lf + .lf .lead-face { outline-color: color-mix(in srgb, var(--chalk) 8%, var(--board)); }
+@media (max-width: 760px) { .slide-top { margin: -22px -18px 18px; padding: 18px 18px 18px; } }
